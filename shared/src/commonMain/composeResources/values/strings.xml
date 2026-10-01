@@ -1,0 +1,10 @@
+<resources>
+    <string name="projects_empty">You have not any projects yet</string>
+    <string name="projects_add">Add Project</string>
+    <string name="project_editor_create_title">Create project</string>
+    <string name="project_editor_edit_title">Edit project</string>
+    <string name="project_name">Project name</string>
+    <string name="action_create">Create</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+</resources>

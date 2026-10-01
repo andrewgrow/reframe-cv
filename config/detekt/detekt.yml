@@ -1,0 +1,12 @@
+config:
+  validation: true
+
+naming:
+  FunctionNaming:
+    # Compose UI functions use PascalCase.
+    ignoreAnnotated: ['Composable']
+
+style:
+  MagicNumber:
+    # Test fixtures and design tokens intentionally declare literal values.
+    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/ui/theme/Spacing.kt']
