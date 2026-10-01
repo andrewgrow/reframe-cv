@@ -1,14 +1,6 @@
 # Third-Party Notices
 
-Anki Deck Builder is licensed under the [MIT License](LICENSE.md). This document records compatibility information and the separate license terms of third-party software used by the project. It does not change the license of Anki Deck Builder.
-
-## Anki compatibility notice
-
-This software is independently developed for the limited purpose of creating Anki-compatible `.apkg` files. Users may import those files into a separately obtained installation of Anki.
-
-This software does not bundle, modify, launch, or distribute the Anki application, and it does not use Anki source code as an application dependency. Anki is therefore not listed below as a bundled third-party component. The Anki application and its source code remain subject to their own license terms, which are available in the [official Anki repository](https://github.com/ankitects/anki/blob/main/LICENSE).
-
-Anki Deck Builder is not affiliated with or endorsed by the Anki project. The name "Anki" is used only to describe compatibility with the package format and the intended destination application. No Anki logo or other Anki project asset is included by this notice.
+Reframe CV is licensed under the [MIT License](LICENSE.md). This document records the separate license terms of third-party software used by the project. It does not change the license of Reframe CV.
 
 ## Third-party software
 

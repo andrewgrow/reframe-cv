@@ -21,11 +21,11 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "ankideckbuilder.MainKt"
+        mainClass = "reframecv.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "ankideckbuilder"
+            packageName = "ReframeCV"
             packageVersion = "1.0.0"
         }
     }

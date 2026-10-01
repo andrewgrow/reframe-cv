@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.room)
 }
 
+compose.resources {
+    packageOfResClass = "reframecv.shared.generated.resources"
+}
+
 kotlin {
     jvm()
 

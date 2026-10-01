@@ -1,39 +1,37 @@
-# Anki Deck Builder
+# Reframe CV
 
-A local desktop application for creating, reviewing, and exporting custom decks as Anki-compatible `.apkg` files. It is built with Kotlin/JVM and Compose Multiplatform Desktop.
+Look at your resume from a new angle.
 
-The application is intended to manage the complete deck-building workflow:
+Reframe CV is a local desktop application for managing your resumes within projects. Store, create, rewrite, and tailor resumes to job opportunities while keeping related versions together.
 
-1. Create or import deck content.
-2. Manage notes, generated cards, and their fields.
-3. Add and organize images, audio, and other media.
-4. Review, edit, validate, and approve content.
-5. Export an approved deck as an Anki-compatible `.apkg` package.
-6. Import the generated package into a separately installed Anki application.
+## Projects first
 
-An Anki note contains the editable fields, while one or more cards can be generated from that note using card templates. The application will preserve this distinction so it can support custom note types and multiple card templates.
+A project is the starting point for working with resumes. It is a flexible workspace whose purpose is defined by the user:
 
-## Intended use and Anki compatibility
+- A career direction, such as backend, full-stack, or mobile development.
+- A company, with resumes tailored specifically to its opportunities.
+- Any other grouping that fits the user's workflow.
 
-The application is an independent deck-authoring tool. Its purpose is limited to preparing content and generating `.apkg` files that can be imported into Anki by the user. It does not bundle, modify, launch, or distribute the Anki application, and it does not use Anki source code as an application dependency.
+Within a project, users will be able to keep source resumes, create and rewrite content, and organize adaptations for different vacancies. Projects are not restricted to a fixed category or tied exclusively to a role, company, or vacancy. More detailed project organization will be explored as the product develops.
 
-Anki Deck Builder is not affiliated with or endorsed by the Anki project. The name "Anki" is used only to describe compatibility with the package format and the intended destination application. Anki is available separately from [the official Anki website](https://apps.ankiweb.net/).
+## Planned workflow
+
+1. Create or open a project for a chosen goal.
+2. Store an existing resume or create a new one within that project.
+3. Edit, rewrite, and review resume content.
+4. Tailor resume versions to specific vacancies.
+5. Keep related resumes and their versions organized within the project.
+6. Export a resume as a PDF.
+
+The current application provides a project list, project creation and editing, and local storage. Storing resume documents within projects, resume-specific editing, tailoring, version management, and PDF export are planned.
 
 ## Architecture
 
-The Kotlin application owns the desktop UI, application logic, and local project storage. Its handlers/services will cover:
-
-- projects and decks;
-- notes, cards, fields, and templates;
-- images, audio, and other media;
-- importing and batch operations;
-- review, validation, and approval;
-- export manifest generation;
-- Anki package export.
+The application is built with Kotlin/JVM and Compose Multiplatform Desktop. Kotlin owns the desktop UI, application logic, and local project storage. Projects form the foundation for resume storage, creation, rewriting, and adaptation as those features are developed.
 
 ## Technologies
 
-The application is local and single-user, with no backend server or web frontend. Project data and media are stored locally.
+The application is local and single-user, with no backend server or web frontend. Project data is stored locally.
 
 - Kotlin/JVM and Compose Multiplatform Desktop for the application and UI.
 - [Decompose](https://arkivanov.github.io/Decompose/) for navigation and lifecycle management.
@@ -45,17 +43,15 @@ The application is local and single-user, with no backend server or web frontend
 - [Detekt](https://detekt.dev/) for static code analysis.
 - [ktlint](https://ktlint.github.io/) for Kotlin formatting checks and automatic formatting.
 
-Anki-compatible `.apkg` export is planned using Python and the `genanki` library.
-
 ## Initial milestone
 
-The first milestone is a minimal end-to-end pipeline for one note/card:
+Development starts with projects: listing, creating, editing, and persisting the user's workspaces. The next milestone is to manage resumes within a project:
 
 ```text
-content and media -> local review -> approval -> valid Anki package
+create or open project -> add or create resume -> edit and save within project
 ```
 
-After that, the application can grow to support importing, batch processing, regeneration controls, caching, custom templates, and release management.
+From that foundation, the application can grow to support rewriting, vacancy-specific adaptations, version management, PDF export, templates, and import tools. The exact organization of projects remains open and will follow users' needs.
 
 ## Project structure
 
@@ -67,7 +63,7 @@ This is a Kotlin Multiplatform project targeting Desktop (JVM).
 
 ## Running the application
 
-Use the run configurations provided by the run widget in your IDE's toolbar, or use one of these commands:
+In Android Studio, select the shared **Reframe CV** run configuration in the toolbar and click Run. The configuration is stored in `.run/ReframeCV.run.xml` and runs `:desktopApp:run`. You can also use one of these commands:
 
 - Hot reload: `./gradlew :desktopApp:hotRun --auto`
 - Standard run: `./gradlew :desktopApp:run`
@@ -83,8 +79,18 @@ The generated application is placed in `desktopApp/build/compose/binaries/main/a
 On macOS, launch it with:
 
 ```shell
-open desktopApp/build/compose/binaries/main/app/org.example.project.app
+open desktopApp/build/compose/binaries/main/app/ReframeCV.app
 ```
+
+## Local storage
+
+Reframe CV stores its database as `reframe-cv.db` in its own application data directory:
+
+- macOS: `~/Library/Application Support/ReframeCV/`.
+- Windows: `%APPDATA%/ReframeCV/`.
+- Linux: `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset.
+
+Existing Reframe CV data is not migrated automatically.
 
 ## Running tests
 
@@ -174,4 +180,4 @@ opencode
 
 ## License
 
-Anki Deck Builder is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses and the Anki compatibility notice.
+Reframe CV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.

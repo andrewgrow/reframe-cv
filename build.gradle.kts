@@ -57,11 +57,11 @@ kover {
         }
         filters {
             excludes {
-                packages("ankideckbuilder.shared.generated.resources")
+                packages("reframecv.shared.generated.resources")
                 classes(
-                    "ankideckbuilder.database.AppDatabase_Impl*",
-                    "ankideckbuilder.database.AppDatabaseConstructor*",
-                    "ankideckbuilder.database.project.ProjectDao_Impl*",
+                    "reframecv.database.AppDatabase_Impl*",
+                    "reframecv.database.AppDatabaseConstructor*",
+                    "reframecv.database.project.ProjectDao_Impl*",
                 )
             }
         }

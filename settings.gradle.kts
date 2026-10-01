@@ -1,4 +1,4 @@
-rootProject.name = "AnkiDeckBuilder"
+rootProject.name = "ReframeCV"
 
 pluginManagement {
     repositories {
