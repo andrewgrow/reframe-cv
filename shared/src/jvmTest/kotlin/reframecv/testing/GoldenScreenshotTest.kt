@@ -2,7 +2,6 @@ package reframecv.testing
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ComposeUiTest
@@ -16,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import io.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
 import org.junit.rules.TestName
+import reframecv.ui.theme.ReframeTheme
+import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 /**
  * JUnit 4 Compose screenshot helpers with a shared theme and screen size.
@@ -50,24 +51,26 @@ abstract class GoldenScreenshotTest {
         composeUiTest: ComposeUiTest,
         screenSize: ScreenSize = defaultScreen,
         captureTag: String? = null,
+        themeMode: ThemeMode = ThemeMode.Dark,
         content: @Composable () -> Unit,
     ) {
-        setGoldenContent(composeUiTest, screenSize, content)
+        setGoldenContent(composeUiTest, screenSize, themeMode, content)
         captureGolden(composeUiTest, captureTag)
     }
 
     /**
-     * Sets themed content at [screenSize] size without capturing. Call once per Compose test scope,
+     * Sets content at [screenSize] size, using dark theme by default. Call once per Compose test scope,
      * then perform any actions before [captureGolden].
      */
     @OptIn(ExperimentalTestApi::class)
     protected fun setGoldenContent(
         composeUiTest: ComposeUiTest,
         screenSize: ScreenSize = defaultScreen,
+        themeMode: ThemeMode = ThemeMode.Dark,
         content: @Composable () -> Unit,
     ) {
         composeUiTest.setContent {
-            MaterialTheme {
+            ReframeTheme(themeMode = themeMode) {
                 Box(Modifier.size(width = screenSize.width, height = screenSize.height)) {
                     content()
                 }

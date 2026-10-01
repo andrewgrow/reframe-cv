@@ -12,6 +12,7 @@ import io.klogging.noCoLogger
 import reframecv.ui.components.application.DefaultRootComponent
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.compose.application.RootContent
+import reframecv.ui.theme.ReframeTheme
 import reframecv.ui.threading.runOnUiThread
 
 // default JVM entry point
@@ -36,8 +37,10 @@ fun runApplication(rootComponent: RootComponent, lifecycle: LifecycleRegistry) =
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,
-        title = "Reframe CV",
+        title = "ReframeCV",
     ) {
-        RootContent(rootComponent)
+        ReframeTheme {
+            RootContent(rootComponent)
+        }
     }
 }

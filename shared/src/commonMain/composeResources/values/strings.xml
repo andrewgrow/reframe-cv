@@ -1,6 +1,9 @@
 <resources>
     <string name="projects_empty">You have not any projects yet</string>
     <string name="projects_add">Add Project</string>
+    <string name="projects_help_show">What is a project?</string>
+    <string name="projects_help_hide">Hide project help</string>
+    <string name="projects_help">A project is a workspace for your resumes. Keep everything in one project, or organize projects by seniority (Middle, Senior, Team Lead), specialization (Mobile, Full-stack, Backend), company (AWS, Google, Meta), or any other way that works for you.\n\nWe recommend starting with a project for your main role, such as “Android Developer”.</string>
     <string name="project_editor_create_title">Create project</string>
     <string name="project_editor_edit_title">Edit project</string>
     <string name="project_name">Project name</string>

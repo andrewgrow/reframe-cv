@@ -2,14 +2,36 @@ package reframecv.ui.compose.projects
 
 import androidx.compose.ui.test.ComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
+import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.projects_help_show
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.testing.getTestString
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
+import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 @OptIn(ExperimentalTestApi::class)
 class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
+    @Test
+    fun expandedProjectHelpInDarkThemeMatchesReference() = runComposeUiTest {
+        val component = TestProjectsComponent()
+        setGoldenContent(this, themeMode = ThemeMode.Dark) { ProjectsContent(component) }
+        onNodeWithContentDescription(getTestString(Res.string.projects_help_show)).performClick()
+        captureGolden(this, PROJECTS_SCREEN_TAG)
+    }
+
+    @Test
+    fun expandedProjectHelpMatchesReference() = runComposeUiTest {
+        val component = TestProjectsComponent()
+        setGoldenContent(this, themeMode = ThemeMode.Light) { ProjectsContent(component) }
+        onNodeWithContentDescription(getTestString(Res.string.projects_help_show)).performClick()
+        captureGolden(this, PROJECTS_SCREEN_TAG)
+    }
+
     @Test
     fun openProjectEditorMatchesReference() = runDesktopComposeUiTest {
         val component = TestProjectsComponent(editorInitiallyOpen = true)

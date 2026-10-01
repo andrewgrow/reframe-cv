@@ -10,6 +10,7 @@ Third-party software remains subject to its own license terms. The following tab
 | --- | --- | --- | --- |
 | Kotlin, Kotlin Gradle plugins, and Kotlin Test | 2.4.10 | Apache License 2.0 | [Kotlin license](https://github.com/JetBrains/kotlin/blob/master/license/LICENSE.txt) |
 | Compose Multiplatform | 1.11.1 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
+| Compose Material Icons Extended | 1.7.3 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
 | Compose Material 3 | 1.11.0-alpha07 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
 | AndroidX Lifecycle for Compose | 2.11.0-beta01 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
 | Room | 3.0.1 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
