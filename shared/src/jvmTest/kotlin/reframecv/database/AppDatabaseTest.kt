@@ -50,6 +50,28 @@ class AppDatabaseTest {
     )
 
     @Test
+    fun marksSubtreeWithOneTimestampAndPreservesEarlierDeletionTimes() = runBlocking {
+        val dao = database.projectDao()
+        val root = dao.insert(entity("Root"))
+        val child = dao.insert(entity("Already deleted").copy(parentId = root, deletedAt = 100L))
+        val grandchild = dao.insert(entity("Grandchild").copy(parentId = child))
+        val unrelated = dao.insert(entity("Unrelated"))
+
+        assertEquals(2, dao.markSubtreeDeleted(root, 300L))
+        assertEquals(300L, dao.findById(root)?.deletedAt)
+        assertEquals(100L, dao.findById(child)?.deletedAt)
+        assertEquals(300L, dao.findById(grandchild)?.deletedAt)
+        assertNull(dao.findById(unrelated)?.deletedAt)
+        assertEquals(listOf(unrelated), dao.observeAll().first().map { it.id })
+        assertEquals(0, dao.markSubtreeDeleted(root, 400L))
+        assertEquals(0, dao.markSubtreeDeleted(-1, 400L))
+        assertEquals(300L, dao.findById(root)?.deletedAt)
+        assertEquals(100L, dao.findById(child)?.deletedAt)
+        val stored = requireNotNull(dao.findById(grandchild))
+        assertEquals(stored, ProjectEntity.fromDomainModel(stored.toDomainModel()))
+    }
+
+    @Test
     fun storesProjectHierarchyAndMapsParentId() = runBlocking {
         val dao = database.projectDao()
         val rootId = dao.insert(entity())

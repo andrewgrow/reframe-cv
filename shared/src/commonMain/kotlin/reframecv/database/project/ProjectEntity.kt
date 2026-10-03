@@ -31,6 +31,8 @@ data class ProjectEntity(
     val updatedAt: Long,
     @ColumnInfo(name = "parent_id")
     val parentId: Long? = null,
+    @ColumnInfo(name = "deleted_at")
+    val deletedAt: Long? = null,
 ) : DatabaseModel<Project> {
     override fun toDomainModel() = Project(
         id = id,
@@ -38,6 +40,7 @@ data class ProjectEntity(
         createdAt = createdAt,
         updatedAt = updatedAt,
         parentId = parentId,
+        deletedAt = deletedAt,
     )
 
     companion object : DatabaseModelFactory<Project, ProjectEntity> {
@@ -47,6 +50,7 @@ data class ProjectEntity(
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
             parentId = domainModel.parentId,
+            deletedAt = domainModel.deletedAt,
         )
     }
 }

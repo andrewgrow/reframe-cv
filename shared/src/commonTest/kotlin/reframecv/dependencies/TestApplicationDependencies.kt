@@ -1,6 +1,7 @@
 package reframecv.dependencies
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.map
 import reframecv.domain.models.project.Project
 import reframecv.repository.ProjectsRepository
 import reframecv.shared.nowMillis
@@ -8,9 +9,22 @@ import reframecv.shared.nowMillis
 class TestApplicationDependencies : ApplicationDependencies {
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
-        override fun observeProjects() = projects
+        override fun observeProjects() = projects.map { values ->
+            values.filter {
+                it.deletedAt ==
+                    null
+            }
+        }
         override suspend fun deleteProject(id: Long) {
-            projects.value = projects.value.filterNot { it.id == id }
+            val ids = mutableSetOf(id)
+            do {
+                val added = projects.value.filter { it.parentId in ids }.map { it.id }
+                val changed = ids.addAll(added)
+            } while (changed)
+            val deletedAt = nowMillis()
+            projects.value = projects.value.map {
+                if (it.id in ids && it.deletedAt == null) it.copy(deletedAt = deletedAt) else it
+            }
         }
         override suspend fun updateProject(id: Long, name: String) {
             projects.value = projects.value.map { project ->

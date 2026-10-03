@@ -90,7 +90,7 @@ ReframeCV stores its database as `reframe-cv.db` in its own application data dir
 - Windows: `%APPDATA%/ReframeCV/`.
 - Linux: `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset.
 
-Existing ReframeCV data is not migrated automatically.
+During development, the database stays at schema version 1. After a schema change, close the application and delete the local database to recreate it; migrations will be introduced when real data needs to be preserved. Deleting a project sets `deleted_at` for that project and all descendants. These rows remain stored and are hidden from the project list; existing deletion timestamps are preserved.
 
 ## Running tests
 

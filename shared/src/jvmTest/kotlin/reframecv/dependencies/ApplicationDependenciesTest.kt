@@ -3,6 +3,7 @@ package reframecv.dependencies
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
@@ -20,22 +21,24 @@ class ApplicationDependenciesTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
-    fun deletesProjectWithAllDescendantsAndPreservesOtherProjects() = runBlocking {
+    fun marksProjectAndDescendantsDeletedAndPreservesOtherProjects() = runBlocking {
         val file = temporaryFolder.root.toPath().resolve("delete.db")
         val database = buildDatabase(createDatabaseBuilder(file))
         var remainingId = 0L
+        var rootId = 0L
         try {
             val dao = database.projectDao()
             val repository = LocalProjectsRepository(dao)
             val root = repository.createProject("Root")
+            rootId = root.id
             remainingId = repository.createProject("Unrelated").id
             val child = dao.insert(
                 ProjectEntity(name = "Child", createdAt = 1, updatedAt = 1, parentId = root.id),
             )
-            dao.insert(
+            val grandchild = dao.insert(
                 ProjectEntity(name = "Grandchild", createdAt = 1, updatedAt = 1, parentId = child),
             )
-            dao.insert(
+            val sibling = dao.insert(
                 ProjectEntity(name = "Sibling", createdAt = 1, updatedAt = 1, parentId = root.id),
             )
             assertFailsWith<IllegalStateException> { repository.deleteProject(-1) }
@@ -43,11 +46,22 @@ class ApplicationDependenciesTest {
 
             repository.deleteProject(root.id)
             assertEquals(remainingId, repository.observeProjects().first().single().id)
+            val deletedAt = assertNotNull(dao.findById(root.id)?.deletedAt)
+            assertTrue(deletedAt > 0)
+            listOf(child, grandchild, sibling).forEach {
+                assertEquals(deletedAt, dao.findById(it)?.deletedAt)
+            }
+            repository.updateProject(child, "Renamed deleted child")
+            assertEquals("Renamed deleted child", dao.findById(child)?.name)
+            assertEquals(deletedAt, dao.findById(child)?.deletedAt)
+            assertEquals(remainingId, repository.observeProjects().first().single().id)
         } finally {
             database.close()
         }
         val reopened = buildDatabase(createDatabaseBuilder(file))
         try {
+            assertNotNull(reopened.projectDao().findById(rootId)?.deletedAt)
+            assertEquals("Root", reopened.projectDao().findById(rootId)?.name)
             assertEquals(remainingId, reopened.projectDao().observeAll().first().single().id)
             LocalProjectsRepository(reopened.projectDao()).deleteProject(remainingId)
             assertEquals(emptyList(), reopened.projectDao().observeAll().first())
