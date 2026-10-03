@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
+import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
 import reframecv.shared.generated.resources.action_create
@@ -86,7 +87,7 @@ fun EditorContent(
     AlertDialog(
         onDismissRequest = component::onClose,
         modifier = Modifier.testTag(PROJECT_EDITOR_TAG),
-        title = { Text(title) },
+        title = { SelectableText(title) },
         text = {
             EditorFields(component, name, {
                 name = it
@@ -190,7 +191,7 @@ private fun EditorFields(
             }),
         )
         if (saveState == EditorSaveState.Failed) {
-            Text(
+            SelectableText(
                 stringResource(Res.string.project_save_error),
                 color = ReframeTheme.colorScheme.critical,
             )
@@ -216,7 +217,7 @@ private fun DeleteConfirmation(
     val focusRequester = remember { FocusRequester() }
     Column(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
         Spacer(Modifier)
-        Text(
+        SelectableText(
             stringResource(Res.string.project_delete_warning),
             color = ReframeTheme.colorScheme.critical,
         )
@@ -233,7 +234,7 @@ private fun DeleteConfirmation(
             }),
         )
         if (deleteState == EditorDeleteState.Failed) {
-            Text(
+            SelectableText(
                 stringResource(Res.string.project_delete_error),
                 color = ReframeTheme.colorScheme.critical,
             )

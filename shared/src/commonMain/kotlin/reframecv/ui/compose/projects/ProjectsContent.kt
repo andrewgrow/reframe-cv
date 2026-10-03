@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.project.Project
+import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.projects_add
 import reframecv.shared.generated.resources.projects_empty
@@ -112,7 +113,7 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(emptyMessage, color = MaterialTheme.colorScheme.onBackground)
+                SelectableText(emptyMessage, color = MaterialTheme.colorScheme.onBackground)
                 IconButton(onClick = { showProjectHelp = !showProjectHelp }) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
@@ -126,7 +127,7 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
                 enter = fadeIn() + expandVertically(),
                 exit = fadeOut() + shrinkVertically(),
             ) {
-                Text(
+                SelectableText(
                     text = helpMessage,
                     modifier = Modifier
                         .widthIn(max = PROJECT_HELP_MAX_WIDTH.dp)
