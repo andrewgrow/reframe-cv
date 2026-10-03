@@ -13,10 +13,31 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import reframecv.domain.models.project.Project
 import reframecv.testing.ComponentTest
 import reframecv.ui.threading.runOnUiThread
 
 class DefaultProjectsComponentTest : ComponentTest() {
+    @Test
+    fun opensProjectForUpdateAndSavesItsIdWithTrimmedName() = runOnUiThread {
+        lifecycle.resume()
+        val executor = TestProjectsExecutor()
+        val component =
+            DefaultProjectsComponent(appComponentContext(), executorFactory = { executor })
+        val now = 1_000L
+        val project = Project(id = 7, name = "Android Developer", createdAt = now, updatedAt = now)
+        component.onProjectClick(project)
+
+        val editor = assertNotNull(component.editorSlot.value.child).instance
+        assertEquals(project.name, editor.initialName)
+        editor.onSave("  Backend Developer  ")
+        assertEquals(
+            ProjectsIntent.UpdateProject(project.id, "Backend Developer"),
+            executor.lastIntent,
+        )
+        assertNull(component.editorSlot.value.child)
+    }
+
     @Test
     fun savesNonBlankNameAndClosesEditorAfterSuccess() = runOnUiThread {
         lifecycle.resume()

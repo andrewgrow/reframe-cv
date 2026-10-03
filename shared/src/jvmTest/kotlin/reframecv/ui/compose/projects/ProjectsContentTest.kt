@@ -2,16 +2,20 @@ package reframecv.ui.compose.projects
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
-import kotlin.time.Instant
 import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
+import reframecv.shared.generated.resources.action_delete
+import reframecv.shared.generated.resources.action_update
 import reframecv.shared.generated.resources.project_editor_create_title
+import reframecv.shared.generated.resources.project_editor_edit_title
+import reframecv.shared.generated.resources.project_name
 import reframecv.shared.generated.resources.projects_add
 import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
@@ -21,6 +25,24 @@ import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 
 class ProjectsContentTest {
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun opensUpdateDialogFromProjectNameAndLeavesDeleteWithoutAction() = runComposeUiTest {
+        val now = 1_000L
+        val project = Project(id = 1, name = "Android Developer", createdAt = now, updatedAt = now)
+        val component = TestProjectsComponent(initialState = UiState.Projects(listOf(project)))
+        setContent { ProjectsContent(component) }
+
+        onNodeWithText(project.name).performClick()
+        onNodeWithText(getTestString(Res.string.project_editor_edit_title)).assertIsDisplayed()
+        onNodeWithText(getTestString(Res.string.project_name)).assertTextContains(project.name)
+        onNodeWithText(getTestString(Res.string.action_update)).assertIsDisplayed()
+        onNodeWithText(getTestString(Res.string.action_delete)).performClick()
+        onNodeWithText(getTestString(Res.string.project_editor_edit_title)).assertIsDisplayed()
+        onNodeWithText(cancelLabel).performClick()
+        onNodeWithText(project.name).assertIsDisplayed()
+    }
+
     private val createTitle = getTestString(Res.string.project_editor_create_title)
     private val addProjectLabel = getTestString(Res.string.projects_add)
     private val cancelLabel = getTestString(Res.string.action_cancel)
@@ -28,7 +50,7 @@ class ProjectsContentTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun displaysSavedProjectsAndOpensCreationDialog() = runComposeUiTest {
-        val now = Instant.fromEpochMilliseconds(1_000L)
+        val now = 1_000L
         val project = Project(id = 1, name = "Android Developer", createdAt = now, updatedAt = now)
         setContent {
             ProjectsContent(TestProjectsComponent(initialState = UiState.Projects(listOf(project))))

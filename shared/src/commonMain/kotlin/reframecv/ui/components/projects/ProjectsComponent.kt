@@ -10,6 +10,7 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
+import reframecv.domain.models.project.Project
 import reframecv.ui.components.projects.editor.DefaultEditorComponent
 import reframecv.ui.components.projects.editor.EditorComponent
 import reframecv.ui.components.projects.editor.EditorSaveState
@@ -21,6 +22,7 @@ interface ProjectsComponent {
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
     fun onAddProject()
+    fun onProjectClick(project: Project)
 }
 
 class DefaultProjectsComponent(
@@ -35,16 +37,31 @@ class DefaultProjectsComponent(
         .also { it.accept(ProjectsIntent.LoadProjects) }
     override val uiState: Value<UiState> = bindStoreToLifecycle(stateStore, lifecycle)
 
-    private val editorNavigation = SlotNavigation<Unit>()
+    private sealed interface EditorConfiguration {
+        data object Create : EditorConfiguration
+        data class Update(val project: Project) : EditorConfiguration
+    }
+
+    private val editorNavigation = SlotNavigation<EditorConfiguration>()
     override val editorSlot: Value<ChildSlot<*, EditorComponent>> = childSlot(
         source = editorNavigation,
         serializer = null,
         handleBackButton = true,
-    ) { _, childContext ->
+    ) { configuration, childContext ->
+        val project = (configuration as? EditorConfiguration.Update)?.project
         DefaultEditorComponent(
             childContext,
             onClosed = { editorNavigation.dismiss() },
-            onSaved = { stateStore.accept(ProjectsIntent.CreateProject(it)) },
+            initialName = project?.name,
+            onSaved = { name ->
+                stateStore.accept(
+                    if (project == null) {
+                        ProjectsIntent.CreateProject(name)
+                    } else {
+                        ProjectsIntent.UpdateProject(project.id, name)
+                    },
+                )
+            },
         )
     }
 
@@ -63,6 +80,10 @@ class DefaultProjectsComponent(
     }
 
     override fun onAddProject() {
-        editorNavigation.activate(Unit)
+        editorNavigation.activate(EditorConfiguration.Create)
+    }
+
+    override fun onProjectClick(project: Project) {
+        editorNavigation.activate(EditorConfiguration.Update(project))
     }
 }

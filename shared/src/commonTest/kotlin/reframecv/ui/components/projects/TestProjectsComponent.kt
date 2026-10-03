@@ -3,6 +3,7 @@ package reframecv.ui.components.projects
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
+import reframecv.domain.models.project.Project
 import reframecv.ui.components.projects.editor.EditorComponent
 import reframecv.ui.components.projects.editor.TestEditorComponent
 
@@ -24,12 +25,17 @@ class TestProjectsComponent(
         onAddProjectClick()
     }
 
-    private fun createEditorSlot(): ChildSlot<Unit, EditorComponent> = ChildSlot(
-        child = Child.Created(
-            Unit,
-            TestEditorComponent {
-                editorSlot.value = ChildSlot<Unit, EditorComponent>()
-            },
-        ),
-    )
+    override fun onProjectClick(project: Project) {
+        editorSlot.value = createEditorSlot(project.name)
+    }
+
+    private fun createEditorSlot(initialName: String? = null): ChildSlot<Unit, EditorComponent> =
+        ChildSlot(
+            child = Child.Created(
+                Unit,
+                TestEditorComponent(initialName) {
+                    editorSlot.value = ChildSlot<Unit, EditorComponent>()
+                },
+            ),
+        )
 }

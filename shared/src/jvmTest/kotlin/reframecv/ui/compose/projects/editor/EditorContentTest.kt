@@ -14,7 +14,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_create
-import reframecv.shared.generated.resources.action_save
+import reframecv.shared.generated.resources.action_update
 import reframecv.shared.generated.resources.project_editor_edit_title
 import reframecv.shared.generated.resources.project_name
 import reframecv.testing.getTestString
@@ -27,7 +27,7 @@ private const val UPDATED_PROJECT_NAME = "Updated Test Project"
 class EditorContentTest {
     private val projectNameLabel = getTestString(Res.string.project_name)
     private val createLabel = getTestString(Res.string.action_create)
-    private val saveLabel = getTestString(Res.string.action_save)
+    private val saveLabel = getTestString(Res.string.action_update)
     private val editTitle = getTestString(Res.string.project_editor_edit_title)
 
     @Test

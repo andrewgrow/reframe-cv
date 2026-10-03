@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -60,16 +61,24 @@ fun ProjectsContent(component: ProjectsComponent) {
     val state by component.uiState.subscribeAsState()
     val editorSlot by component.editorSlot.subscribeAsState()
 
-    Box(Modifier.fillMaxSize().testTag(PROJECTS_SCREEN_TAG)) {
+    Box(
+        Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .testTag(PROJECTS_SCREEN_TAG),
+    ) {
         when (val currentState = state) {
             NoProjects -> NoProjectsContent(onAddProject = component::onAddProject)
 
             is UiState.Projects -> ProjectListContent(
                 currentState.projects,
                 component::onAddProject,
+                component::onProjectClick,
             )
 
-            UiState.LoadFailed -> Text(stringResource(Res.string.projects_load_error))
+            UiState.LoadFailed -> Text(
+                stringResource(Res.string.projects_load_error),
+                color = ReframeTheme.colorScheme.critical,
+            )
         }
 
         editorSlot.child?.instance?.let { EditorContent(it) }
@@ -135,7 +144,11 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
 }
 
 @Composable
-private fun ProjectListContent(projects: List<Project>, onAddProject: () -> Unit) {
+private fun ProjectListContent(
+    projects: List<Project>,
+    onAddProject: () -> Unit,
+    onProjectClick: (Project) -> Unit,
+) {
     Column(
         modifier = Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
@@ -146,7 +159,11 @@ private fun ProjectListContent(projects: List<Project>, onAddProject: () -> Unit
         Button(onClick = onAddProject) { Text(stringResource(Res.string.projects_add)) }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
             items(projects, key = { it.id }) { project ->
-                Text(project.name, color = MaterialTheme.colorScheme.onBackground)
+                Text(
+                    project.name,
+                    modifier = Modifier.clickable { onProjectClick(project) },
+                    color = MaterialTheme.colorScheme.onBackground,
+                )
             }
         }
     }

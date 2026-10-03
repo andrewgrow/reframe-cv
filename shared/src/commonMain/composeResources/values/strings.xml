@@ -5,10 +5,11 @@
     <string name="projects_help_hide">Hide project help</string>
     <string name="projects_help">A project is a workspace for your resumes. Keep everything in one project, or organize projects by seniority (Middle, Senior, Team Lead), specialization (Mobile, Full-stack, Backend), company (AWS, Google, Meta), or any other way that works for you.\n\nWe recommend starting with a project for your main role, such as “Android Developer”.</string>
     <string name="project_editor_create_title">Create project</string>
-    <string name="project_editor_edit_title">Edit project</string>
+    <string name="project_editor_edit_title">Update project</string>
     <string name="project_name">Project name</string>
     <string name="action_create">Create</string>
-    <string name="action_save">Save</string>
+    <string name="action_update">Update</string>
+    <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="project_save_error">Could not save the project. Please try again.</string>
     <string name="projects_load_error">Could not load projects. Please restart the application.</string>

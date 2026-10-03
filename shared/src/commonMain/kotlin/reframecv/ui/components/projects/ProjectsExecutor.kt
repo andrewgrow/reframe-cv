@@ -18,7 +18,14 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
     override fun executeIntent(intent: ProjectsIntent) {
         when (intent) {
             ProjectsIntent.LoadProjects -> observeProjects()
-            is ProjectsIntent.CreateProject -> createProject(intent.name)
+
+            is ProjectsIntent.CreateProject -> saveProject(intent.name) {
+                projectsRepository.createProject(it)
+            }
+
+            is ProjectsIntent.UpdateProject -> saveProject(intent.name) {
+                projectsRepository.updateProject(intent.id, it)
+            }
         }
     }
 
@@ -44,13 +51,13 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
         }
     }
 
-    private fun createProject(name: String) {
+    private fun saveProject(name: String, save: suspend (String) -> Unit) {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty() || saving?.isActive == true) return
         publish(ProjectsLabel.Saving)
         saving = scope.launch {
             try {
-                projectsRepository.createProject(trimmedName)
+                save(trimmedName)
                 publish(ProjectsLabel.Saved)
             } catch (exception: CancellationException) {
                 throw exception

@@ -1,18 +1,23 @@
 package reframecv.ui.components.projects
 
 import com.arkivanov.mvikotlin.core.store.Executor
+import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import reframecv.database.buildDatabase
 import reframecv.database.createDatabaseBuilder
+import reframecv.domain.models.project.Project
 import reframecv.repository.LocalProjectsRepository
+import reframecv.repository.ProjectsRepository
 import reframecv.ui.threading.runOnUiThread
 
 private typealias ProjectsCallbacks = Executor.Callbacks<UiState, UiState, Nothing, ProjectsLabel>
@@ -20,6 +25,31 @@ private typealias ProjectsCallbacks = Executor.Callbacks<UiState, UiState, Nothi
 class RealProjectsExecutorTest {
     @get:Rule
     val temporaryFolder = TemporaryFolder()
+
+    @Test
+    fun reportsLoadFailureWhenRepositoryObservationFails() = runBlocking {
+        val repository = object : ProjectsRepository {
+            override fun observeProjects() = flow<List<Project>> {
+                throw IllegalStateException("Database read failed")
+            }
+            override suspend fun createProject(name: String): Project = error("Unexpected create")
+            override suspend fun updateProject(id: Long, name: String) = error("Unexpected update")
+        }
+        val messages = Channel<UiState>(Channel.UNLIMITED)
+        val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
+        val executor = RealProjectsExecutor(repository)
+        try {
+            runOnUiThread {
+                executor.init(callbacks(messages, labels))
+                executor.executeIntent(ProjectsIntent.LoadProjects)
+            }
+            withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.LoadFailed, messages.receive())
+            }
+        } finally {
+            runOnUiThread { executor.dispose() }
+        }
+    }
 
     @Test
     fun savesTrimmedNamesAndObservesPersistedProjects() = runBlocking {
@@ -30,19 +60,10 @@ class RealProjectsExecutorTest {
         val executor = RealProjectsExecutor(LocalProjectsRepository(database.projectDao()))
         try {
             runOnUiThread {
-                executor.init(object : ProjectsCallbacks {
-                    override val state: UiState = UiState.NoProjects
-                    override fun onMessage(message: UiState) {
-                        messages.trySend(message)
-                    }
-                    override fun onLabel(label: ProjectsLabel) {
-                        labels.trySend(label)
-                    }
-                    override fun onAction(action: Nothing) = Unit
-                })
+                executor.init(callbacks(messages, labels))
                 executor.executeIntent(ProjectsIntent.LoadProjects)
             }
-            withTimeout(10_000L) {
+            withTimeout(10_000L.milliseconds) {
                 assertEquals(UiState.NoProjects, messages.receive())
                 runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("   ")) }
                 assertEquals(emptyList(), database.projectDao().observeAll().first())
@@ -58,19 +79,56 @@ class RealProjectsExecutorTest {
                     database.projectDao()
                         .findById(state.projects.single().id)?.toDomainModel(),
                 )
+                val original = state.projects.single()
+                runOnUiThread {
+                    executor.executeIntent(ProjectsIntent.UpdateProject(original.id, "   "))
+                }
+                assertEquals(original, database.projectDao().findById(original.id)?.toDomainModel())
+                runOnUiThread {
+                    executor.executeIntent(ProjectsIntent.UpdateProject(original.id, "  Backend  "))
+                }
+                assertEquals(ProjectsLabel.Saving, labels.receive())
+                assertEquals(ProjectsLabel.Saved, labels.receive())
+                val updated = (messages.receive() as UiState.Projects).projects.single()
+                assertEquals("Backend", updated.name)
+                assertEquals(original.id, updated.id)
+                assertEquals(original.createdAt, updated.createdAt)
+                assertEquals(original.parentId, updated.parentId)
+                assertEquals(updated, database.projectDao().findById(original.id)?.toDomainModel())
+                runOnUiThread {
+                    executor.executeIntent(ProjectsIntent.UpdateProject(-1, "Missing"))
+                }
+                assertEquals(ProjectsLabel.Saving, labels.receive())
+                assertEquals(ProjectsLabel.SaveFailed, labels.receive())
             }
         } finally {
             runOnUiThread { executor.dispose() }
             database.close()
         }
+        assertPersistedName(file, "Backend")
+    }
+
+    private suspend fun assertPersistedName(file: Path, expectedName: String) {
         val reopened = buildDatabase(createDatabaseBuilder(file))
         try {
             assertEquals(
-                "O'Reilly; DROP TABLE projects; --",
+                expectedName,
                 reopened.projectDao().observeAll().first().single().name,
             )
         } finally {
             reopened.close()
         }
     }
+
+    private fun callbacks(messages: Channel<UiState>, labels: Channel<ProjectsLabel>) =
+        object : ProjectsCallbacks {
+            override val state: UiState = UiState.NoProjects
+            override fun onMessage(message: UiState) {
+                messages.trySend(message)
+            }
+            override fun onLabel(label: ProjectsLabel) {
+                labels.trySend(label)
+            }
+            override fun onAction(action: Nothing) = Unit
+        }
 }

@@ -7,7 +7,6 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Instant
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -46,8 +45,8 @@ class AppDatabaseTest {
 
     private fun entity(name: String = PROJECT_NAME, updatedAt: Long = 1_000L) = ProjectEntity(
         name = name,
-        createdAtEpochMilliseconds = 500L,
-        updatedAtEpochMilliseconds = updatedAt,
+        createdAt = 500L,
+        updatedAt = updatedAt,
     )
 
     @Test
@@ -164,7 +163,7 @@ class AppDatabaseTest {
 
     @Test
     fun storesAndObservesProjects() = runBlocking {
-        val timestamp = Instant.fromEpochMilliseconds(1_000L)
+        val timestamp = 1_000L
         val project = Project(
             name = PROJECT_NAME,
             createdAt = timestamp,

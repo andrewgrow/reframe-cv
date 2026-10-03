@@ -21,11 +21,28 @@ import reframecv.shared.generated.resources.project_save_error
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.components.projects.editor.TestEditorComponent
+import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 private const val PROJECT_NAME = "Test Project"
 
 @OptIn(ExperimentalTestApi::class)
 class EditorContentScreenshotTest : GoldenScreenshotTest() {
+    @Test
+    fun failedProjectUpdateInLightThemeMatchesReference() = runDesktopComposeUiTest {
+        val component = TestEditorComponent(initialName = "Android Developer")
+        component.saveState.value = EditorSaveState.Failed
+        setAndCaptureGolden(this, captureTag = PROJECT_EDITOR_TAG, themeMode = ThemeMode.Light) {
+            EditorContent(component)
+        }
+    }
+
+    @Test
+    fun updateProjectMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this, captureTag = PROJECT_EDITOR_TAG) {
+            EditorContent(TestEditorComponent(initialName = "Android Developer"))
+        }
+    }
+
     @Test
     fun emptyProjectNameWithCancelFocusedMatchesReference() = runDesktopComposeUiTest {
         val projectNameLabel = getString(Res.string.project_name)

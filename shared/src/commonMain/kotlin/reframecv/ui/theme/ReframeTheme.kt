@@ -14,23 +14,29 @@ import androidx.compose.ui.graphics.Color
 private const val HINT_COLOR_LIGHT = 0xFF62606A
 private const val HINT_COLOR_DARK = 0xFFB9B2C3
 private const val BACKGROUND_COLOR_DARK = 0xFF211D29
+private const val CRITICAL_COLOR_LIGHT = 0xFFB3261E
+private const val CRITICAL_COLOR_DARK = 0xFFF2B8B5
 
 val hintColorLight = Color(HINT_COLOR_LIGHT)
 val hintColorDark = Color(HINT_COLOR_DARK)
+val criticalColorLight = Color(CRITICAL_COLOR_LIGHT)
+val criticalColorDark = Color(CRITICAL_COLOR_DARK)
 
 /** Material colors plus application-specific semantic colors. */
 @Immutable
-data class ReframeColorScheme(val material: ColorScheme, val hint: Color)
+data class ReframeColorScheme(val material: ColorScheme, val hint: Color, val critical: Color)
 
 private val lightReframeColorScheme = ReframeColorScheme(
     material = lightColorScheme().run {
         copy(background = primaryContainer, onBackground = onPrimaryContainer)
     },
     hint = hintColorLight,
+    critical = criticalColorLight,
 )
 private val darkReframeColorScheme = ReframeColorScheme(
     material = darkColorScheme(background = Color(BACKGROUND_COLOR_DARK)),
     hint = hintColorDark,
+    critical = criticalColorDark,
 )
 private val LocalReframeColorScheme = staticCompositionLocalOf { lightReframeColorScheme }
 

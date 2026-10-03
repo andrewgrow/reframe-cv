@@ -16,6 +16,9 @@ interface ProjectDao {
     @Update
     suspend fun update(project: ProjectEntity)
 
+    @Query("UPDATE projects SET name = :name, updated_at = :updatedAt WHERE id = :id")
+    suspend fun updateName(id: Long, name: String, updatedAt: Long): Int
+
     @Delete
     suspend fun delete(project: ProjectEntity)
 

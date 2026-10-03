@@ -1,12 +1,12 @@
 package reframecv.domain.models.project
 
-import kotlin.time.Instant
 import reframecv.domain.DomainModel
 
+/** Project timestamps are milliseconds since the Unix epoch. */
 data class Project(
     val id: Long = 0,
     val name: String,
-    val createdAt: Instant,
-    val updatedAt: Instant,
+    val createdAt: Long,
+    val updatedAt: Long,
     val parentId: Long? = null,
 ) : DomainModel

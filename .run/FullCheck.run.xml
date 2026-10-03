@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ReframeCV - Full Check" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="FullCheck" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
       <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -28,8 +28,6 @@
     <RunAsTest>false</RunAsTest>
     <GradleProfilingDisabled>false</GradleProfilingDisabled>
     <GradleCoverageDisabled>false</GradleCoverageDisabled>
-    <method v="2">
-      <option name="Gradle.BeforeRunTask" enabled="true" tasks="ktlintFormat" externalProjectPath="$PROJECT_DIR$" vmOptions="" scriptParameters="--no-parallel" />
-    </method>
+    <method v="2" />
   </configuration>
 </component>

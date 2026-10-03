@@ -8,14 +8,19 @@ class TestProjectsExecutor : ProjectsExecutor {
         private set
     var isDisposed = false
         private set
+    var lastIntent: ProjectsIntent? = null
+        private set
 
     override fun init(callbacks: Executor.Callbacks<UiState, UiState, Nothing, ProjectsLabel>) {
         this.callbacks = callbacks
     }
 
     override fun executeIntent(intent: ProjectsIntent) {
+        lastIntent = intent
         when (intent) {
-            is ProjectsIntent.CreateProject -> callbacks.onLabel(ProjectsLabel.Saved)
+            is ProjectsIntent.CreateProject, is ProjectsIntent.UpdateProject -> callbacks.onLabel(
+                ProjectsLabel.Saved,
+            )
 
             ProjectsIntent.LoadProjects -> {
                 loadCount++
