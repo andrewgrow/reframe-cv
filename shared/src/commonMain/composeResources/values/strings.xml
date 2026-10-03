@@ -12,5 +12,9 @@
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>
     <string name="project_save_error">Could not save the project. Please try again.</string>
+    <string name="project_delete_warning">Warning: deleting this project is permanent. All nested projects, settings, and records belonging to it will also be deleted. You may lose important data. This action cannot be undone.\n\nTo confirm, type DELETE below and click FULL DELETE THIS PROJECT.</string>
+    <string name="project_delete_confirmation">Type DELETE to confirm</string>
+    <string name="action_full_delete">FULL DELETE THIS PROJECT</string>
+    <string name="project_delete_error">Could not delete the project. Please try again.</string>
     <string name="projects_load_error">Could not load projects. Please restart the application.</string>
 </resources>

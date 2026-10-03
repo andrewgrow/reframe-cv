@@ -20,6 +20,43 @@ class ApplicationDependenciesTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun deletesProjectWithAllDescendantsAndPreservesOtherProjects() = runBlocking {
+        val file = temporaryFolder.root.toPath().resolve("delete.db")
+        val database = buildDatabase(createDatabaseBuilder(file))
+        var remainingId = 0L
+        try {
+            val dao = database.projectDao()
+            val repository = LocalProjectsRepository(dao)
+            val root = repository.createProject("Root")
+            remainingId = repository.createProject("Unrelated").id
+            val child = dao.insert(
+                ProjectEntity(name = "Child", createdAt = 1, updatedAt = 1, parentId = root.id),
+            )
+            dao.insert(
+                ProjectEntity(name = "Grandchild", createdAt = 1, updatedAt = 1, parentId = child),
+            )
+            dao.insert(
+                ProjectEntity(name = "Sibling", createdAt = 1, updatedAt = 1, parentId = root.id),
+            )
+            assertFailsWith<IllegalStateException> { repository.deleteProject(-1) }
+            assertEquals(5, repository.observeProjects().first().size)
+
+            repository.deleteProject(root.id)
+            assertEquals(remainingId, repository.observeProjects().first().single().id)
+        } finally {
+            database.close()
+        }
+        val reopened = buildDatabase(createDatabaseBuilder(file))
+        try {
+            assertEquals(remainingId, reopened.projectDao().observeAll().first().single().id)
+            LocalProjectsRepository(reopened.projectDao()).deleteProject(remainingId)
+            assertEquals(emptyList(), reopened.projectDao().observeAll().first())
+        } finally {
+            reopened.close()
+        }
+    }
+
+    @Test
     fun updatesOnlyNameAndTimestampAndRejectsBlankOrMissingProject() = runBlocking {
         val file = temporaryFolder.root.toPath().resolve("update.db")
         val database = buildDatabase(createDatabaseBuilder(file))

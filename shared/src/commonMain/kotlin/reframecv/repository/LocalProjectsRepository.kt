@@ -8,6 +8,8 @@ import reframecv.domain.models.project.Project
 import reframecv.shared.nowMillis
 
 class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepository {
+    override suspend fun deleteProject(id: Long) = projectDao.deleteSubtree(id)
+
     override suspend fun updateProject(id: Long, name: String) {
         val trimmedName = name.trim()
         require(trimmedName.isNotEmpty()) { "Project name must not be blank" }

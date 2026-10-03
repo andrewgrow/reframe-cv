@@ -9,6 +9,9 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
         override fun observeProjects() = projects
+        override suspend fun deleteProject(id: Long) {
+            projects.value = projects.value.filterNot { it.id == id }
+        }
         override suspend fun updateProject(id: Long, name: String) {
             projects.value = projects.value.map { project ->
                 if (project.id ==

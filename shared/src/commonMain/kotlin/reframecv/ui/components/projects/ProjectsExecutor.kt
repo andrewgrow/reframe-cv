@@ -26,6 +26,8 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
             is ProjectsIntent.UpdateProject -> saveProject(intent.name) {
                 projectsRepository.updateProject(intent.id, it)
             }
+
+            is ProjectsIntent.DeleteProject -> deleteProject(intent.id)
         }
     }
 
@@ -63,6 +65,21 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
                 throw exception
             } catch (_: Exception) {
                 publish(ProjectsLabel.SaveFailed)
+            }
+        }
+    }
+
+    private fun deleteProject(id: Long) {
+        if (saving?.isActive == true) return
+        publish(ProjectsLabel.Deleting)
+        saving = scope.launch {
+            try {
+                projectsRepository.deleteProject(id)
+                publish(ProjectsLabel.Deleted)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (_: Exception) {
+                publish(ProjectsLabel.DeleteFailed)
             }
         }
     }

@@ -18,6 +18,8 @@ class TestProjectsExecutor : ProjectsExecutor {
     override fun executeIntent(intent: ProjectsIntent) {
         lastIntent = intent
         when (intent) {
+            is ProjectsIntent.DeleteProject -> callbacks.onLabel(ProjectsLabel.Deleted)
+
             is ProjectsIntent.CreateProject, is ProjectsIntent.UpdateProject -> callbacks.onLabel(
                 ProjectsLabel.Saved,
             )

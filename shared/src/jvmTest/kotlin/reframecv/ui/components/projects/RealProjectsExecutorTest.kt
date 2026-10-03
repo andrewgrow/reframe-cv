@@ -27,8 +27,39 @@ class RealProjectsExecutorTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun deletesProjectAndReportsMissingProjectFailure() = runBlocking {
+        val database =
+            buildDatabase(createDatabaseBuilder(temporaryFolder.root.toPath().resolve("delete.db")))
+        val repository = LocalProjectsRepository(database.projectDao())
+        val project = repository.createProject("Android Developer")
+        val messages = Channel<UiState>(Channel.UNLIMITED)
+        val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
+        val executor = RealProjectsExecutor(repository)
+        try {
+            runOnUiThread {
+                executor.init(callbacks(messages, labels))
+                executor.executeIntent(ProjectsIntent.LoadProjects)
+            }
+            withTimeout(10_000L.milliseconds) {
+                assertEquals(listOf(project), (messages.receive() as UiState.Projects).projects)
+                runOnUiThread { executor.executeIntent(ProjectsIntent.DeleteProject(project.id)) }
+                assertEquals(ProjectsLabel.Deleting, labels.receive())
+                assertEquals(ProjectsLabel.Deleted, labels.receive())
+                assertEquals(UiState.NoProjects, messages.receive())
+                runOnUiThread { executor.executeIntent(ProjectsIntent.DeleteProject(project.id)) }
+                assertEquals(ProjectsLabel.Deleting, labels.receive())
+                assertEquals(ProjectsLabel.DeleteFailed, labels.receive())
+            }
+        } finally {
+            runOnUiThread { executor.dispose() }
+            database.close()
+        }
+    }
+
+    @Test
     fun reportsLoadFailureWhenRepositoryObservationFails() = runBlocking {
         val repository = object : ProjectsRepository {
+            override suspend fun deleteProject(id: Long) = error("Unexpected delete")
             override fun observeProjects() = flow<List<Project>> {
                 throw IllegalStateException("Database read failed")
             }

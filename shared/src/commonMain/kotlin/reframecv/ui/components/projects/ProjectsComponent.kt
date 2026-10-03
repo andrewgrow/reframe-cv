@@ -13,6 +13,7 @@ import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.domain.models.project.Project
 import reframecv.ui.components.projects.editor.DefaultEditorComponent
 import reframecv.ui.components.projects.editor.EditorComponent
+import reframecv.ui.components.projects.editor.EditorDeleteState
 import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
@@ -53,6 +54,7 @@ class DefaultProjectsComponent(
             childContext,
             onClosed = { editorNavigation.dismiss() },
             initialName = project?.name,
+            onDeleted = { project?.let { stateStore.accept(ProjectsIntent.DeleteProject(it.id)) } },
             onSaved = { name ->
                 stateStore.accept(
                     if (project == null) {
@@ -71,8 +73,20 @@ class DefaultProjectsComponent(
                 val editor = editorSlot.value.child?.instance as? DefaultEditorComponent
                 when (label) {
                     ProjectsLabel.Saving -> editor?.saveState?.value = EditorSaveState.Saving
+
                     ProjectsLabel.Saved -> editorNavigation.dismiss()
+
                     ProjectsLabel.SaveFailed -> editor?.saveState?.value = EditorSaveState.Failed
+
+                    ProjectsLabel.Deleting ->
+                        editor?.deleteState?.value =
+                            EditorDeleteState.Deleting
+
+                    ProjectsLabel.Deleted -> editorNavigation.dismiss()
+
+                    ProjectsLabel.DeleteFailed ->
+                        editor?.deleteState?.value =
+                            EditorDeleteState.Failed
                 }
             },
         )

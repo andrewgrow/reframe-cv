@@ -19,6 +19,28 @@ import reframecv.ui.threading.runOnUiThread
 
 class DefaultProjectsComponentTest : ComponentTest() {
     @Test
+    fun deletesAfterCaseInsensitiveConfirmationAndClosesEditorAfterSuccess() = runOnUiThread {
+        lifecycle.resume()
+        val executor = TestProjectsExecutor()
+        val component =
+            DefaultProjectsComponent(appComponentContext(), executorFactory = { executor })
+        val project = Project(id = 7, name = "Android Developer", createdAt = 1, updatedAt = 1)
+        component.onProjectClick(project)
+        val editor = assertNotNull(component.editorSlot.value.child).instance
+        listOf("", "DELET", " DELETE", "DELETE ").forEach { editor.onDelete(it) }
+        assertNotNull(component.editorSlot.value.child)
+        assertEquals(ProjectsIntent.LoadProjects, executor.lastIntent)
+        editor.onDelete("dElEtE")
+        assertEquals(ProjectsIntent.DeleteProject(project.id), executor.lastIntent)
+        assertNull(component.editorSlot.value.child)
+
+        component.onAddProject()
+        assertNotNull(component.editorSlot.value.child).instance.onDelete("DELETE")
+        assertNotNull(component.editorSlot.value.child)
+        assertEquals(ProjectsIntent.DeleteProject(project.id), executor.lastIntent)
+    }
+
+    @Test
     fun opensProjectForUpdateAndSavesItsIdWithTrimmedName() = runOnUiThread {
         lifecycle.resume()
         val executor = TestProjectsExecutor()
