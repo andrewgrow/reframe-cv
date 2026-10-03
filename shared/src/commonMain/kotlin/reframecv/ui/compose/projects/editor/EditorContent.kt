@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects.editor
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -16,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
@@ -24,7 +26,9 @@ import reframecv.shared.generated.resources.action_save
 import reframecv.shared.generated.resources.project_editor_create_title
 import reframecv.shared.generated.resources.project_editor_edit_title
 import reframecv.shared.generated.resources.project_name
+import reframecv.shared.generated.resources.project_save_error
 import reframecv.ui.components.projects.editor.EditorComponent
+import reframecv.ui.components.projects.editor.EditorSaveState
 
 internal const val PROJECT_EDITOR_TAG = "projects.editor"
 
@@ -32,8 +36,9 @@ internal const val PROJECT_EDITOR_TAG = "projects.editor"
 fun EditorContent(
     component: EditorComponent,
     initialName: String? = null,
-    onSave: (String) -> Unit = { component.onClose() },
+    onSave: (String) -> Unit = component::onSave,
 ) {
+    val saveState by component.saveState.subscribeAsState()
     var name by rememberSaveable(initialName) { mutableStateOf(initialName.orEmpty()) }
     val focusRequester = remember { FocusRequester() }
     val isEditing = initialName != null
@@ -55,25 +60,34 @@ fun EditorContent(
         modifier = Modifier.testTag(PROJECT_EDITOR_TAG),
         title = { Text(title) },
         text = {
-            OutlinedTextField(
-                value = name,
-                onValueChange = { name = it },
-                modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-                label = { Text(projectNameLabel) },
-                singleLine = true,
-            )
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+                    label = { Text(projectNameLabel) },
+                    singleLine = true,
+                    enabled = saveState != EditorSaveState.Saving,
+                )
+                if (saveState == EditorSaveState.Failed) {
+                    Text(stringResource(Res.string.project_save_error))
+                }
+            }
             LaunchedEffect(Unit) { focusRequester.requestFocus() }
         },
         confirmButton = {
             TextButton(
                 onClick = { onSave(name.trim()) },
-                enabled = name.isNotBlank(),
+                enabled = name.isNotBlank() && saveState != EditorSaveState.Saving,
             ) {
                 Text(confirmLabel)
             }
         },
         dismissButton = {
-            TextButton(onClick = component::onClose) {
+            TextButton(
+                onClick = component::onClose,
+                enabled = saveState != EditorSaveState.Saving,
+            ) {
                 Text(cancelLabel)
             }
         },

@@ -30,12 +30,12 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.decompose)
             implementation(libs.decompose.extensionsCompose)
-            implementation(libs.mvikotlin.core)
+            api(libs.mvikotlin.core)
             implementation(libs.mvikotlin.main)
-            implementation(libs.mvikotlin.coroutines)
+            api(libs.mvikotlin.coroutines)
             implementation(libs.kotlinx.coroutinesCore)
             api(libs.kotlinx.datetime)
-            implementation(libs.room.runtime)
+            api(libs.room.runtime)
             implementation(libs.sqlite.bundled)
         }
         commonTest.dependencies {

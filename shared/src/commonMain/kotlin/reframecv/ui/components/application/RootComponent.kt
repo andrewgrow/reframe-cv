@@ -1,12 +1,12 @@
 package reframecv.ui.components.application
 
-import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.value.Value
 import reframecv.ui.components.projects.DefaultProjectsComponent
 import reframecv.ui.components.projects.ProjectsComponent
+import reframecv.ui.context.AppComponentContext
 
 interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
@@ -16,9 +16,9 @@ interface RootComponent {
     }
 }
 
-class DefaultRootComponent(componentContext: ComponentContext) :
+class DefaultRootComponent(componentContext: AppComponentContext) :
     RootComponent,
-    ComponentContext by componentContext {
+    AppComponentContext by componentContext {
     private val navigation = StackNavigation<Configuration>()
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
@@ -31,7 +31,7 @@ class DefaultRootComponent(componentContext: ComponentContext) :
 
     private fun createChild(
         configuration: Configuration,
-        componentContext: ComponentContext,
+        componentContext: AppComponentContext,
     ): RootComponent.Child = when (configuration) {
         Configuration.Projects -> RootComponent.Child.Projects(
             DefaultProjectsComponent(componentContext),

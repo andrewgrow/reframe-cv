@@ -1,6 +1,5 @@
 package reframecv.ui.components.projects
 
-import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.Lifecycle
 import com.arkivanov.essenty.lifecycle.LifecycleOwner
 import com.arkivanov.essenty.lifecycle.destroy
@@ -19,10 +18,25 @@ import reframecv.ui.threading.runOnUiThread
 
 class DefaultProjectsComponentTest : ComponentTest() {
     @Test
+    fun savesNonBlankNameAndClosesEditorAfterSuccess() = runOnUiThread {
+        lifecycle.resume()
+        val component = DefaultProjectsComponent(
+            appComponentContext(),
+            executorFactory = ::TestProjectsExecutor,
+        )
+        component.onAddProject()
+        val editor = assertNotNull(component.editorSlot.value.child).instance
+        editor.onSave("   ")
+        assertNotNull(component.editorSlot.value.child)
+        editor.onSave("  Android Developer  ")
+        assertNull(component.editorSlot.value.child)
+    }
+
+    @Test
     fun opensClosesAndRecreatesEditorWithChildLifecycle() = runOnUiThread {
         lifecycle.resume()
         val component = DefaultProjectsComponent(
-            DefaultComponentContext(lifecycle),
+            appComponentContext(),
             executorFactory = ::TestProjectsExecutor,
         )
         assertNull(component.editorSlot.value.child)
@@ -54,7 +68,7 @@ class DefaultProjectsComponentTest : ComponentTest() {
             val factory = RecordingStoreFactory()
             val executor = TestProjectsExecutor()
             val component = DefaultProjectsComponent(
-                componentContext = DefaultComponentContext(lifecycle),
+                componentContext = appComponentContext(),
                 storeFactory = factory,
                 executorFactory = { executor },
             )

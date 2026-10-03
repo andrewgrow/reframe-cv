@@ -6,12 +6,15 @@ import androidx.compose.ui.window.rememberWindowState
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.extensions.compose.lifecycle.LifecycleController
 import com.arkivanov.essenty.lifecycle.LifecycleRegistry
+import com.arkivanov.essenty.lifecycle.destroy
 import io.klogging.config.ANSI_INFO
 import io.klogging.config.loggingConfiguration
 import io.klogging.noCoLogger
+import reframecv.dependencies.DefaultApplicationDependencies
 import reframecv.ui.components.application.DefaultRootComponent
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.compose.application.RootContent
+import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.theme.ReframeTheme
 import reframecv.ui.threading.runOnUiThread
 
@@ -20,12 +23,19 @@ fun main() {
     loggingConfiguration { ANSI_INFO() }
     noCoLogger("App").info("Application started")
 
+    val dependencies = DefaultApplicationDependencies()
     val lifecycle = LifecycleRegistry()
-    val context = DefaultComponentContext(lifecycle = lifecycle)
-    val rootComponent = runOnUiThread {
-        DefaultRootComponent(componentContext = context)
+    try {
+        val rootComponent = runOnUiThread {
+            val context =
+                DefaultAppComponentContext(DefaultComponentContext(lifecycle), dependencies)
+            DefaultRootComponent(context)
+        }
+        runApplication(rootComponent, lifecycle)
+    } finally {
+        runOnUiThread { lifecycle.destroy() }
+        dependencies.close()
     }
-    runApplication(rootComponent, lifecycle)
 }
 
 // Starts the shared application root and hosts its Compose content.

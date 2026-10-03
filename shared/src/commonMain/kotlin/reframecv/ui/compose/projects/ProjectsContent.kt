@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -35,13 +37,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.projects_add
 import reframecv.shared.generated.resources.projects_empty
 import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
+import reframecv.shared.generated.resources.projects_load_error
 import reframecv.ui.components.projects.ProjectsComponent
+import reframecv.ui.components.projects.UiState
 import reframecv.ui.components.projects.UiState.NoProjects
 import reframecv.ui.compose.projects.editor.EditorContent
 import reframecv.ui.theme.ReframeTheme
@@ -56,8 +61,15 @@ fun ProjectsContent(component: ProjectsComponent) {
     val editorSlot by component.editorSlot.subscribeAsState()
 
     Box(Modifier.fillMaxSize().testTag(PROJECTS_SCREEN_TAG)) {
-        when (state) {
+        when (val currentState = state) {
             NoProjects -> NoProjectsContent(onAddProject = component::onAddProject)
+
+            is UiState.Projects -> ProjectListContent(
+                currentState.projects,
+                component::onAddProject,
+            )
+
+            UiState.LoadFailed -> Text(stringResource(Res.string.projects_load_error))
         }
 
         editorSlot.child?.instance?.let { EditorContent(it) }
@@ -118,6 +130,24 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
         }
         Button(onClick = onAddProject) {
             Text(addProjectLabel)
+        }
+    }
+}
+
+@Composable
+private fun ProjectListContent(projects: List<Project>, onAddProject: () -> Unit) {
+    Column(
+        modifier = Modifier.fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .safeContentPadding()
+            .padding(Spacing.medium),
+        verticalArrangement = Arrangement.spacedBy(Spacing.medium),
+    ) {
+        Button(onClick = onAddProject) { Text(stringResource(Res.string.projects_add)) }
+        LazyColumn(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+            items(projects, key = { it.id }) { project ->
+                Text(project.name, color = MaterialTheme.colorScheme.onBackground)
+            }
         }
     }
 }

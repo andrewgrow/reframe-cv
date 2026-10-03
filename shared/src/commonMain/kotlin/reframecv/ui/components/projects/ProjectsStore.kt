@@ -5,15 +5,15 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.ui.components.projects.UiState.NoProjects
 
-internal interface ProjectsStore : Store<ProjectsIntent, UiState, Nothing>
+internal interface ProjectsStore : Store<ProjectsIntent, UiState, ProjectsLabel>
 
 private const val PROJECTS_STORE_NAME = "ProjectsStore"
 internal fun createProjectsStore(
     storeFactory: StoreFactory,
-    executorFactory: () -> ProjectsExecutor = ::RealProjectsExecutor,
+    executorFactory: () -> ProjectsExecutor,
 ): ProjectsStore = object :
     ProjectsStore,
-    Store<ProjectsIntent, UiState, Nothing> by storeFactory.create(
+    Store<ProjectsIntent, UiState, ProjectsLabel> by storeFactory.create(
         name = PROJECTS_STORE_NAME,
         initialState = NoProjects,
         executorFactory = executorFactory,

@@ -10,4 +10,6 @@
     <string name="action_create">Create</string>
     <string name="action_save">Save</string>
     <string name="action_cancel">Cancel</string>
+    <string name="project_save_error">Could not save the project. Please try again.</string>
+    <string name="projects_load_error">Could not load projects. Please restart the application.</string>
 </resources>

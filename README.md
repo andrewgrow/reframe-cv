@@ -94,6 +94,9 @@ Existing ReframeCV data is not migrated automatically.
 
 ## Running tests
 
+For a complete local run from Android Studio, select **ReframeCV - Full Check** in the toolbar. It clears JVM test outputs, applies `ktlintFormat`, checks formatting and Detekt, runs all tests including screenshot verification, generates HTML/XML coverage reports, and verifies the coverage threshold. It runs without parallel task execution or the build cache. This configuration modifies source formatting; review the diff afterward. Screenshot references are verified, not overwritten.
+
+
 Use the run button in your IDE's editor gutter, or run all test suites at once from the project root:
 
 ```shell
@@ -170,12 +173,18 @@ To run formatting checks, static analysis, all tests, and the coverage check tog
 
 Open `build/reports/kover/html/index.html` for the HTML report. The XML report is at `build/reports/kover/report.xml`. The initial minimum is 75% line coverage. Generated Room implementations and Compose resources are excluded; application code, including the desktop entry point, remains included. Add behavioral tests alongside new application logic.
 
-## Running opencode
+## Help and tricks
 
-Open a terminal in the project root and run:
+Running opencode: Open a terminal in the project root and run:
 
 ```shell
 opencode
+```
+
+Open the database folder in Finder on MacOS and looking up to `reframe-cv.db`:
+
+```shell
+open "$HOME/Library/Application Support/ReframeCV"
 ```
 
 ## License
