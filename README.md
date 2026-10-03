@@ -1,8 +1,8 @@
-# Reframe CV
+# ReframeCV
 
 Look at your resume from a new angle.
 
-Reframe CV is a local desktop application for managing your resumes within projects. Store, create, rewrite, and tailor resumes to job opportunities while keeping related versions together.
+ReframeCV is a local desktop application for managing your resumes within projects. Store, create, rewrite, and tailor resumes to job opportunities while keeping related versions together.
 
 ## Projects first
 
@@ -63,7 +63,7 @@ This is a Kotlin Multiplatform project targeting Desktop (JVM).
 
 ## Running the application
 
-In Android Studio, select the shared **Reframe CV** run configuration in the toolbar and click Run. The configuration is stored in `.run/ReframeCV.run.xml` and runs `:desktopApp:run`. You can also use one of these commands:
+In Android Studio, select the shared **ReframeCV** run configuration in the toolbar and click Run. The configuration is stored in `.run/ReframeCV.run.xml` and runs `:desktopApp:run`. You can also use one of these commands:
 
 - Hot reload: `./gradlew :desktopApp:hotRun --auto`
 - Standard run: `./gradlew :desktopApp:run`
@@ -84,13 +84,13 @@ open desktopApp/build/compose/binaries/main/app/ReframeCV.app
 
 ## Local storage
 
-Reframe CV stores its database as `reframe-cv.db` in its own application data directory:
+ReframeCV stores its database as `reframe-cv.db` in its own application data directory:
 
 - macOS: `~/Library/Application Support/ReframeCV/`.
 - Windows: `%APPDATA%/ReframeCV/`.
 - Linux: `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset.
 
-Existing Reframe CV data is not migrated automatically.
+Existing ReframeCV data is not migrated automatically.
 
 ## Running tests
 
@@ -180,4 +180,4 @@ opencode
 
 ## License
 
-Reframe CV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
+ReframeCV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.

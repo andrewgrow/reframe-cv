@@ -8,4 +8,5 @@ data class Project(
     val name: String,
     val createdAt: Instant,
     val updatedAt: Instant,
+    val parentId: Long? = null,
 ) : DomainModel

@@ -51,6 +51,43 @@ class AppDatabaseTest {
     )
 
     @Test
+    fun storesProjectHierarchyAndMapsParentId() = runBlocking {
+        val dao = database.projectDao()
+        val rootId = dao.insert(entity())
+        val child = entity("Child").copy(parentId = rootId)
+        val childId = dao.insert(child)
+        val siblingId = dao.insert(entity("Sibling").copy(parentId = rootId))
+        val grandchild = entity("Grandchild").copy(parentId = childId)
+        val grandchildId = dao.insert(grandchild)
+
+        assertNull(dao.findById(rootId)?.parentId)
+        assertEquals(rootId, dao.findById(childId)?.parentId)
+        assertEquals(rootId, dao.findById(siblingId)?.parentId)
+        assertEquals(childId, dao.findById(grandchildId)?.parentId)
+        val storedChild = requireNotNull(dao.findById(childId))
+        assertEquals(rootId, storedChild.toDomainModel().parentId)
+        assertEquals(storedChild, ProjectEntity.fromDomainModel(storedChild.toDomainModel()))
+    }
+
+    @Test
+    fun rejectsMissingParentAndDeletingParentWithChildren() = runBlocking {
+        val dao = database.projectDao()
+        assertFailsWith<SQLiteException> {
+            dao.insert(entity().copy(parentId = 99L))
+        }
+        val root = entity()
+        val rootId = dao.insert(root)
+        val child = entity("Child").copy(parentId = rootId)
+        val childId = dao.insert(child)
+
+        assertFailsWith<SQLiteException> { dao.delete(root.copy(id = rootId)) }
+        assertEquals(rootId, dao.findById(childId)?.parentId)
+        dao.delete(child.copy(id = childId))
+        dao.delete(root.copy(id = rootId))
+        assertNull(dao.findById(rootId))
+    }
+
+    @Test
     fun updatesDeletesAndReturnsNullForMissingProject() = runBlocking {
         val dao = database.projectDao()
         assertNull(dao.findById(99L))
