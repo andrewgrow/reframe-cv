@@ -31,6 +31,10 @@ class DefaultRootComponentTest : ComponentTest() {
             val editorContext = editor as AppComponentContext
             assertSame(dependencies, editorContext.dependencies)
             assertNotSame(childContext.lifecycle, editorContext.lifecycle)
+            repeat(2) { root.onProjectsList() }
+            assertSame(child, root.childStack.value.active.instance)
+            assertTrue(root.childStack.value.backStack.isEmpty())
+            assertSame(editor, child.component.editorSlot.value.child?.instance)
         }
     }
 }

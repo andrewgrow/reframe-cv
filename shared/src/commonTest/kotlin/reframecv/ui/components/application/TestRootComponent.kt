@@ -6,8 +6,11 @@ import com.arkivanov.decompose.value.Value
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
 
-class TestRootComponent(projectsComponent: ProjectsComponent = TestProjectsComponent()) :
-    RootComponent {
+class TestRootComponent(
+    projectsComponent: ProjectsComponent = TestProjectsComponent(),
+    private val onProjectsListClick: () -> Unit = {},
+) : RootComponent {
+    override fun onProjectsList() = onProjectsListClick()
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = MutableValue(
         ChildStack(
             configuration = Unit,

@@ -1,4 +1,5 @@
 <resources>
+    <string name="navigation_projects_list">Projects List</string>
     <string name="projects_empty">You have not any projects yet</string>
     <string name="projects_add">Add Project</string>
     <string name="projects_help_show">What is a project?</string>
