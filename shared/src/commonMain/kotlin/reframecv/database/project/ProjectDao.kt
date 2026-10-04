@@ -5,6 +5,7 @@ import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
+import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -12,6 +13,23 @@ import kotlinx.coroutines.flow.Flow
 interface ProjectDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(project: ProjectEntity): Long
+
+    @Transaction
+    suspend fun insertWithParentMode(project: ProjectEntity): Long {
+        project.parentId?.let { parentId ->
+            val updatedRows = markAsContainer(parentId, project.createdAt)
+            check(updatedRows == 1) {
+                "Parent project is missing, deleted, or configured as a workspace"
+            }
+        }
+        return insert(project)
+    }
+
+    @Query(
+        "UPDATE projects SET mode = 'Container', updated_at = :updatedAt " +
+            "WHERE id = :id AND deleted_at IS NULL AND mode IN ('Unconfigured', 'Container')",
+    )
+    suspend fun markAsContainer(id: Long, updatedAt: Long): Int
 
     @Update
     suspend fun update(project: ProjectEntity)

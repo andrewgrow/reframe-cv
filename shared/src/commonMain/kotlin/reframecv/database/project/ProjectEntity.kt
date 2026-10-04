@@ -8,6 +8,7 @@ import androidx.room3.PrimaryKey
 import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.domain.models.project.Project
+import reframecv.domain.models.project.ProjectMode
 
 @Entity(
     tableName = "projects",
@@ -33,6 +34,8 @@ data class ProjectEntity(
     val parentId: Long? = null,
     @ColumnInfo(name = "deleted_at")
     val deletedAt: Long? = null,
+    @ColumnInfo(defaultValue = "'Unconfigured'")
+    val mode: ProjectMode = ProjectMode.Unconfigured,
 ) : DatabaseModel<Project> {
     override fun toDomainModel() = Project(
         id = id,
@@ -41,6 +44,7 @@ data class ProjectEntity(
         updatedAt = updatedAt,
         parentId = parentId,
         deletedAt = deletedAt,
+        mode = mode,
     )
 
     companion object : DatabaseModelFactory<Project, ProjectEntity> {
@@ -51,6 +55,7 @@ data class ProjectEntity(
             updatedAt = domainModel.updatedAt,
             parentId = domainModel.parentId,
             deletedAt = domainModel.deletedAt,
+            mode = domainModel.mode,
         )
     }
 }

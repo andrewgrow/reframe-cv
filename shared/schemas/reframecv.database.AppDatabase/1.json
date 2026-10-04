@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "d2a4d912afa32d48d25ea83a2528d200",
+    "identityHash": "f84ccddea3d96dbffa4e09c79c17a891",
     "entities": [
       {
         "tableName": "projects",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `parent_id` INTEGER, `deleted_at` INTEGER, FOREIGN KEY(`parent_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `parent_id` INTEGER, `deleted_at` INTEGER, `mode` TEXT NOT NULL DEFAULT 'Unconfigured', FOREIGN KEY(`parent_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
         "fields": [
           {
             "fieldPath": "id",
@@ -41,6 +41,13 @@
             "fieldPath": "deletedAt",
             "columnName": "deleted_at",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "mode",
+            "columnName": "mode",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'Unconfigured'"
           }
         ],
         "primaryKey": {
@@ -77,7 +84,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'd2a4d912afa32d48d25ea83a2528d200')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f84ccddea3d96dbffa4e09c79c17a891')"
     ]
   }
 }

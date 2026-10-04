@@ -33,7 +33,7 @@ class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepo
         val project =
             Project(name = trimmedName, createdAt = now, updatedAt = now, parentId = parentId)
         val entity = ProjectEntity.fromDomainModel(project)
-        val id = projectDao.insert(entity)
+        val id = projectDao.insertWithParentMode(entity)
         return entity.copy(id = id).toDomainModel()
     }
 }

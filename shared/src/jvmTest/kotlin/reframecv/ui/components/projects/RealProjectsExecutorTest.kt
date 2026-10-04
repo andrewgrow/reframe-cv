@@ -18,6 +18,7 @@ import org.junit.rules.TemporaryFolder
 import reframecv.database.buildDatabase
 import reframecv.database.createDatabaseBuilder
 import reframecv.domain.models.project.Project
+import reframecv.domain.models.project.ProjectMode
 import reframecv.repository.LocalProjectsRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.ui.threading.runOnUiThread
@@ -94,7 +95,9 @@ class RealProjectsExecutorTest {
                         it.id
                     }.toSet(),
                 )
-                assertEquals(listOf(child), repository.observeProjects(parent.id).first())
+                val children = repository.observeProjects(parent.id).first()
+                assertEquals(listOf(child.id), children.map { it.id })
+                assertEquals(ProjectMode.Container, children.single().mode)
                 assertEquals(listOf(grandchild), repository.observeProjects(child.id).first())
                 assertEquals(listOf(sibling), repository.observeProjects(other.id).first())
                 repository.deleteProject(child.id)
