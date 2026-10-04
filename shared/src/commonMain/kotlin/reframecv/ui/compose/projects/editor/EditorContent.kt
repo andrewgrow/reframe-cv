@@ -1,77 +1,27 @@
 package reframecv.ui.compose.projects.editor
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextRange
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.action_cancel
-import reframecv.shared.generated.resources.action_create
-import reframecv.shared.generated.resources.action_delete
-import reframecv.shared.generated.resources.action_full_delete
-import reframecv.shared.generated.resources.action_update
-import reframecv.shared.generated.resources.project_delete_confirmation
-import reframecv.shared.generated.resources.project_delete_error
-import reframecv.shared.generated.resources.project_delete_warning
 import reframecv.shared.generated.resources.project_editor_create_title
 import reframecv.shared.generated.resources.project_editor_edit_title
-import reframecv.shared.generated.resources.project_name
-import reframecv.shared.generated.resources.project_save_error
 import reframecv.ui.components.projects.editor.EditorComponent
 import reframecv.ui.components.projects.editor.EditorDeleteState
 import reframecv.ui.components.projects.editor.EditorSaveState
-import reframecv.ui.components.projects.editor.isDeleteConfirmation
-import reframecv.ui.theme.ReframeTheme
 
 internal const val PROJECT_EDITOR_TAG = "projects.editor"
-
-private enum class EditorActionMode { Create, Update, ConfirmDeletion }
-
-private class EditorFocusOrder {
-    val name = FocusRequester()
-    val update = FocusRequester()
-    val cancel = FocusRequester()
-    val delete = FocusRequester()
-}
 
 @Composable
 fun EditorContent(
@@ -129,207 +79,4 @@ fun EditorContent(
             )
         },
     )
-}
-
-@Composable
-private fun EditorActions(
-    mode: EditorActionMode,
-    name: String,
-    focusOrder: EditorFocusOrder,
-    isBusy: Boolean,
-    onSave: (String) -> Unit,
-    onClose: () -> Unit,
-    onDelete: () -> Unit,
-) {
-    val confirmLabel = stringResource(
-        if (mode == EditorActionMode.Create) Res.string.action_create else Res.string.action_update,
-    )
-    val cancelLabel = stringResource(Res.string.action_cancel)
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
-    ) {
-        EditorDeleteAction(mode, focusOrder, isBusy, onDelete)
-        Spacer(Modifier.weight(1f))
-        TextButton(
-            modifier = editorActionFocus(
-                focusOrder.cancel,
-                focusOrder.delete,
-                if (name.isNotBlank()) focusOrder.update else focusOrder.name,
-                mode,
-            ),
-            onClick = onClose,
-            enabled = !isBusy,
-            contentPadding = ReframeTheme.tokens.textButtonContentPadding,
-        ) {
-            Text(cancelLabel)
-        }
-        AnimatedVisibility(
-            visible = mode != EditorActionMode.ConfirmDeletion,
-            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
-            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
-        ) {
-            TextButton(
-                contentPadding = ReframeTheme.tokens.textButtonContentPadding,
-                modifier = editorActionFocus(
-                    focusOrder.update,
-                    focusOrder.cancel,
-                    focusOrder.name,
-                    mode,
-                ),
-                onClick = { onSave(name.trim()) },
-                enabled = name.isNotBlank() && !isBusy && mode != EditorActionMode.ConfirmDeletion,
-            ) {
-                Text(confirmLabel)
-            }
-        }
-    }
-}
-
-@Composable
-private fun EditorDeleteAction(
-    mode: EditorActionMode,
-    focusOrder: EditorFocusOrder,
-    isBusy: Boolean,
-    onDelete: () -> Unit,
-) {
-    AnimatedVisibility(
-        visible = mode == EditorActionMode.Update,
-        enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
-        exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
-    ) {
-        TextButton(
-            contentPadding = ReframeTheme.tokens.textButtonContentPadding,
-            modifier = editorActionFocus(
-                focusOrder.delete,
-                focusOrder.name,
-                focusOrder.cancel,
-                mode,
-            ),
-            onClick = onDelete,
-            enabled = !isBusy && mode == EditorActionMode.Update,
-            colors = ButtonDefaults.textButtonColors(
-                contentColor = ReframeTheme.colorScheme.critical,
-            ),
-        ) {
-            Text(stringResource(Res.string.action_delete))
-        }
-    }
-}
-
-private fun editorActionFocus(
-    requester: FocusRequester,
-    next: FocusRequester,
-    previous: FocusRequester,
-    mode: EditorActionMode,
-): Modifier = Modifier.focusRequester(requester).focusProperties {
-    if (mode == EditorActionMode.Update) {
-        this.next = next
-        this.previous = previous
-    }
-}
-
-@Composable
-private fun EditorFields(
-    component: EditorComponent,
-    name: TextFieldValue,
-    onNameChange: (TextFieldValue) -> Unit,
-    focusOrder: EditorFocusOrder,
-    mode: EditorActionMode,
-    onSave: (String) -> Unit,
-) {
-    val saveState by component.saveState.subscribeAsState()
-    val deleteState by component.deleteState.subscribeAsState()
-    val isBusy = saveState == EditorSaveState.Saving || deleteState == EditorDeleteState.Deleting
-    Column(Modifier.verticalScroll(rememberScrollState())) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = onNameChange,
-            modifier = Modifier.fillMaxWidth().focusRequester(focusOrder.name)
-                .focusProperties {
-                    if (mode == EditorActionMode.Update) {
-                        next = if (name.text.isNotBlank()) focusOrder.update else focusOrder.cancel
-                        previous = focusOrder.delete
-                    }
-                }
-                .onFocusChanged {
-                    if (it.isFocused) {
-                        onNameChange(
-                            name.copy(selection = TextRange(name.text.length)),
-                        )
-                    }
-                },
-            label = { Text(stringResource(Res.string.project_name)) },
-            singleLine = true,
-            enabled = !isBusy,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = {
-                if (name.text.isNotBlank() && !isBusy && mode != EditorActionMode.ConfirmDeletion) {
-                    onSave(name.text.trim())
-                }
-            }),
-        )
-        if (saveState == EditorSaveState.Failed) {
-            SelectableText(
-                stringResource(Res.string.project_save_error),
-                color = ReframeTheme.colorScheme.critical,
-            )
-        }
-        AnimatedVisibility(
-            visible = mode == EditorActionMode.ConfirmDeletion,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically(),
-        ) {
-            DeleteConfirmation(component, isBusy, deleteState)
-        }
-    }
-    LaunchedEffect(Unit) { focusOrder.name.requestFocus() }
-}
-
-@Composable
-private fun DeleteConfirmation(
-    component: EditorComponent,
-    isBusy: Boolean,
-    deleteState: EditorDeleteState,
-) {
-    var confirmation by rememberSaveable { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
-    Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small)) {
-        Spacer(Modifier)
-        SelectableText(
-            stringResource(Res.string.project_delete_warning),
-            color = ReframeTheme.colorScheme.critical,
-        )
-        OutlinedTextField(
-            value = confirmation,
-            onValueChange = { confirmation = it },
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
-            label = { Text(stringResource(Res.string.project_delete_confirmation)) },
-            singleLine = true,
-            enabled = !isBusy,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-            keyboardActions = KeyboardActions(onDone = {
-                if (confirmation.isDeleteConfirmation() && !isBusy) component.onDelete(confirmation)
-            }),
-        )
-        if (deleteState == EditorDeleteState.Failed) {
-            SelectableText(
-                stringResource(Res.string.project_delete_error),
-                color = ReframeTheme.colorScheme.critical,
-            )
-        }
-        Button(
-            contentPadding = ReframeTheme.tokens.buttonContentPadding,
-            onClick = { component.onDelete(confirmation) },
-            enabled = confirmation.isDeleteConfirmation() && !isBusy,
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = ReframeTheme.colorScheme.critical,
-                contentColor = MaterialTheme.colorScheme.onError,
-            ),
-        ) {
-            Text(stringResource(Res.string.action_full_delete))
-        }
-    }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
 }
