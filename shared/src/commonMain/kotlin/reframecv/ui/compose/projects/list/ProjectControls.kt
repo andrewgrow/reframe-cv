@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects
+package reframecv.ui.compose.projects.list
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints

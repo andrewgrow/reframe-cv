@@ -12,9 +12,9 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.ProjectBreadcrumb
-import reframecv.ui.compose.projects.ProjectAction
-import reframecv.ui.compose.projects.ProjectBreadcrumbs
-import reframecv.ui.compose.projects.ProjectControls
+import reframecv.ui.compose.projects.common.ProjectBreadcrumbs
+import reframecv.ui.compose.projects.list.ProjectAction
+import reframecv.ui.compose.projects.list.ProjectControls
 import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 @OptIn(ExperimentalTestApi::class)

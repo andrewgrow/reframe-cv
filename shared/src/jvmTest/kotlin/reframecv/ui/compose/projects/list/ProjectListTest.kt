@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects
+package reframecv.ui.compose.projects.list
 
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.ExperimentalComposeUiApi

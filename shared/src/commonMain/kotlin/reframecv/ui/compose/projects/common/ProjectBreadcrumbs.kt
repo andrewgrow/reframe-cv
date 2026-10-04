@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects
+package reframecv.ui.compose.projects.common
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll

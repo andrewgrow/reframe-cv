@@ -34,6 +34,8 @@ import reframecv.testing.getTestString
 import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
+import reframecv.ui.compose.projects.list.PROJECTS_LIST_TAG
+import reframecv.ui.compose.projects.list.projectRowTag
 
 class ProjectsContentTest {
     @OptIn(ExperimentalTestApi::class)

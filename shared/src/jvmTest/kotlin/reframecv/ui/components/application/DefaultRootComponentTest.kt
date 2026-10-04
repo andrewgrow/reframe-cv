@@ -28,7 +28,7 @@ class DefaultRootComponentTest : ComponentTest() {
         val parentProjects =
             assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component
         assertEquals(listOf(ProjectBreadcrumb(parent.id, parent.name)), parentProjects.projectPath)
-        assertEquals(UiState.NoProjects, parentProjects.uiState.value)
+        assertEquals(UiState.Loading, parentProjects.uiState.value)
         parentProjects.onOpenProject(child)
         val childProjects =
             assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component
@@ -59,7 +59,7 @@ class DefaultRootComponentTest : ComponentTest() {
             val stack = root.childStack.value
             assertTrue(stack.backStack.isEmpty())
             val child = assertIs<RootComponent.Child.Projects>(stack.active.instance)
-            assertEquals(UiState.NoProjects, child.component.uiState.value)
+            assertEquals(UiState.Loading, child.component.uiState.value)
             val childContext = child.component as AppComponentContext
             assertSame(dependencies, childContext.dependencies)
             assertNotSame(lifecycle, childContext.lifecycle)

@@ -5,7 +5,9 @@ import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -27,6 +29,38 @@ class RealProjectsExecutorTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun remainsLoadingUntilRepositoryReturnsItsFirstResult() = runBlocking {
+        val result = CompletableDeferred<List<Project>>()
+        val repository = object : ProjectsRepository {
+            override fun observeProjects(parentId: Long?) = flow { emit(result.await()) }
+            override suspend fun createProject(name: String, parentId: Long?): Project =
+                error("Unexpected create")
+            override suspend fun updateProject(id: Long, name: String) = error("Unexpected update")
+            override suspend fun deleteProject(id: Long) = error("Unexpected delete")
+        }
+        val messages = Channel<UiState>(Channel.UNLIMITED)
+        val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
+        val executor = RealProjectsExecutor(repository)
+        try {
+            runOnUiThread {
+                executor.init(callbacks(messages, labels))
+                executor.executeIntent(ProjectsIntent.LoadProjects)
+            }
+            withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.Loading, messages.receive())
+                assertTrue(messages.tryReceive().isFailure)
+                result.complete(emptyList())
+                assertEquals(UiState.NoProjects, messages.receive())
+                runOnUiThread { executor.executeIntent(ProjectsIntent.LoadProjects) }
+                assertEquals(UiState.Loading, messages.receive())
+                assertEquals(UiState.NoProjects, messages.receive())
+            }
+        } finally {
+            runOnUiThread { executor.dispose() }
+        }
+    }
+
+    @Test
     fun observesOnlyDirectChildrenAndCreatesUnderCurrentParent() = runBlocking {
         val database =
             buildDatabase(
@@ -45,6 +79,7 @@ class RealProjectsExecutorTest {
                 executor.executeIntent(ProjectsIntent.LoadProjects)
             }
             withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.Loading, messages.receive())
                 assertEquals(UiState.NoProjects, messages.receive())
                 runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("  Google  ")) }
                 assertEquals(ProjectsLabel.Saving, labels.receive())
@@ -87,6 +122,7 @@ class RealProjectsExecutorTest {
                 executor.executeIntent(ProjectsIntent.LoadProjects)
             }
             withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.Loading, messages.receive())
                 assertEquals(listOf(project), (messages.receive() as UiState.Projects).projects)
                 runOnUiThread { executor.executeIntent(ProjectsIntent.DeleteProject(project.id)) }
                 assertEquals(ProjectsLabel.Deleting, labels.receive())
@@ -122,6 +158,7 @@ class RealProjectsExecutorTest {
                 executor.executeIntent(ProjectsIntent.LoadProjects)
             }
             withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.Loading, messages.receive())
                 assertEquals(UiState.LoadFailed, messages.receive())
             }
         } finally {
@@ -142,6 +179,7 @@ class RealProjectsExecutorTest {
                 executor.executeIntent(ProjectsIntent.LoadProjects)
             }
             withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.Loading, messages.receive())
                 assertEquals(UiState.NoProjects, messages.receive())
                 runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("   ")) }
                 assertEquals(emptyList(), database.projectDao().observeAll().first())

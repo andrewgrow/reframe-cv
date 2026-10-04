@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects
+package reframecv.ui.compose.projects.common
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

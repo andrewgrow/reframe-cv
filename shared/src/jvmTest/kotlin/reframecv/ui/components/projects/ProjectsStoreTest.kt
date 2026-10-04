@@ -12,6 +12,7 @@ class ProjectsStoreTest {
         val store = createProjectsStore(DefaultStoreFactory()) { executor }
         try {
             assertEquals(0, executor.loadCount)
+            assertEquals(UiState.Loading, store.state)
 
             store.accept(ProjectsIntent.LoadProjects)
 

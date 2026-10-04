@@ -35,6 +35,7 @@ class RealProjectsExecutor(
 
     private fun observeProjects() {
         observation?.cancel()
+        dispatch(UiState.Loading)
         observation = scope.launch {
             try {
                 projectsRepository.observeProjects(parentId).collect { projects ->

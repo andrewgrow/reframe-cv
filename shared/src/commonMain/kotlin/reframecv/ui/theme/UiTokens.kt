@@ -19,6 +19,7 @@ data class UiDimensions(
     val projectHelpMaxWidth: Dp,
     val iconSize: Dp,
     val iconButtonSize: Dp,
+    val loadingIndicatorSize: Dp,
 )
 
 @Immutable
@@ -49,6 +50,7 @@ internal fun createUiTokens(scale: UiScale): UiTokens {
             projectHelpMaxWidth = 560.dp * factor,
             iconSize = 24.dp * factor,
             iconButtonSize = 48.dp * factor,
+            loadingIndicatorSize = 40.dp * factor,
         ),
         typography = typography.copy(
             displayLarge = typography.displayLarge.scaled(factor),

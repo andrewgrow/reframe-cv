@@ -3,7 +3,7 @@ package reframecv.ui.components.projects
 import com.arkivanov.mvikotlin.core.store.Reducer
 import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
-import reframecv.ui.components.projects.UiState.NoProjects
+import reframecv.ui.components.projects.UiState.Loading
 
 internal interface ProjectsStore : Store<ProjectsIntent, UiState, ProjectsLabel>
 
@@ -15,7 +15,7 @@ internal fun createProjectsStore(
     ProjectsStore,
     Store<ProjectsIntent, UiState, ProjectsLabel> by storeFactory.create(
         name = PROJECTS_STORE_NAME,
-        initialState = NoProjects,
+        initialState = Loading,
         executorFactory = executorFactory,
         reducer = Reducer<UiState, UiState> { message -> message },
     ) { /* */ }
