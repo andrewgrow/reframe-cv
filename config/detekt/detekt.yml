@@ -9,4 +9,4 @@ naming:
 style:
   MagicNumber:
     # Test fixtures and design tokens intentionally declare literal values.
-    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/ui/theme/Spacing.kt']
+    excludes: ['**/commonTest/**', '**/jvmTest/**', '**/ui/theme/UiTokens.kt']

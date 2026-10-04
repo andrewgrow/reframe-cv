@@ -12,12 +12,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
 import reframecv.ui.compose.common.FillButton
-import reframecv.ui.theme.Spacing
+import reframecv.ui.theme.ReframeTheme
 
-private const val CONTROL_WIDTH = 200
-private const val CONTROL_HEIGHT = 48
 private const val MAX_CONTROL_ROWS = 2
 internal const val PROJECT_CONTROLS_TAG = "projects.controls"
 
@@ -29,16 +26,17 @@ internal data class ProjectAction(
 
 @Composable
 internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = Modifier) {
-    BoxWithConstraints(modifier.fillMaxWidth().padding(Spacing.medium)) {
-        val columns = ((maxWidth + Spacing.small) / (CONTROL_WIDTH.dp + Spacing.small))
-            .toInt().coerceAtLeast(1)
+    val tokens = ReframeTheme.tokens
+    BoxWithConstraints(modifier.fillMaxWidth().padding(tokens.spacing.medium)) {
+        val columnWidth = tokens.dimensions.projectActionWidth + tokens.spacing.small
+        val columns = ((maxWidth + tokens.spacing.small) / columnWidth).toInt().coerceAtLeast(1)
         val rows = if (actions.size > columns) MAX_CONTROL_ROWS else 1
-        val height = CONTROL_HEIGHT.dp * rows + Spacing.small * (rows - 1)
+        val height = tokens.dimensions.buttonHeight * rows + tokens.spacing.small * (rows - 1)
         LazyHorizontalGrid(
             rows = GridCells.Fixed(rows),
             modifier = Modifier.fillMaxWidth().height(height).testTag(PROJECT_CONTROLS_TAG),
-            horizontalArrangement = Arrangement.spacedBy(Spacing.small),
-            verticalArrangement = Arrangement.spacedBy(Spacing.small),
+            horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
+            verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
         ) {
             items(actions) { action ->
                 FillButton(
@@ -46,7 +44,7 @@ internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = 
                     onClick = action.onClick,
                     enabled = action.enabled,
                     outlineState = FillButton.OutlineState.Visible,
-                    modifier = Modifier.width(CONTROL_WIDTH.dp),
+                    modifier = Modifier.width(tokens.dimensions.projectActionWidth),
                 )
             }
         }

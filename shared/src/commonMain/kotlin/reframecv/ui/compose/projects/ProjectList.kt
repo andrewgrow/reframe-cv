@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import reframecv.domain.models.project.Project
-import reframecv.ui.theme.Spacing
+import reframecv.ui.theme.ReframeTheme
 
 internal const val PROJECTS_LIST_TAG = "projects.list"
 
@@ -23,9 +23,9 @@ internal fun ProjectList(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier.fillMaxWidth().padding(Spacing.medium)
+        modifier = modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)
             .testTag(PROJECTS_LIST_TAG),
-        verticalArrangement = Arrangement.spacedBy(Spacing.small),
+        verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         items(projects, key = { it.id }) { project ->
             Text(

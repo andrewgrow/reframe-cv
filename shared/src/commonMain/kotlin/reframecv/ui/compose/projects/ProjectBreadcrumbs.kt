@@ -18,7 +18,6 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_projects_list
 import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.theme.ReframeTheme
-import reframecv.ui.theme.Spacing
 
 @Composable
 internal fun ProjectBreadcrumbs(
@@ -33,9 +32,9 @@ internal fun ProjectBreadcrumbs(
     }
     Row(
         modifier = modifier.fillMaxWidth()
-            .padding(Spacing.medium)
+            .padding(ReframeTheme.tokens.spacing.medium)
             .horizontalScroll(scrollState),
-        horizontalArrangement = Arrangement.spacedBy(Spacing.small),
+        horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val rootName = stringResource(Res.string.navigation_projects_list)

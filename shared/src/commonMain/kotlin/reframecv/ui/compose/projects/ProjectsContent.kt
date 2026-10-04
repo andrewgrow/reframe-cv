@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -33,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.project.Project
@@ -51,10 +51,8 @@ import reframecv.ui.components.projects.UiState
 import reframecv.ui.components.projects.UiState.NoProjects
 import reframecv.ui.compose.projects.editor.EditorContent
 import reframecv.ui.theme.ReframeTheme
-import reframecv.ui.theme.Spacing
 
 internal const val PROJECTS_SCREEN_TAG = "projects.screen"
-private const val PROJECT_HELP_MAX_WIDTH = 560
 
 @Composable
 fun ProjectsContent(component: ProjectsComponent) {
@@ -88,6 +86,7 @@ fun ProjectsContent(component: ProjectsComponent) {
 
 @Composable
 private fun NoProjectsContent(onAddProject: () -> Unit) {
+    val tokens = ReframeTheme.tokens
     var showProjectHelp by remember { mutableStateOf(false) }
     val emptyMessage = stringResource(Res.string.projects_empty)
     val addProjectLabel = stringResource(Res.string.projects_add)
@@ -101,22 +100,26 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
             .safeContentPadding()
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(Spacing.medium),
+            .padding(tokens.spacing.medium),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(
-            space = Spacing.medium,
+            space = tokens.spacing.medium,
             alignment = Alignment.CenterVertically,
         ),
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(Spacing.small),
+                horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SelectableText(emptyMessage, color = MaterialTheme.colorScheme.onBackground)
-                IconButton(onClick = { showProjectHelp = !showProjectHelp }) {
+                IconButton(
+                    onClick = { showProjectHelp = !showProjectHelp },
+                    modifier = Modifier.size(tokens.dimensions.iconButtonSize),
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Info,
+                        modifier = Modifier.size(tokens.dimensions.iconSize),
                         tint = MaterialTheme.colorScheme.onBackground,
                         contentDescription = if (showProjectHelp) hideHelpLabel else showHelpLabel,
                     )
@@ -130,15 +133,15 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
                 SelectableText(
                     text = helpMessage,
                     modifier = Modifier
-                        .widthIn(max = PROJECT_HELP_MAX_WIDTH.dp)
-                        .padding(top = Spacing.medium),
+                        .widthIn(max = tokens.dimensions.projectHelpMaxWidth)
+                        .padding(top = tokens.spacing.medium),
                     style = MaterialTheme.typography.bodyMedium,
                     color = ReframeTheme.colorScheme.hint,
                     textAlign = TextAlign.Center,
                 )
             }
         }
-        Button(onClick = onAddProject) {
+        Button(onClick = onAddProject, contentPadding = tokens.buttonContentPadding) {
             Text(addProjectLabel)
         }
     }

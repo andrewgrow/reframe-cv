@@ -24,11 +24,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-
-private const val HOVER_ANIMATION_DURATION = 300
-private const val FILL_BUTTON_HEIGHT = 48
-private const val DISABLED_CONTENT_ALPHA = 0.38f
+import reframecv.ui.theme.ReframeTheme
 
 object FillButton {
     enum class OutlineState {
@@ -58,13 +54,18 @@ fun FillButton(
     val highlighted = enabled && (hovered || focused || pressed)
     val fill by animateFloatAsState(
         targetValue = if (highlighted) 1f else 0f,
-        animationSpec = tween(HOVER_ANIMATION_DURATION),
+        animationSpec = tween(ReframeTheme.tokens.fillAnimationMillis),
     )
-    val disabledColor = contentColor.copy(alpha = DISABLED_CONTENT_ALPHA)
+    val disabledColor = contentColor.copy(alpha = ReframeTheme.tokens.disabledContentAlpha)
     val textColor = if (enabled) lerp(contentColor, filledContentColor, fill) else disabledColor
     val border = when {
-        !enabled -> BorderStroke(1.dp, disabledColor)
-        outlineState == FillButton.OutlineState.Visible -> BorderStroke(1.dp, fillColor)
+        !enabled -> BorderStroke(ReframeTheme.tokens.outlineWidth, disabledColor)
+
+        outlineState == FillButton.OutlineState.Visible -> BorderStroke(
+            ReframeTheme.tokens.outlineWidth,
+            fillColor,
+        )
+
         else -> null
     }
 
@@ -73,9 +74,10 @@ fun FillButton(
             onClick = onClick,
             enabled = enabled,
             elevation = null,
+            contentPadding = ReframeTheme.tokens.buttonContentPadding,
             border = border,
             modifier = modifier.height(
-                FILL_BUTTON_HEIGHT.dp,
+                ReframeTheme.tokens.dimensions.buttonHeight,
             ).clip(ButtonDefaults.shape).drawBehind {
                 drawRect(color = containerColor)
                 drawRect(color = fillColor, size = Size(size.width * fill, size.height))

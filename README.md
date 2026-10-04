@@ -92,6 +92,14 @@ ReframeCV stores its database as `reframe-cv.db` in its own application data dir
 
 During development, the database stays at schema version 1. After a schema change, close the application and delete the local database to recreate it; migrations will be introduced when real data needs to be preserved. Deleting a project sets `deleted_at` for that project and all descendants. These rows remain stored and are hidden from the project list; existing deletion timestamps are preserved.
 
+## UI tokens
+
+`ReframeTheme.tokens` provides scaled spacing, layout dimensions, button padding, and typography.
+Pass `uiScale = UiScale(90)` to `ReframeTheme` to render these at 90% of their baseline size.
+The default is 100%; `smaller()` and `larger()` change the scale in 5% steps between 75% and 150%.
+The system's display density and font scale remain in effect. Outlines stay at 1 dp and the fill animation at 300 ms.
+Scale controls and persistence will be connected through application settings later.
+
 ## Running tests
 
 For a complete local run from Android Studio, select **ReframeCV - Full Check** in the toolbar. It clears JVM test outputs, applies `ktlintFormat`, checks formatting and Detekt, runs all tests including screenshot verification, generates HTML/XML coverage reports, and verifies the coverage threshold. It runs without parallel task execution or the build cache. This configuration modifies source formatting; review the diff afterward. Screenshot references are verified, not overwritten.

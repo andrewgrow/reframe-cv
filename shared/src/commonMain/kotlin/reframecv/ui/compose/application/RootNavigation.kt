@@ -10,22 +10,19 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_projects_list
 import reframecv.ui.compose.common.FillButton
-import reframecv.ui.theme.Spacing
-
-private const val NAVIGATION_WIDTH = 220
+import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun RootNavigation(onProjectsList: () -> Unit, modifier: Modifier = Modifier) {
     Column(
-        modifier.width(NAVIGATION_WIDTH.dp).fillMaxHeight()
+        modifier.width(ReframeTheme.tokens.dimensions.navigationWidth).fillMaxHeight()
             .background(MaterialTheme.colorScheme.surfaceContainer)
             .safeContentPadding()
-            .padding(Spacing.medium),
+            .padding(ReframeTheme.tokens.spacing.medium),
     ) {
         FillButton(
             text = stringResource(Res.string.navigation_projects_list),

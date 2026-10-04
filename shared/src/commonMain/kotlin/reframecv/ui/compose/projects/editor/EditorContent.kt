@@ -57,7 +57,6 @@ import reframecv.ui.components.projects.editor.EditorDeleteState
 import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.components.projects.editor.isDeleteConfirmation
 import reframecv.ui.theme.ReframeTheme
-import reframecv.ui.theme.Spacing
 
 internal const val PROJECT_EDITOR_TAG = "projects.editor"
 
@@ -130,13 +129,17 @@ private fun EditorActions(
     )
     val deleteLabel = stringResource(Res.string.action_delete)
     val cancelLabel = stringResource(Res.string.action_cancel)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
+    ) {
         AnimatedVisibility(
             visible = mode == EditorActionMode.Update,
             enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
             exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
         ) {
             TextButton(
+                contentPadding = ReframeTheme.tokens.textButtonContentPadding,
                 onClick = onDelete,
                 enabled = !isBusy && mode == EditorActionMode.Update,
                 colors = ButtonDefaults.textButtonColors(
@@ -153,13 +156,18 @@ private fun EditorActions(
             exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End),
         ) {
             TextButton(
+                contentPadding = ReframeTheme.tokens.textButtonContentPadding,
                 onClick = { onSave(name.trim()) },
                 enabled = name.isNotBlank() && !isBusy && mode != EditorActionMode.ConfirmDeletion,
             ) {
                 Text(confirmLabel)
             }
         }
-        TextButton(onClick = onClose, enabled = !isBusy) {
+        TextButton(
+            onClick = onClose,
+            enabled = !isBusy,
+            contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+        ) {
             Text(cancelLabel)
         }
     }
@@ -215,7 +223,7 @@ private fun DeleteConfirmation(
 ) {
     var confirmation by rememberSaveable { mutableStateOf("") }
     val focusRequester = remember { FocusRequester() }
-    Column(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
+    Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small)) {
         Spacer(Modifier)
         SelectableText(
             stringResource(Res.string.project_delete_warning),
@@ -240,6 +248,7 @@ private fun DeleteConfirmation(
             )
         }
         Button(
+            contentPadding = ReframeTheme.tokens.buttonContentPadding,
             onClick = { component.onDelete(confirmation) },
             enabled = confirmation.isDeleteConfirmation() && !isBusy,
             modifier = Modifier.fillMaxWidth(),
