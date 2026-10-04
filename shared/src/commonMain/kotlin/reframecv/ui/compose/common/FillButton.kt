@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextOverflow
 import reframecv.ui.theme.ReframeTheme
 
@@ -48,7 +50,11 @@ fun FillButton(
     filledContentColor: Color = MaterialTheme.colorScheme.onPrimary,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
 ) {
+    val focusManager = LocalFocusManager.current
     val hovered by interactionSource.collectIsHoveredAsState()
+    LaunchedEffect(hovered) {
+        if (hovered) focusManager.clearFocus()
+    }
     val focused by interactionSource.collectIsFocusedAsState()
     val pressed by interactionSource.collectIsPressedAsState()
     val highlighted = enabled && (hovered || focused || pressed)

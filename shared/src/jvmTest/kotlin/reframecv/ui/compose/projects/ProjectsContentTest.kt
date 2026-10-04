@@ -20,12 +20,13 @@ import reframecv.shared.generated.resources.action_cancel
 import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.action_edit
 import reframecv.shared.generated.resources.action_update
+import reframecv.shared.generated.resources.project_add
 import reframecv.shared.generated.resources.project_delete_warning
 import reframecv.shared.generated.resources.project_editor_create_title
 import reframecv.shared.generated.resources.project_editor_edit_title
+import reframecv.shared.generated.resources.project_empty
 import reframecv.shared.generated.resources.project_name
 import reframecv.shared.generated.resources.projects_add
-import reframecv.shared.generated.resources.projects_empty
 import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
@@ -44,11 +45,11 @@ class ProjectsContentTest {
             onBreadcrumbSelected = { selected = it },
         )
         setContent { ProjectsContent(component) }
-        onNodeWithText(getTestString(Res.string.projects_empty)).assertIsDisplayed()
+        onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
         onNodeWithText("Google").assertIsDisplayed()
         onNodeWithText("Backend").performClick()
         assertEquals(1, selected)
-        onNodeWithText(addProjectLabel).performClick()
+        onNodeWithText(getTestString(Res.string.project_add)).performClick()
         onNodeWithText(createTitle).assertIsDisplayed()
     }
 

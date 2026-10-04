@@ -50,6 +50,7 @@ import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.components.projects.UiState.NoProjects
 import reframecv.ui.compose.projects.editor.EditorContent
+import reframecv.ui.compose.projects.empty.EmptyProjectContent
 import reframecv.ui.theme.ReframeTheme
 
 internal const val PROJECTS_SCREEN_TAG = "projects.screen"
@@ -74,7 +75,7 @@ fun ProjectsContent(component: ProjectsComponent) {
                         onBreadcrumb = component::onBreadcrumb,
                     )
                     HorizontalDivider()
-                    NoProjectsContent(onAddProject = component::onAddProject)
+                    EmptyProjectContent(onAddProject = component::onAddProject)
                 }
             }
 

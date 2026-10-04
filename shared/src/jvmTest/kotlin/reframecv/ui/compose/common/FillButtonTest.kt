@@ -2,11 +2,18 @@ package reframecv.ui.compose.common
 
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.text.TextLayoutResult
 import kotlin.test.Test
@@ -16,6 +23,29 @@ import reframecv.ui.theme.ReframeTheme
 
 @OptIn(ExperimentalTestApi::class)
 class FillButtonTest {
+    @Test
+    fun hoverClearsPreviousFocusAndKeyboardNavigationWorksUntilThen() = runComposeUiTest {
+        setContent {
+            ReframeTheme {
+                Row {
+                    FillButton("Configure", onClick = {})
+                    FillButton("Add project", onClick = {})
+                }
+            }
+        }
+        val configure = onNodeWithText("Configure")
+        val add = onNodeWithText("Add project")
+        configure.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        configure.assertIsFocused().performKeyInput { pressKey(Key.Tab) }
+        add.assertIsFocused()
+        configure.performMouseInput { enter(center) }
+        configure.assertIsNotFocused()
+        add.assertIsNotFocused()
+        configure.performMouseInput { exit() }
+        add.performSemanticsAction(SemanticsActions.RequestFocus) { it() }
+        add.assertIsFocused()
+    }
+
     @Test
     fun textColorChangesGraduallyOnHoverEnterAndExit() = runComposeUiTest {
         val source = MutableInteractionSource()
