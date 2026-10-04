@@ -19,6 +19,7 @@ import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
 interface ProjectsComponent {
+    val projectPath: List<ProjectBreadcrumb>
     val uiState: Value<UiState>
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
@@ -29,6 +30,7 @@ interface ProjectsComponent {
 class DefaultProjectsComponent(
     componentContext: AppComponentContext,
     storeFactory: StoreFactory = DefaultStoreFactory(),
+    override val projectPath: List<ProjectBreadcrumb> = emptyList(),
     executorFactory: () -> ProjectsExecutor = {
         RealProjectsExecutor(componentContext.dependencies.projectsRepository)
     },

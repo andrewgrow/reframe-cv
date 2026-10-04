@@ -46,6 +46,14 @@ class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
+    fun savedProjectsInLightThemeMatchesReference() = runComposeUiTest {
+        val project = Project(id = 1, name = "Android Developer", createdAt = 0, updatedAt = 0)
+        setAndCaptureGolden(this, themeMode = ThemeMode.Light, captureTag = PROJECTS_SCREEN_TAG) {
+            ProjectsContent(TestProjectsComponent(initialState = UiState.Projects(listOf(project))))
+        }
+    }
+
+    @Test
     fun expandedProjectHelpInDarkThemeMatchesReference() = runComposeUiTest {
         val component = TestProjectsComponent()
         setGoldenContent(this, themeMode = ThemeMode.Dark) { ProjectsContent(component) }

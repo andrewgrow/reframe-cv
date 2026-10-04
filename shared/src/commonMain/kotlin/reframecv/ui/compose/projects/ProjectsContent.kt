@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,13 +14,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +45,7 @@ import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
 import reframecv.shared.generated.resources.projects_load_error
+import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.components.projects.UiState.NoProjects
@@ -71,9 +70,10 @@ fun ProjectsContent(component: ProjectsComponent) {
             NoProjects -> NoProjectsContent(onAddProject = component::onAddProject)
 
             is UiState.Projects -> ProjectListContent(
-                currentState.projects,
-                component::onAddProject,
-                component::onProjectClick,
+                projects = currentState.projects,
+                projectPath = component.projectPath,
+                onAddProject = component::onAddProject,
+                onProjectClick = component::onProjectClick,
             )
 
             UiState.LoadFailed -> Text(
@@ -147,25 +147,30 @@ private fun NoProjectsContent(onAddProject: () -> Unit) {
 @Composable
 private fun ProjectListContent(
     projects: List<Project>,
+    projectPath: List<ProjectBreadcrumb>,
     onAddProject: () -> Unit,
     onProjectClick: (Project) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .safeContentPadding()
-            .padding(Spacing.medium),
-        verticalArrangement = Arrangement.spacedBy(Spacing.medium),
+            .safeContentPadding(),
     ) {
-        Button(onClick = onAddProject) { Text(stringResource(Res.string.projects_add)) }
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(Spacing.small)) {
-            items(projects, key = { it.id }) { project ->
-                Text(
-                    project.name,
-                    modifier = Modifier.clickable { onProjectClick(project) },
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            }
-        }
+        ProjectBreadcrumbs(projectPath)
+        HorizontalDivider()
+        ProjectList(
+            projects = projects,
+            onProjectClick = onProjectClick,
+            modifier = Modifier.weight(1f),
+        )
+        HorizontalDivider()
+        ProjectControls(
+            actions = listOf(
+                ProjectAction(
+                    label = stringResource(Res.string.projects_add),
+                    onClick = onAddProject,
+                ),
+            ),
+        )
     }
 }

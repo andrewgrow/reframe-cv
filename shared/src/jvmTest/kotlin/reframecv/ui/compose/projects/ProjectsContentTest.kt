@@ -2,12 +2,17 @@ package reframecv.ui.compose.projects
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
@@ -22,10 +27,65 @@ import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
 import reframecv.testing.getTestString
+import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 
 class ProjectsContentTest {
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun projectListScrollsWhileBreadcrumbsAndAddButtonStayFixed() = runComposeUiTest {
+        val projects = List(100) { index ->
+            Project(id = index.toLong(), name = "Project $index", createdAt = 0, updatedAt = 0)
+        }
+        setContent {
+            ProjectsContent(
+                TestProjectsComponent(
+                    initialState = UiState.Projects(projects),
+                    projectPath = listOf(
+                        ProjectBreadcrumb(id = 1, name = "Parent Project"),
+                        ProjectBreadcrumb(id = 2, name = "This Project"),
+                    ),
+                ),
+            )
+        }
+        val addButton = onNodeWithText(addProjectLabel)
+        val breadcrumb = onNodeWithText("This Project")
+        val initialButtonBounds = addButton.fetchSemanticsNode().boundsInRoot
+        val initialBreadcrumbBounds = breadcrumb.fetchSemanticsNode().boundsInRoot
+        onNodeWithTag(PROJECTS_LIST_TAG).performScrollToIndex(projects.lastIndex)
+
+        onNodeWithText(projects.last().name).assertIsDisplayed()
+        addButton.assertIsDisplayed()
+        breadcrumb.assertIsDisplayed()
+        assertEquals(initialButtonBounds, addButton.fetchSemanticsNode().boundsInRoot)
+        assertEquals(initialBreadcrumbBounds, breadcrumb.fetchSemanticsNode().boundsInRoot)
+        addButton.performClick()
+        onNodeWithText(createTitle).assertIsDisplayed()
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun longBreadcrumbPathScrollsHorizontally() = runComposeUiTest {
+        val project = Project(id = 1, name = "Child Project", createdAt = 0, updatedAt = 0)
+        setContent {
+            ProjectsContent(
+                TestProjectsComponent(
+                    initialState = UiState.Projects(listOf(project)),
+                    projectPath =
+                        List(10) {
+                            ProjectBreadcrumb(it.toLong(), "Parent project with a long name $it")
+                        } + ProjectBreadcrumb(id = 10, name = "This Project"),
+                ),
+            )
+        }
+        onNodeWithText("This Project").assertIsDisplayed()
+        onNodeWithText("Parent project with a long name 0").assertIsNotDisplayed()
+        onNodeWithText("Parent project with a long name 0").performScrollTo().assertIsDisplayed()
+        onNodeWithText(project.name).assertIsDisplayed()
+        onNodeWithText(addProjectLabel).assertIsDisplayed()
+    }
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun opensUpdateDialogFromProjectNameAndCancelsDeletion() = runComposeUiTest {

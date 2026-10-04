@@ -30,6 +30,13 @@ private const val HOVER_ANIMATION_DURATION = 300
 private const val FILL_BUTTON_HEIGHT = 48
 private const val DISABLED_CONTENT_ALPHA = 0.38f
 
+object FillButton {
+    enum class OutlineState {
+        Visible,
+        Hidden,
+    }
+}
+
 /** A button whose background fills from left to right on hover, focus, or press. */
 @Composable
 @Suppress("LongParameterList")
@@ -38,6 +45,7 @@ fun FillButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    outlineState: FillButton.OutlineState = FillButton.OutlineState.Hidden,
     containerColor: Color = Color.Transparent,
     fillColor: Color = MaterialTheme.colorScheme.primary,
     contentColor: Color = MaterialTheme.colorScheme.onSurface,
@@ -54,13 +62,18 @@ fun FillButton(
     )
     val disabledColor = contentColor.copy(alpha = DISABLED_CONTENT_ALPHA)
     val textColor = if (enabled) lerp(contentColor, filledContentColor, fill) else disabledColor
+    val border = when {
+        !enabled -> BorderStroke(1.dp, disabledColor)
+        outlineState == FillButton.OutlineState.Visible -> BorderStroke(1.dp, fillColor)
+        else -> null
+    }
 
     CompositionLocalProvider(LocalRippleConfiguration provides null) {
         Button(
             onClick = onClick,
             enabled = enabled,
             elevation = null,
-            border = if (enabled) null else BorderStroke(1.dp, disabledColor),
+            border = border,
             modifier = modifier.height(
                 FILL_BUTTON_HEIGHT.dp,
             ).clip(ButtonDefaults.shape).drawBehind {

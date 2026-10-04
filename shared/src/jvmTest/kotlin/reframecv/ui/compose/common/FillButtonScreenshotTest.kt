@@ -37,9 +37,23 @@ class FillButtonScreenshotTest : GoldenScreenshotTest() {
         captureGallery(this, ThemeMode.Light)
     }
 
-    private fun captureGallery(test: ComposeUiTest, themeMode: ThemeMode) {
+    @Test
+    fun outlinedGalleryInDarkThemeMatchesReference() = runComposeUiTest {
+        captureGallery(this, ThemeMode.Dark, FillButton.OutlineState.Visible)
+    }
+
+    @Test
+    fun outlinedGalleryInLightThemeMatchesReference() = runComposeUiTest {
+        captureGallery(this, ThemeMode.Light, FillButton.OutlineState.Visible)
+    }
+
+    private fun captureGallery(
+        test: ComposeUiTest,
+        themeMode: ThemeMode,
+        outlineState: FillButton.OutlineState = FillButton.OutlineState.Hidden,
+    ) {
         val sources = List(GalleryState.entries.size) { List(3) { MutableInteractionSource() } }
-        setGoldenContent(test, themeMode = themeMode) { ButtonGallery(sources) }
+        setGoldenContent(test, themeMode = themeMode) { ButtonGallery(sources, outlineState) }
         test.waitForIdle()
         test.runOnIdle {
             GalleryState.entries.forEach { state ->
@@ -82,7 +96,10 @@ private enum class GalleryState(val label: String) {
 }
 
 @Composable
-private fun ButtonGallery(sources: List<List<MutableInteractionSource>>) {
+private fun ButtonGallery(
+    sources: List<List<MutableInteractionSource>>,
+    outlineState: FillButton.OutlineState,
+) {
     val colors = MaterialTheme.colorScheme
     val backgrounds = listOf(colors.background, colors.surfaceContainer, colors.secondaryContainer)
     val foregrounds = listOf(colors.onBackground, colors.onSurface, colors.onSecondaryContainer)
@@ -117,6 +134,7 @@ private fun ButtonGallery(sources: List<List<MutableInteractionSource>>) {
                                 onClick = {},
                                 modifier = Modifier.fillMaxWidth(),
                                 enabled = state != GalleryState.Disabled,
+                                outlineState = outlineState,
                                 containerColor = background,
                                 contentColor = foregrounds[index],
                                 fillColor = if (index == 2) colors.tertiary else colors.primary,
