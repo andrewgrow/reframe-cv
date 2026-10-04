@@ -9,8 +9,10 @@ import reframecv.repository.ProjectsRepository
 
 interface ProjectsExecutor : Executor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>
 
-class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
-    CoroutineExecutor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>(),
+class RealProjectsExecutor(
+    private val projectsRepository: ProjectsRepository,
+    private val parentId: Long? = null,
+) : CoroutineExecutor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>(),
     ProjectsExecutor {
     private var observation: Job? = null
     private var saving: Job? = null
@@ -20,7 +22,7 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
             ProjectsIntent.LoadProjects -> observeProjects()
 
             is ProjectsIntent.CreateProject -> saveProject(intent.name) {
-                projectsRepository.createProject(it)
+                projectsRepository.createProject(it, parentId)
             }
 
             is ProjectsIntent.UpdateProject -> saveProject(intent.name) {
@@ -35,7 +37,7 @@ class RealProjectsExecutor(private val projectsRepository: ProjectsRepository) :
         observation?.cancel()
         observation = scope.launch {
             try {
-                projectsRepository.observeProjects().collect { projects ->
+                projectsRepository.observeProjects(parentId).collect { projects ->
                     val newState = if (projects.isEmpty()) {
                         UiState.NoProjects
                     } else {

@@ -27,6 +27,52 @@ class RealProjectsExecutorTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun observesOnlyDirectChildrenAndCreatesUnderCurrentParent() = runBlocking {
+        val database =
+            buildDatabase(
+                createDatabaseBuilder(temporaryFolder.root.toPath().resolve("children.db")),
+            )
+        val repository = LocalProjectsRepository(database.projectDao())
+        val parent = repository.createProject("Backend")
+        val other = repository.createProject("Mobile")
+        val sibling = repository.createProject("Sibling", other.id)
+        val messages = Channel<UiState>(Channel.UNLIMITED)
+        val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
+        val executor = RealProjectsExecutor(repository, parent.id)
+        try {
+            runOnUiThread {
+                executor.init(callbacks(messages, labels))
+                executor.executeIntent(ProjectsIntent.LoadProjects)
+            }
+            withTimeout(10_000L.milliseconds) {
+                assertEquals(UiState.NoProjects, messages.receive())
+                runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("  Google  ")) }
+                assertEquals(ProjectsLabel.Saving, labels.receive())
+                assertEquals(ProjectsLabel.Saved, labels.receive())
+                val child = (messages.receive() as UiState.Projects).projects.single()
+                assertEquals(parent.id, child.parentId)
+                assertEquals("Google", child.name)
+                val grandchild = repository.createProject("Resume", child.id)
+                assertEquals(
+                    setOf(parent.id, other.id),
+                    repository.observeProjects().first().map {
+                        it.id
+                    }.toSet(),
+                )
+                assertEquals(listOf(child), repository.observeProjects(parent.id).first())
+                assertEquals(listOf(grandchild), repository.observeProjects(child.id).first())
+                assertEquals(listOf(sibling), repository.observeProjects(other.id).first())
+                repository.deleteProject(child.id)
+                assertEquals(emptyList(), repository.observeProjects(parent.id).first())
+                assertEquals(emptyList(), repository.observeProjects(child.id).first())
+            }
+        } finally {
+            runOnUiThread { executor.dispose() }
+            database.close()
+        }
+    }
+
+    @Test
     fun deletesProjectAndReportsMissingProjectFailure() = runBlocking {
         val database =
             buildDatabase(createDatabaseBuilder(temporaryFolder.root.toPath().resolve("delete.db")))
@@ -60,10 +106,11 @@ class RealProjectsExecutorTest {
     fun reportsLoadFailureWhenRepositoryObservationFails() = runBlocking {
         val repository = object : ProjectsRepository {
             override suspend fun deleteProject(id: Long) = error("Unexpected delete")
-            override fun observeProjects() = flow<List<Project>> {
+            override fun observeProjects(parentId: Long?) = flow<List<Project>> {
                 throw IllegalStateException("Database read failed")
             }
-            override suspend fun createProject(name: String): Project = error("Unexpected create")
+            override suspend fun createProject(name: String, parentId: Long?): Project =
+                error("Unexpected create")
             override suspend fun updateProject(id: Long, name: String) = error("Unexpected update")
         }
         val messages = Channel<UiState>(Channel.UNLIMITED)

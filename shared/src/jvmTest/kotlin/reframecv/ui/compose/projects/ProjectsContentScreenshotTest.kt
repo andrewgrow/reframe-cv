@@ -15,6 +15,7 @@ import reframecv.shared.generated.resources.projects_help_show
 import reframecv.shared.generated.resources.projects_load_error
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.testing.getTestString
+import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
@@ -22,6 +23,40 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 @OptIn(ExperimentalTestApi::class)
 class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
+    @Test
+    fun emptyChildProjectMatchesReference() = runComposeUiTest {
+        captureProjectsGolden(
+            this,
+            TestProjectsComponent(
+                projectPath = listOf(
+                    ProjectBreadcrumb(1, "Backend"),
+                    ProjectBreadcrumb(2, "Google"),
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun childProjectsMatchesReference() = runComposeUiTest {
+        captureProjectsGolden(
+            this,
+            TestProjectsComponent(
+                projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+                initialState = UiState.Projects(
+                    listOf(
+                        Project(
+                            id = 2,
+                            name = "Google",
+                            createdAt = 0,
+                            updatedAt = 0,
+                            parentId = 1,
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+
     @Test
     fun failedProjectsLoadMatchesReference() = runComposeUiTest {
         setGoldenContent(this, themeMode = ThemeMode.Light) {

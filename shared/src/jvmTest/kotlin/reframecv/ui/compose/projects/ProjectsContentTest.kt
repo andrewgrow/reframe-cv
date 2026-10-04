@@ -25,6 +25,7 @@ import reframecv.shared.generated.resources.project_editor_create_title
 import reframecv.shared.generated.resources.project_editor_edit_title
 import reframecv.shared.generated.resources.project_name
 import reframecv.shared.generated.resources.projects_add
+import reframecv.shared.generated.resources.projects_empty
 import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
@@ -34,6 +35,23 @@ import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 
 class ProjectsContentTest {
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun emptyChildProjectKeepsBreadcrumbNavigationAndCreation() = runComposeUiTest {
+        var selected: Int? = null
+        val component = TestProjectsComponent(
+            projectPath = listOf(ProjectBreadcrumb(1, "Backend"), ProjectBreadcrumb(2, "Google")),
+            onBreadcrumbSelected = { selected = it },
+        )
+        setContent { ProjectsContent(component) }
+        onNodeWithText(getTestString(Res.string.projects_empty)).assertIsDisplayed()
+        onNodeWithText("Google").assertIsDisplayed()
+        onNodeWithText("Backend").performClick()
+        assertEquals(1, selected)
+        onNodeWithText(addProjectLabel).performClick()
+        onNodeWithText(createTitle).assertIsDisplayed()
+    }
+
     @OptIn(ExperimentalTestApi::class)
     @Test
     fun projectListScrollsWhileBreadcrumbsAndAddButtonStayFixed() = runComposeUiTest {

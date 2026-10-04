@@ -65,13 +65,26 @@ fun ProjectsContent(component: ProjectsComponent) {
             .testTag(PROJECTS_SCREEN_TAG),
     ) {
         when (val currentState = state) {
-            NoProjects -> NoProjectsContent(onAddProject = component::onAddProject)
+            NoProjects -> if (component.projectPath.isEmpty()) {
+                NoProjectsContent(onAddProject = component::onAddProject)
+            } else {
+                Column(Modifier.fillMaxSize().safeContentPadding()) {
+                    ProjectBreadcrumbs(
+                        component.projectPath,
+                        onBreadcrumb = component::onBreadcrumb,
+                    )
+                    HorizontalDivider()
+                    NoProjectsContent(onAddProject = component::onAddProject)
+                }
+            }
 
             is UiState.Projects -> ProjectListContent(
                 projects = currentState.projects,
                 projectPath = component.projectPath,
                 onAddProject = component::onAddProject,
                 onEditProject = component::onEditProject,
+                onOpenProject = component::onOpenProject,
+                onBreadcrumb = component::onBreadcrumb,
             )
 
             UiState.LoadFailed -> Text(
@@ -153,17 +166,20 @@ private fun ProjectListContent(
     projectPath: List<ProjectBreadcrumb>,
     onAddProject: () -> Unit,
     onEditProject: (Project) -> Unit,
+    onOpenProject: (Project) -> Unit,
+    onBreadcrumb: (Int) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .safeContentPadding(),
     ) {
-        ProjectBreadcrumbs(projectPath)
+        ProjectBreadcrumbs(projectPath, onBreadcrumb = onBreadcrumb)
         HorizontalDivider()
         ProjectList(
             projects = projects,
             onEditProject = onEditProject,
+            onOpenProject = onOpenProject,
             modifier = Modifier.weight(1f),
         )
         HorizontalDivider()

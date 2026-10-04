@@ -35,6 +35,12 @@ interface ProjectDao {
     @Query("SELECT * FROM projects WHERE id = :id")
     suspend fun findById(id: Long): ProjectEntity?
 
+    @Query(
+        "SELECT * FROM projects WHERE deleted_at IS NULL AND parent_id IS :parentId " +
+            "ORDER BY updated_at DESC, name ASC",
+    )
+    fun observeChildren(parentId: Long?): Flow<List<ProjectEntity>>
+
     @Query("SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY updated_at DESC, name ASC")
     fun observeAll(): Flow<List<ProjectEntity>>
 }

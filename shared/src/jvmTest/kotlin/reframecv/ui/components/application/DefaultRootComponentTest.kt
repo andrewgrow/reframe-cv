@@ -7,12 +7,49 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import reframecv.domain.models.project.Project
 import reframecv.testing.ComponentTest
+import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.threading.runOnUiThread
 
 class DefaultRootComponentTest : ComponentTest() {
+    @Test
+    fun opensNestedProjectsAndReturnsThroughBreadcrumbsAndMenu() = runOnUiThread {
+        val root = DefaultRootComponent(appComponentContext())
+        lifecycle.resume()
+        val rootProjects =
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component
+        val parent = Project(id = 1, name = "Backend", createdAt = 0, updatedAt = 0)
+        val child =
+            Project(id = 2, name = "Google", createdAt = 0, updatedAt = 0, parentId = parent.id)
+        rootProjects.onOpenProject(parent)
+        val parentProjects =
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component
+        assertEquals(listOf(ProjectBreadcrumb(parent.id, parent.name)), parentProjects.projectPath)
+        assertEquals(UiState.NoProjects, parentProjects.uiState.value)
+        parentProjects.onOpenProject(child)
+        val childProjects =
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component
+        assertEquals(
+            parentProjects.projectPath + ProjectBreadcrumb(child.id, child.name),
+            childProjects.projectPath,
+        )
+        assertEquals(2, root.childStack.value.backStack.size)
+        childProjects.onBreadcrumb(1)
+        assertSame(
+            parentProjects,
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component,
+        )
+        root.onProjectsList()
+        assertSame(
+            rootProjects,
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component,
+        )
+        assertTrue(root.childStack.value.backStack.isEmpty())
+    }
+
     @Test
     fun startsWithProjectsAsTheOnlyScreen() {
         runOnUiThread {

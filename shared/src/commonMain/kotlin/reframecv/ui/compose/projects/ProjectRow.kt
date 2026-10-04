@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.project.Project
+import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_edit
 import reframecv.ui.theme.ReframeTheme
@@ -32,7 +33,11 @@ import reframecv.ui.theme.ReframeTheme
 internal fun projectRowTag(id: Long): String = "projects.row.$id"
 
 @Composable
-internal fun ProjectRow(project: Project, onEditProject: (Project) -> Unit) {
+internal fun ProjectRow(
+    project: Project,
+    onEditProject: (Project) -> Unit,
+    onOpenProject: (Project) -> Unit,
+) {
     val interactionSource = remember { MutableInteractionSource() }
     val hovered by interactionSource.collectIsHoveredAsState()
     var focused by remember { mutableStateOf(false) }
@@ -44,9 +49,14 @@ internal fun ProjectRow(project: Project, onEditProject: (Project) -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
+        SelectableText(
             project.name,
-            modifier = Modifier.weight(1f),
+            selectionModifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth().clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                role = Role.Button,
+            ) { onOpenProject(project) },
             color = MaterialTheme.colorScheme.onBackground,
         )
         AnimatedVisibility(visible = hovered || focused, enter = fadeIn(), exit = fadeOut()) {

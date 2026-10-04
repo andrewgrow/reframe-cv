@@ -2,10 +2,12 @@ package reframecv.ui.components.application
 
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.popTo
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import reframecv.ui.components.projects.DefaultProjectsComponent
+import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.context.AppComponentContext
 
@@ -24,14 +26,15 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     private val navigation = StackNavigation<Configuration>()
 
     override fun onProjectsList() {
-        navigation.bringToFront(Configuration.Projects)
+        navigation.popTo(0)
     }
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
-        // There is only one route for now; each launch opens Projects.
+        // Each launch starts at the root project list.
         serializer = null,
-        initialConfiguration = Configuration.Projects,
+        initialConfiguration = Configuration.Projects(),
+        handleBackButton = true,
         childFactory = ::createChild,
     )
 
@@ -39,12 +42,23 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         configuration: Configuration,
         componentContext: AppComponentContext,
     ): RootComponent.Child = when (configuration) {
-        Configuration.Projects -> RootComponent.Child.Projects(
-            DefaultProjectsComponent(componentContext),
+        is Configuration.Projects -> RootComponent.Child.Projects(
+            DefaultProjectsComponent(
+                componentContext,
+                projectPath = configuration.projectPath,
+                onProjectOpened = { project ->
+                    navigation.pushNew(
+                        Configuration.Projects(
+                            configuration.projectPath + ProjectBreadcrumb(project.id, project.name),
+                        ),
+                    )
+                },
+                onBreadcrumbSelected = { index -> navigation.popTo(index) },
+            ),
         )
     }
 
     private sealed interface Configuration {
-        data object Projects : Configuration
+        data class Projects(val projectPath: List<ProjectBreadcrumb> = emptyList()) : Configuration
     }
 }

@@ -18,6 +18,7 @@ internal fun ProjectList(
     projects: List<Project>,
     onEditProject: (Project) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenProject: (Project) -> Unit = {},
 ) {
     LazyColumn(
         modifier = modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)
@@ -25,7 +26,11 @@ internal fun ProjectList(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         items(projects, key = { it.id }) { project ->
-            ProjectRow(project = project, onEditProject = onEditProject)
+            ProjectRow(
+                project = project,
+                onEditProject = onEditProject,
+                onOpenProject = onOpenProject,
+            )
         }
     }
 }

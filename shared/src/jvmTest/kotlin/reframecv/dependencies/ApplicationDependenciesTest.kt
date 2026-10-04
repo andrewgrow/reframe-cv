@@ -42,7 +42,7 @@ class ApplicationDependenciesTest {
                 ProjectEntity(name = "Sibling", createdAt = 1, updatedAt = 1, parentId = root.id),
             )
             assertFailsWith<IllegalStateException> { repository.deleteProject(-1) }
-            assertEquals(5, repository.observeProjects().first().size)
+            assertEquals(2, repository.observeProjects().first().size)
 
             repository.deleteProject(root.id)
             assertEquals(remainingId, repository.observeProjects().first().single().id)
@@ -96,7 +96,7 @@ class ApplicationDependenciesTest {
             assertEquals(oldTime, updated.createdAt)
             assertEquals(parent.id, updated.parentId)
             assertTrue(updated.updatedAt > oldTime)
-            assertEquals(2, repository.observeProjects().first().size)
+            assertEquals(1, repository.observeProjects().first().size)
         } finally {
             database.close()
         }

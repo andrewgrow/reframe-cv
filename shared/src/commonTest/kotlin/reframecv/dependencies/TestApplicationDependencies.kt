@@ -9,11 +9,8 @@ import reframecv.shared.nowMillis
 class TestApplicationDependencies : ApplicationDependencies {
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
-        override fun observeProjects() = projects.map { values ->
-            values.filter {
-                it.deletedAt ==
-                    null
-            }
+        override fun observeProjects(parentId: Long?) = projects.map { values ->
+            values.filter { it.deletedAt == null && it.parentId == parentId }
         }
         override suspend fun deleteProject(id: Long) {
             val ids = mutableSetOf(id)
@@ -38,11 +35,12 @@ class TestApplicationDependencies : ApplicationDependencies {
             }
         }
 
-        override suspend fun createProject(name: String): Project {
+        override suspend fun createProject(name: String, parentId: Long?): Project {
             val now = nowMillis()
             val project = Project(
                 id = projects.value.size.toLong() + 1,
                 name = name.trim(),
+                parentId = parentId,
                 createdAt = now,
                 updatedAt = now,
             )

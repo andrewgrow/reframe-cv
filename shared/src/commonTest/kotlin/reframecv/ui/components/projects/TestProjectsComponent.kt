@@ -11,6 +11,8 @@ class TestProjectsComponent(
     initialState: UiState = UiState.NoProjects,
     editorInitiallyOpen: Boolean = false,
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
+    private val onProjectOpened: (Project) -> Unit = {},
+    private val onBreadcrumbSelected: (Int) -> Unit = {},
     private val onAddProjectClick: () -> Unit = {},
 ) : ProjectsComponent {
     override val uiState = MutableValue(initialState)
@@ -25,6 +27,9 @@ class TestProjectsComponent(
         }
         onAddProjectClick()
     }
+
+    override fun onOpenProject(project: Project) = onProjectOpened(project)
+    override fun onBreadcrumb(index: Int) = onBreadcrumbSelected(index)
 
     override fun onEditProject(project: Project) {
         editorSlot.value = createEditorSlot(project.name)

@@ -24,6 +24,8 @@ interface ProjectsComponent {
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
     fun onAddProject()
+    fun onOpenProject(project: Project)
+    fun onBreadcrumb(index: Int)
     fun onEditProject(project: Project)
 }
 
@@ -31,8 +33,13 @@ class DefaultProjectsComponent(
     componentContext: AppComponentContext,
     storeFactory: StoreFactory = DefaultStoreFactory(),
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
+    private val onProjectOpened: (Project) -> Unit = {},
+    private val onBreadcrumbSelected: (Int) -> Unit = {},
     executorFactory: () -> ProjectsExecutor = {
-        RealProjectsExecutor(componentContext.dependencies.projectsRepository)
+        RealProjectsExecutor(
+            componentContext.dependencies.projectsRepository,
+            projectPath.lastOrNull()?.id,
+        )
     },
 ) : ProjectsComponent,
     AppComponentContext by componentContext {
@@ -97,6 +104,14 @@ class DefaultProjectsComponent(
 
     override fun onAddProject() {
         editorNavigation.activate(EditorConfiguration.Create)
+    }
+
+    override fun onOpenProject(project: Project) {
+        onProjectOpened(project)
+    }
+
+    override fun onBreadcrumb(index: Int) {
+        onBreadcrumbSelected(index)
     }
 
     override fun onEditProject(project: Project) {

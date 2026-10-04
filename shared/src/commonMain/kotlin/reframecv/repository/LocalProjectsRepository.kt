@@ -22,14 +22,16 @@ class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepo
         check(updatedRows == 1) { "Project does not exist" }
     }
 
-    override fun observeProjects(): Flow<List<Project>> = projectDao.observeAll()
-        .map { entities -> entities.map(ProjectEntity::toDomainModel) }
+    override fun observeProjects(parentId: Long?): Flow<List<Project>> =
+        projectDao.observeChildren(parentId)
+            .map { entities -> entities.map(ProjectEntity::toDomainModel) }
 
-    override suspend fun createProject(name: String): Project {
+    override suspend fun createProject(name: String, parentId: Long?): Project {
         val trimmedName = name.trim()
         require(trimmedName.isNotEmpty()) { "Project name must not be blank" }
         val now = nowMillis()
-        val project = Project(name = trimmedName, createdAt = now, updatedAt = now)
+        val project =
+            Project(name = trimmedName, createdAt = now, updatedAt = now, parentId = parentId)
         val entity = ProjectEntity.fromDomainModel(project)
         val id = projectDao.insert(entity)
         return entity.copy(id = id).toDomainModel()

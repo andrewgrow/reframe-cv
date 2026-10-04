@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -23,6 +24,7 @@ import reframecv.ui.theme.ReframeTheme
 internal fun ProjectBreadcrumbs(
     projectPath: List<ProjectBreadcrumb>,
     modifier: Modifier = Modifier,
+    onBreadcrumb: (Int) -> Unit = {},
 ) {
     val scrollState = rememberScrollState()
     LaunchedEffect(projectPath, scrollState.maxValue) {
@@ -43,7 +45,15 @@ internal fun ProjectBreadcrumbs(
             if (index > 0) {
                 Text(">", color = ReframeTheme.colorScheme.hint)
             }
-            SelectableText(name, color = MaterialTheme.colorScheme.onBackground)
+            SelectableText(
+                name,
+                modifier = if (index < breadcrumbs.lastIndex) {
+                    Modifier.clickable { onBreadcrumb(index) }
+                } else {
+                    Modifier
+                },
+                color = MaterialTheme.colorScheme.onBackground,
+            )
         }
     }
 }
