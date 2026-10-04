@@ -71,7 +71,7 @@ fun ProjectsContent(component: ProjectsComponent) {
                 projects = currentState.projects,
                 projectPath = component.projectPath,
                 onAddProject = component::onAddProject,
-                onProjectClick = component::onProjectClick,
+                onEditProject = component::onEditProject,
             )
 
             UiState.LoadFailed -> Text(
@@ -152,7 +152,7 @@ private fun ProjectListContent(
     projects: List<Project>,
     projectPath: List<ProjectBreadcrumb>,
     onAddProject: () -> Unit,
-    onProjectClick: (Project) -> Unit,
+    onEditProject: (Project) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -163,7 +163,7 @@ private fun ProjectListContent(
         HorizontalDivider()
         ProjectList(
             projects = projects,
-            onProjectClick = onProjectClick,
+            onEditProject = onEditProject,
             modifier = Modifier.weight(1f),
         )
         HorizontalDivider()

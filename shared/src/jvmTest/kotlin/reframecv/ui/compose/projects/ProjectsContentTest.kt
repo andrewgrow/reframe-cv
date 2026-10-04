@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -17,6 +18,7 @@ import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
 import reframecv.shared.generated.resources.action_delete
+import reframecv.shared.generated.resources.action_edit
 import reframecv.shared.generated.resources.action_update
 import reframecv.shared.generated.resources.project_delete_warning
 import reframecv.shared.generated.resources.project_editor_create_title
@@ -88,13 +90,14 @@ class ProjectsContentTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun opensUpdateDialogFromProjectNameAndCancelsDeletion() = runComposeUiTest {
+    fun opensUpdateDialogFromEditActionAndCancelsDeletion() = runComposeUiTest {
         val now = 1_000L
         val project = Project(id = 1, name = "Android Developer", createdAt = now, updatedAt = now)
         val component = TestProjectsComponent(initialState = UiState.Projects(listOf(project)))
         setContent { ProjectsContent(component) }
 
-        onNodeWithText(project.name).performClick()
+        onNodeWithTag(projectRowTag(project.id)).performMouseInput { enter(center) }
+        onNodeWithText(getTestString(Res.string.action_edit)).performClick()
         onNodeWithText(getTestString(Res.string.project_editor_edit_title)).assertIsDisplayed()
         onNodeWithText(getTestString(Res.string.project_name)).assertTextContains(project.name)
         onNodeWithText(getTestString(Res.string.action_update)).assertIsDisplayed()

@@ -9,6 +9,7 @@
     <string name="project_editor_edit_title">Update project</string>
     <string name="project_name">Project name</string>
     <string name="action_create">Create</string>
+    <string name="action_edit">Edit</string>
     <string name="action_update">Update</string>
     <string name="action_delete">Delete</string>
     <string name="action_cancel">Cancel</string>

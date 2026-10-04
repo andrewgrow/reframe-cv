@@ -1,6 +1,7 @@
 package reframecv.ui.compose.projects.editor
 
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -9,9 +10,11 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performTextInputSelection
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.text.TextRange
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -36,6 +39,47 @@ private const val UPDATED_PROJECT_NAME = "Updated Test Project"
 
 @OptIn(ExperimentalTestApi::class)
 class EditorContentTest {
+    @Test
+    fun tabsThroughUpdateCancelDeleteAndReturnsCursorToEnd() = runComposeUiTest {
+        setContent { EditorContent(TestEditorComponent(initialName = PROJECT_NAME)) }
+        val field = onNodeWithText(projectNameLabel)
+        field.assertIsFocused()
+        assertEquals(
+            TextRange(PROJECT_NAME.length),
+            field.fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange],
+        )
+        field.performTextInputSelection(TextRange(0))
+        field.performKeyInput { pressKey(Key.Tab) }
+        onNodeWithText(saveLabel).assertIsFocused().performKeyInput { pressKey(Key.Tab) }
+        onNodeWithText(getTestString(Res.string.action_cancel)).assertIsFocused().performKeyInput {
+            pressKey(Key.Tab)
+        }
+        onNodeWithText(getTestString(Res.string.action_delete)).assertIsFocused().performKeyInput {
+            pressKey(Key.Tab)
+        }
+        field.assertIsFocused()
+        assertEquals(
+            TextRange(PROJECT_NAME.length),
+            field.fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange],
+        )
+    }
+
+    @Test
+    fun tabsPastDisabledUpdateForBlankName() = runComposeUiTest {
+        setContent { EditorContent(TestEditorComponent(initialName = PROJECT_NAME)) }
+        onNodeWithText(projectNameLabel).performTextReplacement("")
+        onNodeWithText(projectNameLabel).performKeyInput {
+            pressKey(Key.Tab)
+        }
+        onNodeWithText(getTestString(Res.string.action_cancel)).assertIsFocused().performKeyInput {
+            pressKey(Key.Tab)
+        }
+        onNodeWithText(getTestString(Res.string.action_delete)).assertIsFocused().performKeyInput {
+            pressKey(Key.Tab)
+        }
+        onNodeWithText(projectNameLabel).assertIsFocused()
+    }
+
     @Test
     fun updatesProjectNameOnEnter() = runComposeUiTest {
         var savedName: String? = null

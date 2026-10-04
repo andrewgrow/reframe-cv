@@ -26,7 +26,7 @@ class TestProjectsComponent(
         onAddProjectClick()
     }
 
-    override fun onProjectClick(project: Project) {
+    override fun onEditProject(project: Project) {
         editorSlot.value = createEditorSlot(project.name)
     }
 

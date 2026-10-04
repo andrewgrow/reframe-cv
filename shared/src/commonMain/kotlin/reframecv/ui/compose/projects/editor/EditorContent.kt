@@ -33,9 +33,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
@@ -62,6 +66,13 @@ internal const val PROJECT_EDITOR_TAG = "projects.editor"
 
 private enum class EditorActionMode { Create, Update, ConfirmDeletion }
 
+private class EditorFocusOrder {
+    val name = FocusRequester()
+    val update = FocusRequester()
+    val cancel = FocusRequester()
+    val delete = FocusRequester()
+}
+
 @Composable
 fun EditorContent(
     component: EditorComponent,
@@ -72,9 +83,17 @@ fun EditorContent(
     val deleteState by component.deleteState.subscribeAsState()
     val isBusy = saveState == EditorSaveState.Saving || deleteState == EditorDeleteState.Deleting
     var showDeleteConfirmation by rememberSaveable { mutableStateOf(false) }
-    var name by rememberSaveable(initialName) { mutableStateOf(initialName.orEmpty()) }
-    val focusRequester = remember { FocusRequester() }
+    var name by rememberSaveable(initialName, stateSaver = TextFieldValue.Saver) {
+        val text = initialName.orEmpty()
+        mutableStateOf(TextFieldValue(text, TextRange(text.length)))
+    }
+    val focusOrder = remember { EditorFocusOrder() }
     val isEditing = initialName != null
+    val mode = when {
+        showDeleteConfirmation -> EditorActionMode.ConfirmDeletion
+        isEditing -> EditorActionMode.Update
+        else -> EditorActionMode.Create
+    }
     val title = stringResource(
         if (isEditing) {
             Res.string.project_editor_edit_title
@@ -90,16 +109,13 @@ fun EditorContent(
         text = {
             EditorFields(component, name, {
                 name = it
-            }, focusRequester, showDeleteConfirmation, onSave)
+            }, focusOrder, mode, onSave)
         },
         confirmButton = {
             EditorActions(
-                mode = when {
-                    showDeleteConfirmation -> EditorActionMode.ConfirmDeletion
-                    isEditing -> EditorActionMode.Update
-                    else -> EditorActionMode.Create
-                },
-                name,
+                mode = mode,
+                name = name.text,
+                focusOrder = focusOrder,
                 isBusy,
                 onSave,
                 onClose = {
@@ -119,6 +135,7 @@ fun EditorContent(
 private fun EditorActions(
     mode: EditorActionMode,
     name: String,
+    focusOrder: EditorFocusOrder,
     isBusy: Boolean,
     onSave: (String) -> Unit,
     onClose: () -> Unit,
@@ -127,29 +144,26 @@ private fun EditorActions(
     val confirmLabel = stringResource(
         if (mode == EditorActionMode.Create) Res.string.action_create else Res.string.action_update,
     )
-    val deleteLabel = stringResource(Res.string.action_delete)
     val cancelLabel = stringResource(Res.string.action_cancel)
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
-        AnimatedVisibility(
-            visible = mode == EditorActionMode.Update,
-            enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
-            exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
-        ) {
-            TextButton(
-                contentPadding = ReframeTheme.tokens.textButtonContentPadding,
-                onClick = onDelete,
-                enabled = !isBusy && mode == EditorActionMode.Update,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = ReframeTheme.colorScheme.critical,
-                ),
-            ) {
-                Text(deleteLabel)
-            }
-        }
+        EditorDeleteAction(mode, focusOrder, isBusy, onDelete)
         Spacer(Modifier.weight(1f))
+        TextButton(
+            modifier = editorActionFocus(
+                focusOrder.cancel,
+                focusOrder.delete,
+                if (name.isNotBlank()) focusOrder.update else focusOrder.name,
+                mode,
+            ),
+            onClick = onClose,
+            enabled = !isBusy,
+            contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+        ) {
+            Text(cancelLabel)
+        }
         AnimatedVisibility(
             visible = mode != EditorActionMode.ConfirmDeletion,
             enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End),
@@ -157,29 +171,71 @@ private fun EditorActions(
         ) {
             TextButton(
                 contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+                modifier = editorActionFocus(
+                    focusOrder.update,
+                    focusOrder.cancel,
+                    focusOrder.name,
+                    mode,
+                ),
                 onClick = { onSave(name.trim()) },
                 enabled = name.isNotBlank() && !isBusy && mode != EditorActionMode.ConfirmDeletion,
             ) {
                 Text(confirmLabel)
             }
         }
+    }
+}
+
+@Composable
+private fun EditorDeleteAction(
+    mode: EditorActionMode,
+    focusOrder: EditorFocusOrder,
+    isBusy: Boolean,
+    onDelete: () -> Unit,
+) {
+    AnimatedVisibility(
+        visible = mode == EditorActionMode.Update,
+        enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start),
+        exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.Start),
+    ) {
         TextButton(
-            onClick = onClose,
-            enabled = !isBusy,
             contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+            modifier = editorActionFocus(
+                focusOrder.delete,
+                focusOrder.name,
+                focusOrder.cancel,
+                mode,
+            ),
+            onClick = onDelete,
+            enabled = !isBusy && mode == EditorActionMode.Update,
+            colors = ButtonDefaults.textButtonColors(
+                contentColor = ReframeTheme.colorScheme.critical,
+            ),
         ) {
-            Text(cancelLabel)
+            Text(stringResource(Res.string.action_delete))
         }
+    }
+}
+
+private fun editorActionFocus(
+    requester: FocusRequester,
+    next: FocusRequester,
+    previous: FocusRequester,
+    mode: EditorActionMode,
+): Modifier = Modifier.focusRequester(requester).focusProperties {
+    if (mode == EditorActionMode.Update) {
+        this.next = next
+        this.previous = previous
     }
 }
 
 @Composable
 private fun EditorFields(
     component: EditorComponent,
-    name: String,
-    onNameChange: (String) -> Unit,
-    focusRequester: FocusRequester,
-    showDeleteConfirmation: Boolean,
+    name: TextFieldValue,
+    onNameChange: (TextFieldValue) -> Unit,
+    focusOrder: EditorFocusOrder,
+    mode: EditorActionMode,
     onSave: (String) -> Unit,
 ) {
     val saveState by component.saveState.subscribeAsState()
@@ -189,13 +245,28 @@ private fun EditorFields(
         OutlinedTextField(
             value = name,
             onValueChange = onNameChange,
-            modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
+            modifier = Modifier.fillMaxWidth().focusRequester(focusOrder.name)
+                .focusProperties {
+                    if (mode == EditorActionMode.Update) {
+                        next = if (name.text.isNotBlank()) focusOrder.update else focusOrder.cancel
+                        previous = focusOrder.delete
+                    }
+                }
+                .onFocusChanged {
+                    if (it.isFocused) {
+                        onNameChange(
+                            name.copy(selection = TextRange(name.text.length)),
+                        )
+                    }
+                },
             label = { Text(stringResource(Res.string.project_name)) },
             singleLine = true,
             enabled = !isBusy,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = {
-                if (name.isNotBlank() && !isBusy && !showDeleteConfirmation) onSave(name.trim())
+                if (name.text.isNotBlank() && !isBusy && mode != EditorActionMode.ConfirmDeletion) {
+                    onSave(name.text.trim())
+                }
             }),
         )
         if (saveState == EditorSaveState.Failed) {
@@ -205,14 +276,14 @@ private fun EditorFields(
             )
         }
         AnimatedVisibility(
-            visible = showDeleteConfirmation,
+            visible = mode == EditorActionMode.ConfirmDeletion,
             enter = fadeIn() + expandVertically(),
             exit = fadeOut() + shrinkVertically(),
         ) {
             DeleteConfirmation(component, isBusy, deleteState)
         }
     }
-    LaunchedEffect(Unit) { focusRequester.requestFocus() }
+    LaunchedEffect(Unit) { focusOrder.name.requestFocus() }
 }
 
 @Composable

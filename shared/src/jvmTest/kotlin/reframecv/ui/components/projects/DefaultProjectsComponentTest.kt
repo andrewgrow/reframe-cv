@@ -25,7 +25,7 @@ class DefaultProjectsComponentTest : ComponentTest() {
         val component =
             DefaultProjectsComponent(appComponentContext(), executorFactory = { executor })
         val project = Project(id = 7, name = "Android Developer", createdAt = 1, updatedAt = 1)
-        component.onProjectClick(project)
+        component.onEditProject(project)
         val editor = assertNotNull(component.editorSlot.value.child).instance
         listOf("", "DELET", " DELETE", "DELETE ").forEach { editor.onDelete(it) }
         assertNotNull(component.editorSlot.value.child)
@@ -48,7 +48,7 @@ class DefaultProjectsComponentTest : ComponentTest() {
             DefaultProjectsComponent(appComponentContext(), executorFactory = { executor })
         val now = 1_000L
         val project = Project(id = 7, name = "Android Developer", createdAt = now, updatedAt = now)
-        component.onProjectClick(project)
+        component.onEditProject(project)
 
         val editor = assertNotNull(component.editorSlot.value.child).instance
         assertEquals(project.name, editor.initialName)

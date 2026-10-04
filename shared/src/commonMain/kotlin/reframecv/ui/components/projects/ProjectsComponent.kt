@@ -24,7 +24,7 @@ interface ProjectsComponent {
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
     fun onAddProject()
-    fun onProjectClick(project: Project)
+    fun onEditProject(project: Project)
 }
 
 class DefaultProjectsComponent(
@@ -99,7 +99,7 @@ class DefaultProjectsComponent(
         editorNavigation.activate(EditorConfiguration.Create)
     }
 
-    override fun onProjectClick(project: Project) {
+    override fun onEditProject(project: Project) {
         editorNavigation.activate(EditorConfiguration.Update(project))
     }
 }
