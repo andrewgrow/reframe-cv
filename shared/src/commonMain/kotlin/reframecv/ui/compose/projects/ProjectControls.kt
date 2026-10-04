@@ -5,7 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -31,7 +31,8 @@ internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = 
         val columnWidth = tokens.dimensions.projectActionWidth + tokens.spacing.small
         val columns = ((maxWidth + tokens.spacing.small) / columnWidth).toInt().coerceAtLeast(1)
         val rows = if (actions.size > columns) MAX_CONTROL_ROWS else 1
-        val height = tokens.dimensions.buttonHeight * rows + tokens.spacing.small * (rows - 1)
+        val height =
+            tokens.dimensions.projectActionHeight * rows + tokens.spacing.small * (rows - 1)
         LazyHorizontalGrid(
             rows = GridCells.Fixed(rows),
             modifier = Modifier.fillMaxWidth().height(height).testTag(PROJECT_CONTROLS_TAG),
@@ -44,7 +45,10 @@ internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = 
                     onClick = action.onClick,
                     enabled = action.enabled,
                     outlineState = FillButton.OutlineState.Visible,
-                    modifier = Modifier.width(tokens.dimensions.projectActionWidth),
+                    modifier = Modifier.size(
+                        width = tokens.dimensions.projectActionWidth,
+                        height = tokens.dimensions.projectActionHeight,
+                    ),
                 )
             }
         }

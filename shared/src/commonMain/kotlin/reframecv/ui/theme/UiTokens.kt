@@ -15,6 +15,7 @@ data class UiDimensions(
     val navigationWidth: Dp,
     val buttonHeight: Dp,
     val projectActionWidth: Dp,
+    val projectActionHeight: Dp,
     val projectHelpMaxWidth: Dp,
     val iconSize: Dp,
     val iconButtonSize: Dp,
@@ -43,7 +44,8 @@ internal fun createUiTokens(scale: UiScale): UiTokens {
         dimensions = UiDimensions(
             navigationWidth = 220.dp * factor,
             buttonHeight = 48.dp * factor,
-            projectActionWidth = 200.dp * factor,
+            projectActionWidth = 160.dp * factor,
+            projectActionHeight = 40.dp * factor,
             projectHelpMaxWidth = 560.dp * factor,
             iconSize = 24.dp * factor,
             iconButtonSize = 48.dp * factor,
