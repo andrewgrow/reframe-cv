@@ -22,11 +22,12 @@ class RealProjectsExecutor(
             ProjectsIntent.LoadProjects -> observeProjects()
 
             is ProjectsIntent.CreateProject -> saveProject(intent.name) {
-                projectsRepository.createProject(it, parentId)
+                ProjectsLabel.Created(projectsRepository.createProject(it, parentId))
             }
 
             is ProjectsIntent.UpdateProject -> saveProject(intent.name) {
                 projectsRepository.updateProject(intent.id, it)
+                ProjectsLabel.Saved
             }
 
             is ProjectsIntent.DeleteProject -> deleteProject(intent.id)
@@ -56,14 +57,13 @@ class RealProjectsExecutor(
         }
     }
 
-    private fun saveProject(name: String, save: suspend (String) -> Unit) {
+    private fun saveProject(name: String, save: suspend (String) -> ProjectsLabel) {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty() || saving?.isActive == true) return
         publish(ProjectsLabel.Saving)
         saving = scope.launch {
             try {
-                save(trimmedName)
-                publish(ProjectsLabel.Saved)
+                publish(save(trimmedName))
             } catch (exception: CancellationException) {
                 throw exception
             } catch (_: Exception) {

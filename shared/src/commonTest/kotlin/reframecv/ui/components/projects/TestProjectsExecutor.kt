@@ -1,6 +1,7 @@
 package reframecv.ui.components.projects
 
 import com.arkivanov.mvikotlin.core.store.Executor
+import reframecv.domain.models.project.Project
 
 class TestProjectsExecutor : ProjectsExecutor {
     private lateinit var callbacks: Executor.Callbacks<UiState, UiState, Nothing, ProjectsLabel>
@@ -20,7 +21,13 @@ class TestProjectsExecutor : ProjectsExecutor {
         when (intent) {
             is ProjectsIntent.DeleteProject -> callbacks.onLabel(ProjectsLabel.Deleted)
 
-            is ProjectsIntent.CreateProject, is ProjectsIntent.UpdateProject -> callbacks.onLabel(
+            is ProjectsIntent.CreateProject -> callbacks.onLabel(
+                ProjectsLabel.Created(
+                    Project(id = 1, name = intent.name, createdAt = 0, updatedAt = 0),
+                ),
+            )
+
+            is ProjectsIntent.UpdateProject -> callbacks.onLabel(
                 ProjectsLabel.Saved,
             )
 

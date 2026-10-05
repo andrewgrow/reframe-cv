@@ -14,7 +14,7 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun EmptyProjectActions(onAddProject: () -> Unit) {
+internal fun EmptyProjectActions(onAddProject: () -> Unit, onConfigureProject: () -> Unit = {}) {
     val tokens = ReframeTheme.tokens
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(
@@ -25,7 +25,7 @@ internal fun EmptyProjectActions(onAddProject: () -> Unit) {
     ) {
         FillButton(
             text = stringResource(Res.string.project_configure),
-            onClick = {},
+            onClick = onConfigureProject,
             outlineState = FillButton.OutlineState.Visible,
             modifier = Modifier.size(
                 tokens.dimensions.projectActionWidth,

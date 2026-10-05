@@ -26,7 +26,14 @@ val criticalColorDark = Color(CRITICAL_COLOR_DARK)
 
 /** Material colors plus application-specific semantic colors. */
 @Immutable
-data class ReframeColorScheme(val material: ColorScheme, val hint: Color, val critical: Color)
+data class ReframeColorScheme(
+    val material: ColorScheme,
+    val hint: Color,
+    val critical: Color,
+    val dashboardResumes: Color,
+    val dashboardVacancies: Color,
+    val dashboardCoverLetters: Color,
+)
 
 private val lightReframeColorScheme = ReframeColorScheme(
     material = lightColorScheme().run {
@@ -34,11 +41,17 @@ private val lightReframeColorScheme = ReframeColorScheme(
     },
     hint = hintColorLight,
     critical = criticalColorLight,
+    dashboardResumes = Color(0xFFE5DFF0),
+    dashboardVacancies = Color(0xFFE0EBE4),
+    dashboardCoverLetters = Color(0xFFF2DFE6),
 )
 private val darkReframeColorScheme = ReframeColorScheme(
     material = darkColorScheme(background = Color(BACKGROUND_COLOR_DARK)),
     hint = hintColorDark,
     critical = criticalColorDark,
+    dashboardResumes = Color(0xFF332B48),
+    dashboardVacancies = Color(0xFF283C3C),
+    dashboardCoverLetters = Color(0xFF422E3A),
 )
 private val LocalReframeColorScheme = staticCompositionLocalOf { lightReframeColorScheme }
 

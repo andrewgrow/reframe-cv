@@ -59,6 +59,9 @@ without creating a resume. Relationships between records are optional.
 - Clicking an expansion arrow reveals or hides children; clicking a project name
   opens that project in the right pane. These are separate actions.
 - Clicking `Projects` opens the root project list.
+- Successful project creation closes the editor and immediately opens the new project,
+  including subprojects. The parent list remains reachable through the tree or Back.
+- Renaming does not navigate; failed creation keeps the editor open.
 - Highlight the current project with contrasting text and a subtle background;
   keep hover and keyboard focus visible.
 - When a project is opened, expand its ancestors and scroll the selected row into view.
@@ -183,9 +186,9 @@ For indexed searches by individual keywords, use the database tables
   from the right pane or Back.
 - [x] Preserve expansion and scroll state when switching right-pane screens.
 - [x] Define a consistent destination when the currently open project is deleted.
-- [ ] Add a dashboard component with the project identifier and current project name.
-- [ ] Pass the Configure callback from the component to `EmptyProjectActions`.
-- [ ] Add the Configure transition through the existing Decompose navigation.
+- [x] Add a dashboard component with the project identifier; show its name in the left tree.
+- [x] Pass the Configure callback from the component to `EmptyProjectActions`.
+- [x] Add the Configure transition through the existing Decompose navigation.
 - [x] Preserve hierarchy-aware navigation and Back without visual breadcrumb rows.
 - [ ] Open the dashboard when revisiting a project in `Workspace` mode.
 - [ ] Preserve the current subproject list for `Container` mode.
@@ -202,13 +205,13 @@ For indexed searches by individual keywords, use the database tables
 - [x] Remove right-pane breadcrumb rows and repeated project titles.
 - [x] Keep project names current in the left tree after renaming.
 - [x] Keep the main content scrollable and the bottom controls anchored.
-- [ ] Create a separate dashboard UI package alongside the other project screens.
-- [ ] Put the screen container and reusable section block in separate files.
-- [ ] Show three columns: Resumes, Vacancies, and Cover letters.
+- [x] Create a separate dashboard UI package alongside the other project screens.
+- [x] Put the screen container and reusable section block in separate files.
+- [x] Show three columns: Resumes, Vacancies, and Cover letters.
 - [ ] Show actual active-record counts; empty sections display `0`.
-- [ ] Use English string resources and the tokens and colors from `ReframeTheme`.
-- [ ] Use `SelectableText` for ordinary text where it does not interfere with interaction.
-- [ ] Support narrow windows and increased UI scale without clipping content.
+- [x] Use English string resources and the tokens and colors from `ReframeTheme`.
+- [x] Use `SelectableText` for ordinary text where it does not interfere with interaction.
+- [x] Support narrow windows and increased UI scale without clipping content.
 - [ ] Avoid nonfunctional creation buttons: connect navigation and actions
   alongside their corresponding section screens.
 
@@ -221,7 +224,8 @@ For indexed searches by individual keywords, use the database tables
 - [x] Verify that lists, searches, and counts exclude soft-deleted records.
 - [x] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
 - [x] Verify that subprojects and workspace records cannot coexist in a project.
-- [ ] Verify Configure, navigation back, and reopening a project in `Workspace` mode.
+- [x] Verify Configure and Back without changing project mode, including deletion of the open dashboard project.
+- [ ] Verify reopening a project in `Workspace` mode once mode-based routing is implemented.
 - [x] Verify tree expansion separately from opening a project, root navigation,
   current selection, ancestor expansion, and scrolling the selection into view.
 - [x] Verify tree updates after creation, renaming, and deletion, including
@@ -247,7 +251,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Define workspace-record behavior when their project is deleted.
 - [x] Decide whether a project stays in `Workspace` after its last record is deleted.
 - [ ] Define searches with multiple keywords: match all or any.
-- [ ] Agree on the dashboard layout for narrow windows.
+- [x] Agree on the dashboard layout for narrow windows.
 - [ ] Agree on left-pane sizing and how deep nesting behaves in narrow windows.
 - [ ] Decide how Back behaves when switching between unrelated tree branches
   and when returning from an unconfigured project's dashboard.
@@ -271,9 +275,18 @@ Lists, counts, and searches exclude records owned by deleted projects. Project d
 preserves its workspace records and relationships, including their existing deletion
 states; only projects and their descendants are marked deleted. Restoration is not
 implemented in this milestone.
-New repositories, dependency wiring, and the dashboard remain pending.
+New repositories and dependency wiring remain pending.
+Configure now opens a layout-only dashboard in the existing Decompose stack,
+with three full-height section columns and no selection or creation actions.
+It preserves the tree selection and does not change the project's mode.
+Back returns to the project's empty screen; deleting the project removes its dashboard
+from history and returns to the nearest surviving project or the root.
+Dashboard columns use dedicated theme background colors and token-based spacing.
+They share the available width and retain a minimum width of 160 dp at default scale;
+narrow windows use horizontal scrolling with fixed outer padding.
+Counts, record lists, loading states, and mode-based reopening remain pending.
 The project already has `ProjectMode` values `Unconfigured`, `Container`,
-and `Workspace`; Configure currently has an empty click handler.
+and `Workspace`; Configure opens the dashboard without persisting a mode change.
 The root now displays a project tree with separate expansion and navigation actions,
 selection, hover, keyboard focus, long-name tooltips, and automatic scrolling to selection.
 Active projects are observed across all levels; creation, renaming, and deletion update the tree.
@@ -293,9 +306,9 @@ Main content scrolls independently, while empty-screen and list controls stay at
 Opening help no longer moves the controls, including on narrow project screens.
 
 Next: add the repositories and dependency wiring in Stage 3.
-The dashboard itself and Configure navigation remain pending.
+Next UI work: connect actual counts and section navigation after their repositories are available.
 
-Verification on 2026-10-05: all 148 JVM tests, screenshot verification, ktlint,
+Verification on 2026-10-05: all 158 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed with:
 
 ```shell
@@ -312,3 +325,17 @@ keyword replacement and observation, section-count observation, deletion cleanup
 and competing child / workspace creation. Generated Room DAO implementations are
 excluded from coverage using the same rule previously applied to ProjectDao.
 The local development database must be recreated before launching against this schema.
+
+Dashboard verification includes dark / light full-screen goldens, a narrow layout,
+and 150% scale. Functional tests cover Configure, Back, unchanged project mode,
+project deletion while viewing the dashboard, and scrolling to all three sections.
+
+## Follow-up after this milestone: user-accessible Back navigation
+
+- [ ] Discuss keyboard shortcuts and hardware Back input on supported platforms.
+- [ ] Discuss an on-screen Back button, possibly at the top; placement is undecided.
+- [ ] Once agreed, connect both input paths to the existing navigation history and
+  define their behavior at the root and while a dialog is open.
+
+The current Back navigation is available programmatically; desktop keyboard input
+and an on-screen Back button are not connected yet.

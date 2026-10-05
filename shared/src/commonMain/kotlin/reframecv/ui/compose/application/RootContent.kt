@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.compose.projects.ProjectsContent
+import reframecv.ui.compose.projects.dashboard.DashboardContent
 
 @Composable
 fun RootContent(component: RootComponent) {
@@ -23,6 +24,7 @@ fun RootContent(component: RootComponent) {
         ) { child ->
             when (val instance = child.instance) {
                 is RootComponent.Child.Projects -> ProjectsContent(instance.component)
+                is RootComponent.Child.Dashboard -> DashboardContent(instance.component)
             }
         }
     }

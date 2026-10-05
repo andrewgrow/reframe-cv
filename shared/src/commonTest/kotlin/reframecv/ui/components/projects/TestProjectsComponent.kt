@@ -13,12 +13,15 @@ class TestProjectsComponent(
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
     private val onAddProjectClick: () -> Unit = {},
+    private val onConfigureProjectClick: () -> Unit = {},
 ) : ProjectsComponent {
     override val uiState = MutableValue(initialState)
     override val editorSlot =
         MutableValue<ChildSlot<*, EditorComponent>>(
             if (editorInitiallyOpen) createEditorSlot() else ChildSlot(),
         )
+
+    override fun onConfigureProject() = onConfigureProjectClick()
 
     override fun onAddProject() {
         if (editorSlot.value.child == null) {

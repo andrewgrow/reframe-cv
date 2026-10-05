@@ -28,4 +28,7 @@
     <string name="project_empty_help_footer">Each subproject can have its own vacancies, resumes, and cover letters.</string>
     <string name="project_configure">Configure</string>
     <string name="project_add">Add project</string>
+    <string name="dashboard_resumes">Resumes</string>
+    <string name="dashboard_vacancies">Vacancies</string>
+    <string name="dashboard_cover_letters">Cover letters</string>
 </resources>

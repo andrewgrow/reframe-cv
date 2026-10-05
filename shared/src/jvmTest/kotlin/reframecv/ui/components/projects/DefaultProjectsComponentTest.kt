@@ -13,11 +13,46 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.project.Project
+import reframecv.repository.ProjectsRepository
 import reframecv.testing.ComponentTest
+import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.threading.runOnUiThread
 
 class DefaultProjectsComponentTest : ComponentTest() {
+    @Test
+    fun failedCreationKeepsEditorOpenAndDoesNotNavigate() = runBlocking {
+        val states = Channel<EditorSaveState>(Channel.UNLIMITED)
+        val opened = mutableListOf<Project>()
+        val repository = object : ProjectsRepository by dependencies.projectsRepository {
+            override suspend fun createProject(name: String, parentId: Long?): Project =
+                error("Write failed")
+        }
+        lateinit var component: DefaultProjectsComponent
+        runOnUiThread {
+            lifecycle.resume()
+            component = DefaultProjectsComponent(
+                appComponentContext(),
+                onProjectOpened = opened::add,
+                executorFactory = { RealProjectsExecutor(repository) },
+            )
+            component.onAddProject()
+            val editor = assertNotNull(component.editorSlot.value.child).instance
+            editor.saveState.subscribe { states.trySend(it) }
+            editor.onSave("Backend")
+        }
+        withTimeout(10_000) {
+            while (states.receive() != EditorSaveState.Failed) { /* Await write failure. */ }
+        }
+        runOnUiThread {
+            assertNotNull(component.editorSlot.value.child)
+            assertTrue(opened.isEmpty())
+        }
+    }
+
     @Test
     fun deletesAfterCaseInsensitiveConfirmationAndClosesEditorAfterSuccess() = runOnUiThread {
         lifecycle.resume()
@@ -44,8 +79,12 @@ class DefaultProjectsComponentTest : ComponentTest() {
     fun opensProjectForUpdateAndSavesItsIdWithTrimmedName() = runOnUiThread {
         lifecycle.resume()
         val executor = TestProjectsExecutor()
-        val component =
-            DefaultProjectsComponent(appComponentContext(), executorFactory = { executor })
+        val opened = mutableListOf<Project>()
+        val component = DefaultProjectsComponent(
+            appComponentContext(),
+            executorFactory = { executor },
+            onProjectOpened = opened::add,
+        )
         val now = 1_000L
         val project = Project(id = 7, name = "Android Developer", createdAt = now, updatedAt = now)
         component.onEditProject(project)
@@ -58,21 +97,27 @@ class DefaultProjectsComponentTest : ComponentTest() {
             executor.lastIntent,
         )
         assertNull(component.editorSlot.value.child)
+        assertTrue(opened.isEmpty())
     }
 
     @Test
-    fun savesNonBlankNameAndClosesEditorAfterSuccess() = runOnUiThread {
+    fun savesNonBlankNameClosesEditorAndOpensCreatedProject() = runOnUiThread {
         lifecycle.resume()
+        val opened = mutableListOf<Project>()
         val component = DefaultProjectsComponent(
             appComponentContext(),
             executorFactory = ::TestProjectsExecutor,
+            onProjectOpened = opened::add,
         )
         component.onAddProject()
         val editor = assertNotNull(component.editorSlot.value.child).instance
         editor.onSave("   ")
         assertNotNull(component.editorSlot.value.child)
+        assertTrue(opened.isEmpty())
         editor.onSave("  Android Developer  ")
         assertNull(component.editorSlot.value.child)
+        assertEquals("Android Developer", opened.single().name)
+        assertEquals(1L, opened.single().id)
     }
 
     @Test

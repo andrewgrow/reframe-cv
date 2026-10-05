@@ -23,6 +23,7 @@ interface ProjectsComponent {
     val uiState: Value<UiState>
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
+    fun onConfigureProject()
     fun onAddProject()
     fun onOpenProject(project: Project)
     fun onEditProject(project: Project)
@@ -33,6 +34,7 @@ class DefaultProjectsComponent(
     storeFactory: StoreFactory = DefaultStoreFactory(),
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
+    private val onProjectConfigured: () -> Unit = {},
     executorFactory: () -> ProjectsExecutor = {
         RealProjectsExecutor(
             componentContext.dependencies.projectsRepository,
@@ -81,6 +83,11 @@ class DefaultProjectsComponent(
                 when (label) {
                     ProjectsLabel.Saving -> editor?.saveState?.value = EditorSaveState.Saving
 
+                    is ProjectsLabel.Created -> {
+                        editorNavigation.dismiss()
+                        onProjectOpened(label.project)
+                    }
+
                     ProjectsLabel.Saved -> editorNavigation.dismiss()
 
                     ProjectsLabel.SaveFailed -> editor?.saveState?.value = EditorSaveState.Failed
@@ -98,6 +105,10 @@ class DefaultProjectsComponent(
             },
         )
         lifecycle.doOnDestroy { subscription.dispose() }
+    }
+
+    override fun onConfigureProject() {
+        if (projectPath.isNotEmpty()) onProjectConfigured()
     }
 
     override fun onAddProject() {

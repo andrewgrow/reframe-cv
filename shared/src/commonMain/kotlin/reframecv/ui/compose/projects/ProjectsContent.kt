@@ -50,7 +50,10 @@ private fun ProjectBody(state: UiState, component: ProjectsComponent) {
         UiState.NoProjects -> if (component.projectPath.isEmpty()) {
             NoProjectsContent(onAddProject = component::onAddProject)
         } else {
-            EmptyProjectContent(onAddProject = component::onAddProject)
+            EmptyProjectContent(
+                onAddProject = component::onAddProject,
+                onConfigureProject = component::onConfigureProject,
+            )
         }
 
         is UiState.Projects -> ProjectListContent(

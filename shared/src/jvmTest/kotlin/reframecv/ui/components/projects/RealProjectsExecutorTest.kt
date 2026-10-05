@@ -4,6 +4,7 @@ import com.arkivanov.mvikotlin.core.store.Executor
 import java.nio.file.Path
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
@@ -85,8 +86,9 @@ class RealProjectsExecutorTest {
                 assertEquals(UiState.NoProjects, messages.receive())
                 runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("  Google  ")) }
                 assertEquals(ProjectsLabel.Saving, labels.receive())
-                assertEquals(ProjectsLabel.Saved, labels.receive())
+                val created = assertIs<ProjectsLabel.Created>(labels.receive())
                 val child = (messages.receive() as UiState.Projects).projects.single()
+                assertEquals(child, created.project)
                 assertEquals(parent.id, child.parentId)
                 assertEquals("Google", child.name)
                 val grandchild = repository.createProject("Resume", child.id)
@@ -191,8 +193,9 @@ class RealProjectsExecutorTest {
                 val name = "O'Reilly; DROP TABLE projects; --"
                 runOnUiThread { executor.executeIntent(ProjectsIntent.CreateProject("  $name  ")) }
                 assertEquals(ProjectsLabel.Saving, labels.receive())
-                assertEquals(ProjectsLabel.Saved, labels.receive())
+                val created = assertIs<ProjectsLabel.Created>(labels.receive())
                 val state = messages.receive() as UiState.Projects
+                assertEquals(state.projects.single(), created.project)
                 assertEquals(name, state.projects.single().name)
                 assertNull(state.projects.single().parentId)
                 assertEquals(

@@ -13,6 +13,8 @@ import reframecv.ui.components.application.navigation.ProjectTreeComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
 import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.ProjectsComponent
+import reframecv.ui.components.projects.dashboard.DashboardComponent
+import reframecv.ui.components.projects.dashboard.DefaultDashboardComponent
 import reframecv.ui.context.AppComponentContext
 
 interface RootComponent {
@@ -22,6 +24,7 @@ interface RootComponent {
 
     sealed interface Child {
         data class Projects(val component: ProjectsComponent) : Child
+        data class Dashboard(val component: DashboardComponent) : Child
     }
 }
 
@@ -52,8 +55,8 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
 
     init {
         val updateSelection: (ChildStack<*, RootComponent.Child>) -> Unit = { stack ->
-            val child = stack.active.instance as RootComponent.Child.Projects
-            projectTree.select(child.component.projectPath.lastOrNull()?.id)
+            val configuration = stack.active.configuration as Configuration
+            projectTree.select(configuration.projectPath.lastOrNull()?.id)
         }
         val subscription = childStack.subscribe(updateSelection)
         lifecycle.doOnDestroy { subscription.cancel() }
@@ -61,7 +64,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
 
     private fun openPath(path: List<ProjectBreadcrumb>) {
         val configurations = childStack.value.items.map {
-            it.configuration as Configuration.Projects
+            it.configuration as Configuration
         }
         val existing = configurations.indexOfLast { candidate ->
             candidate.projectPath.map { it.id } == path.map { it.id }
@@ -74,14 +77,14 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     }
 
     private fun onProjectsChanged(projects: List<Project>) {
-        val current = (childStack.value.active.configuration as Configuration.Projects).projectPath
+        val current = (childStack.value.active.configuration as Configuration).projectPath
         val activeIds = projects.map { it.id }.toSet()
         if (current.any { it.id !in activeIds }) {
             openPath(current.takeWhile { it.id in activeIds })
         }
         navigation.navigate(transformer = { stack ->
             stack.filter { configuration ->
-                (configuration as Configuration.Projects).projectPath.all { it.id in activeIds }
+                configuration.projectPath.all { it.id in activeIds }
             }
         }, onComplete = { _, _ -> })
     }
@@ -94,6 +97,9 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
             DefaultProjectsComponent(
                 componentContext,
                 projectPath = configuration.projectPath,
+                onProjectConfigured = {
+                    navigation.pushNew(Configuration.Dashboard(configuration.projectPath))
+                },
                 onProjectOpened = { project ->
                     openPath(
                         configuration.projectPath + ProjectBreadcrumb(project.id, project.name),
@@ -101,9 +107,16 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                 },
             ),
         )
+
+        is Configuration.Dashboard -> RootComponent.Child.Dashboard(
+            DefaultDashboardComponent(componentContext, configuration.projectPath.last().id),
+        )
     }
 
     private sealed interface Configuration {
-        data class Projects(val projectPath: List<ProjectBreadcrumb> = emptyList()) : Configuration
+        val projectPath: List<ProjectBreadcrumb>
+        data class Projects(override val projectPath: List<ProjectBreadcrumb> = emptyList()) :
+            Configuration
+        data class Dashboard(override val projectPath: List<ProjectBreadcrumb>) : Configuration
     }
 }
