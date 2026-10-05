@@ -36,6 +36,24 @@ class LocalProjectsRepositoryModeTest {
     fun tearDown() = database.close()
 
     @Test
+    fun observesAllActiveProjectsAcrossLevels() = runBlocking {
+        val parent = repository.createProject("Backend")
+        val child = repository.createProject("Java", parent.id)
+        val sibling = repository.createProject("Mobile")
+        assertEquals(
+            setOf(parent.id, child.id, sibling.id),
+            repository.observeAllProjects().first().map { it.id }.toSet(),
+        )
+        repository.updateProject(child.id, "Java Developer")
+        assertEquals(
+            "Java Developer",
+            repository.observeAllProjects().first().single { it.id == child.id }.name,
+        )
+        repository.deleteProject(parent.id)
+        assertEquals(listOf(sibling.id), repository.observeAllProjects().first().map { it.id })
+    }
+
+    @Test
     fun commitsContainerModeOnlyAfterCreatingAChild() = runBlocking {
         val parent = repository.createProject("Backend")
         assertEquals(ProjectMode.Unconfigured, parent.mode)

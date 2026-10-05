@@ -15,7 +15,7 @@ import reframecv.ui.compose.projects.ProjectsContent
 @Composable
 fun RootContent(component: RootComponent) {
     Row(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        RootNavigation(onProjectsList = component::onProjectsList)
+        RootNavigation(component.projectTree)
         VerticalDivider()
         Children(
             stack = component.childStack,

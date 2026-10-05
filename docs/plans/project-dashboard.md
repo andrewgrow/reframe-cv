@@ -147,7 +147,7 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Add local implementations that encapsulate DAOs and transactions.
 - [ ] Provide the repositories through `ApplicationDependencies`.
 - [ ] Add observation of the three section counts for the dashboard.
-- [ ] Provide observation of active projects for the navigation tree, including
+- [x] Provide observation of active projects for the navigation tree, including
   hierarchy and name changes.
 - [ ] Validate that related records belong to the selected project.
 - [ ] Reject relationships to missing or soft-deleted records.
@@ -155,14 +155,14 @@ For indexed searches by individual keywords, use the database tables
 
 ## Stage 4. Project tree and dashboard navigation
 
-- [ ] Replace the root's left menu buttons with a project-tree component.
-- [ ] Model tree expansion and current selection independently from right-pane content.
-- [ ] Observe active projects and update the tree after creation, renaming, and deletion.
-- [ ] Wire tree-name clicks and the `Projects` root to existing Decompose navigation.
-- [ ] Expand ancestors and reveal the selected row when navigation originates
+- [x] Replace the root's left menu buttons with a project-tree component.
+- [x] Model tree expansion and current selection independently from right-pane content.
+- [x] Observe active projects and update the tree after creation, renaming, and deletion.
+- [x] Wire tree-name clicks and the `Projects` root to existing Decompose navigation.
+- [x] Expand ancestors and reveal the selected row when navigation originates
   from the right pane or Back.
-- [ ] Preserve expansion and scroll state when switching right-pane screens.
-- [ ] Define a consistent destination when the currently open project is deleted.
+- [x] Preserve expansion and scroll state when switching right-pane screens.
+- [x] Define a consistent destination when the currently open project is deleted.
 - [ ] Add a dashboard component with the project identifier and current project name.
 - [ ] Pass the Configure callback from the component to `EmptyProjectActions`.
 - [ ] Add the Configure transition through the existing Decompose navigation.
@@ -177,7 +177,7 @@ For indexed searches by individual keywords, use the database tables
 
 ## Stage 5. Dashboard layout
 
-- [ ] Add the scrollable text-based project tree with expansion arrows,
+- [x] Add the scrollable text-based project tree with expansion arrows,
   selection, hover, keyboard focus, and full-name tooltips.
 - [ ] Replace right-pane breadcrumb rows across project screens with a compact title.
 - [ ] Keep the title current after renaming the open project.
@@ -202,13 +202,13 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
 - [ ] Verify that subprojects and workspace records cannot coexist in a project.
 - [ ] Verify Configure, navigation back, and reopening a project in `Workspace` mode.
-- [ ] Verify tree expansion separately from opening a project, root navigation,
+- [x] Verify tree expansion separately from opening a project, root navigation,
   current selection, ancestor expansion, and scrolling the selection into view.
-- [ ] Verify tree updates after creation, renaming, and deletion, including
+- [x] Verify tree updates after creation, renaming, and deletion, including
   deletion of the currently open project.
-- [ ] Verify keyboard navigation and focus visibility in the tree.
+- [x] Verify keyboard navigation and focus visibility in the tree.
 - [ ] Verify title updates and independent tree / content scrolling.
-- [ ] Add isolated tree goldens covering nesting, expansion, selection,
+- [x] Add isolated tree goldens covering nesting, expansion, selection,
   long names, and both themes.
 - [ ] Update full-screen goldens for the new left navigation and compact title;
   remove obsolete breadcrumb-specific tests and references once replaced.
@@ -239,5 +239,26 @@ For indexed searches by individual keywords, use the database tables
 The plan has been saved. Model and dashboard implementation has not started.
 The project already has `ProjectMode` values `Unconfigured`, `Container`,
 and `Workspace`; Configure currently has an empty click handler.
-The root currently uses menu buttons, and project screens still show breadcrumbs.
-The tree navigation and compact-title changes are planned but not implemented.
+The root now displays a project tree with separate expansion and navigation actions,
+selection, hover, keyboard focus, long-name tooltips, and automatic scrolling to selection.
+Active projects are observed across all levels; creation, renaming, and deletion update the tree.
+Deleting the open project returns to its nearest surviving ancestor or the root list,
+and deleted destinations are removed from navigation history.
+The left pane uses the existing navigation-width token. Deep nesting adds horizontal
+scrolling while ordinary branches retain their left inset. Expansion and scroll state
+remain owned by the root navigation UI when the right-pane screen changes.
+Tree navigation uses the existing Decompose stack: opening a new destination adds
+it to history, while selecting a destination already in the stack returns to it.
+
+Project screens still show breadcrumbs. Replacing them with a compact title and
+updating the title after renaming remain pending.
+
+Verification on 2026-10-05: all 127 JVM tests, screenshot verification, ktlint,
+Detekt, and coverage verification passed with:
+
+```shell
+./gradlew cleanJvmTest ktlintCheck detekt allTests :koverVerify --no-parallel --no-build-cache
+```
+
+The two root-screen goldens were updated, and isolated tree goldens were added
+and visually reviewed in dark and light themes.

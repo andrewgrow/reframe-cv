@@ -10,6 +10,10 @@ import reframecv.shared.nowMillis
 class TestApplicationDependencies : ApplicationDependencies {
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
+        override fun observeAllProjects() = projects.map { values ->
+            values.filter { it.deletedAt == null }
+        }
+
         override fun observeProjects(parentId: Long?) = projects.map { values ->
             values.filter { it.deletedAt == null && it.parentId == parentId }
         }

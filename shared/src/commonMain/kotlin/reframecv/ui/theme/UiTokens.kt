@@ -13,6 +13,7 @@ data class UiSpacing(val small: Dp, val medium: Dp, val large: Dp)
 @Immutable
 data class UiDimensions(
     val navigationWidth: Dp,
+    val projectTreeTextMinWidth: Dp,
     val buttonHeight: Dp,
     val projectActionWidth: Dp,
     val projectActionHeight: Dp,
@@ -44,6 +45,7 @@ internal fun createUiTokens(scale: UiScale): UiTokens {
         spacing = UiSpacing(8.dp * factor, 16.dp * factor, 24.dp * factor),
         dimensions = UiDimensions(
             navigationWidth = 220.dp * factor,
+            projectTreeTextMinWidth = 120.dp * factor,
             buttonHeight = 48.dp * factor,
             projectActionWidth = 160.dp * factor,
             projectActionHeight = 40.dp * factor,

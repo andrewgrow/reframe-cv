@@ -22,6 +22,9 @@ class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepo
         check(updatedRows == 1) { "Project does not exist" }
     }
 
+    override fun observeAllProjects(): Flow<List<Project>> = projectDao.observeAll()
+        .map { entities -> entities.map(ProjectEntity::toDomainModel) }
+
     override fun observeProjects(parentId: Long?): Flow<List<Project>> =
         projectDao.observeChildren(parentId)
             .map { entities -> entities.map(ProjectEntity::toDomainModel) }

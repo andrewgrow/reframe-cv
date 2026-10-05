@@ -33,6 +33,7 @@ class RealProjectsExecutorTest {
     fun remainsLoadingUntilRepositoryReturnsItsFirstResult() = runBlocking {
         val result = CompletableDeferred<List<Project>>()
         val repository = object : ProjectsRepository {
+            override fun observeAllProjects() = observeProjects(null)
             override fun observeProjects(parentId: Long?) = flow { emit(result.await()) }
             override suspend fun createProject(name: String, parentId: Long?): Project =
                 error("Unexpected create")
@@ -144,6 +145,7 @@ class RealProjectsExecutorTest {
     @Test
     fun reportsLoadFailureWhenRepositoryObservationFails() = runBlocking {
         val repository = object : ProjectsRepository {
+            override fun observeAllProjects() = observeProjects(null)
             override suspend fun deleteProject(id: Long) = error("Unexpected delete")
             override fun observeProjects(parentId: Long?) = flow<List<Project>> {
                 throw IllegalStateException("Database read failed")
