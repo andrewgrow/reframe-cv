@@ -11,4 +11,5 @@ data class Project(
     val parentId: Long? = null,
     val deletedAt: Long? = null,
     val mode: ProjectMode = ProjectMode.Unconfigured,
+    val mainResumeId: Long? = null,
 ) : DomainModel

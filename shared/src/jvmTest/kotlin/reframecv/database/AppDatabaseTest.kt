@@ -18,6 +18,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import reframecv.database.project.ProjectEntity
+import reframecv.database.resume.ResumeEntity
 import reframecv.domain.models.project.Project
 
 private const val PROJECT_NAME = "Test Project"
@@ -48,6 +49,50 @@ class AppDatabaseTest {
         createdAt = 500L,
         updatedAt = updatedAt,
     )
+
+    @Test
+    fun storesChangesAndClearsMainResumeWithoutChangingOtherFields() = runBlocking {
+        val dao = database.projectDao()
+        val project = Project(name = PROJECT_NAME, createdAt = 500L, updatedAt = 1_000L)
+        val id = dao.insert(ProjectEntity.fromDomainModel(project))
+        val initial = project.copy(id = id)
+        assertEquals(initial, dao.findById(id)?.toDomainModel())
+        assertNull(dao.findById(id)?.mainResumeId)
+
+        val firstResume = database.resumeDao().insertEntity(
+            ResumeEntity(projectId = id, name = "First", createdAt = 1, updatedAt = 1),
+        )
+        val secondResume = database.resumeDao().insertEntity(
+            ResumeEntity(projectId = id, name = "Second", createdAt = 1, updatedAt = 1),
+        )
+        for (mainResumeId in listOf(firstResume, secondResume, null)) {
+            val updated = initial.copy(mainResumeId = mainResumeId)
+            dao.update(ProjectEntity.fromDomainModel(updated))
+            val stored = requireNotNull(dao.findById(id))
+            assertEquals(updated, stored.toDomainModel())
+            assertEquals(stored, ProjectEntity.fromDomainModel(stored.toDomainModel()))
+            assertEquals(
+                listOf(updated),
+                dao.observeAll().first().map(ProjectEntity::toDomainModel),
+            )
+        }
+    }
+
+    @Test
+    fun renamingProjectPreservesMainResume() = runBlocking {
+        val dao = database.projectDao()
+        val id = dao.insert(entity())
+        val resumeId = database.resumeDao().insertEntity(
+            ResumeEntity(projectId = id, name = "Main", createdAt = 1, updatedAt = 1),
+        )
+        val project = entity().copy(id = id, mainResumeId = resumeId)
+        dao.update(project)
+        assertEquals(1, dao.updateName(id, UPDATED_PROJECT_NAME, 2_000L))
+        assertEquals(
+            project.copy(id = id, name = UPDATED_PROJECT_NAME, updatedAt = 2_000L),
+            dao.findById(id),
+        )
+    }
 
     @Test
     fun marksSubtreeWithOneTimestampAndPreservesEarlierDeletionTimes() = runBlocking {
@@ -169,9 +214,15 @@ class AppDatabaseTest {
     fun persistsProjectsAfterReopeningDatabase() = runBlocking {
         val file = temporaryFolder.root.toPath().resolve("nested/project/test.db")
         val firstDatabase = buildDatabase(createDatabaseBuilder(file))
-        val project = entity()
+        var project = entity()
         val id = try {
-            firstDatabase.projectDao().insert(project)
+            val projectId = firstDatabase.projectDao().insert(project)
+            val resumeId = firstDatabase.resumeDao().insertEntity(
+                ResumeEntity(projectId = projectId, name = "Main", createdAt = 1, updatedAt = 1),
+            )
+            project = project.copy(id = projectId, mainResumeId = resumeId)
+            firstDatabase.projectDao().update(project)
+            projectId
         } finally {
             firstDatabase.close()
         }

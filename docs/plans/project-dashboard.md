@@ -28,12 +28,29 @@ without creating a resume. Relationships between records are optional.
   existing `nowMillis()` helper to obtain the current time.
 - All three models have `keywords: List<String>`, defaulting to an empty list.
 - Records are soft-deleted through `deletedAt`; lists and counts exclude deleted records.
+- Deleting a project marks the project and its descendants as deleted, preserving
+  earlier deletion timestamps. Its resumes, vacancies, letters, keywords, and
+  relationships remain unchanged.
+- Lists, searches, and counts exclude records whose owning project is deleted;
+  record creation, updates, and relationship selection reject deleted projects.
+- Project restoration is outside this milestone. Future branch restoration must
+  distinguish descendants deleted with the parent from those deleted earlier.
 - Resumes and letters initially store editable text.
+- A project may select one main resume through `Project.mainResumeId: Long?`.
+- Adaptations default to the main resume as their source; users may choose another.
+- Assign only an active resume belonging to the same project; clear the selection
+  atomically when that resume is soft-deleted.
 - Opening the dashboard does not change the project's mode.
 - Creating the first record in any section changes the project to `Workspace`.
 - A project in `Container` mode cannot contain its own workspace records.
 - A project in `Workspace` mode cannot contain subprojects.
 - Record creation and the mode transition must occur in a single transaction.
+- Soft-deleting a resume clears the project's main selection, adaptation source
+  references, and vacancy resume references in the same transaction.
+- Soft-deleting a letter clears vacancy letter references in the same transaction.
+- Clearing references preserves the independent text of adaptations and vacancies.
+- Deleting the last active record across all three sections returns the project
+  to `Unconfigured` in the same transaction.
 
 ## Navigation and screen layout
 
@@ -120,25 +137,26 @@ For indexed searches by individual keywords, use the database tables
 
 ## Stage 1. Domain models
 
-- [ ] Add `Resume`, `Vacancy`, and `CoverLetter` in separate model packages.
-- [ ] Add the shared and model-specific fields listed above.
-- [ ] Define defaults for optional fields and `keywords`.
-- [ ] Follow the existing `DomainModel` contract and project conventions.
+- [x] Add `Resume`, `Vacancy`, and `CoverLetter` in separate model packages.
+- [x] Add the shared and model-specific fields listed above.
+- [x] Define defaults for optional fields and `keywords`.
+- [x] Follow the existing `DomainModel` contract and project conventions.
 
 ## Stage 2. Database and DAOs
 
-- [ ] Add Room entities and mappings between database entities and domain models.
-- [ ] Add keyword tables and the required foreign keys.
-- [ ] Add indexes on `projectId`, relationship foreign keys, and keywords
+- [x] Add the main-resume foreign key when the resume table is introduced.
+- [x] Add Room entities and mappings between database entities and domain models.
+- [x] Add keyword tables and the required foreign keys.
+- [x] Add indexes on `projectId`, relationship foreign keys, and keywords
   based on the actual queries.
-- [ ] Add DAOs for creating, reading, updating, and soft-deleting records.
-- [ ] Add observation of active records and their counts in the selected project.
-- [ ] Add keyword searches for each entity.
-- [ ] Implement transactional record creation that changes the project to `Workspace`.
-- [ ] Reject record creation in a missing, deleted, or container project.
-- [ ] Preserve the rule that `Workspace` projects cannot contain subprojects.
-- [ ] Register the new entities and DAOs in `AppDatabase`.
-- [ ] Regenerate the single version 1 schema and recreate the old local database
+- [x] Add DAOs for creating, reading, updating, and soft-deleting records.
+- [x] Add observation of active records and their counts in the selected project.
+- [x] Add keyword searches for each entity.
+- [x] Implement transactional record creation that changes the project to `Workspace`.
+- [x] Reject record creation in a missing, deleted, or container project.
+- [x] Preserve the rule that `Workspace` projects cannot contain subprojects.
+- [x] Register the new entities and DAOs in `AppDatabase`.
+- [x] Regenerate the single version 1 schema and recreate the old local database
   if necessary. There is no real user data yet, so migrations are not required.
 
 ## Stage 3. Repositories and dependencies
@@ -150,8 +168,9 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Add observation of the three section counts for the dashboard.
 - [x] Provide observation of active projects for the navigation tree, including
   hierarchy and name changes.
-- [ ] Validate that related records belong to the selected project.
-- [ ] Reject relationships to missing or soft-deleted records.
+- [x] Validate that related records belong to the selected project.
+- [x] Reject relationships to missing or soft-deleted records.
+- [x] Validate main-resume selection and clear it atomically on resume deletion.
 - [ ] Use the existing time, error-handling, and lifecycle mechanisms.
 
 ## Stage 4. Project tree and dashboard navigation
@@ -195,13 +214,13 @@ For indexed searches by individual keywords, use the database tables
 
 ## Stage 6. Verification
 
-- [ ] Verify persistence and reading of all three models, including optional relationships.
-- [ ] Verify independent creation of vacancies and letters without a resume.
-- [ ] Verify reuse of one resume and letter across multiple vacancies.
-- [ ] Verify keyword normalization, deduplication, and case-insensitive searches.
-- [ ] Verify that lists, searches, and counts exclude soft-deleted records.
-- [ ] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
-- [ ] Verify that subprojects and workspace records cannot coexist in a project.
+- [x] Verify persistence and reading of all three models, including optional relationships.
+- [x] Verify independent creation of vacancies and letters without a resume.
+- [x] Verify reuse of one resume and letter across multiple vacancies.
+- [x] Verify keyword normalization, deduplication, and case-insensitive searches.
+- [x] Verify that lists, searches, and counts exclude soft-deleted records.
+- [x] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
+- [x] Verify that subprojects and workspace records cannot coexist in a project.
 - [ ] Verify Configure, navigation back, and reopening a project in `Workspace` mode.
 - [x] Verify tree expansion separately from opening a project, root navigation,
   current selection, ancestor expansion, and scrolling the selection into view.
@@ -224,9 +243,9 @@ For indexed searches by individual keywords, use the database tables
 ## Open questions
 
 - [ ] Define minimum name and content validation when creating records.
-- [ ] Define relationship behavior when a resume, letter, or vacancy is soft-deleted.
-- [ ] Define workspace-record behavior when their project is deleted.
-- [ ] Decide whether a project stays in `Workspace` after its last record is deleted.
+- [x] Define relationship behavior when a resume, letter, or vacancy is soft-deleted.
+- [x] Define workspace-record behavior when their project is deleted.
+- [x] Decide whether a project stays in `Workspace` after its last record is deleted.
 - [ ] Define searches with multiple keywords: match all or any.
 - [ ] Agree on the dashboard layout for narrow windows.
 - [ ] Agree on left-pane sizing and how deep nesting behaves in narrow windows.
@@ -237,7 +256,22 @@ For indexed searches by individual keywords, use the database tables
 
 ## Current state
 
-The plan has been saved. Model and dashboard implementation has not started.
+The three domain models are implemented with the agreed fields and optional defaults.
+The project model and version 1 schema include nullable `mainResumeId` / `main_resume_id`.
+The database now contains projects, resumes, vacancies, cover letters, and three
+keyword tables, with foreign keys and indexes. Complete record reads include keywords
+in their saved order; writes normalize whitespace and deduplicate case-insensitively,
+while preserving the first spelling for display. Single-keyword searches are indexed.
+DAOs provide transactional creation, updates, soft deletion, active lists, and counts.
+Creation promotes a project to Workspace atomically and rejects missing, deleted,
+or Container projects. Relationship writes require active records in the same project.
+Main-resume selection and deletion cleanup are implemented; deleting the final active
+workspace record returns the project to Unconfigured.
+Lists, counts, and searches exclude records owned by deleted projects. Project deletion
+preserves its workspace records and relationships, including their existing deletion
+states; only projects and their descendants are marked deleted. Restoration is not
+implemented in this milestone.
+New repositories, dependency wiring, and the dashboard remain pending.
 The project already has `ProjectMode` values `Unconfigured`, `Container`,
 and `Workspace`; Configure currently has an empty click handler.
 The root now displays a project tree with separate expansion and navigation actions,
@@ -258,10 +292,10 @@ have been removed; the underlying project path is retained for hierarchy navigat
 Main content scrolls independently, while empty-screen and list controls stay at the bottom.
 Opening help no longer moves the controls, including on narrow project screens.
 
-Next: implement the three domain models in Stage 1, then their storage and repositories.
+Next: add the repositories and dependency wiring in Stage 3.
 The dashboard itself and Configure navigation remain pending.
 
-Verification on 2026-10-05: all JVM tests, screenshot verification, ktlint,
+Verification on 2026-10-05: all 148 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed with:
 
 ```shell
@@ -271,3 +305,10 @@ Detekt, and coverage verification passed with:
 Project-screen, root-screen, loading, empty-project, and UI-scale goldens were updated.
 Isolated tree and project-list goldens were visually reviewed in dark and light themes,
 including the expanded project help on a narrow screen.
+
+Database verification includes round-trip mappings, reopening persisted records,
+optional and reused links, foreign-key rejection, atomic rollback, invalid updates,
+keyword replacement and observation, section-count observation, deletion cleanup,
+and competing child / workspace creation. Generated Room DAO implementations are
+excluded from coverage using the same rule previously applied to ProjectDao.
+The local development database must be recreated before launching against this schema.

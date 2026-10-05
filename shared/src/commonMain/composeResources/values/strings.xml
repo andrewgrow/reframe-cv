@@ -25,7 +25,7 @@
     <string name="project_empty">This project is empty. Configure it for your work or create subprojects.</string>
     <string name="project_empty_help">A project can either have its own workspace or contain subprojects. Use subprojects to organize your work, for example:</string>
     <string name="project_empty_help_example">Projects\n└── Backend\n    ├── Java\n    └── Node.js</string>
-    <string name="project_empty_help_footer">Each subproject can have its own settings, resumes, and cover letters.</string>
+    <string name="project_empty_help_footer">Each subproject can have its own vacancies, resumes, and cover letters.</string>
     <string name="project_configure">Configure</string>
     <string name="project_add">Add project</string>
 </resources>

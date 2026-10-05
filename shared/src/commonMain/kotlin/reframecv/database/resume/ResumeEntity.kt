@@ -1,4 +1,4 @@
-package reframecv.database.project
+package reframecv.database.resume
 
 import androidx.room3.ColumnInfo
 import androidx.room3.Entity
@@ -7,66 +7,64 @@ import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
-import reframecv.database.resume.ResumeEntity
-import reframecv.domain.models.project.Project
-import reframecv.domain.models.project.ProjectMode
+import reframecv.database.project.ProjectEntity
+import reframecv.domain.models.resume.Resume
 
 @Entity(
-    tableName = "projects",
+    tableName = "resumes",
     foreignKeys = [
         ForeignKey(
             entity = ProjectEntity::class,
             parentColumns = ["id"],
-            childColumns = ["parent_id"],
+            childColumns = ["project_id"],
             onDelete = ForeignKey.RESTRICT,
         ),
         ForeignKey(
             entity = ResumeEntity::class,
             parentColumns = ["id"],
-            childColumns = ["main_resume_id"],
+            childColumns = ["source_resume_id"],
             onDelete = ForeignKey.SET_NULL,
         ),
     ],
-    indices = [Index(value = ["parent_id"]), Index(value = ["main_resume_id"])],
+    indices = [Index(value = ["project_id"]), Index(value = ["source_resume_id"])],
 )
-data class ProjectEntity(
+data class ResumeEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
+    @ColumnInfo(name = "project_id")
+    val projectId: Long,
     val name: String,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long,
-    @ColumnInfo(name = "parent_id")
-    val parentId: Long? = null,
+    val content: String = "",
+    @ColumnInfo(name = "source_resume_id")
+    val sourceResumeId: Long? = null,
     @ColumnInfo(name = "deleted_at")
     val deletedAt: Long? = null,
-    @ColumnInfo(defaultValue = "'Unconfigured'")
-    val mode: ProjectMode = ProjectMode.Unconfigured,
-    @ColumnInfo(name = "main_resume_id")
-    val mainResumeId: Long? = null,
-) : DatabaseModel<Project> {
-    override fun toDomainModel() = Project(
+) : DatabaseModel<Resume> {
+    override fun toDomainModel() = Resume(
         id = id,
+        projectId = projectId,
         name = name,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        parentId = parentId,
+        content = content,
+        sourceResumeId = sourceResumeId,
         deletedAt = deletedAt,
-        mode = mode,
-        mainResumeId = mainResumeId,
     )
 
-    companion object : DatabaseModelFactory<Project, ProjectEntity> {
-        override fun fromDomainModel(domainModel: Project) = ProjectEntity(
+    companion object : DatabaseModelFactory<Resume, ResumeEntity> {
+        override fun fromDomainModel(domainModel: Resume) = ResumeEntity(
             id = domainModel.id,
+            projectId = domainModel.projectId,
             name = domainModel.name,
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
-            parentId = domainModel.parentId,
+            content = domainModel.content,
+            sourceResumeId = domainModel.sourceResumeId,
             deletedAt = domainModel.deletedAt,
-            mode = domainModel.mode,
-            mainResumeId = domainModel.mainResumeId,
         )
     }
 }

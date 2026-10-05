@@ -31,6 +31,14 @@ interface ProjectDao {
     )
     suspend fun markAsContainer(id: Long, updatedAt: Long): Int
 
+    @Query(
+        "UPDATE projects SET main_resume_id = :resumeId, updated_at = :updatedAt " +
+            "WHERE id = :id AND deleted_at IS NULL AND mode = 'Workspace' AND " +
+            "(:resumeId IS NULL OR EXISTS (SELECT 1 FROM resumes WHERE resumes.id = :resumeId " +
+            "AND resumes.project_id = :id AND resumes.deleted_at IS NULL))",
+    )
+    suspend fun setMainResume(id: Long, resumeId: Long?, updatedAt: Long): Int
+
     @Update
     suspend fun update(project: ProjectEntity)
 

@@ -61,7 +61,7 @@ kover {
                 classes(
                     "reframecv.database.AppDatabase_Impl*",
                     "reframecv.database.AppDatabaseConstructor*",
-                    "reframecv.database.project.ProjectDao_Impl*",
+                    "reframecv.database.*.*Dao_Impl*",
                 )
             }
         }
