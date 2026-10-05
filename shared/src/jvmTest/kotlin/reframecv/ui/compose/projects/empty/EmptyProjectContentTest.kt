@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
@@ -59,6 +60,8 @@ class EmptyProjectContentTest {
         val footer = getTestString(Res.string.project_empty_help_footer)
         val title = getTestString(Res.string.project_editor_create_title)
         setContent { ProjectsContent(component) }
+        val add = onNodeWithText(getTestString(Res.string.project_add))
+        val actionBounds = add.fetchSemanticsNode().boundsInRoot
         onNodeWithText(message).assertIsDisplayed()
         onNodeWithText(help).assertDoesNotExist()
         onNodeWithText(getTestString(Res.string.project_configure)).performClick()
@@ -68,6 +71,7 @@ class EmptyProjectContentTest {
         onNodeWithText(help).assertIsDisplayed()
         onNodeWithText(example).assertIsDisplayed()
         onNodeWithText(footer).assertIsDisplayed()
+        assertEquals(actionBounds, add.fetchSemanticsNode().boundsInRoot)
         onNodeWithContentDescription(getTestString(Res.string.projects_help_hide)).performClick()
         onNodeWithText(help).assertDoesNotExist()
         onNodeWithText(example).assertDoesNotExist()

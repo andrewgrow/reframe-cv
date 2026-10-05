@@ -51,8 +51,15 @@ internal fun RootNavigation(component: ProjectTreeComponent, modifier: Modifier 
             tokens.dimensions.projectTreeTextMinWidth + tokens.dimensions.iconSize +
                 tokens.spacing.small * 3 +
                 tokens.spacing.medium * (rows.maxOfOrNull { it.depth } ?: 0)
-            ).coerceAtLeast(tokens.dimensions.navigationWidth)
-        Box(Modifier.horizontalScroll(horizontalScroll)) {
+            ).coerceAtLeast(tokens.dimensions.navigationWidth - tokens.spacing.medium * 2)
+        Box(
+            Modifier.padding(
+                start = tokens.spacing.medium,
+                end = tokens.spacing.medium,
+                top = tokens.spacing.medium,
+            )
+                .horizontalScroll(horizontalScroll),
+        ) {
             LazyColumn(Modifier.width(contentWidth).fillMaxHeight(), state = listState) {
                 item(key = "root") {
                     ProjectTreeEntry(

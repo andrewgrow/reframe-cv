@@ -11,6 +11,7 @@ import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -52,11 +53,16 @@ internal fun ProjectRow(
         SelectableText(
             project.name,
             selectionModifier = Modifier.weight(1f),
-            modifier = Modifier.fillMaxWidth().clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                role = Role.Button,
-            ) { onOpenProject(project) },
+            modifier = Modifier.fillMaxWidth()
+                .padding(
+                    vertical =
+                        ReframeTheme.tokens.spacing.small + ReframeTheme.tokens.outlineWidth,
+                )
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    role = Role.Button,
+                ) { onOpenProject(project) },
             color = MaterialTheme.colorScheme.onBackground,
         )
         AnimatedVisibility(visible = hovered || focused, enter = fadeIn(), exit = fadeOut()) {

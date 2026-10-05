@@ -25,7 +25,6 @@ interface ProjectsComponent {
 
     fun onAddProject()
     fun onOpenProject(project: Project)
-    fun onBreadcrumb(index: Int)
     fun onEditProject(project: Project)
 }
 
@@ -34,7 +33,6 @@ class DefaultProjectsComponent(
     storeFactory: StoreFactory = DefaultStoreFactory(),
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
-    private val onBreadcrumbSelected: (Int) -> Unit = {},
     executorFactory: () -> ProjectsExecutor = {
         RealProjectsExecutor(
             componentContext.dependencies.projectsRepository,
@@ -108,10 +106,6 @@ class DefaultProjectsComponent(
 
     override fun onOpenProject(project: Project) {
         onProjectOpened(project)
-    }
-
-    override fun onBreadcrumb(index: Int) {
-        onBreadcrumbSelected(index)
     }
 
     override fun onEditProject(project: Project) {

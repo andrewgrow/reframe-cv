@@ -14,7 +14,7 @@ The dashboard contains three columns: **Resumes**, **Vacancies**, and **Cover le
 each showing the number of active records in its section.
 
 Project navigation is part of this milestone: replace the left menu buttons
-with a project tree and replace right-pane breadcrumbs with a compact title.
+with a project tree and remove right-pane breadcrumbs and repeated project titles.
 The right pane contains the main content area and a bottom controls area.
 
 All three sections are independent. Users can start with vacancies or letters
@@ -46,8 +46,9 @@ without creating a resume. Relationships between records are optional.
   keep hover and keyboard focus visible.
 - When a project is opened, expand its ancestors and scroll the selected row into view.
 - Truncate long names with an ellipsis and show the full name on hover.
-- Remove breadcrumb rows from the right pane. Keep a compact current-project title
-  with the content, without reserving a separate breadcrumb strip.
+- Remove breadcrumb rows and repeated project titles from the right pane.
+  The selected project in the left tree identifies the current destination.
+- Align menu and content rows using the same token-based top spacing.
 - The main content area uses the available space and scrolls independently;
   controls remain anchored at the bottom.
 - Keep the child-project list and its Edit actions in the right pane;
@@ -166,7 +167,7 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Add a dashboard component with the project identifier and current project name.
 - [ ] Pass the Configure callback from the component to `EmptyProjectActions`.
 - [ ] Add the Configure transition through the existing Decompose navigation.
-- [ ] Preserve hierarchy-aware navigation and Back without visual breadcrumb rows.
+- [x] Preserve hierarchy-aware navigation and Back without visual breadcrumb rows.
 - [ ] Open the dashboard when revisiting a project in `Workspace` mode.
 - [ ] Preserve the current subproject list for `Container` mode.
 - [ ] Preserve the Configure / Add project choice for `Unconfigured` mode.
@@ -179,9 +180,9 @@ For indexed searches by individual keywords, use the database tables
 
 - [x] Add the scrollable text-based project tree with expansion arrows,
   selection, hover, keyboard focus, and full-name tooltips.
-- [ ] Replace right-pane breadcrumb rows across project screens with a compact title.
-- [ ] Keep the title current after renaming the open project.
-- [ ] Keep the main content scrollable and the bottom controls anchored.
+- [x] Remove right-pane breadcrumb rows and repeated project titles.
+- [x] Keep project names current in the left tree after renaming.
+- [x] Keep the main content scrollable and the bottom controls anchored.
 - [ ] Create a separate dashboard UI package alongside the other project screens.
 - [ ] Put the screen container and reusable section block in separate files.
 - [ ] Show three columns: Resumes, Vacancies, and Cover letters.
@@ -207,10 +208,10 @@ For indexed searches by individual keywords, use the database tables
 - [x] Verify tree updates after creation, renaming, and deletion, including
   deletion of the currently open project.
 - [x] Verify keyboard navigation and focus visibility in the tree.
-- [ ] Verify title updates and independent tree / content scrolling.
+- [x] Verify tree name updates and independent tree / content scrolling.
 - [x] Add isolated tree goldens covering nesting, expansion, selection,
   long names, and both themes.
-- [ ] Update full-screen goldens for the new left navigation and compact title;
+- [x] Update full-screen goldens for the new left navigation and content layout;
   remove obsolete breadcrumb-specific tests and references once replaced.
 - [ ] Verify count updates and dashboard loading / error states.
 - [ ] Add dashboard goldens in dark and light themes, with zero and nonzero counts.
@@ -250,15 +251,23 @@ remain owned by the root navigation UI when the right-pane screen changes.
 Tree navigation uses the existing Decompose stack: opening a new destination adds
 it to history, while selecting a destination already in the stack returns to it.
 
-Project screens still show breadcrumbs. Replacing them with a compact title and
-updating the title after renaming remain pending.
+Project names are shown in the left tree without a duplicate right-pane title.
+The tree and project list use the same medium top spacing and aligned row text.
+The visual breadcrumb component and title component, their tests, and goldens
+have been removed; the underlying project path is retained for hierarchy navigation.
+Main content scrolls independently, while empty-screen and list controls stay at the bottom.
+Opening help no longer moves the controls, including on narrow project screens.
 
-Verification on 2026-10-05: all 127 JVM tests, screenshot verification, ktlint,
+Next: implement the three domain models in Stage 1, then their storage and repositories.
+The dashboard itself and Configure navigation remain pending.
+
+Verification on 2026-10-05: all JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed with:
 
 ```shell
 ./gradlew cleanJvmTest ktlintCheck detekt allTests :koverVerify --no-parallel --no-build-cache
 ```
 
-The two root-screen goldens were updated, and isolated tree goldens were added
-and visually reviewed in dark and light themes.
+Project-screen, root-screen, loading, empty-project, and UI-scale goldens were updated.
+Isolated tree and project-list goldens were visually reviewed in dark and light themes,
+including the expanded project help on a narrow screen.

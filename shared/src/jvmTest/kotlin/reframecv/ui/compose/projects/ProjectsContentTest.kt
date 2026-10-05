@@ -2,14 +2,12 @@ package reframecv.ui.compose.projects
 
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performMouseInput
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
@@ -40,24 +38,21 @@ import reframecv.ui.compose.projects.list.projectRowTag
 class ProjectsContentTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun emptyChildProjectKeepsBreadcrumbNavigationAndCreation() = runComposeUiTest {
-        var selected: Int? = null
+    fun emptyChildProjectAllowsCreationWithoutRepeatingItsName() = runComposeUiTest {
         val component = TestProjectsComponent(
             projectPath = listOf(ProjectBreadcrumb(1, "Backend"), ProjectBreadcrumb(2, "Google")),
-            onBreadcrumbSelected = { selected = it },
         )
         setContent { ProjectsContent(component) }
         onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
-        onNodeWithText("Google").assertIsDisplayed()
-        onNodeWithText("Backend").performClick()
-        assertEquals(1, selected)
+        onNodeWithText("Google").assertDoesNotExist()
+        onNodeWithText("Backend").assertDoesNotExist()
         onNodeWithText(getTestString(Res.string.project_add)).performClick()
         onNodeWithText(createTitle).assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun projectListScrollsWhileBreadcrumbsAndAddButtonStayFixed() = runComposeUiTest {
+    fun projectListScrollsWhileAddButtonStaysFixed() = runComposeUiTest {
         val projects = List(100) { index ->
             Project(id = index.toLong(), name = "Project $index", createdAt = 0, updatedAt = 0)
         }
@@ -73,23 +68,19 @@ class ProjectsContentTest {
             )
         }
         val addButton = onNodeWithText(addProjectLabel)
-        val breadcrumb = onNodeWithText("This Project")
         val initialButtonBounds = addButton.fetchSemanticsNode().boundsInRoot
-        val initialBreadcrumbBounds = breadcrumb.fetchSemanticsNode().boundsInRoot
         onNodeWithTag(PROJECTS_LIST_TAG).performScrollToIndex(projects.lastIndex)
 
         onNodeWithText(projects.last().name).assertIsDisplayed()
         addButton.assertIsDisplayed()
-        breadcrumb.assertIsDisplayed()
         assertEquals(initialButtonBounds, addButton.fetchSemanticsNode().boundsInRoot)
-        assertEquals(initialBreadcrumbBounds, breadcrumb.fetchSemanticsNode().boundsInRoot)
         addButton.performClick()
         onNodeWithText(createTitle).assertIsDisplayed()
     }
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun longBreadcrumbPathScrollsHorizontally() = runComposeUiTest {
+    fun deepProjectPathDoesNotRepeatNamesAboveContent() = runComposeUiTest {
         val project = Project(id = 1, name = "Child Project", createdAt = 0, updatedAt = 0)
         setContent {
             ProjectsContent(
@@ -102,9 +93,8 @@ class ProjectsContentTest {
                 ),
             )
         }
-        onNodeWithText("This Project").assertIsDisplayed()
-        onNodeWithText("Parent project with a long name 0").assertIsNotDisplayed()
-        onNodeWithText("Parent project with a long name 0").performScrollTo().assertIsDisplayed()
+        onNodeWithText("This Project").assertDoesNotExist()
+        onNodeWithText("Parent project with a long name 0").assertDoesNotExist()
         onNodeWithText(project.name).assertIsDisplayed()
         onNodeWithText(addProjectLabel).assertIsDisplayed()
     }
@@ -154,11 +144,14 @@ class ProjectsContentTest {
     fun projectHelpIsHiddenInitiallyAndTogglesOnClick() = runComposeUiTest {
         val help = getTestString(Res.string.projects_help)
         setContent { ProjectsContent(TestProjectsComponent()) }
+        val add = onNodeWithText(addProjectLabel)
+        val actionBounds = add.fetchSemanticsNode().boundsInRoot
 
         onNodeWithText(help).assertDoesNotExist()
         onNodeWithContentDescription(getTestString(Res.string.projects_help_show)).performClick()
         onNodeWithText(help).assertIsDisplayed()
         onNodeWithText(addProjectLabel).assertIsDisplayed()
+        assertEquals(actionBounds, add.fetchSemanticsNode().boundsInRoot)
         onNodeWithContentDescription(getTestString(Res.string.projects_help_hide)).performClick()
         onNodeWithText(help).assertDoesNotExist()
     }

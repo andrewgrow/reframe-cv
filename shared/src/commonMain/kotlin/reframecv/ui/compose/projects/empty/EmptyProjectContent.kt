@@ -6,12 +6,15 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,28 +28,36 @@ import reframecv.ui.theme.ReframeTheme
 internal fun EmptyProjectContent(onAddProject: () -> Unit) {
     val tokens = ReframeTheme.tokens
     var showHelp by remember { mutableStateOf(false) }
-    Column(
-        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())
-            .padding(tokens.spacing.medium),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            tokens.spacing.medium,
-            Alignment.CenterVertically,
-        ),
-    ) {
+    Column(Modifier.fillMaxSize()) {
         Column(
-            modifier = Modifier.widthIn(max = tokens.dimensions.projectHelpMaxWidth),
+            modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(tokens.spacing.medium),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(
+                tokens.spacing.medium,
+                Alignment.CenterVertically,
+            ),
         ) {
-            EmptyProjectMessage(showHelp = showHelp, onToggleHelp = { showHelp = !showHelp })
-            AnimatedVisibility(
-                visible = showHelp,
-                enter = fadeIn() + expandVertically(),
-                exit = fadeOut() + shrinkVertically(),
+            Column(
+                modifier = Modifier.widthIn(max = tokens.dimensions.projectHelpMaxWidth),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                EmptyProjectHelp()
+                EmptyProjectMessage(showHelp = showHelp, onToggleHelp = { showHelp = !showHelp })
+                AnimatedVisibility(
+                    visible = showHelp,
+                    enter = fadeIn() + expandVertically(),
+                    exit = fadeOut() + shrinkVertically(),
+                ) {
+                    EmptyProjectHelp()
+                }
             }
         }
-        EmptyProjectActions(onAddProject)
+        HorizontalDivider()
+        Box(
+            Modifier.fillMaxWidth().padding(tokens.spacing.medium),
+            contentAlignment = Alignment.Center,
+        ) {
+            EmptyProjectActions(onAddProject)
+        }
     }
 }

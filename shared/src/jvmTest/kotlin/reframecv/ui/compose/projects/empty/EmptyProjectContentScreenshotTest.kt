@@ -6,7 +6,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -58,7 +57,7 @@ class EmptyProjectContentScreenshotTest : GoldenScreenshotTest() {
             captureGolden(this, PROJECTS_SCREEN_TAG)
 
             runOnIdle { contentHeight.value = 320.dp }
-            add.assertIsNotDisplayed().performScrollTo().assertIsDisplayed()
+            add.assertIsDisplayed()
             configure.assertIsDisplayed()
             onNodeWithText(getTestString(Res.string.project_empty))
                 .performScrollTo().assertIsDisplayed()

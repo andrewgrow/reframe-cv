@@ -11,8 +11,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 import reframecv.testing.GoldenScreenshotTest
-import reframecv.ui.components.projects.ProjectBreadcrumb
-import reframecv.ui.compose.projects.common.ProjectBreadcrumbs
+import reframecv.ui.compose.application.navigation.ProjectTreeEntry
 import reframecv.ui.compose.projects.list.ProjectAction
 import reframecv.ui.compose.projects.list.ProjectControls
 import reframecv.ui.theme.ReframeTheme.ThemeMode
@@ -40,7 +39,7 @@ class UiScaleScreenshotTest : GoldenScreenshotTest() {
                                 color = MaterialTheme.colorScheme.onBackground,
                                 style = MaterialTheme.typography.titleMedium,
                             )
-                            ProjectBreadcrumbs(listOf(ProjectBreadcrumb(1, "Android Developer")))
+                            ProjectTreeEntry("Android Developer", selected = true, onClick = {})
                             ProjectControls(listOf(ProjectAction("Add Project", onClick = {})))
                         }
                     }

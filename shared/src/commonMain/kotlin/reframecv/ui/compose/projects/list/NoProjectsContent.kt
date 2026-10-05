@@ -5,24 +5,22 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,26 +41,28 @@ import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun NoProjectsContent(onAddProject: () -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        NoProjectsMessage(Modifier.weight(1f))
+        HorizontalDivider()
+        ProjectControls(
+            listOf(ProjectAction(stringResource(Res.string.projects_add), onAddProject)),
+        )
+    }
+}
+
+@Composable
+private fun NoProjectsMessage(modifier: Modifier) {
     val tokens = ReframeTheme.tokens
     var showProjectHelp by remember { mutableStateOf(false) }
     val emptyMessage = stringResource(Res.string.projects_empty)
-    val addProjectLabel = stringResource(Res.string.projects_add)
     val helpMessage = stringResource(Res.string.projects_help)
     val showHelpLabel = stringResource(Res.string.projects_help_show)
     val hideHelpLabel = stringResource(Res.string.projects_help_hide)
-
     Column(
-        modifier = Modifier
-            .background(MaterialTheme.colorScheme.background)
-            .safeContentPadding()
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+        modifier.fillMaxWidth().verticalScroll(rememberScrollState())
             .padding(tokens.spacing.medium),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(
-            space = tokens.spacing.medium,
-            alignment = Alignment.CenterVertically,
-        ),
+        verticalArrangement = Arrangement.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Row(
@@ -97,9 +97,6 @@ internal fun NoProjectsContent(onAddProject: () -> Unit) {
                     textAlign = TextAlign.Center,
                 )
             }
-        }
-        Button(onClick = onAddProject, contentPadding = tokens.buttonContentPadding) {
-            Text(addProjectLabel)
         }
     }
 }

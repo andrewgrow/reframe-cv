@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -28,7 +29,7 @@ class RootProjectTreeTest : ComponentTest() {
             lifecycle.resume()
             root.projectTree.state.subscribe { updates.trySend(it) }
         }
-        withTimeout(10_000L) {
+        withTimeout(10_000L.milliseconds) {
             awaitState(updates) { !it.loading }
             runOnUiThread { root.projectTree.onProjectSelected(java.id) }
             val javaState = awaitState(updates) { it.selectedId == java.id }
@@ -39,8 +40,8 @@ class RootProjectTreeTest : ComponentTest() {
             assertTrue(mobile.id in androidState.expandedIds)
             assertTrue(backend.id in androidState.expandedIds)
             assertEquals(listOf(mobile.id, android.id), activePath(root))
-            repository.updateProject(android.id, "Android Developer")
-            awaitState(updates) { it.projects.any { p -> p.name == "Android Developer" } }
+            renameAndAssertTree(updates, android.id, "Android Developer")
+            renameAndAssertTree(updates, java.id, "Java Developer")
             repository.deleteProject(android.id)
             val afterDelete = awaitState(updates) { it.selectedId == mobile.id }
             assertTrue(afterDelete.projects.none { it.id == android.id })
@@ -72,6 +73,17 @@ class RootProjectTreeTest : ComponentTest() {
                 root.onProjectsList()
                 assertEquals(null, root.projectTree.state.value.selectedId)
             }
+        }
+    }
+
+    private suspend fun renameAndAssertTree(
+        updates: Channel<ProjectTreeState>,
+        id: Long,
+        name: String,
+    ) {
+        dependencies.projectsRepository.updateProject(id, name)
+        awaitState(updates) {
+            it.projects.any { project -> project.id == id && project.name == name }
         }
     }
 

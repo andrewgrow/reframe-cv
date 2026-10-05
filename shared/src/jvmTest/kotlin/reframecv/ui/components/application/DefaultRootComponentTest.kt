@@ -1,5 +1,6 @@
 package reframecv.ui.components.application
 
+import com.arkivanov.essenty.backhandler.BackDispatcher
 import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -16,7 +17,7 @@ import reframecv.ui.threading.runOnUiThread
 
 class DefaultRootComponentTest : ComponentTest() {
     @Test
-    fun opensNestedProjectsAndReturnsThroughBreadcrumbsAndMenu() = runOnUiThread {
+    fun opensNestedProjectsAndReturnsThroughBackAndTreeRoot() = runOnUiThread {
         val root = DefaultRootComponent(appComponentContext())
         lifecycle.resume()
         val rootProjects =
@@ -37,7 +38,7 @@ class DefaultRootComponentTest : ComponentTest() {
             childProjects.projectPath,
         )
         assertEquals(2, root.childStack.value.backStack.size)
-        childProjects.onBreadcrumb(1)
+        assertTrue((root.backHandler as BackDispatcher).back())
         assertSame(
             parentProjects,
             assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance).component,

@@ -99,9 +99,6 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                         configuration.projectPath + ProjectBreadcrumb(project.id, project.name),
                     )
                 },
-                onBreadcrumbSelected = { index ->
-                    openPath(configuration.projectPath.take(index))
-                },
             ),
         )
     }
