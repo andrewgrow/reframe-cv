@@ -164,17 +164,17 @@ For indexed searches by individual keywords, use the database tables
 
 ## Stage 3. Repositories and dependencies
 
-- [ ] Add separate `ResumesRepository`, `VacanciesRepository`,
+- [x] Add separate `ResumesRepository`, `VacanciesRepository`,
   and `CoverLettersRepository` contracts.
-- [ ] Add local implementations that encapsulate DAOs and transactions.
-- [ ] Provide the repositories through `ApplicationDependencies`.
-- [ ] Add observation of the three section counts for the dashboard.
+- [x] Add local implementations that encapsulate DAOs and transactions.
+- [x] Provide the repositories through `ApplicationDependencies`.
+- [x] Add observation of the three section counts for the dashboard.
 - [x] Provide observation of active projects for the navigation tree, including
   hierarchy and name changes.
 - [x] Validate that related records belong to the selected project.
 - [x] Reject relationships to missing or soft-deleted records.
 - [x] Validate main-resume selection and clear it atomically on resume deletion.
-- [ ] Use the existing time, error-handling, and lifecycle mechanisms.
+- [x] Use the existing time, error-handling, and lifecycle mechanisms.
 
 ## Stage 4. Project tree and dashboard navigation
 
@@ -190,12 +190,12 @@ For indexed searches by individual keywords, use the database tables
 - [x] Pass the Configure callback from the component to `EmptyProjectActions`.
 - [x] Add the Configure transition through the existing Decompose navigation.
 - [x] Preserve hierarchy-aware navigation and Back without visual breadcrumb rows.
-- [ ] Open the dashboard when revisiting a project in `Workspace` mode.
-- [ ] Preserve the current subproject list for `Container` mode.
-- [ ] Preserve the Configure / Add project choice for `Unconfigured` mode.
-- [ ] Observe counts and cancel observation when the component is destroyed.
-- [ ] Distinguish loading, ready, and error states.
-- [ ] Use the existing delayed loading indicator so zero counts are not shown
+- [x] Open the dashboard when revisiting a project in `Workspace` mode.
+- [x] Preserve the current subproject list for `Container` mode.
+- [x] Preserve the Configure / Add project choice for `Unconfigured` mode.
+- [x] Observe counts and cancel observation when the component is destroyed.
+- [x] Distinguish loading, ready, and error states.
+- [x] Use the existing delayed loading indicator so zero counts are not shown
   as results before the initial read completes.
 
 ## Stage 5. Dashboard layout
@@ -208,7 +208,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Create a separate dashboard UI package alongside the other project screens.
 - [x] Put the screen container and reusable section block in separate files.
 - [x] Show three columns: Resumes, Vacancies, and Cover letters.
-- [ ] Show actual active-record counts; empty sections display `0`.
+- [x] Show actual active-record counts; empty sections display `0`.
 - [x] Use English string resources and the tokens and colors from `ReframeTheme`.
 - [x] Use `SelectableText` for ordinary text where it does not interfere with interaction.
 - [x] Support narrow windows and increased UI scale without clipping content.
@@ -225,7 +225,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
 - [x] Verify that subprojects and workspace records cannot coexist in a project.
 - [x] Verify Configure and Back without changing project mode, including deletion of the open dashboard project.
-- [ ] Verify reopening a project in `Workspace` mode once mode-based routing is implemented.
+- [x] Verify reopening a project in `Workspace` mode once mode-based routing is implemented.
 - [x] Verify tree expansion separately from opening a project, root navigation,
   current selection, ancestor expansion, and scrolling the selection into view.
 - [x] Verify tree updates after creation, renaming, and deletion, including
@@ -236,12 +236,12 @@ For indexed searches by individual keywords, use the database tables
   long names, and both themes.
 - [x] Update full-screen goldens for the new left navigation and content layout;
   remove obsolete breadcrumb-specific tests and references once replaced.
-- [ ] Verify count updates and dashboard loading / error states.
-- [ ] Add dashboard goldens in dark and light themes, with zero and nonzero counts.
-- [ ] Add a separate golden for the reusable section block if its states need
+- [x] Verify count updates and dashboard loading / error states.
+- [x] Add dashboard goldens in dark and light themes, with zero and nonzero counts.
+- [x] Add a separate golden for the reusable section block if its states need
   detailed coverage; do not duplicate all of them on the full screen.
-- [ ] Verify narrow windows and increased UI scale.
-- [ ] Run formatting, ktlint, Detekt, all tests, and coverage verification
+- [x] Verify narrow windows and increased UI scale.
+- [x] Run formatting, ktlint, Detekt, all tests, and coverage verification
   using the current README instructions; visually review new goldens.
 
 ## Open questions
@@ -275,8 +275,12 @@ Lists, counts, and searches exclude records owned by deleted projects. Project d
 preserves its workspace records and relationships, including their existing deletion
 states; only projects and their descendants are marked deleted. Restoration is not
 implemented in this milestone.
-New repositories and dependency wiring remain pending.
-Configure now opens a layout-only dashboard in the existing Decompose stack,
+Separate repositories now encapsulate transactional DAO writes, active record
+observation, and keyword searches. ApplicationDependencies lazily shares one database
+across all four repositories and prevents service access after closing.
+Record creation and updates use nowMillis(); minimum name / content validation
+remains an open question for the editors.
+Configure opens the dashboard in the existing Decompose stack,
 with three full-height section columns and no selection or creation actions.
 It preserves the tree selection and does not change the project's mode.
 Back returns to the project's empty screen; deleting the project removes its dashboard
@@ -284,7 +288,15 @@ from history and returns to the nearest surviving project or the root.
 Dashboard columns use dedicated theme background colors and token-based spacing.
 They share the available width and retain a minimum width of 160 dp at default scale;
 narrow windows use horizontal scrolling with fixed outer padding.
-Counts, record lists, loading states, and mode-based reopening remain pending.
+The dashboard observes all three active-record lists for its project. Counts are
+computed from these same lists rather than separate count queries, so each section's
+count matches its displayed records. Each column scrolls vertically independently.
+Narrow dashboards scroll horizontally; long record names wrap and remain selectable.
+Loading persists until all three lists have emitted; the spinner appears only after
+one second. Failed reads expose Retry, which replaces the previous observation.
+Destroying the component disposes its store and cancels all observations.
+Reopening Workspace projects routes to the dashboard; Container and Unconfigured
+projects retain their project-list and empty-project screens.
 The project already has `ProjectMode` values `Unconfigured`, `Container`,
 and `Workspace`; Configure opens the dashboard without persisting a mode change.
 The root now displays a project tree with separate expansion and navigation actions,
@@ -305,8 +317,8 @@ have been removed; the underlying project path is retained for hierarchy navigat
 Main content scrolls independently, while empty-screen and list controls stay at the bottom.
 Opening help no longer moves the controls, including on narrow project screens.
 
-Next: add the repositories and dependency wiring in Stage 3.
-Next UI work: connect actual counts and section navigation after their repositories are available.
+Next: agree on section navigation, creation / editing screens, and minimum draft
+validation, then implement the first section editor and connect its actions.
 
 Verification on 2026-10-05: all 158 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed with:
@@ -339,3 +351,15 @@ project deletion while viewing the dashboard, and scrolling to all three section
 
 The current Back navigation is available programmatically; desktop keyboard input
 and an on-screen Back button are not connected yet.
+
+Repository and dashboard verification added on 2026-10-06 covers active-project
+scoping, keyword mappings, write timestamps, updates, soft deletion, dependency reuse,
+combined initial reads, live updates, Retry, and cancellation on component destruction.
+An integration test observes all three sections through ApplicationDependencies and
+checks record and project soft deletion against the real database.
+Dashboard goldens cover empty and populated columns in both themes, a failed read,
+narrow windows, 150% scale, and isolated populated / empty sections.
+
+Verification on 2026-10-06: all 175 JVM tests, screenshot verification, ktlint,
+Detekt, and coverage verification passed using the full command above.
+New and updated dashboard goldens were visually reviewed.

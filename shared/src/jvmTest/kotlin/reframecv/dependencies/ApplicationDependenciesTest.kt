@@ -114,6 +114,9 @@ class ApplicationDependenciesTest {
             assertEquals(0, opened)
             val repository = dependencies.projectsRepository
             assertSame(repository, dependencies.projectsRepository)
+            assertSame(dependencies.resumesRepository, dependencies.resumesRepository)
+            assertSame(dependencies.vacanciesRepository, dependencies.vacanciesRepository)
+            assertSame(dependencies.coverLettersRepository, dependencies.coverLettersRepository)
             assertEquals(1, opened)
             assertFailsWith<IllegalArgumentException> { repository.createProject("  ") }
             val project = repository.createProject("  Android Developer  ")
@@ -124,6 +127,9 @@ class ApplicationDependenciesTest {
         }
         dependencies.close()
         assertFailsWith<IllegalStateException> { dependencies.projectsRepository }
+        assertFailsWith<IllegalStateException> { dependencies.resumesRepository }
+        assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
+        assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
         val reopened = DefaultApplicationDependencies { buildDatabase(createDatabaseBuilder(file)) }
         try {
             assertEquals(
@@ -141,5 +147,8 @@ class ApplicationDependenciesTest {
         dependencies.close()
         dependencies.close()
         assertFailsWith<IllegalStateException> { dependencies.projectsRepository }
+        assertFailsWith<IllegalStateException> { dependencies.resumesRepository }
+        assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
+        assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
     }
 }

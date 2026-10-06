@@ -7,9 +7,12 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
@@ -19,7 +22,9 @@ import reframecv.shared.generated.resources.project_configure
 import reframecv.testing.getTestString
 import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.TestProjectsComponent
-import reframecv.ui.components.projects.dashboard.DashboardComponent
+import reframecv.ui.components.projects.dashboard.DashboardState
+import reframecv.ui.components.projects.dashboard.TestDashboardComponent
+import reframecv.ui.compose.common.LOADING_INDICATOR_TAG
 import reframecv.ui.compose.projects.ProjectsContent
 import reframecv.ui.theme.ReframeTheme
 
@@ -39,9 +44,7 @@ class DashboardContentTest {
 
     @Test
     fun narrowDashboardKeepsAllThreeSectionsReachableWithoutActions() = runComposeUiTest {
-        val component = object : DashboardComponent {
-            override val projectId = 1L
-        }
+        val component = TestDashboardComponent()
         setContent {
             ReframeTheme {
                 Box(Modifier.size(320.dp, 600.dp)) { DashboardContent(component) }
@@ -52,5 +55,51 @@ class DashboardContentTest {
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
         onAllNodes(hasClickAction()).assertCountEquals(0)
+    }
+
+    @Test
+    fun sectionsShowActualCountsAndScrollTheirRecords() = runComposeUiTest {
+        val sample = dashboardSample()
+        val component = TestDashboardComponent(
+            initialState = sample.copy(
+                resumes = List(30) {
+                    sample.resumes.first().copy(id = it.toLong(), name = "Resume $it")
+                },
+            ),
+        )
+        setContent { ReframeTheme { DashboardContent(component) } }
+        onNodeWithText("30").assertIsDisplayed()
+        onNodeWithText("2").assertIsDisplayed()
+        onNodeWithText("1").assertIsDisplayed()
+        onNodeWithTag("dashboard.records.Resumes").performScrollToNode(hasText("Resume 29"))
+        onNodeWithText("Resume 29").assertIsDisplayed()
+        onNodeWithText("Kotlin Developer").assertIsDisplayed()
+        runOnIdle { component.uiState.value = sample }
+        onNodeWithText("30").assertDoesNotExist()
+        onNodeWithText("3").assertIsDisplayed()
+        onNodeWithText("Android Developer").assertIsDisplayed()
+    }
+
+    @Test
+    fun loadingDelaysSpinnerAndFailureOffersRetryWithoutZeroCounts() = runComposeUiTest {
+        mainClock.autoAdvance = false
+        var retries = 0
+        val component =
+            TestDashboardComponent(initialState = DashboardState.Loading, retry = { retries++ })
+        setContent { ReframeTheme { DashboardContent(component) } }
+        mainClock.advanceTimeByFrame()
+        mainClock.advanceTimeBy(900)
+        onNodeWithText("0").assertDoesNotExist()
+        onNodeWithTag(LOADING_INDICATOR_TAG).assertDoesNotExist()
+        mainClock.advanceTimeBy(200)
+        onNodeWithTag(LOADING_INDICATOR_TAG).assertIsDisplayed()
+        runOnIdle { component.uiState.value = DashboardState.LoadFailed }
+        mainClock.advanceTimeByFrame()
+        onNodeWithTag(LOADING_INDICATOR_TAG).assertDoesNotExist()
+        onNodeWithText("Retry").performClick()
+        assertEquals(1, retries)
+        runOnIdle { component.uiState.value = DashboardState.Ready() }
+        mainClock.advanceTimeByFrame()
+        onAllNodes(androidx.compose.ui.test.hasText("0")).assertCountEquals(3)
     }
 }

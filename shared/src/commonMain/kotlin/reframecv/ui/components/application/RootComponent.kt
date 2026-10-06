@@ -8,6 +8,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import reframecv.domain.models.project.Project
+import reframecv.domain.models.project.ProjectMode
 import reframecv.ui.components.application.navigation.DefaultProjectTreeComponent
 import reframecv.ui.components.application.navigation.ProjectTreeComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
@@ -32,6 +33,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     RootComponent,
     AppComponentContext by componentContext {
     private val navigation = StackNavigation<Configuration>()
+    private var activeProjects: List<Project> = emptyList()
 
     override fun onProjectsList() {
         navigation.popTo(0)
@@ -62,21 +64,31 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         lifecycle.doOnDestroy { subscription.cancel() }
     }
 
-    private fun openPath(path: List<ProjectBreadcrumb>) {
+    private fun openPath(
+        path: List<ProjectBreadcrumb>,
+        mode: ProjectMode? = activeProjects.find { it.id == path.lastOrNull()?.id }?.mode,
+    ) {
+        val destination = if (mode == ProjectMode.Workspace) {
+            Configuration.Dashboard(path)
+        } else {
+            Configuration.Projects(path)
+        }
         val configurations = childStack.value.items.map {
             it.configuration as Configuration
         }
         val existing = configurations.indexOfLast { candidate ->
-            candidate.projectPath.map { it.id } == path.map { it.id }
+            candidate::class == destination::class &&
+                candidate.projectPath.map { it.id } == path.map { it.id }
         }
         if (existing >= 0) {
             navigation.popTo(existing)
         } else {
-            navigation.pushNew(Configuration.Projects(path))
+            navigation.pushNew(destination)
         }
     }
 
     private fun onProjectsChanged(projects: List<Project>) {
+        activeProjects = projects
         val current = (childStack.value.active.configuration as Configuration).projectPath
         val activeIds = projects.map { it.id }.toSet()
         if (current.any { it.id !in activeIds }) {
@@ -103,6 +115,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                 onProjectOpened = { project ->
                     openPath(
                         configuration.projectPath + ProjectBreadcrumb(project.id, project.name),
+                        project.mode,
                     )
                 },
             ),

@@ -1,18 +1,25 @@
 package reframecv.ui.compose.projects.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import reframecv.shared.SelectableText
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun DashboardSection(
     title: String,
+    entries: List<DashboardEntry>,
     backgroundColor: Color,
     contentColor: Color,
     modifier: Modifier = Modifier,
@@ -24,7 +31,35 @@ internal fun DashboardSection(
                 horizontal = tokens.spacing.medium,
                 vertical = tokens.spacing.small + tokens.outlineWidth,
             ),
+        verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
     ) {
-        SelectableText(title, color = contentColor, style = MaterialTheme.typography.titleMedium)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
+        ) {
+            SelectableText(
+                title,
+                selectionModifier = Modifier.weight(1f),
+                color = contentColor,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            SelectableText(
+                entries.size.toString(),
+                color = contentColor,
+                style = MaterialTheme.typography.titleMedium,
+            )
+        }
+        LazyColumn(
+            Modifier.weight(1f).fillMaxWidth().testTag("dashboard.records.$title"),
+            verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
+        ) {
+            items(entries, key = { it.id }) { entry ->
+                SelectableText(
+                    entry.name,
+                    color = contentColor,
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        }
     }
 }

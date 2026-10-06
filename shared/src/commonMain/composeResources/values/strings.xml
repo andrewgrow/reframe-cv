@@ -31,4 +31,5 @@
     <string name="dashboard_resumes">Resumes</string>
     <string name="dashboard_vacancies">Vacancies</string>
     <string name="dashboard_cover_letters">Cover letters</string>
+    <string name="dashboard_load_error">Could not load project records. Please try again.</string>
 </resources>

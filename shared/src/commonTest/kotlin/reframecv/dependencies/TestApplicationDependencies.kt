@@ -5,6 +5,9 @@ import kotlinx.coroutines.flow.map
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 import reframecv.repository.ProjectsRepository
+import reframecv.repository.TestCoverLettersRepository
+import reframecv.repository.TestResumesRepository
+import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 
 class TestApplicationDependencies : ApplicationDependencies {
@@ -66,6 +69,12 @@ class TestApplicationDependencies : ApplicationDependencies {
             return project
         }
     }
+
+    override val resumesRepository = TestResumesRepository()
+
+    override val vacanciesRepository = TestVacanciesRepository()
+
+    override val coverLettersRepository = TestCoverLettersRepository()
 
     override fun close() = Unit
 }
