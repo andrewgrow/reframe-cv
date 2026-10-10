@@ -27,11 +27,13 @@ import reframecv.shared.generated.resources.vacancies_empty
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesState
 import reframecv.ui.compose.common.LoadingContent
+import reframecv.ui.compose.projects.vacancies.editor.VacancyEditorContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 fun VacanciesContent(component: VacanciesComponent) {
     val state by component.uiState.subscribeAsState()
+    val editor by component.editorSlot.subscribeAsState()
     val timeZone = remember { TimeZone.currentSystemDefault() }
     key(component.projectId) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -61,17 +63,19 @@ fun VacanciesContent(component: VacanciesComponent) {
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             } else {
-                                VacanciesList(current.vacancies, timeZone)
+                                VacanciesList(current.vacancies, timeZone, component::onEdit)
                             }
                         }
                     }
                 }
                 HorizontalDivider()
                 VacanciesControls(
+                    onAdd = component::onAdd,
                     onBack = component::onBack,
                     onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
                 )
             }
+            editor.child?.instance?.let { VacancyEditorContent(it) }
         }
     }
 }

@@ -1,11 +1,14 @@
 package reframecv.ui.compose.projects.vacancies
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
@@ -37,6 +40,8 @@ class VacanciesContentTest {
         onNodeWithTag(VACANCIES_LIST_TAG).performScrollToNode(hasText("Vacancy 29"))
         onNodeWithText("Vacancy 29").assertIsDisplayed()
         onNodeWithText("Add").assertIsDisplayed().performClick()
+        onNodeWithText("Add vacancy").assertIsDisplayed()
+        onNodeWithText("Cancel").performClick()
         onNodeWithText("Vacancy 29").assertIsDisplayed()
         assertEquals(0, backs)
         onNodeWithText("Back").assertIsDisplayed().performClick()
@@ -76,6 +81,23 @@ class VacanciesContentTest {
         mainClock.advanceTimeByFrame()
         onNodeWithText("No vacancies yet.").assertIsDisplayed()
         onNodeWithText("Retry").assertDoesNotExist()
+    }
+
+    @Test
+    fun clickingTitleCompanyDateAndRowOpensPrefilledEditor() = runComposeUiTest {
+        val sample = vacancySamples().first()
+        val component = TestVacanciesComponent(initialState = VacanciesState.Ready(listOf(sample)))
+        setContent { ReframeTheme { VacanciesContent(component) } }
+        for (text in listOf(sample.name, sample.company, "2026-10-10")) {
+            onNodeWithText(text).performMouseInput { click() }
+            onNodeWithText("Edit vacancy").assertIsDisplayed()
+            assertEquals(sample, component.editorSlot.value.child?.instance?.initialVacancy)
+            onNodeWithText("Cancel").performClick()
+        }
+        onNodeWithTag("vacancies.row.${sample.id}").performMouseInput {
+            click(Offset(width - 2f, height - 2f))
+        }
+        onNodeWithText("Edit vacancy").assertIsDisplayed()
     }
 
     @Test

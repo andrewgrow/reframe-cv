@@ -40,4 +40,15 @@
     <string name="vacancy_company">Company</string>
     <string name="vacancy_title">Title</string>
     <string name="vacancy_add">Add</string>
+    <string name="vacancy_editor_title">Add vacancy</string>
+    <string name="vacancy_description">Description</string>
+    <string name="vacancy_url">URL</string>
+    <string name="vacancy_keywords">Keywords</string>
+    <string name="vacancy_keywords_hint">Separate keywords with commas</string>
+    <string name="vacancy_save_error">Could not save the vacancy. Please try again.</string>
+    <string name="action_save">Save</string>
+    <string name="vacancy_editor_edit_title">Edit vacancy</string>
+    <string name="vacancy_delete_question">Delete this vacancy permanently?</string>
+    <string name="vacancy_delete_confirm">Yes, delete this</string>
+    <string name="vacancy_delete_error">Could not delete the vacancy. Please try again.</string>
 </resources>

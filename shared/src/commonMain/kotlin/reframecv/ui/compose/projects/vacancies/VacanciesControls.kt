@@ -16,7 +16,11 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun VacanciesControls(onBack: () -> Unit, onRetry: (() -> Unit)? = null) {
+internal fun VacanciesControls(
+    onAdd: () -> Unit,
+    onBack: () -> Unit,
+    onRetry: (() -> Unit)? = null,
+) {
     val tokens = ReframeTheme.tokens
     FlowRow(
         Modifier.fillMaxWidth().padding(tokens.spacing.medium),
@@ -28,8 +32,7 @@ internal fun VacanciesControls(onBack: () -> Unit, onRetry: (() -> Unit)? = null
     ) {
         FillButton(
             text = stringResource(Res.string.vacancy_add),
-            // Creation is deliberately deferred while the vacancy list is being refined.
-            onClick = {},
+            onClick = onAdd,
             outlineState = FillButton.OutlineState.Visible,
         )
         onRetry?.let { retry ->

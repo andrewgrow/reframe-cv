@@ -5,7 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.repository.VacanciesRepository
 
-internal interface VacanciesStore : Store<VacanciesIntent, VacanciesState, Nothing>
+internal interface VacanciesStore : Store<VacanciesIntent, VacanciesState, VacanciesLabel>
 
 internal fun createVacanciesStore(
     storeFactory: StoreFactory,
@@ -13,7 +13,7 @@ internal fun createVacanciesStore(
     repository: VacanciesRepository,
 ): VacanciesStore = object :
     VacanciesStore,
-    Store<VacanciesIntent, VacanciesState, Nothing> by storeFactory.create(
+    Store<VacanciesIntent, VacanciesState, VacanciesLabel> by storeFactory.create(
         name = "VacanciesStore",
         initialState = VacanciesState.Loading,
         executorFactory = { VacanciesExecutor(projectId, repository) },

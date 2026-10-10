@@ -15,6 +15,9 @@ import reframecv.shared.generated.resources.vacancy_company
 import reframecv.shared.generated.resources.vacancy_title
 import reframecv.ui.theme.ReframeTheme
 
+internal const val VACANCY_TITLE_WEIGHT = 1f
+internal const val VACANCY_COMPANY_WEIGHT = 3f
+
 @Composable
 internal fun VacancyTableHeader() {
     Row(
@@ -22,18 +25,18 @@ internal fun VacancyTableHeader() {
         horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
         SelectableText(
-            stringResource(Res.string.vacancy_added),
-            selectionModifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyDateWidth),
+            stringResource(Res.string.vacancy_title),
+            selectionModifier = Modifier.weight(VACANCY_TITLE_WEIGHT),
             style = MaterialTheme.typography.titleMedium,
         )
         SelectableText(
             stringResource(Res.string.vacancy_company),
-            selectionModifier = Modifier.weight(1f),
+            selectionModifier = Modifier.weight(VACANCY_COMPANY_WEIGHT),
             style = MaterialTheme.typography.titleMedium,
         )
         SelectableText(
-            stringResource(Res.string.vacancy_title),
-            selectionModifier = Modifier.weight(2f),
+            stringResource(Res.string.vacancy_added),
+            selectionModifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyDateWidth),
             style = MaterialTheme.typography.titleMedium,
         )
     }
