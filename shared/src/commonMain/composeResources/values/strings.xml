@@ -32,4 +32,12 @@
     <string name="dashboard_vacancies">Vacancies</string>
     <string name="dashboard_cover_letters">Cover letters</string>
     <string name="dashboard_load_error">Could not load project records. Please try again.</string>
+    <string name="navigation_back">Back</string>
+    <string name="vacancies_empty">No vacancies yet.</string>
+    <string name="vacancies_load_error">Could not load vacancies. Please try again.</string>
+    <string name="vacancy_company_missing">Company not specified</string>
+    <string name="vacancy_added">Added</string>
+    <string name="vacancy_company">Company</string>
+    <string name="vacancy_title">Title</string>
+    <string name="vacancy_add">Add</string>
 </resources>

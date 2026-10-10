@@ -5,8 +5,10 @@ import com.arkivanov.decompose.value.MutableValue
 class TestDashboardComponent(
     override val projectId: Long = 1,
     initialState: DashboardState = DashboardState.Ready(),
+    private val openVacancies: () -> Unit = {},
     private val retry: () -> Unit = {},
 ) : DashboardComponent {
     override val uiState = MutableValue(initialState)
+    override fun onOpenVacancies() = openVacancies()
     override fun onRetry() = retry()
 }

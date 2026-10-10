@@ -8,12 +8,14 @@ import reframecv.ui.components.application.navigation.ProjectTreeState
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
+import reframecv.ui.components.projects.vacancies.VacanciesComponent
 
 class TestRootComponent(
     projectsComponent: ProjectsComponent = TestProjectsComponent(),
     private val onProjectsListClick: () -> Unit = {},
     dashboardComponent: DashboardComponent? = null,
     initialTreeState: ProjectTreeState = ProjectTreeState(loading = false),
+    vacanciesComponent: VacanciesComponent? = null,
 ) : RootComponent {
     override val projectTree = object : ProjectTreeComponent {
         override val state = MutableValue(initialTreeState)
@@ -26,7 +28,8 @@ class TestRootComponent(
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = MutableValue(
         ChildStack(
             configuration = Unit,
-            instance = dashboardComponent?.let { RootComponent.Child.Dashboard(it) }
+            instance = vacanciesComponent?.let { RootComponent.Child.Vacancies(it) }
+                ?: dashboardComponent?.let { RootComponent.Child.Dashboard(it) }
                 ?: RootComponent.Child.Projects(projectsComponent),
         ),
     )

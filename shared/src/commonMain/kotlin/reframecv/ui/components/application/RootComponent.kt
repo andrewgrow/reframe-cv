@@ -3,6 +3,7 @@ package reframecv.ui.components.application
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.popTo
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
@@ -16,6 +17,8 @@ import reframecv.ui.components.projects.ProjectBreadcrumb
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DefaultDashboardComponent
+import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
+import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.context.AppComponentContext
 
 interface RootComponent {
@@ -26,6 +29,7 @@ interface RootComponent {
     sealed interface Child {
         data class Projects(val component: ProjectsComponent) : Child
         data class Dashboard(val component: DashboardComponent) : Child
+        data class Vacancies(val component: VacanciesComponent) : Child
     }
 }
 
@@ -122,7 +126,21 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         )
 
         is Configuration.Dashboard -> RootComponent.Child.Dashboard(
-            DefaultDashboardComponent(componentContext, configuration.projectPath.last().id),
+            DefaultDashboardComponent(
+                componentContext,
+                configuration.projectPath.last().id,
+                openVacancies = {
+                    navigation.pushNew(Configuration.Vacancies(configuration.projectPath))
+                },
+            ),
+        )
+
+        is Configuration.Vacancies -> RootComponent.Child.Vacancies(
+            DefaultVacanciesComponent(
+                componentContext,
+                configuration.projectPath.last().id,
+                back = { navigation.pop() },
+            ),
         )
     }
 
@@ -131,5 +149,6 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         data class Projects(override val projectPath: List<ProjectBreadcrumb> = emptyList()) :
             Configuration
         data class Dashboard(override val projectPath: List<ProjectBreadcrumb>) : Configuration
+        data class Vacancies(override val projectPath: List<ProjectBreadcrumb>) : Configuration
     }
 }

@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -51,7 +52,7 @@ class RootDashboardTest : ComponentTest() {
     }
 
     @Test
-    fun deletingTheDashboardProjectReturnsToTheRootAndRemovesItsHistory() = runBlocking<Unit> {
+    fun deletingTheProjectRemovesDashboardAndVacanciesFromHistory() = runBlocking<Unit> {
         val project = dependencies.projectsRepository.createProject("Backend")
         lateinit var root: DefaultRootComponent
         val updates = Channel<ProjectTreeState>(Channel.UNLIMITED)
@@ -66,7 +67,11 @@ class RootDashboardTest : ComponentTest() {
                 root.childStack.value.active.instance,
             ).component.onConfigureProject()
         }
-        withTimeout(10_000) {
+        runOnUiThread {
+            assertIs<RootComponent.Child.Dashboard>(root.childStack.value.active.instance)
+                .component.onOpenVacancies()
+        }
+        withTimeout(10_000.milliseconds) {
             while (updates.receive().loading) { /* Await the initial project read. */ }
             dependencies.projectsRepository.deleteProject(project.id)
             while (true) {
@@ -81,5 +86,30 @@ class RootDashboardTest : ComponentTest() {
             assertEquals(1, root.childStack.value.items.size)
         }
         updates.close()
+    }
+
+    @Test
+    fun opensVacanciesForSelectedProjectAndBackReturnsToDashboard() = runBlocking<Unit> {
+        val project = dependencies.projectsRepository.createProject("Backend")
+        runOnUiThread {
+            lifecycle.resume()
+            val root = DefaultRootComponent(appComponentContext())
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onOpenProject(project)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onConfigureProject()
+            val dashboard =
+                assertIs<RootComponent.Child.Dashboard>(root.childStack.value.active.instance)
+            dashboard.component.onOpenVacancies()
+            val vacancies =
+                assertIs<RootComponent.Child.Vacancies>(root.childStack.value.active.instance)
+            assertEquals(project.id, vacancies.component.projectId)
+            assertEquals(project.id, root.projectTree.state.value.selectedId)
+            vacancies.component.onBack()
+            assertEquals(dashboard, root.childStack.value.active.instance)
+            dashboard.component.onOpenVacancies()
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(dashboard, root.childStack.value.active.instance)
+        }
     }
 }

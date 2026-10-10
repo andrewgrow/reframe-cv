@@ -1,6 +1,7 @@
 package reframecv.ui.compose.projects.dashboard
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,9 +12,10 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
-import reframecv.shared.SelectableText
+import androidx.compose.ui.semantics.Role
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
@@ -23,10 +25,19 @@ internal fun DashboardSection(
     backgroundColor: Color,
     contentColor: Color,
     modifier: Modifier = Modifier,
+    onClick: (() -> Unit)? = null,
 ) {
     val tokens = ReframeTheme.tokens
     Column(
-        modifier.background(backgroundColor, MaterialTheme.shapes.medium)
+        modifier.then(
+            onClick?.let {
+                Modifier.clip(
+                    MaterialTheme.shapes.medium,
+                ).clickable(role = Role.Button, onClick = it)
+            } ?: Modifier,
+        )
+            .testTag("dashboard.section.$title")
+            .background(backgroundColor, MaterialTheme.shapes.medium)
             .padding(
                 horizontal = tokens.spacing.medium,
                 vertical = tokens.spacing.small + tokens.outlineWidth,
@@ -37,16 +48,18 @@ internal fun DashboardSection(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
         ) {
-            SelectableText(
+            DashboardSectionText(
                 title,
                 selectionModifier = Modifier.weight(1f),
                 color = contentColor,
                 style = MaterialTheme.typography.titleMedium,
+                selectable = onClick == null,
             )
-            SelectableText(
+            DashboardSectionText(
                 entries.size.toString(),
                 color = contentColor,
                 style = MaterialTheme.typography.titleMedium,
+                selectable = onClick == null,
             )
         }
         LazyColumn(
@@ -54,10 +67,11 @@ internal fun DashboardSection(
             verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
         ) {
             items(entries, key = { it.id }) { entry ->
-                SelectableText(
+                DashboardSectionText(
                     entry.name,
                     color = contentColor,
                     style = MaterialTheme.typography.bodyLarge,
+                    selectable = onClick == null,
                 )
             }
         }

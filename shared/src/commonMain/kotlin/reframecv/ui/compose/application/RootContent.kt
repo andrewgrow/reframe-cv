@@ -12,6 +12,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.compose.projects.ProjectsContent
 import reframecv.ui.compose.projects.dashboard.DashboardContent
+import reframecv.ui.compose.projects.vacancies.VacanciesContent
 
 @Composable
 fun RootContent(component: RootComponent) {
@@ -25,6 +26,7 @@ fun RootContent(component: RootComponent) {
             when (val instance = child.instance) {
                 is RootComponent.Child.Projects -> ProjectsContent(instance.component)
                 is RootComponent.Child.Dashboard -> DashboardContent(instance.component)
+                is RootComponent.Child.Vacancies -> VacanciesContent(instance.component)
             }
         }
     }

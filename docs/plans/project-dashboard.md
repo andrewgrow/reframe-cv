@@ -212,8 +212,9 @@ For indexed searches by individual keywords, use the database tables
 - [x] Use English string resources and the tokens and colors from `ReframeTheme`.
 - [x] Use `SelectableText` for ordinary text where it does not interfere with interaction.
 - [x] Support narrow windows and increased UI scale without clipping content.
-- [ ] Avoid nonfunctional creation buttons: connect navigation and actions
-  alongside their corresponding section screens.
+- [ ] Connect creation actions when their corresponding editors are implemented.
+  The vacancy list's Add button is deliberately a placeholder while list behavior
+  is being refined, as agreed on 2026-10-10.
 
 ## Stage 6. Verification
 
@@ -243,6 +244,26 @@ For indexed searches by individual keywords, use the database tables
 - [x] Verify narrow windows and increased UI scale.
 - [x] Run formatting, ktlint, Detekt, all tests, and coverage verification
   using the current README instructions; visually review new goldens.
+
+## Stage 7. Vacancy list and editor
+
+- [x] Start the section UI with vacancies rather than resumes.
+- [x] Make the entire vacancy section on the dashboard open the vacancy list.
+- [x] Open the selected project's vacancy list in the right pane, preserving tree selection.
+- [x] Display creation date, company, and title; use createdAt rather than updatedAt.
+- [x] Show dates as YYYY-MM-DD in the device's local time zone.
+- [x] Use a table in wider panes and stacked records in narrow panes or at larger UI scales.
+- [x] Observe active vacancies through VacanciesRepository with delayed loading, empty, and error states.
+- [x] Show Retry only on load failure, between Add and Back in the bottom controls.
+- [x] Cancel observation when the component is destroyed.
+- [x] Keep Back anchored at the bottom and return to the dashboard through existing navigation.
+- [x] Remove the vacancy screen from history when its project is deleted.
+- [x] Cover navigation, loading, live updates, cancellation, scrolling, date boundaries,
+  and dark / light / narrow / increased-scale screenshots.
+- [x] Add a visible Add button beside Back, with no action for now.
+- [ ] Finish refining list behavior before starting the vacancy editor.
+- [ ] Agree on the vacancy editor, Save / Cancel behavior, and minimum draft validation.
+- [ ] Add the vacancy creation action and editor, then connect updating existing vacancies.
 
 ## Open questions
 
@@ -317,8 +338,17 @@ have been removed; the underlying project path is retained for hierarchy navigat
 Main content scrolls independently, while empty-screen and list controls stay at the bottom.
 Opening help no longer moves the controls, including on narrow project screens.
 
-Next: agree on section navigation, creation / editing screens, and minimum draft
-validation, then implement the first section editor and connect its actions.
+The first section screen is now the vacancy list. Clicking its entire dashboard section
+opens the selected project's active vacancies without changing its mode. Rows show
+creation date, company, and title; missing companies have an explicit placeholder.
+Dates use the device's local time zone and ISO calendar-date format. Table widths
+and the switch to stacked records use scalable UI tokens. The list scrolls while
+Back remains anchored at the bottom. Retry replaces the active observation.
+
+Next: refine the vacancy list. Add is visible next to Back and intentionally does
+nothing for now; the creation screen is deferred by the user. After list behavior
+is settled, agree on the editor and minimum draft validation, then implement
+vacancy creation and editing. Resume and cover-letter section screens follow later.
 
 Verification on 2026-10-05: all 158 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed with:
@@ -349,8 +379,9 @@ project deletion while viewing the dashboard, and scrolling to all three section
 - [ ] Once agreed, connect both input paths to the existing navigation history and
   define their behavior at the root and while a dialog is open.
 
-The current Back navigation is available programmatically; desktop keyboard input
-and an on-screen Back button are not connected yet.
+The vacancy list has a contextual Back button returning to its dashboard.
+Global Back navigation is available programmatically; desktop keyboard input and
+an application-wide Back button are not connected yet.
 
 Repository and dashboard verification added on 2026-10-06 covers active-project
 scoping, keyword mappings, write timestamps, updates, soft deletion, dependency reuse,
@@ -363,3 +394,8 @@ narrow windows, 150% scale, and isolated populated / empty sections.
 Verification on 2026-10-06: all 175 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed using the full command above.
 New and updated dashboard goldens were visually reviewed.
+
+Verification on 2026-10-10: all 188 JVM tests, screenshot verification, ktlint,
+Detekt, and coverage verification passed using the full command above. Vacancy-list
+and updated dashboard goldens were visually reviewed in both themes, narrow panes,
+and at increased UI scale. Vacancy creation and editing remain the next step.

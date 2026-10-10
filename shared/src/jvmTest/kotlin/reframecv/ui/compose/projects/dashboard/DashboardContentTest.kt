@@ -6,11 +6,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -43,7 +45,7 @@ class DashboardContentTest {
     }
 
     @Test
-    fun narrowDashboardKeepsAllThreeSectionsReachableWithoutActions() = runComposeUiTest {
+    fun narrowDashboardKeepsAllThreeSectionsAndVacanciesActionReachable() = runComposeUiTest {
         val component = TestDashboardComponent()
         setContent {
             ReframeTheme {
@@ -54,7 +56,7 @@ class DashboardContentTest {
         onNodeWithText("Cover letters").performScrollTo().assertIsDisplayed()
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
-        onAllNodes(hasClickAction()).assertCountEquals(0)
+        onAllNodes(hasClickAction()).assertCountEquals(1)
     }
 
     @Test
@@ -101,5 +103,22 @@ class DashboardContentTest {
         runOnIdle { component.uiState.value = DashboardState.Ready() }
         mainClock.advanceTimeByFrame()
         onAllNodes(androidx.compose.ui.test.hasText("0")).assertCountEquals(3)
+    }
+
+    @Test
+    fun entireVacanciesSectionInvokesNavigation() = runComposeUiTest {
+        var opened = 0
+        val component = TestDashboardComponent(
+            initialState = dashboardSample(),
+            openVacancies = { opened++ },
+        )
+        setContent { ReframeTheme { DashboardContent(component) } }
+        onNodeWithText("View all").assertDoesNotExist()
+        onNodeWithText("Vacancies").performClick()
+        onNodeWithText("Kotlin Developer", useUnmergedTree = true).performMouseInput { click() }
+        onNodeWithTag("dashboard.section.Vacancies").performMouseInput {
+            click(bottomCenter - androidx.compose.ui.geometry.Offset(0f, 10f))
+        }
+        assertEquals(3, opened)
     }
 }

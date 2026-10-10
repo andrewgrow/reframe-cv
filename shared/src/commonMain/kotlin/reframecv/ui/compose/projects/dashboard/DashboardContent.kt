@@ -44,14 +44,14 @@ fun DashboardContent(component: DashboardComponent) {
             when (val current = state) {
                 DashboardState.Loading -> LoadingContent()
                 DashboardState.LoadFailed -> DashboardLoadError(component::onRetry)
-                is DashboardState.Ready -> DashboardLayout(current)
+                is DashboardState.Ready -> DashboardLayout(current, component::onOpenVacancies)
             }
         }
     }
 }
 
 @Composable
-private fun DashboardLayout(state: DashboardState.Ready) {
+private fun DashboardLayout(state: DashboardState.Ready, onOpenVacancies: () -> Unit) {
     val tokens = ReframeTheme.tokens
     val colors = MaterialTheme.colorScheme
     val appColors = ReframeTheme.colorScheme
@@ -79,6 +79,7 @@ private fun DashboardLayout(state: DashboardState.Ready) {
                 appColors.dashboardVacancies,
                 colors.onSurface,
                 Modifier.width(sectionWidth).fillMaxHeight(),
+                onClick = onOpenVacancies,
             )
             DashboardSection(
                 stringResource(Res.string.dashboard_cover_letters),

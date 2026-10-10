@@ -1,4 +1,4 @@
-package reframecv.ui.components.projects.dashboard
+package reframecv.ui.components.projects.vacancies
 
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -6,32 +6,27 @@ import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
-interface DashboardComponent {
+interface VacanciesComponent {
     val projectId: Long
-    val uiState: Value<DashboardState>
-    fun onOpenVacancies()
+    val uiState: Value<VacanciesState>
     fun onRetry()
+    fun onBack()
 }
 
-class DefaultDashboardComponent(
+class DefaultVacanciesComponent(
     componentContext: AppComponentContext,
     override val projectId: Long,
+    private val back: () -> Unit,
     storeFactory: StoreFactory = DefaultStoreFactory(),
-    private val openVacancies: () -> Unit = {},
-) : DashboardComponent,
+) : VacanciesComponent,
     AppComponentContext by componentContext {
-    private val store = createDashboardStore(
+    private val store = createVacanciesStore(
         storeFactory,
         projectId,
-        dependencies.resumesRepository,
         dependencies.vacanciesRepository,
-        dependencies.coverLettersRepository,
-    ).also { it.accept(DashboardIntent.Load) }
+    )
+        .also { it.accept(VacanciesIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
-
-    override fun onOpenVacancies() = openVacancies()
-
-    override fun onRetry() {
-        store.accept(DashboardIntent.Load)
-    }
+    override fun onRetry() = store.accept(VacanciesIntent.Load)
+    override fun onBack() = back()
 }
