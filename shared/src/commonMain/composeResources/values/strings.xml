@@ -51,4 +51,6 @@
     <string name="vacancy_delete_question">Delete this vacancy permanently?</string>
     <string name="vacancy_delete_confirm">Yes, delete this</string>
     <string name="vacancy_delete_error">Could not delete the vacancy. Please try again.</string>
+    <string name="vacancy_attach_snapshot">Attach source file</string>
+    <string name="vacancy_snapshot_hint">Coming soon: attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX.</string>
 </resources>

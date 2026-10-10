@@ -53,7 +53,9 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
             )
         },
         text = {
-            VacancyEditorFields(draft, { draft = it }, saveState, save, !isBusy && !confirming)
+            VacancyEditorFields(draft, { draft = it }, saveState, save, !isBusy && !confirming) {
+                if (initial == null) VacancySnapshotPlaceholder()
+            }
         },
         confirmButton = {
             VacancyEditorActions(component, draft.title.isNotBlank(), isBusy, deleteState, save)

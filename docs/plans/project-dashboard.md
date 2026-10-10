@@ -71,7 +71,18 @@ without creating a resume. Relationships between records are optional.
   referenced by vacancies, including vacancies belonging to deleted projects.
 - [x] Verify persistence, mapping, optional fields, deletion, and foreign-key rollback.
 - Keep schema version 1 while no real user data needs migration.
-- Import workflows and repositories will be added when scraper integration begins.
+
+### Source snapshot attachment
+
+- [x] Indicate future snapshot attachment in the vacancy creation dialog with a
+  disabled button and a short explanation.
+- The first version does not select, read, fetch, parse, or save snapshots.
+- [ ] Support JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX as original snapshots.
+- [ ] Store original bytes, format, and filename without changing the source content.
+- [ ] Save the snapshot and vacancy atomically when attachment is implemented.
+- [ ] Add URL fetching separately from parsing; vacancy fields remain independently editable.
+
+Import workflows and repositories will be added when scraper integration begins.
 
 ## Navigation and screen layout
 
@@ -437,3 +448,8 @@ Verification on 2026-10-10: all 188 JVM tests, screenshot verification, ktlint,
 Detekt, and coverage verification passed using the full command above. Vacancy-list
 and updated dashboard goldens were visually reviewed in both themes, narrow panes,
 and at increased UI scale. Vacancy creation and editing are implemented through a shared dialog.
+
+Snapshot placeholder verification on 2026-10-10: all 221 JVM tests, screenshot
+verification, ktlint, Detekt, and coverage verification passed. Creation goldens
+were updated and reviewed; the source attachment is disabled and performs no work.
+The database schema and snapshot persistence remain unchanged.

@@ -38,6 +38,7 @@ internal fun VacancyEditorFields(
     saveState: VacancySaveState,
     onSave: () -> Unit,
     enabled: Boolean,
+    attachment: @Composable () -> Unit,
 ) {
     val titleFocus = remember { FocusRequester() }
     val submit = { if (draft.title.isNotBlank() && enabled) onSave() }
@@ -67,6 +68,7 @@ internal fun VacancyEditorFields(
             color = ReframeTheme.colorScheme.hint,
             style = ReframeTheme.tokens.typography.bodySmall,
         )
+        attachment()
         if (saveState == VacancySaveState.Failed) {
             SelectableText(
                 stringResource(Res.string.vacancy_save_error),
