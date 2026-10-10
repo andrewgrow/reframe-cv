@@ -116,8 +116,8 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         assertEquals(ProjectMode.Workspace, database.projectDao().findById(projectId)?.mode)
         database.coverLetterDao().softDelete(letterId, 400)
         assertEquals(ProjectMode.Workspace, database.projectDao().findById(projectId)?.mode)
-        assertEquals(1, database.vacancyDao().softDelete(vacancyId, 500))
-        assertEquals(0, database.vacancyDao().softDelete(vacancyId, 600))
+        assertEquals(1, database.vacancyDao().delete(vacancyId, 500))
+        assertEquals(0, database.vacancyDao().delete(vacancyId, 600))
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(projectId)?.mode)
         assertEquals(500L, database.projectDao().findById(projectId)?.updatedAt)
         database.projectDao().insertWithParentMode(
@@ -162,6 +162,6 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         assertEquals(emptyList(), database.vacancyDao().search(child, "kotlin"))
         assertEquals(null, database.resumeDao().findById(resumeId)?.entity?.deletedAt)
         assertEquals(null, database.coverLetterDao().findById(letterId)?.entity?.deletedAt)
-        assertEquals(null, database.vacancyDao().findById(vacancyId)?.entity?.deletedAt)
+        assertEquals(vacancyId, database.vacancyDao().findById(vacancyId)?.entity?.id)
     }
 }

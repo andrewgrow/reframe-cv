@@ -102,7 +102,7 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         assertEquals(0, database.resumeDao().softDelete(resumeId, 600))
         assertEquals(400L, database.resumeDao().findById(resumeId)?.entity?.deletedAt)
         assertEquals(0, database.coverLetterDao().softDelete(letterId, 600))
-        assertEquals(0, database.vacancyDao().softDelete(-1, 600))
+        assertEquals(0, database.vacancyDao().delete(-1, 600))
     }
 
     @Test

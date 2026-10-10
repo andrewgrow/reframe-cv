@@ -24,6 +24,6 @@ class LocalVacanciesRepository(private val dao: VacancyDao) : VacanciesRepositor
     }
 
     override suspend fun delete(id: Long) {
-        check(dao.softDelete(id, nowMillis()) == 1) { "Active record does not exist" }
+        check(dao.delete(id, nowMillis()) == 1) { "Active record does not exist" }
     }
 }

@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a7e257449b85b7a75907cefac8dad471",
+    "identityHash": "8a3e71067964321c6f8fcc90a18f8547",
     "entities": [
       {
         "tableName": "projects",
@@ -103,6 +103,69 @@
             "referencedColumns": [
               "id"
             ]
+          }
+        ]
+      },
+      {
+        "tableName": "import_records",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `provider` TEXT NOT NULL, `raw_data` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `external_id` TEXT, `source_url` TEXT, `metadata_json` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "provider",
+            "columnName": "provider",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rawData",
+            "columnName": "raw_data",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "externalId",
+            "columnName": "external_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sourceUrl",
+            "columnName": "source_url",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "metadataJson",
+            "columnName": "metadata_json",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_import_records_provider_external_id",
+            "unique": false,
+            "columnNames": [
+              "provider",
+              "external_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_import_records_provider_external_id` ON `${TABLE_NAME}` (`provider`, `external_id`)"
           }
         ]
       },
@@ -409,7 +472,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `deleted_at` INTEGER, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `import_record_id` INTEGER, FOREIGN KEY(`import_record_id`) REFERENCES `import_records`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -470,8 +533,8 @@
             "affinity": "INTEGER"
           },
           {
-            "fieldPath": "deletedAt",
-            "columnName": "deleted_at",
+            "fieldPath": "importRecordId",
+            "columnName": "import_record_id",
             "affinity": "INTEGER"
           }
         ],
@@ -482,6 +545,15 @@
           ]
         },
         "indices": [
+          {
+            "name": "index_vacancies_import_record_id",
+            "unique": false,
+            "columnNames": [
+              "import_record_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_import_record_id` ON `${TABLE_NAME}` (`import_record_id`)"
+          },
           {
             "name": "index_vacancies_project_id",
             "unique": false,
@@ -511,6 +583,17 @@
           }
         ],
         "foreignKeys": [
+          {
+            "table": "import_records",
+            "onDelete": "RESTRICT",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "import_record_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
           {
             "table": "projects",
             "onDelete": "RESTRICT",
@@ -610,7 +693,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a7e257449b85b7a75907cefac8dad471')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a3e71067964321c6f8fcc90a18f8547')"
     ]
   }
 }

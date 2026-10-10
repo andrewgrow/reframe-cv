@@ -8,6 +8,7 @@ import androidx.room3.PrimaryKey
 import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.database.coverletter.CoverLetterEntity
+import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeEntity
 import reframecv.domain.models.vacancy.Vacancy
@@ -15,6 +16,12 @@ import reframecv.domain.models.vacancy.Vacancy
 @Entity(
     tableName = "vacancies",
     foreignKeys = [
+        ForeignKey(
+            entity = ImportRecordEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["import_record_id"],
+            onDelete = ForeignKey.RESTRICT,
+        ),
         ForeignKey(
             entity = ProjectEntity::class,
             parentColumns = ["id"],
@@ -35,6 +42,7 @@ import reframecv.domain.models.vacancy.Vacancy
         ),
     ],
     indices = [
+        Index(value = ["import_record_id"]),
         Index(
             value = ["project_id"],
         ), Index(value = ["resume_id"]), Index(value = ["cover_letter_id"]),
@@ -57,8 +65,8 @@ data class VacancyEntity(
     val resumeId: Long? = null,
     @ColumnInfo(name = "cover_letter_id")
     val coverLetterId: Long? = null,
-    @ColumnInfo(name = "deleted_at")
-    val deletedAt: Long? = null,
+    @ColumnInfo(name = "import_record_id")
+    val importRecordId: Long? = null,
 ) : DatabaseModel<Vacancy> {
     override fun toDomainModel() = Vacancy(
         id = id,
@@ -71,7 +79,7 @@ data class VacancyEntity(
         url = url,
         resumeId = resumeId,
         coverLetterId = coverLetterId,
-        deletedAt = deletedAt,
+        importRecordId = importRecordId,
     )
 
     companion object : DatabaseModelFactory<Vacancy, VacancyEntity> {
@@ -86,7 +94,7 @@ data class VacancyEntity(
             url = domainModel.url,
             resumeId = domainModel.resumeId,
             coverLetterId = domainModel.coverLetterId,
-            deletedAt = domainModel.deletedAt,
+            importRecordId = domainModel.importRecordId,
         )
     }
 }

@@ -12,7 +12,6 @@ interface VacancyDao :
     WorkspaceDao {
     @Transaction
     suspend fun create(record: Vacancy): Long {
-        check(record.deletedAt == null) { "Cannot create a deleted record" }
         requireWorkspace(record.projectId, record.createdAt)
         record.resumeId?.let { requireActiveResume(it, record.projectId) }
         record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
@@ -24,7 +23,6 @@ interface VacancyDao :
     @Transaction
     suspend fun update(record: Vacancy) {
         val existing = checkNotNull(findById(record.id)) { "Record does not exist" }
-        check(existing.entity.deletedAt == null && record.deletedAt == null) { "Record is deleted" }
         require(existing.entity.projectId == record.projectId) {
             "Cannot move a record to another project"
         }
@@ -49,12 +47,14 @@ interface VacancyDao :
     suspend fun search(projectId: Long, keyword: String): List<VacancyWithKeywords> =
         searchNormalized(projectId, keyword.trim().lowercase())
 
+    /** Delete one vacancy and its unused source snapshot atomically. */
     @Transaction
-    suspend fun softDelete(id: Long, deletedAt: Long): Int {
-        val projectId = findById(id)?.entity?.projectId ?: return 0
-        val changed = markDeleted(id, deletedAt)
+    suspend fun delete(id: Long, updatedAt: Long): Int {
+        val existing = findById(id)?.entity ?: return 0
+        val changed = deleteEntity(id)
         if (changed > 0) {
-            resetEmptyWorkspace(projectId, deletedAt)
+            existing.importRecordId?.let { deleteUnusedImportRecord(it) }
+            resetEmptyWorkspace(existing.projectId, updatedAt)
         }
         return changed
     }

@@ -27,7 +27,11 @@ without creating a resume. Relationships between records are optional.
 - Timestamps are `Long` values in milliseconds since the Unix epoch; use the
   existing `nowMillis()` helper to obtain the current time.
 - All three models have `keywords: List<String>`, defaulting to an empty list.
-- Records are soft-deleted through `deletedAt`; lists and counts exclude deleted records.
+- Resumes and cover letters are soft-deleted through `deletedAt`; lists and counts
+  exclude deleted records. Individual vacancies are physically deleted with their keywords.
+- Deleting a vacancy also deletes its source snapshot if no remaining vacancy references
+  it, including vacancies in deleted projects. Resume and letter records are preserved.
+- Vacancy deletion, unused-source cleanup, and resetting an empty workspace are atomic.
 - Deleting a project marks the project and its descendants as deleted, preserving
   earlier deletion timestamps. Its resumes, vacancies, letters, keywords, and
   relationships remain unchanged.
@@ -51,6 +55,23 @@ without creating a resume. Relationships between records are optional.
 - Clearing references preserves the independent text of adaptations and vacancies.
 - Deleting the last active record across all three sections returns the project
   to `Unconfigured` in the same transaction.
+
+## Imported source records
+
+- [x] Add `ImportRecord` and the `import_records` table for one immutable raw
+  source item per snapshot, independent of projects and workspace records.
+- [x] Store `provider`, `rawData`, `createdAt`, optional `externalId`, `sourceUrl`,
+  and `metadataJson`. No `updatedAt`: fetching again creates a new snapshot.
+  No `deletedAt`: unused snapshots are physically deleted.
+- [x] Add optional `Vacancy.importRecordId` with an indexed foreign key.
+- [x] Allow repeated provider/external ID pairs and sharing a snapshot between vacancies.
+- [x] Preserve snapshots when vacancies are edited or their project is deleted.
+  Deleting an individual vacancy removes its snapshot only after the last reference.
+- [x] Allow physical deletion of unreferenced snapshots; preserve snapshots still
+  referenced by vacancies, including vacancies belonging to deleted projects.
+- [x] Verify persistence, mapping, optional fields, deletion, and foreign-key rollback.
+- Keep schema version 1 while no real user data needs migration.
+- Import workflows and repositories will be added when scraper integration begins.
 
 ## Navigation and screen layout
 
@@ -88,7 +109,9 @@ Fields shared by `Resume`, `Vacancy`, and `CoverLetter`:
 | `keywords` | `List<String>` | Keywords for searching |
 | `createdAt` | `Long` | Creation timestamp |
 | `updatedAt` | `Long` | Last modification timestamp |
-| `deletedAt` | `Long?` | Soft-deletion timestamp; `null` for an active record |
+
+`Resume` and `CoverLetter` additionally have `deletedAt: Long?` for soft deletion.
+`Vacancy` has no soft-deletion timestamp.
 
 ### Resume
 
@@ -110,6 +133,7 @@ origin; changes are not inherited automatically.
 | `url` | `String` | Vacancy URL; may be empty |
 | `resumeId` | `Long?` | Selected resume |
 | `coverLetterId` | `Long?` | Selected cover letter |
+| `importRecordId` | `Long?` | Immutable imported source snapshot |
 
 A vacancy has at most one selected resume and one selected letter.
 The same resume or letter may be used for multiple vacancies.
@@ -152,7 +176,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Add keyword tables and the required foreign keys.
 - [x] Add indexes on `projectId`, relationship foreign keys, and keywords
   based on the actual queries.
-- [x] Add DAOs for creating, reading, updating, and soft-deleting records.
+- [x] Add DAOs for creating, reading, updating, and deleting records according to their retention policy.
 - [x] Add observation of active records and their counts in the selected project.
 - [x] Add keyword searches for each entity.
 - [x] Implement transactional record creation that changes the project to `Workspace`.
@@ -268,7 +292,7 @@ For indexed searches by individual keywords, use the database tables
 ## Open questions
 
 - [ ] Define minimum name and content validation when creating records.
-- [x] Define relationship behavior when a resume, letter, or vacancy is soft-deleted.
+- [x] Define relationship behavior when a resume or letter is soft-deleted or a vacancy is deleted.
 - [x] Define workspace-record behavior when their project is deleted.
 - [x] Decide whether a project stays in `Workspace` after its last record is deleted.
 - [ ] Define searches with multiple keywords: match all or any.
@@ -287,7 +311,8 @@ The database now contains projects, resumes, vacancies, cover letters, and three
 keyword tables, with foreign keys and indexes. Complete record reads include keywords
 in their saved order; writes normalize whitespace and deduplicate case-insensitively,
 while preserving the first spelling for display. Single-keyword searches are indexed.
-DAOs provide transactional creation, updates, soft deletion, active lists, and counts.
+DAOs provide transactional creation, updates, deletion, active lists, and counts.
+Resumes and letters use soft deletion; vacancies use physical deletion with unused-source cleanup.
 Creation promotes a project to Workspace atomically and rejects missing, deleted,
 or Container projects. Relationship writes require active records in the same project.
 Main-resume selection and deletion cleanup are implemented; deleting the final active
@@ -387,7 +412,7 @@ Repository and dashboard verification added on 2026-10-06 covers active-project
 scoping, keyword mappings, write timestamps, updates, soft deletion, dependency reuse,
 combined initial reads, live updates, Retry, and cancellation on component destruction.
 An integration test observes all three sections through ApplicationDependencies and
-checks record and project soft deletion against the real database.
+checks record deletion and project soft deletion against the real database.
 Dashboard goldens cover empty and populated columns in both themes, a failed read,
 narrow windows, 150% scale, and isolated populated / empty sections.
 

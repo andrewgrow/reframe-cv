@@ -3,6 +3,7 @@ package reframecv.repository
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -11,7 +12,7 @@ import reframecv.domain.models.project.ProjectMode
 
 class LocalVacanciesRepositoryTest : WorkspaceDatabaseTest() {
     @Test
-    fun writesReadsSearchesUpdatesAndSoftDeletes() = runBlocking<Unit> {
+    fun writesReadsSearchesUpdatesAndDeletes() = runBlocking<Unit> {
         val projectId = project()
         val repository = LocalVacanciesRepository(database.vacancyDao())
         val draft = vacancy(projectId)
@@ -35,7 +36,7 @@ class LocalVacanciesRepositoryTest : WorkspaceDatabaseTest() {
         repository.delete(id)
         assertEquals(emptyList(), repository.observeVacancies(projectId).first())
         assertEquals(emptyList(), repository.search(projectId, "JVM"))
-        assertTrue(database.vacancyDao().findById(id)?.entity?.deletedAt != null)
+        assertNull(database.vacancyDao().findById(id))
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(projectId)?.mode)
         assertFailsWith<IllegalStateException> { repository.delete(id) }
         assertFailsWith<IllegalStateException> { repository.delete(-1) }
@@ -59,7 +60,7 @@ class LocalVacanciesRepositoryTest : WorkspaceDatabaseTest() {
                 it.id
             },
         )
-        assertEquals(null, database.vacancyDao().findById(id)?.entity?.deletedAt)
+        assertEquals(id, database.vacancyDao().findById(id)?.entity?.id)
         assertFailsWith<IllegalStateException> { repository.create(vacancy(projectId)) }
     }
 }

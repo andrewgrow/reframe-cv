@@ -15,5 +15,5 @@ data class Vacancy(
     val resumeId: Long? = null,
     val coverLetterId: Long? = null,
     val keywords: List<String> = emptyList(),
-    val deletedAt: Long? = null,
+    val importRecordId: Long? = null,
 ) : DomainModel

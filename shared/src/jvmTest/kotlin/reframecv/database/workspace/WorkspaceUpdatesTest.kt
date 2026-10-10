@@ -62,15 +62,12 @@ class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
         assertFailsWith<IllegalStateException> {
             database.coverLetterDao().create(letter(projectId).copy(deletedAt = 300))
         }
-        assertFailsWith<IllegalStateException> {
-            database.vacancyDao().create(vacancy(projectId).copy(deletedAt = 300))
-        }
         val resumeId = database.resumeDao().create(resume(projectId))
         val letterId = database.coverLetterDao().create(letter(projectId))
         val vacancyId = database.vacancyDao().create(vacancy(projectId))
         database.resumeDao().softDelete(resumeId, 300)
         database.coverLetterDao().softDelete(letterId, 300)
-        database.vacancyDao().softDelete(vacancyId, 300)
+        database.vacancyDao().delete(vacancyId, 300)
         assertFailsWith<IllegalStateException> {
             database.resumeDao().update(resume(projectId).copy(id = resumeId))
         }

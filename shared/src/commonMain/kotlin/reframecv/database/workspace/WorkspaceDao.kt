@@ -47,8 +47,7 @@ interface WorkspaceDao {
             "WHERE id = :id AND mode = 'Workspace' AND deleted_at IS NULL " +
             "AND NOT EXISTS (SELECT 1 FROM resumes WHERE project_id = :id AND " +
             "deleted_at IS NULL) " +
-            "AND NOT EXISTS (SELECT 1 FROM vacancies WHERE project_id = :id " +
-            "AND deleted_at IS NULL) " +
+            "AND NOT EXISTS (SELECT 1 FROM vacancies WHERE project_id = :id) " +
             "AND NOT EXISTS (SELECT 1 FROM cover_letters WHERE project_id = " +
             ":id AND deleted_at IS NULL)",
     )

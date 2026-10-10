@@ -9,6 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import reframecv.database.coverletter.CoverLetterDao
 import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.coverletter.CoverLetterKeywordEntity
+import reframecv.database.importrecord.ImportRecordDao
+import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.project.ProjectDao
 import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeDao
@@ -21,6 +23,7 @@ import reframecv.database.vacancy.VacancyKeywordEntity
 @Database(
     entities = [
         ProjectEntity::class,
+        ImportRecordEntity::class,
         ResumeEntity::class, ResumeKeywordEntity::class,
         CoverLetterEntity::class, CoverLetterKeywordEntity::class,
         VacancyEntity::class, VacancyKeywordEntity::class,
@@ -30,6 +33,7 @@ import reframecv.database.vacancy.VacancyKeywordEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun importRecordDao(): ImportRecordDao
     abstract fun projectDao(): ProjectDao
     abstract fun resumeDao(): ResumeDao
     abstract fun coverLetterDao(): CoverLetterDao

@@ -27,7 +27,7 @@ interface VacancyQueries {
     @Transaction
     @Query(
         "SELECT * FROM vacancies WHERE project_id = :projectId AND " +
-            "vacancies.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
+            "EXISTS (SELECT 1 FROM projects " +
             "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL) " +
             "ORDER BY updated_at DESC, name ASC, id ASC",
     )
@@ -35,7 +35,7 @@ interface VacancyQueries {
 
     @Query(
         "SELECT COUNT(*) FROM vacancies WHERE project_id = :projectId AND " +
-            "vacancies.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
+            "EXISTS (SELECT 1 FROM projects " +
             "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL)",
     )
     fun observeCount(projectId: Long): Flow<Int>
@@ -43,16 +43,19 @@ interface VacancyQueries {
     @Transaction
     @Query(
         "SELECT * FROM vacancies WHERE project_id = :projectId AND " +
-            "vacancies.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
+            "EXISTS (SELECT 1 FROM projects " +
             "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL) AND " +
             "EXISTS (SELECT 1 FROM vacancies_keywords WHERE record_id = vacancies.id " +
             "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<VacancyWithKeywords>
 
+    @Query("DELETE FROM vacancies WHERE id = :id")
+    suspend fun deleteEntity(id: Long): Int
+
     @Query(
-        "UPDATE vacancies SET deleted_at = :deletedAt, updated_at = :deletedAt " +
-            "WHERE id = :id AND deleted_at IS NULL",
+        "DELETE FROM import_records WHERE id = :id AND NOT EXISTS " +
+            "(SELECT 1 FROM vacancies WHERE import_record_id = :id)",
     )
-    suspend fun markDeleted(id: Long, deletedAt: Long): Int
+    suspend fun deleteUnusedImportRecord(id: Long): Int
 }
