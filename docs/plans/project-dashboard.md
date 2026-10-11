@@ -327,8 +327,8 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Define searches with multiple keywords: match all or any.
 - [x] Agree on the dashboard layout for narrow windows.
 - [ ] Agree on left-pane sizing and how deep nesting behaves in narrow windows.
-- [x] Define Back behavior across tree branches and project screens: return through
-  navigation history; Configure returns to its originating project screen.
+- [x] Define Back behavior across tree branches and project screens: project and
+  dashboard Back opens the parent project list regardless of the entry route.
 - [ ] Before implementing section screens, agree on their navigation, editors,
   and the workflow for creating a resume adaptation.
 
@@ -358,7 +358,7 @@ remains an open question for the editors.
 Configure opens the dashboard in the existing Decompose stack,
 with three full-height section columns and no selection or creation actions.
 It preserves the tree selection and does not change the project's mode.
-Back returns to the screen that opened the dashboard; deleting the project removes its dashboard
+Back opens the parent project list; deleting the project removes its dashboard
 from history and returns to the nearest surviving project or the root.
 Dashboard columns use dedicated theme background colors and token-based spacing.
 They share the available width and retain a minimum width of 160 dp at default scale;
@@ -433,13 +433,13 @@ project deletion while viewing the dashboard, and scrolling to all three section
 ## User-accessible Back navigation — completed
 
 Back navigation work is complete for the current milestone. Header buttons,
-Escape, hardware Back, dialog priority, and navigation-history returns are
+Escape, hardware Back, dialog priority, and parent-project returns are
 implemented and verified; no Back-related work remains open in this plan.
 
 - [x] Add a Back arrow beside the Vacancies heading; return to the project's dashboard.
-- [x] Add a Dashboard heading with the same arrow; return to the previous screen
-  in navigation history. Opening a workspace from a project list returns to that
-  list; Configure returns to the empty project screen from which it was invoked.
+- [x] Add a Dashboard heading with the same arrow; return to the parent project
+  list, including after Configure and when opened directly from the tree.
+  Top-level projects return to the root list.
 - [x] Handle Escape on the active page, including when the left tree has focus.
 - [x] Give the vacancy editor priority: Escape cancels deletion confirmation first,
   then closes the dialog; saving and deletion block closing. A later Escape returns
@@ -447,9 +447,21 @@ implemented and verified; no Back-related work remains open in this plan.
 - [x] Connect hardware Back to the same dashboard return destination.
 - [x] Remove Back from the vacancy footer; keep Add and optional Retry there.
 - [x] Show the current project title and Back arrow on an opened project's screen,
-  including configuration and subproject lists. The page callback and Escape return
-  through navigation history; an open project editor retains dismissal priority.
+  including configuration and subproject lists. The page callback, Escape, and
+  hardware Back open the parent list; an open project editor retains dismissal priority.
   Keep the root project list without a Back arrow or Escape navigation action.
+
+Parent-project navigation supersedes the earlier history-based return behavior
+recorded below. Returning from Test 5 after opening it directly from the root tree
+opens Test 4, then proceeds through ancestors to the root. Missing ancestor screens
+are created in the stack, and unrelated branches are removed from the return path.
+Vacancies still returns to its dashboard; dialogs retain Back / Escape priority.
+
+Parent-project Back verification on 2026-10-11: all 248 tests across shared and
+desktop modules, screenshot verification, ktlint, Detekt, and coverage verification
+passed. Five-level regression tests cover opening Test 5 from the root tree,
+returning to Test 4 from both configuration and a persisted workspace, page and
+hardware callbacks, Configure, tree selection, and repeated returns to the root.
 
 Project-screen Back verification on 2026-10-11: all 238 JVM tests, screenshot
 verification, ktlint, Detekt, and coverage verification passed. Tests cover arrow

@@ -91,6 +91,19 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         }
     }
 
+    private fun openParentList(path: List<ProjectBreadcrumb>) {
+        if (path.isEmpty()) return
+        val parentPath = path.dropLast(1)
+        navigation.navigate(
+            transformer = {
+                listOf(Configuration.Projects()) + parentPath.indices.map { index ->
+                    Configuration.Projects(parentPath.take(index + 1))
+                }
+            },
+            onComplete = { _, _ -> },
+        )
+    }
+
     private fun onProjectsChanged(projects: List<Project>) {
         activeProjects = projects
         val current = (childStack.value.active.configuration as Configuration).projectPath
@@ -113,7 +126,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
             DefaultProjectsComponent(
                 componentContext,
                 projectPath = configuration.projectPath,
-                back = { navigation.pop() },
+                back = { openParentList(configuration.projectPath) },
                 onProjectConfigured = {
                     navigation.pushNew(Configuration.Dashboard(configuration.projectPath))
                 },
@@ -130,7 +143,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
             DefaultDashboardComponent(
                 componentContext,
                 configuration.projectPath.last().id,
-                back = { navigation.pop() },
+                back = { openParentList(configuration.projectPath) },
                 openVacancies = {
                     navigation.pushNew(Configuration.Vacancies(configuration.projectPath))
                 },

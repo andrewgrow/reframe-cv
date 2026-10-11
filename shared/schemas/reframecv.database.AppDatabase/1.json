@@ -2,8 +2,44 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "8a3e71067964321c6f8fcc90a18f8547",
+    "identityHash": "5d6e2b9cb684555abc33a5a1e72a7591",
     "entities": [
+      {
+        "tableName": "app_settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `window_width` REAL NOT NULL, `window_height` REAL NOT NULL, `window_maximized` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowWidth",
+            "columnName": "window_width",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowHeight",
+            "columnName": "window_height",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowMaximized",
+            "columnName": "window_maximized",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
       {
         "tableName": "projects",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `parent_id` INTEGER, `deleted_at` INTEGER, `mode` TEXT NOT NULL DEFAULT 'Unconfigured', `main_resume_id` INTEGER, FOREIGN KEY(`parent_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`main_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
@@ -693,7 +729,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8a3e71067964321c6f8fcc90a18f8547')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5d6e2b9cb684555abc33a5a1e72a7591')"
     ]
   }
 }

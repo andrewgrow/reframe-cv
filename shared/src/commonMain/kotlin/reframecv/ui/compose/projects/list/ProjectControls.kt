@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import reframecv.ui.compose.common.FillButton
@@ -36,7 +37,10 @@ internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = 
         LazyHorizontalGrid(
             rows = GridCells.Fixed(rows),
             modifier = Modifier.fillMaxWidth().height(height).testTag(PROJECT_CONTROLS_TAG),
-            horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
+            horizontalArrangement = Arrangement.spacedBy(
+                tokens.spacing.small,
+                Alignment.CenterHorizontally,
+            ),
             verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
         ) {
             items(actions) { action ->

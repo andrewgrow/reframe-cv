@@ -17,6 +17,8 @@ dependencies {
     implementation(libs.decompose.extensionsCompose)
 
     implementation(libs.compose.uiToolingPreview)
+    implementation(libs.kotlinx.coroutinesCore)
+    testImplementation(libs.kotlin.testJunit)
 }
 
 compose.desktop {

@@ -63,10 +63,10 @@ interface ProjectDao {
 
     @Query(
         "SELECT * FROM projects WHERE deleted_at IS NULL AND parent_id IS :parentId " +
-            "ORDER BY updated_at DESC, name ASC",
+            "ORDER BY id ASC",
     )
     fun observeChildren(parentId: Long?): Flow<List<ProjectEntity>>
 
-    @Query("SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY updated_at DESC, name ASC")
+    @Query("SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY id ASC")
     fun observeAll(): Flow<List<ProjectEntity>>
 }

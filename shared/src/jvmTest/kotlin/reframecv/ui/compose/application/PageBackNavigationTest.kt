@@ -104,9 +104,9 @@ class PageBackNavigationTest {
 
     @Test
     fun escapeClosesEditorBeforeReturningThroughPagesAndPreservesBusyGuard() {
-        val projectId = 7L
+        val parentId = 6L
         val projects = RootComponent.Child.Projects(
-            TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(projectId, "Backend"))),
+            TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(parentId, "Parent"))),
         )
         val stack = MutableValue(ChildStack<Unit, RootComponent.Child>(Unit, projects))
         fun show(child: RootComponent.Child) {
@@ -145,7 +145,7 @@ class PageBackNavigationTest {
             waitForIdle()
             val projects =
                 assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
-            assertEquals(projectId, projects.component.projectPath.last().id)
+            assertEquals(parentId, projects.component.projectPath.last().id)
         }
     }
 }

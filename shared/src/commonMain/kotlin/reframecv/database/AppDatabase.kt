@@ -16,12 +16,15 @@ import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeDao
 import reframecv.database.resume.ResumeEntity
 import reframecv.database.resume.ResumeKeywordEntity
+import reframecv.database.settings.AppSettingsDao
+import reframecv.database.settings.AppSettingsEntity
 import reframecv.database.vacancy.VacancyDao
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.database.vacancy.VacancyKeywordEntity
 
 @Database(
     entities = [
+        AppSettingsEntity::class,
         ProjectEntity::class,
         ImportRecordEntity::class,
         ResumeEntity::class, ResumeKeywordEntity::class,
@@ -33,6 +36,7 @@ import reframecv.database.vacancy.VacancyKeywordEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun appSettingsDao(): AppSettingsDao
     abstract fun importRecordDao(): ImportRecordDao
     abstract fun projectDao(): ProjectDao
     abstract fun resumeDao(): ResumeDao

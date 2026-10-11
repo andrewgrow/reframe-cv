@@ -5,20 +5,22 @@ import kotlinx.coroutines.flow.map
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 import reframecv.repository.ProjectsRepository
+import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
 import reframecv.repository.TestResumesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 
 class TestApplicationDependencies : ApplicationDependencies {
+    override val appSettingsRepository = TestAppSettingsRepository()
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
         override fun observeAllProjects() = projects.map { values ->
-            values.filter { it.deletedAt == null }
+            values.filter { it.deletedAt == null }.sortedBy { it.id }
         }
 
         override fun observeProjects(parentId: Long?) = projects.map { values ->
-            values.filter { it.deletedAt == null && it.parentId == parentId }
+            values.filter { it.deletedAt == null && it.parentId == parentId }.sortedBy { it.id }
         }
 
         override suspend fun deleteProject(id: Long) {

@@ -17,7 +17,7 @@ import reframecv.ui.threading.runOnUiThread
 
 class RootDashboardTest : ComponentTest() {
     @Test
-    fun unconfiguredProjectBackReturnsToItsOriginatingList() = runBlocking<Unit> {
+    fun unconfiguredProjectBackReturnsToItsParentList() = runBlocking<Unit> {
         val parent = dependencies.projectsRepository.createProject("Parent")
         val child = dependencies.projectsRepository.createProject("Child", parent.id)
         runOnUiThread {
@@ -61,9 +61,11 @@ class RootDashboardTest : ComponentTest() {
             (root.backHandler as BackDispatcher).back()
             val returned =
                 assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
-            assertEquals(project.id, returned.component.projectPath.last().id)
-            assertEquals(project.id, root.projectTree.state.value.selectedId)
-            returned.component.onConfigureProject()
+            assertEquals(emptyList(), returned.component.projectPath)
+            assertEquals(null, root.projectTree.state.value.selectedId)
+            returned.component.onOpenProject(project)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onConfigureProject()
             root.onProjectsList()
             val rootList =
                 assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)

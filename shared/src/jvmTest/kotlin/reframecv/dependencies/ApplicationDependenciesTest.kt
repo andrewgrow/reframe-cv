@@ -114,6 +114,7 @@ class ApplicationDependenciesTest {
             assertEquals(0, opened)
             val repository = dependencies.projectsRepository
             assertSame(repository, dependencies.projectsRepository)
+            assertSame(dependencies.appSettingsRepository, dependencies.appSettingsRepository)
             assertSame(dependencies.resumesRepository, dependencies.resumesRepository)
             assertSame(dependencies.vacanciesRepository, dependencies.vacanciesRepository)
             assertSame(dependencies.coverLettersRepository, dependencies.coverLettersRepository)
@@ -130,6 +131,7 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.resumesRepository }
         assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
         assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
+        assertFailsWith<IllegalStateException> { dependencies.appSettingsRepository }
         val reopened = DefaultApplicationDependencies { buildDatabase(createDatabaseBuilder(file)) }
         try {
             assertEquals(
@@ -150,5 +152,6 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.resumesRepository }
         assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
         assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
+        assertFailsWith<IllegalStateException> { dependencies.appSettingsRepository }
     }
 }

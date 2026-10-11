@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.slot.activate
 import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
@@ -79,6 +80,15 @@ class DefaultProjectsComponent(
     }
 
     init {
+        val projectBack = BackCallback(isEnabled = projectPath.isNotEmpty()) { onBack() }
+        backHandler.register(projectBack)
+        val editorSubscription = editorSlot.subscribe {
+            projectBack.isEnabled = projectPath.isNotEmpty() && it.child == null
+        }
+        lifecycle.doOnDestroy {
+            editorSubscription.cancel()
+            backHandler.unregister(projectBack)
+        }
         val subscription = stateStore.labels(
             observer { label ->
                 val editor = editorSlot.value.child?.instance as? DefaultEditorComponent

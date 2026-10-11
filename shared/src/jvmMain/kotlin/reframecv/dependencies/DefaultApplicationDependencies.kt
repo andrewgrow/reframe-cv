@@ -2,7 +2,9 @@ package reframecv.dependencies
 
 import reframecv.database.AppDatabase
 import reframecv.database.openDefaultDatabase
+import reframecv.repository.AppSettingsRepository
 import reframecv.repository.CoverLettersRepository
+import reframecv.repository.LocalAppSettingsRepository
 import reframecv.repository.LocalCoverLettersRepository
 import reframecv.repository.LocalProjectsRepository
 import reframecv.repository.LocalResumesRepository
@@ -20,7 +22,16 @@ class DefaultApplicationDependencies(databaseFactory: () -> AppDatabase = ::open
     private val coverLetterRepository by lazy {
         LocalCoverLettersRepository(database.value.coverLetterDao())
     }
+    private val settingsRepository by lazy {
+        LocalAppSettingsRepository(database.value.appSettingsDao())
+    }
     private var closed = false
+
+    override val appSettingsRepository: AppSettingsRepository
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return settingsRepository
+        }
 
     override val projectsRepository: ProjectsRepository
         get() {

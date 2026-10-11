@@ -169,19 +169,32 @@ class AppDatabaseTest {
     }
 
     @Test
-    fun sortsByUpdatedTimeThenNameAndRejectsDuplicateIds() = runBlocking {
+    fun sortsProjectsByIdForRootAndChildrenAndKeepsOrderAfterUpdates() = runBlocking<Unit> {
         val dao = database.projectDao()
-        val older = entity("Older", 100L)
-        val zulu = entity("Zulu", 200L)
-        val alpha = entity("Alpha", 200L)
+        val older = entity("Older", 100L).copy(id = 30)
+        val zulu = entity("Zulu", 200L).copy(id = 10)
+        val alpha = entity("Alpha", 200L).copy(id = 20)
         dao.insert(older)
         dao.insert(zulu)
-        val id = dao.insert(alpha)
-        assertEquals(listOf("Alpha", "Zulu", "Older"), dao.observeAll().first().map { it.name })
-        assertFailsWith<SQLiteException> {
-            dao.insert(entity("Conflict").copy(id = id))
-        }
-        assertEquals(alpha.copy(id = id), dao.findById(id))
+        dao.insert(alpha)
+        val rootIds = listOf(10L, 20L, 30L)
+        assertEquals(rootIds, dao.observeAll().first().map { it.id })
+        assertEquals(rootIds, dao.observeChildren(null).first().map { it.id })
+        assertFailsWith<SQLiteException> { dao.insert(entity("Conflict").copy(id = alpha.id)) }
+        assertEquals(alpha, dao.findById(alpha.id))
+        dao.updateName(older.id, "Aardvark", 2000)
+        assertEquals(rootIds, dao.observeAll().first().map { it.id })
+        assertEquals(rootIds, dao.observeChildren(null).first().map { it.id })
+
+        dao.insert(entity("Alpha child", 999).copy(id = 60, parentId = older.id))
+        dao.insert(entity("Zulu child", 100).copy(id = 50, parentId = older.id))
+        assertEquals(listOf(50L, 60L), dao.observeChildren(older.id).first().map { it.id })
+        dao.updateName(60, "Aardvark child", 5000)
+        assertEquals(listOf(50L, 60L), dao.observeChildren(older.id).first().map { it.id })
+        assertEquals(rootIds + listOf(50L, 60L), dao.observeAll().first().map { it.id })
+        dao.markSubtreeDeleted(50, 6000)
+        assertEquals(listOf(60L), dao.observeChildren(older.id).first().map { it.id })
+        assertEquals(rootIds + 60L, dao.observeAll().first().map { it.id })
     }
 
     @Test

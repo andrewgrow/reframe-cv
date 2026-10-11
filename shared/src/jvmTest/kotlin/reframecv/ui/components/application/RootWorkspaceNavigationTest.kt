@@ -15,13 +15,112 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.dependencies.DefaultApplicationDependencies
+import reframecv.domain.models.project.Project
+import reframecv.domain.models.project.ProjectMode
 import reframecv.ui.components.application.navigation.ProjectTreeState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
 
 class RootWorkspaceNavigationTest : WorkspaceDatabaseTest() {
     @Test
-    fun dashboardBackReturnsToTheListThatOpenedTheWorkspace() = runBlocking<Unit> {
+    fun deepProjectOpenedFromRootReturnsThroughParentsForPageAndHardwareBack() = runBlocking<Unit> {
+        withDeepProjectTree { root, path ->
+            root.projectTree.onProjectSelected(path.last().id)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onBack()
+            val parent =
+                assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+            assertEquals(path.dropLast(1).map { it.id }, parent.component.projectPath.map { it.id })
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onConfigureProject()
+            assertIs<RootComponent.Child.Dashboard>(root.childStack.value.active.instance)
+                .component.onBack()
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onConfigureProject()
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+            for (ancestor in path.dropLast(2).asReversed()) {
+                (root.backHandler as BackDispatcher).back()
+                assertEquals(ancestor.id, root.projectTree.state.value.selectedId)
+            }
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(null, root.projectTree.state.value.selectedId)
+            assertEquals(1, root.childStack.value.items.size)
+        }
+    }
+
+    @Test
+    fun deepWorkspaceOpenedFromTheRootTreeReturnsToItsParent() = runBlocking<Unit> {
+        withDeepProjectTree(ProjectMode.Workspace) { root, path ->
+            root.projectTree.onProjectSelected(path.last().id)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            assertIs<RootComponent.Child.Dashboard>(root.childStack.value.active.instance)
+                .component.onBack()
+            val parent =
+                assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+            assertEquals(path.dropLast(1).map { it.id }, parent.component.projectPath.map { it.id })
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+            root.onProjectsList()
+            root.projectTree.onProjectSelected(path.last().id)
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(path[3].id, root.projectTree.state.value.selectedId)
+        }
+    }
+
+    private suspend fun withDeepProjectTree(
+        mode: ProjectMode = ProjectMode.Unconfigured,
+        action: (DefaultRootComponent, List<Project>) -> Unit,
+    ) {
+        val dependencies = DefaultApplicationDependencies { database }
+        val path = mutableListOf<Project>()
+        repeat(5) { index ->
+            path +=
+                dependencies.projectsRepository.createProject(
+                    "Test ${index + 1}",
+                    path.lastOrNull()?.id,
+                )
+        }
+        if (mode ==
+            ProjectMode.Workspace
+        ) {
+            dependencies.vacanciesRepository.create(vacancy(path.last().id))
+        }
+        val lifecycle = LifecycleRegistry()
+        val states = Channel<ProjectTreeState>(Channel.UNLIMITED)
+        lateinit var root: DefaultRootComponent
+        try {
+            runOnUiThread {
+                lifecycle.resume()
+                root = DefaultRootComponent(
+                    DefaultAppComponentContext(DefaultComponentContext(lifecycle), dependencies),
+                )
+                root.projectTree.state.subscribe { states.trySend(it) }
+            }
+            withTimeout(10_000.milliseconds) {
+                while (states.receive().loading) { /* Await the complete tree. */ }
+            }
+            runOnUiThread { action(root, path) }
+        } finally {
+            runOnUiThread { lifecycle.destroy() }
+            states.close()
+        }
+    }
+
+    @Test
+    fun dashboardBackReturnsToTheParentList() = runBlocking<Unit> {
         val dependencies = DefaultApplicationDependencies { database }
         val repository = dependencies.projectsRepository
         val parent = repository.createProject("Container")
