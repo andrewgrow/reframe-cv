@@ -1,6 +1,8 @@
 package reframecv.dependencies
 
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import reframecv.attachments.AttachmentPicker
+import reframecv.attachments.AttachmentStorage
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.repository.AppSettingsRepository
@@ -14,6 +16,8 @@ interface ApplicationDependencies {
     val eventHistory: EventHistory
     val storeFactory: StoreFactory
     val logger: ApplicationLogger
+    val attachmentStorage: AttachmentStorage
+    val attachmentPicker: AttachmentPicker
     val appSettingsRepository: AppSettingsRepository
     val projectsRepository: ProjectsRepository
     val resumesRepository: ResumesRepository

@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
+import reframecv.attachments.TestAttachmentStorage
 import reframecv.database.buildDatabase
 import reframecv.database.createDatabaseBuilder
 import reframecv.database.project.ProjectEntity
@@ -106,10 +107,11 @@ class ApplicationDependenciesTest {
     fun reusesRepositoryAndDatabaseAndPersistsProjects() = runBlocking {
         var opened = 0
         val file = temporaryFolder.root.toPath().resolve("projects.db")
-        val dependencies = DefaultApplicationDependencies {
-            opened++
-            buildDatabase(createDatabaseBuilder(file))
-        }
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) {
+                opened++
+                buildDatabase(createDatabaseBuilder(file))
+            }
         try {
             assertEquals(0, opened)
             assertSame(dependencies.storeFactory, dependencies.storeFactory)
@@ -134,7 +136,10 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
         assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
         assertFailsWith<IllegalStateException> { dependencies.appSettingsRepository }
-        val reopened = DefaultApplicationDependencies { buildDatabase(createDatabaseBuilder(file)) }
+        val reopened =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) {
+                buildDatabase(createDatabaseBuilder(file))
+            }
         try {
             assertEquals(
                 "Android Developer",
@@ -147,7 +152,10 @@ class ApplicationDependenciesTest {
 
     @Test
     fun closingUnusedDependenciesDoesNotOpenDatabase() {
-        val dependencies = DefaultApplicationDependencies { error("Should not open the database") }
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) {
+                error("Should not open the database")
+            }
         dependencies.close()
         dependencies.close()
         assertFailsWith<IllegalStateException> { dependencies.projectsRepository }

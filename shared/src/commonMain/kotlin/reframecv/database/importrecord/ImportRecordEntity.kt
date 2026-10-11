@@ -18,7 +18,7 @@ data class ImportRecordEntity(
     val id: Long = 0,
     val provider: String,
     @ColumnInfo(name = "raw_data")
-    val rawData: String,
+    val rawData: String? = null,
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "external_id")
@@ -27,6 +27,15 @@ data class ImportRecordEntity(
     val sourceUrl: String? = null,
     @ColumnInfo(name = "metadata_json")
     val metadataJson: String? = null,
+    @ColumnInfo(name = "file_path")
+    val filePath: String? = null,
+    @ColumnInfo(name = "file_name")
+    val fileName: String? = null,
+    @ColumnInfo(name = "media_type")
+    val mediaType: String? = null,
+    @ColumnInfo(name = "file_size")
+    val fileSize: Long? = null,
+    val sha256: String? = null,
 ) : DatabaseModel<ImportRecord> {
     override fun toDomainModel() = ImportRecord(
         id = id,
@@ -36,6 +45,8 @@ data class ImportRecordEntity(
         externalId = externalId,
         sourceUrl = sourceUrl,
         metadataJson = metadataJson,
+        filePath = filePath, fileName = fileName, mediaType = mediaType,
+        fileSize = fileSize, sha256 = sha256,
     )
 
     companion object : DatabaseModelFactory<ImportRecord, ImportRecordEntity> {
@@ -47,6 +58,9 @@ data class ImportRecordEntity(
             externalId = domainModel.externalId,
             sourceUrl = domainModel.sourceUrl,
             metadataJson = domainModel.metadataJson,
+            filePath = domainModel.filePath, fileName = domainModel.fileName,
+            mediaType = domainModel.mediaType, fileSize = domainModel.fileSize,
+            sha256 = domainModel.sha256,
         )
     }
 }

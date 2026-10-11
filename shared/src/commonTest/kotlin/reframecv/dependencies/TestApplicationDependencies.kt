@@ -2,6 +2,8 @@ package reframecv.dependencies
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import reframecv.attachments.AttachmentPicker
+import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 import reframecv.logging.EventHistory
@@ -18,6 +20,8 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val eventHistory = EventHistory()
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     override val logger = RecordingApplicationLogger()
+    override val attachmentStorage = TestAttachmentStorage()
+    override val attachmentPicker = AttachmentPicker { null }
     override val appSettingsRepository = TestAppSettingsRepository()
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())

@@ -28,13 +28,14 @@ private val draftSaver = listSaver<VacancyDraft, String>(
 fun VacancyEditorContent(component: VacancyEditorComponent) {
     val saveState by component.saveState.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
+    val snapshot by component.snapshot.state.subscribeAsState()
     val initial = component.initialVacancy
     var draft by rememberSaveable(initial?.id, stateSaver = draftSaver) {
         mutableStateOf(initial?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     }
     val isBusy = saveState == VacancySaveState.Saving || deleteState == VacancyDeleteState.Deleting
     val confirming = deleteState != VacancyDeleteState.Idle
-    val save = { if (!confirming && !isBusy) component.onSave(draft) }
+    val save = { if (!confirming && !isBusy && !snapshot.selecting) component.onSave(draft) }
     VacancyEditorDialog(
         resizingEnabled = !isBusy && !confirming,
         onDismissRequest = component::onClose,
@@ -51,11 +52,17 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
         },
         text = {
             VacancyEditorFields(draft, { draft = it }, saveState, save, !isBusy && !confirming) {
-                VacancySnapshotPlaceholder()
+                VacancySnapshotContent(component.snapshot, enabled = !isBusy && !confirming)
             }
         },
         actions = {
-            VacancyEditorActions(component, draft.title.isNotBlank(), isBusy, deleteState, save)
+            VacancyEditorActions(
+                component,
+                draft.title.isNotBlank() && !snapshot.selecting,
+                isBusy,
+                deleteState,
+                save,
+            )
         },
     )
 }

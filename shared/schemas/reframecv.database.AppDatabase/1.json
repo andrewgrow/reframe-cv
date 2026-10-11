@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "5d6e2b9cb684555abc33a5a1e72a7591",
+    "identityHash": "092209014257aecd75a7e8ba34da083c",
     "entities": [
       {
         "tableName": "app_settings",
@@ -144,7 +144,7 @@
       },
       {
         "tableName": "import_records",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `provider` TEXT NOT NULL, `raw_data` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `external_id` TEXT, `source_url` TEXT, `metadata_json` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `provider` TEXT NOT NULL, `raw_data` TEXT, `created_at` INTEGER NOT NULL, `external_id` TEXT, `source_url` TEXT, `metadata_json` TEXT, `file_path` TEXT, `file_name` TEXT, `media_type` TEXT, `file_size` INTEGER, `sha256` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -161,8 +161,7 @@
           {
             "fieldPath": "rawData",
             "columnName": "raw_data",
-            "affinity": "TEXT",
-            "notNull": true
+            "affinity": "TEXT"
           },
           {
             "fieldPath": "createdAt",
@@ -183,6 +182,31 @@
           {
             "fieldPath": "metadataJson",
             "columnName": "metadata_json",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "filePath",
+            "columnName": "file_path",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileName",
+            "columnName": "file_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mediaType",
+            "columnName": "media_type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fileSize",
+            "columnName": "file_size",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sha256",
+            "columnName": "sha256",
             "affinity": "TEXT"
           }
         ],
@@ -729,7 +753,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '5d6e2b9cb684555abc33a5a1e72a7591')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '092209014257aecd75a7e8ba34da083c')"
     ]
   }
 }

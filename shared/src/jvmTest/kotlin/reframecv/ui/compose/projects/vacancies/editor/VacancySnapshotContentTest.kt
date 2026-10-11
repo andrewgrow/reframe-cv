@@ -1,7 +1,7 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
 import androidx.compose.ui.test.ExperimentalTestApi
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.v2.runComposeUiTest
@@ -13,16 +13,16 @@ import reframecv.ui.theme.ReframeTheme
 @OptIn(ExperimentalTestApi::class)
 class VacancySnapshotContentTest {
     @Test
-    fun creationShowsDisabledAttachmentPlaceholder() = runComposeUiTest {
+    fun creationShowsAttachmentAction() = runComposeUiTest {
         setContent { ReframeTheme { VacancyEditorContent(TestVacancyEditorComponent()) } }
-        onNodeWithText("Attach source file").performScrollTo().assertIsNotEnabled()
+        onNodeWithText("Attach source file").performScrollTo().assertIsEnabled()
         onNodeWithText(
-            "Coming soon: attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX.",
+            "Attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX. A copy is saved with the vacancy.",
         ).performScrollTo().assertExists()
     }
 
     @Test
-    fun editingShowsDisabledAttachmentPlaceholder() = runComposeUiTest {
+    fun editingShowsAttachmentAction() = runComposeUiTest {
         val vacancy =
             Vacancy(id = 1, projectId = 7, name = "Backend", createdAt = 100, updatedAt = 200)
         setContent {
@@ -30,9 +30,9 @@ class VacancySnapshotContentTest {
                 VacancyEditorContent(TestVacancyEditorComponent(initialVacancy = vacancy))
             }
         }
-        onNodeWithText("Attach source file").performScrollTo().assertIsNotEnabled()
+        onNodeWithText("Attach source file").performScrollTo().assertIsEnabled()
         onNodeWithText(
-            "Coming soon: attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX.",
+            "Attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX. A copy is saved with the vacancy.",
         ).performScrollTo().assertExists()
     }
 }

@@ -13,6 +13,7 @@ enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 
 /** Lets one dialog create, edit, or confirm deletion of a vacancy. */
 interface VacancyEditorComponent {
+    val snapshot: VacancySnapshotComponent
     val initialVacancy: Vacancy?
     val deleteState: Value<VacancyDeleteState>
     val saveState: Value<VacancySaveState>
@@ -30,6 +31,11 @@ class DefaultVacancyEditorComponent(
     private val delete: () -> Unit = {},
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
+    override val snapshot = DefaultVacancySnapshotComponent(
+        componentContext,
+        initialVacancy?.id,
+        initialVacancy?.importRecordId != null,
+    )
     override val saveState = MutableValue(VacancySaveState.Idle)
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     private val isBusy: Boolean
@@ -37,10 +43,9 @@ class DefaultVacancyEditorComponent(
             deleteState.value == VacancyDeleteState.Deleting
 
     override fun onSave(draft: VacancyDraft) {
-        if (draft.title.isNotBlank() && !isBusy &&
-            deleteState.value == VacancyDeleteState.Idle
-        ) {
-            save(draft)
+        if (isBusy || snapshot.state.value.selecting) return
+        if (draft.title.isNotBlank() && deleteState.value == VacancyDeleteState.Idle) {
+            save(draft.copy(snapshotChange = snapshot.change))
         }
     }
 

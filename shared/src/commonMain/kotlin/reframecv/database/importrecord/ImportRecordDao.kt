@@ -8,6 +8,12 @@ import kotlinx.coroutines.flow.Flow
 /** Stores original import snapshots and removes snapshots no longer used by vacancies. */
 @Dao
 interface ImportRecordDao {
+    @Query("SELECT file_path FROM import_records WHERE file_path IS NOT NULL")
+    suspend fun filePaths(): List<String>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM import_records WHERE file_path = :path)")
+    suspend fun referencesFile(path: String): Boolean
+
     @Insert
     suspend fun insert(entity: ImportRecordEntity): Long
 

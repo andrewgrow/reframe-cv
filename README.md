@@ -204,3 +204,21 @@ Print in the terminal `open "$HOME/Library/Application Support/ReframeCV"`
 ## License
 
 ReframeCV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
+
+### Vacancy source files
+
+Attaching a source file selects an immutable snapshot for the vacancy. Save copies
+the original bytes into `attachments/` beside `reframe-cv.db`, under a UUID filename.
+The database stores its relative path, original name, MIME type, size, and SHA-256.
+Cancel leaves no copy. JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX are supported;
+files are neither parsed nor fetched from URLs.
+
+The editor can open, replace, or remove a saved snapshot. Missing or changed copies
+show a warning; vacancy data and snapshot metadata are retained. Reattach the original
+file or remove the snapshot to resolve the warning. Deleting a vacancy removes its
+snapshot and copy after the last reference; soft-deleting projects preserves them.
+Unreferenced copies are cleaned when vacancy observation starts. Back up the database
+and its `attachments/` directory together.
+
+The development schema remains version 1. Databases created before file attachments
+need recreation before running this version; no migration is provided.

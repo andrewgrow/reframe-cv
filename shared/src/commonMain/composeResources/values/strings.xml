@@ -52,7 +52,15 @@
     <string name="vacancy_delete_confirm">Yes, delete this</string>
     <string name="vacancy_delete_error">Could not delete the vacancy. Please try again.</string>
     <string name="vacancy_attach_snapshot">Attach source file</string>
-    <string name="vacancy_snapshot_hint">Coming soon: attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX.</string>
+    <string name="vacancy_snapshot_hint">Attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX. A copy is saved with the vacancy.</string>
+    <string name="vacancy_snapshot_open">Open</string>
+    <string name="vacancy_snapshot_remove">Remove</string>
+    <string name="vacancy_snapshot_missing">Snapshot file is missing. Attach it again or remove the snapshot.</string>
+    <string name="vacancy_snapshot_changed">Snapshot file has changed or is damaged. Attach it again or remove the snapshot.</string>
+    <string name="vacancy_snapshot_error">Could not read or open the snapshot. Please try again.</string>
+    <string name="vacancy_snapshot_loading">Loading snapshot…</string>
+    <string name="vacancy_snapshot_selected">This file will be copied when you save the vacancy.</string>
+    <string name="vacancy_snapshot_imported">Original import data is attached.</string>
     <string name="vacancy_resize_description">Resize description</string>
     <string name="vacancy_resize_dialog">Resize vacancy dialog</string>
     <string name="dashboard_title">Dashboard</string>

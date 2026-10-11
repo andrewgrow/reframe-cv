@@ -13,6 +13,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import reframecv.attachments.TestAttachmentStorage
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.dependencies.DefaultApplicationDependencies
 import reframecv.domain.models.project.Project
@@ -84,7 +85,8 @@ class RootWorkspaceNavigationTest : WorkspaceDatabaseTest() {
         mode: ProjectMode = ProjectMode.Unconfigured,
         action: (DefaultRootComponent, List<Project>) -> Unit,
     ) {
-        val dependencies = DefaultApplicationDependencies { database }
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) { database }
         val path = mutableListOf<Project>()
         repeat(5) { index ->
             path +=
@@ -121,7 +123,8 @@ class RootWorkspaceNavigationTest : WorkspaceDatabaseTest() {
 
     @Test
     fun dashboardBackReturnsToTheParentList() = runBlocking<Unit> {
-        val dependencies = DefaultApplicationDependencies { database }
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) { database }
         val repository = dependencies.projectsRepository
         val parent = repository.createProject("Container")
         val topLevel = repository.createProject("Top-level workspace")
@@ -164,7 +167,8 @@ class RootWorkspaceNavigationTest : WorkspaceDatabaseTest() {
 
     @Test
     fun treeOpensWorkspaceDashboardAndKeepsContainerAndUnconfiguredScreens() = runBlocking<Unit> {
-        val dependencies = DefaultApplicationDependencies { database }
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) { database }
         val repository = dependencies.projectsRepository
         val workspace = repository.createProject("Workspace")
         dependencies.resumesRepository.create(resume(workspace.id))

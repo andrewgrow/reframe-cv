@@ -2,6 +2,7 @@ package reframecv.database.vacancy
 
 import androidx.room3.Dao
 import androidx.room3.Transaction
+import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.vacancy.Vacancy
@@ -32,6 +33,28 @@ interface VacancyDao :
         record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
         check(updateEntity(VacancyEntity.fromDomainModel(record)) == 1)
         replaceKeywords(record.id, record.keywords)
+    }
+
+    @Transaction
+    suspend fun createWithSnapshot(record: Vacancy, snapshot: ImportRecordEntity?): Long {
+        val sourceId = snapshot?.let { insertSnapshot(it) } ?: record.importRecordId
+        return create(record.copy(importRecordId = sourceId))
+    }
+
+    @Transaction
+    suspend fun updateWithSnapshot(
+        record: Vacancy,
+        snapshot: ImportRecordEntity?,
+        removeSnapshot: Boolean,
+    ) {
+        val previous = checkNotNull(findById(record.id)).entity.importRecordId
+        val sourceId = when {
+            snapshot != null -> insertSnapshot(snapshot)
+            removeSnapshot -> null
+            else -> previous
+        }
+        update(record.copy(importRecordId = sourceId))
+        if (previous != null && previous != sourceId) deleteUnusedImportRecord(previous)
     }
 
     @Transaction

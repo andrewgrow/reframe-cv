@@ -4,6 +4,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import reframecv.attachments.SnapshotChange
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.logging.ApplicationLogger
 import reframecv.repository.VacanciesRepository
@@ -37,9 +38,19 @@ internal class VacanciesExecutor(
         saving = scope.launch {
             try {
                 if (original == null) {
-                    repository.create(draft.toVacancy(projectId))
+                    val record = draft.toVacancy(projectId)
+                    if (draft.snapshotChange == SnapshotChange.Keep) {
+                        repository.create(record)
+                    } else {
+                        repository.create(record, draft.snapshotChange)
+                    }
                 } else {
-                    repository.update(draft.applyTo(original))
+                    val record = draft.applyTo(original)
+                    if (draft.snapshotChange == SnapshotChange.Keep) {
+                        repository.update(record)
+                    } else {
+                        repository.update(record, draft.snapshotChange)
+                    }
                 }
                 publish(VacanciesLabel.Saved)
             } catch (exception: CancellationException) {

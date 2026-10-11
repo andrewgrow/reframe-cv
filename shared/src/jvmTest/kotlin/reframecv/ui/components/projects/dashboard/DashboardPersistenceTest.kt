@@ -10,6 +10,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import reframecv.attachments.TestAttachmentStorage
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.dependencies.DefaultApplicationDependencies
 import reframecv.ui.context.DefaultAppComponentContext
@@ -17,8 +18,9 @@ import reframecv.ui.threading.runOnUiThread
 
 class DashboardPersistenceTest : WorkspaceDatabaseTest() {
     @Test
-    fun loadsAllSectionsFromDatabaseAndObservesSoftDeletion() = runBlocking<Unit> {
-        val dependencies = DefaultApplicationDependencies { database }
+    fun loadsAllSectionsFromDatabaseAndObservesSoftDeletion() = runBlocking {
+        val dependencies =
+            DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) { database }
         val projectId = project()
         val otherId = project("Other")
         val resumeId = dependencies.resumesRepository.create(resume(projectId))

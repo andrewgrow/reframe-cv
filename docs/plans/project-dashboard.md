@@ -76,10 +76,21 @@ without creating a resume. Relationships between records are optional.
 
 - [x] Indicate future snapshot attachment in the vacancy creation and editing dialogs with a
   disabled button and a short explanation.
-- The first version does not select, read, fetch, parse, or save snapshots.
-- [ ] Support JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX as original snapshots.
-- [ ] Store original bytes, format, and filename without changing the source content.
-- [ ] Save the snapshot and vacancy atomically when attachment is implemented.
+- The initial placeholder has been replaced by local file attachment. URL fetching
+  and parsing remain separate future work.
+- [x] Support JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX as original snapshots.
+- [x] Store original bytes, format, and filename without changing the source content.
+- [x] Commit snapshot metadata and vacancy in one database transaction after copying
+  the file; remove the copy on rollback. Cancel never persists a selection.
+- [x] Store UUID file copies under `attachments/` beside the database, with relative
+  paths, original names, media types, byte sizes, and SHA-256 hashes in ImportRecord.
+  File snapshots have nullable `rawData`.
+- [x] Open, replace, and detach snapshots in both creation and editing dialogs.
+  Retain metadata for missing files and warn when stored bytes have changed.
+- [x] Remove unused files after replacement or vacancy deletion. Preserve shared
+  snapshots and snapshots belonging to soft-deleted projects. Serialize orphan
+  cleanup with writes; log failed cleanup. Failed startup cleanup retries on the
+  next observation; leftover files from a failed deletion are removed on the next start.
 - [ ] Add URL fetching separately from parsing; vacancy fields remain independently editable.
 
 Import workflows and repositories will be added when scraper integration begins.
@@ -517,3 +528,11 @@ axes, the initial minimum, window bounds, immediate reverse dragging at the limi
 preserved dimensions during editing, resizing after description growth, and disabled
 handles during saving or deletion confirmation. Default and expanded dialog goldens
 were visually reviewed. Description and dialog handles share the same resize component.
+
+
+File attachment verification on 2026-10-11: all JVM tests, screenshot verification,
+ktlint, Detekt, coverage verification, and macOS packaging passed. Added tests cover
+original-byte copying, missing/changed files, rollback, replacement, shared snapshots,
+detachment, project soft deletion, serialized cleanup, failed file deletion, selection
+cancellation, and pending editor changes. Isolated snapshot goldens and updated
+vacancy-dialog goldens were reviewed in dark and light themes.

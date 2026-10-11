@@ -1,5 +1,6 @@
 package reframecv.ui.components.projects.vacancies.editor
 
+import reframecv.attachments.SnapshotChange
 import reframecv.domain.models.vacancy.Vacancy
 
 /** Keeps unfinished vacancy edits separate from the saved record. */
@@ -9,6 +10,7 @@ data class VacancyDraft(
     val description: String = "",
     val url: String = "",
     val keywords: String = "",
+    val snapshotChange: SnapshotChange = SnapshotChange.Keep,
 ) {
     fun toVacancy(projectId: Long) = applyTo(
         Vacancy(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),

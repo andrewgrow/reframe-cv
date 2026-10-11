@@ -5,9 +5,13 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import reframecv.database.importrecord.ImportRecordEntity
 
 /** Provides SQL queries for vacancy records, keywords, and unused snapshots. */
 interface VacancyQueries {
+    @Insert
+    suspend fun insertSnapshot(entity: ImportRecordEntity): Long
+
     @Insert
     suspend fun insertEntity(entity: VacancyEntity): Long
 

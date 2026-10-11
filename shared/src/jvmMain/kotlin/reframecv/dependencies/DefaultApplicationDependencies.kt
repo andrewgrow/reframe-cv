@@ -1,7 +1,12 @@
 package reframecv.dependencies
 
+import reframecv.attachments.AttachmentPicker
+import reframecv.attachments.AttachmentStorage
+import reframecv.attachments.DesktopAttachmentPicker
+import reframecv.attachments.FileAttachmentStorage
 import reframecv.database.AppDatabase
 import reframecv.database.openDefaultDatabase
+import reframecv.filesystem.applicationDataDirectory
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
@@ -16,18 +21,33 @@ import reframecv.repository.LocalVacanciesRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
+import reframecv.repository.VacancySnapshotManager
 
 /** Gives all screens access to the same local data without reopening the database. */
 class DefaultApplicationDependencies(
     override val eventHistory: EventHistory = EventHistory(),
     override val logger: ApplicationLogger = FileApplicationLogger(history = eventHistory),
+    override val attachmentStorage: AttachmentStorage =
+        FileAttachmentStorage(applicationDataDirectory()),
+    override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
     private val repository by lazy { LocalProjectsRepository(database.value.projectDao()) }
     private val resumeRepository by lazy { LocalResumesRepository(database.value.resumeDao()) }
-    private val vacancyRepository by lazy { LocalVacanciesRepository(database.value.vacancyDao()) }
+    private val vacancyRepository by lazy {
+        val dao = database.value.vacancyDao()
+        LocalVacanciesRepository(
+            dao,
+            VacancySnapshotManager(
+                dao,
+                database.value.importRecordDao(),
+                attachmentStorage,
+                logger,
+            ),
+        )
+    }
     private val coverLetterRepository by lazy {
         LocalCoverLettersRepository(database.value.coverLetterDao())
     }
