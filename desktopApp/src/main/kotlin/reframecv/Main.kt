@@ -15,6 +15,7 @@ import reframecv.ui.components.application.DefaultRootComponent
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.window.DesktopApplicationIcon
 import reframecv.window.DesktopApplicationWindow
 import reframecv.window.DesktopWindowSettingsStore
 
@@ -40,6 +41,7 @@ fun main() {
     val lifecycle = LifecycleRegistry()
     try {
         val rootComponent = runOnUiThread {
+            DesktopApplicationIcon.applyToTaskbar()
             val context =
                 DefaultAppComponentContext(DefaultComponentContext(lifecycle), dependencies)
             DefaultRootComponent(context)

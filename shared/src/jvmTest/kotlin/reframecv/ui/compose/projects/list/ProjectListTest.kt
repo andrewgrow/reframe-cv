@@ -61,7 +61,7 @@ class ProjectListTest {
             assertEquals(
                 true,
                 text?.contains("Android"),
-                "Expected selected project name to be copied"
+                "Expected selected project name to be copied",
             )
             assertEquals(0, opened)
         }

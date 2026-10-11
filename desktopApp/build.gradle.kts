@@ -24,11 +24,23 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "reframecv.MainKt"
+        if (System.getProperty("os.name").startsWith("Mac")) {
+            jvmArgs("-Xdock:name=ReframeCV", "-Dapple.awt.application.name=ReframeCV")
+        }
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "ReframeCV"
             packageVersion = "1.0.0"
+            macOS {
+                iconFile.set(project.file("icons/reframe-cv.icns"))
+            }
+            windows {
+                iconFile.set(project.file("icons/reframe-cv.ico"))
+            }
+            linux {
+                iconFile.set(project.file("src/main/resources/icons/reframe-cv.png"))
+            }
         }
     }
 }

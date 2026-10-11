@@ -4,6 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.toComposeImageBitmap
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.rememberWindowState
@@ -39,6 +41,7 @@ internal fun DesktopApplicationWindow(
             (configuration.bounds.height - insets.top - insets.bottom).toFloat(),
         )
     }
+    val icon = remember { BitmapPainter(DesktopApplicationIcon.image.toComposeImageBitmap()) }
     val state = rememberWindowState(
         size = initial.size,
         placement = if (initial.maximized) WindowPlacement.Maximized else WindowPlacement.Floating,
@@ -59,6 +62,7 @@ internal fun DesktopApplicationWindow(
         },
         state = state,
         title = "ReframeCV",
+        icon = icon,
     ) {
         ReframeTheme { RootContent(rootComponent) }
     }
