@@ -53,4 +53,6 @@
     <string name="vacancy_delete_error">Could not delete the vacancy. Please try again.</string>
     <string name="vacancy_attach_snapshot">Attach source file</string>
     <string name="vacancy_snapshot_hint">Coming soon: attach an original snapshot as JSON, HTML, TXT, PNG, JPG, PDF, or DOCX.</string>
+    <string name="vacancy_resize_description">Resize description</string>
+    <string name="vacancy_resize_dialog">Resize vacancy dialog</string>
 </resources>

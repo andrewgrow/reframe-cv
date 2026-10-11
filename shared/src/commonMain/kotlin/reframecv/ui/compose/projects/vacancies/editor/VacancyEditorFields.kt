@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,17 +12,22 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_company
-import reframecv.shared.generated.resources.vacancy_description
 import reframecv.shared.generated.resources.vacancy_keywords
 import reframecv.shared.generated.resources.vacancy_keywords_hint
 import reframecv.shared.generated.resources.vacancy_save_error
@@ -41,9 +47,13 @@ internal fun VacancyEditorFields(
     attachment: @Composable () -> Unit,
 ) {
     val titleFocus = remember { FocusRequester() }
+    val scroll = rememberScrollState()
+    var viewport by remember { mutableStateOf(Rect.Zero) }
     val submit = { if (draft.title.isNotBlank() && enabled) onSave() }
     Column(
-        Modifier.verticalScroll(rememberScrollState()),
+        Modifier.testTag("vacancy.fields")
+            .onGloballyPositioned { viewport = it.boundsInWindow() }
+            .verticalScroll(scroll),
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         VacancyField(
@@ -62,7 +72,7 @@ internal fun VacancyEditorFields(
             submit,
             Modifier.testTag("vacancy.company"),
         ) { onChange(draft.copy(company = it)) }
-        VacancyDetailFields(draft, onChange, enabled, submit)
+        VacancyDetailFields(draft, onChange, enabled, submit, scroll, viewport)
         SelectableText(
             stringResource(Res.string.vacancy_keywords_hint),
             color = ReframeTheme.colorScheme.hint,
@@ -85,14 +95,15 @@ private fun VacancyDetailFields(
     onChange: (VacancyDraft) -> Unit,
     enabled: Boolean,
     submit: () -> Unit,
+    scroll: ScrollState,
+    viewport: Rect,
 ) {
-    OutlinedTextField(
+    VacancyDescriptionField(
         value = draft.description,
         onValueChange = { onChange(draft.copy(description = it)) },
-        modifier = Modifier.fillMaxWidth().testTag("vacancy.description"),
-        label = { Text(stringResource(Res.string.vacancy_description)) },
         enabled = enabled,
-        minLines = 2,
+        scroll = scroll,
+        viewport = viewport,
     )
     VacancyField(
         draft.url,

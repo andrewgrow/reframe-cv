@@ -1,14 +1,11 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
@@ -38,8 +35,8 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     val isBusy = saveState == VacancySaveState.Saving || deleteState == VacancyDeleteState.Deleting
     val confirming = deleteState != VacancyDeleteState.Idle
     val save = { if (!confirming && !isBusy) component.onSave(draft) }
-    AlertDialog(
-        modifier = Modifier.testTag(VACANCY_EDITOR_TAG),
+    VacancyEditorDialog(
+        resizingEnabled = !isBusy && !confirming,
         onDismissRequest = component::onClose,
         title = {
             SelectableText(
@@ -54,10 +51,10 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
         },
         text = {
             VacancyEditorFields(draft, { draft = it }, saveState, save, !isBusy && !confirming) {
-                if (initial == null) VacancySnapshotPlaceholder()
+                VacancySnapshotPlaceholder()
             }
         },
-        confirmButton = {
+        actions = {
             VacancyEditorActions(component, draft.title.isNotBlank(), isBusy, deleteState, save)
         },
     )

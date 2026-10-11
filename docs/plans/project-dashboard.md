@@ -74,7 +74,7 @@ without creating a resume. Relationships between records are optional.
 
 ### Source snapshot attachment
 
-- [x] Indicate future snapshot attachment in the vacancy creation dialog with a
+- [x] Indicate future snapshot attachment in the vacancy creation and editing dialogs with a
   disabled button and a short explanation.
 - The first version does not select, read, fetch, parse, or save snapshots.
 - [ ] Support JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX as original snapshots.
@@ -297,6 +297,14 @@ For indexed searches by individual keywords, use the database tables
   and dark / light / narrow / increased-scale screenshots.
 - [x] Add a visible Add button beside Back that opens the vacancy creation dialog.
 - [x] Add a creation dialog with Title, Company, Description, URL, and comma-separated Keywords.
+- [x] Allow resizing the vacancy dialog horizontally and vertically with a bottom-right handle.
+  Preserve the initial rendered size as its minimum, keep the dialog centered, constrain it
+  to the application window, and retain the chosen size until the dialog closes.
+- [x] Keep dialog actions at the bottom and disable resizing while saving or confirming deletion.
+- [x] Allow vertical resizing of Description using a bottom-right drag handle.
+  Keep a token-based minimum height, with no maximum; remember height while the dialog is open.
+- [x] Automatically scroll the form while dragging at its visible top or bottom edge;
+  keep Save and Cancel anchored and disable resizing while saving or confirming deletion.
 - [x] Require only a nonblank Title; optional fields may be empty.
 - [x] Save through the repository; keep the form open on failure and allow retry.
 - [x] Prevent duplicate writes and dismissal while saving; focus Title on opening.
@@ -453,3 +461,17 @@ Snapshot placeholder verification on 2026-10-10: all 221 JVM tests, screenshot
 verification, ktlint, Detekt, and coverage verification passed. Creation goldens
 were updated and reviewed; the source attachment is disabled and performs no work.
 The database schema and snapshot persistence remain unchanged.
+
+Description resizing verification on 2026-10-11: all 225 JVM tests, screenshot
+verification, ktlint, Detekt, and coverage verification passed. Mouse tests cover
+growth, shrinking to the minimum, preserved text and height during editing,
+automatic scrolling with growth beyond an 800x600 viewport, and disabled resizing
+during deletion confirmation. Dialog goldens were updated and visually reviewed
+in both themes, including an expanded description.
+
+Dialog resizing verification on 2026-10-11: all 230 JVM tests, screenshot
+verification, ktlint, Detekt, and coverage verification passed. Tests cover both
+axes, the initial minimum, window bounds, immediate reverse dragging at the limit,
+preserved dimensions during editing, resizing after description growth, and disabled
+handles during saving or deletion confirmation. Default and expanded dialog goldens
+were visually reviewed. Description and dialog handles share the same resize component.
