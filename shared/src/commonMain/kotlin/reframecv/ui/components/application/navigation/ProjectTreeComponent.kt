@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import reframecv.domain.models.project.Project
 import reframecv.ui.context.AppComponentContext
 
+/** Lets users reach projects directly through the persistent navigation tree. */
 interface ProjectTreeComponent {
     val state: Value<ProjectTreeState>
     fun onToggle(id: Long)
@@ -21,6 +22,7 @@ interface ProjectTreeComponent {
     fun onRetry()
 }
 
+/** Keeps tree navigation current and the selected project visible within its ancestry. */
 class DefaultProjectTreeComponent(
     componentContext: AppComponentContext,
     private val openProject: (List<Project>) -> Unit,

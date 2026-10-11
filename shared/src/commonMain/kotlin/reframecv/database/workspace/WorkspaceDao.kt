@@ -2,7 +2,7 @@ package reframecv.database.workspace
 
 import androidx.room3.Query
 
-/** Shared queries used inside the concrete DAOs' transactions. */
+/** Provides shared database operations for workspace modes and document references. */
 interface WorkspaceDao {
     @Query(
         "UPDATE projects SET mode = 'Workspace', updated_at = :updatedAt " +

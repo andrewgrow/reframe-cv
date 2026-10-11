@@ -15,7 +15,7 @@ import reframecv.shared.generated.resources.projects_help_show
 import reframecv.shared.generated.resources.projects_load_error
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
@@ -28,7 +28,7 @@ class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
         setAndCaptureGolden(this, themeMode = ThemeMode.Light, captureTag = PROJECTS_SCREEN_TAG) {
             ProjectsContent(
                 TestProjectsComponent(
-                    projectPath = listOf(ProjectBreadcrumb(1, "Android Developer")),
+                    projectPath = listOf(ProjectPathEntry(1, "Android Developer")),
                 ),
             )
         }
@@ -40,8 +40,8 @@ class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
             this,
             TestProjectsComponent(
                 projectPath = listOf(
-                    ProjectBreadcrumb(1, "Backend"),
-                    ProjectBreadcrumb(2, "Google"),
+                    ProjectPathEntry(1, "Backend"),
+                    ProjectPathEntry(2, "Google"),
                 ),
             ),
         )
@@ -52,7 +52,7 @@ class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
         captureProjectsGolden(
             this,
             TestProjectsComponent(
-                projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+                projectPath = listOf(ProjectPathEntry(1, "Backend")),
                 initialState = UiState.Projects(
                     listOf(
                         Project(

@@ -1,3 +1,4 @@
 package reframecv.ui.components.projects.dashboard
 
-internal enum class DashboardIntent { Load }
+/** Requests dashboard observation or a retry. */
+internal enum class DashboardIntent { Load, }

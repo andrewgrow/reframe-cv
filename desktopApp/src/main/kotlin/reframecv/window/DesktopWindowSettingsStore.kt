@@ -9,6 +9,7 @@ import kotlinx.coroutines.withContext
 import reframecv.domain.models.settings.WindowSettings
 import reframecv.repository.AppSettingsRepository
 
+/** Remembers window size and maximized state so the next launch restores them. */
 internal class DesktopWindowSettingsStore private constructor(
     private val repository: AppSettingsRepository,
     initial: WindowSettings,

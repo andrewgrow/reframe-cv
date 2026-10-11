@@ -10,7 +10,7 @@ import reframecv.ui.components.projects.editor.TestEditorComponent
 class TestProjectsComponent(
     initialState: UiState = UiState.NoProjects,
     editorInitiallyOpen: Boolean = false,
-    override val projectPath: List<ProjectBreadcrumb> = emptyList(),
+    override val projectPath: List<ProjectPathEntry> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
     private val onAddProjectClick: () -> Unit = {},
     private val onConfigureProjectClick: () -> Unit = {},

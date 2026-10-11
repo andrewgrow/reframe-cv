@@ -2,7 +2,7 @@ package reframecv.ui.theme
 
 import androidx.compose.runtime.Immutable
 
-/** Application scale, independent of the operating system's display and font settings. */
+/** Lets users resize the interface independently of operating system settings. */
 @Immutable
 data class UiScale(val percent: Int = DEFAULT_PERCENT) {
     init {

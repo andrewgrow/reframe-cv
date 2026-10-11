@@ -22,7 +22,7 @@ import kotlin.test.assertEquals
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.project_configure
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardState
 import reframecv.ui.components.projects.dashboard.TestDashboardComponent
@@ -36,7 +36,7 @@ class DashboardContentTest {
     fun configureInvokesTheProjectCallback() = runComposeUiTest {
         var calls = 0
         val component = TestProjectsComponent(
-            projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+            projectPath = listOf(ProjectPathEntry(1, "Backend")),
             onConfigureProjectClick = { calls++ },
         )
         setContent { ReframeTheme { ProjectsContent(component) } }

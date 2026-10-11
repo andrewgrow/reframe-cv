@@ -6,6 +6,7 @@ import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.coverletter.CoverLetter
 
+/** Saves, loads, and searches cover letters in the local database. */
 @Dao
 interface CoverLetterDao :
     CoverLetterQueries,

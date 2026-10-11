@@ -2,7 +2,7 @@ package reframecv.domain.models.coverletter
 
 import reframecv.domain.DomainModel
 
-/** CoverLetter timestamps are milliseconds since the Unix epoch. */
+/** Represents a cover letter in a project workspace. */
 data class CoverLetter(
     val id: Long = 0,
     val projectId: Long,

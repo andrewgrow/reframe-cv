@@ -11,7 +11,7 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.project_empty
 import reframecv.shared.generated.resources.projects_load_error
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.compose.common.LOADING_INDICATOR_TAG
@@ -24,7 +24,7 @@ class ProjectsLoadingTest {
         mainClock.autoAdvance = false
         val component = TestProjectsComponent(
             initialState = UiState.Loading,
-            projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+            projectPath = listOf(ProjectPathEntry(1, "Backend")),
         )
         setContent { ReframeTheme { ProjectsContent(component) } }
         mainClock.advanceTimeByFrame()

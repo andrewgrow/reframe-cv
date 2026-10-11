@@ -8,6 +8,7 @@ import reframecv.domain.models.vacancy.Vacancy
 import reframecv.repository.VacanciesRepository
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 
+/** Keeps vacancies current and gives the editor feedback when changes succeed or fail. */
 internal class VacanciesExecutor(
     private val projectId: Long,
     private val repository: VacanciesRepository,

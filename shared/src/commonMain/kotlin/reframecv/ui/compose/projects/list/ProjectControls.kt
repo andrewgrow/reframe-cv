@@ -19,6 +19,7 @@ import reframecv.ui.theme.ReframeTheme
 private const val MAX_CONTROL_ROWS = 2
 internal const val PROJECT_CONTROLS_TAG = "projects.controls"
 
+/** Lets screens share an action bar without hardcoding its available actions. */
 internal data class ProjectAction(
     val label: String,
     val onClick: () -> Unit,

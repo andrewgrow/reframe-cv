@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.ui.components.projects.UiState.Loading
 
+/** Gives project browsing and editing one source of state and operation results. */
 internal interface ProjectsStore : Store<ProjectsIntent, UiState, ProjectsLabel>
 
 private const val PROJECTS_STORE_NAME = "ProjectsStore"

@@ -28,7 +28,9 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.style.TextOverflow
 import reframecv.ui.theme.ReframeTheme
 
+/** Lets screens configure the shared button appearance consistently. */
 object FillButton {
+    /** Lets action buttons remain recognizable against the page background. */
     enum class OutlineState {
         Visible,
         Hidden,

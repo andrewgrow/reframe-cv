@@ -7,9 +7,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+/** Keeps layout gaps consistent at the selected UI scale. */
 @Immutable
 data class UiSpacing(val small: Dp, val medium: Dp, val large: Dp)
 
+/** Keeps component sizes consistent at the selected UI scale. */
 @Immutable
 data class UiDimensions(
     val navigationWidth: Dp,
@@ -29,6 +31,7 @@ data class UiDimensions(
     val loadingIndicatorSize: Dp,
 )
 
+/** Lets the whole interface change scale without separate adjustments in each screen. */
 @Immutable
 data class UiTokens(
     val scale: UiScale,

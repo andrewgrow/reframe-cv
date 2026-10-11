@@ -7,6 +7,7 @@ import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.project.Project
 import reframecv.shared.nowMillis
 
+/** Keeps project organization in local storage while retaining deleted subtrees. */
 class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepository {
     override suspend fun deleteProject(id: Long) {
         val deletedAt = nowMillis()

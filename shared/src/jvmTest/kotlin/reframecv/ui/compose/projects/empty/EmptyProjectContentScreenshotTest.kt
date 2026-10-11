@@ -21,7 +21,7 @@ import reframecv.shared.generated.resources.project_empty_help_example
 import reframecv.shared.generated.resources.projects_help_show
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.compose.projects.PROJECTS_SCREEN_TAG
 import reframecv.ui.compose.projects.ProjectsContent
@@ -38,7 +38,7 @@ class EmptyProjectContentScreenshotTest : GoldenScreenshotTest() {
                 Box(Modifier.height(contentHeight.value)) {
                     ProjectsContent(
                         TestProjectsComponent(
-                            projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+                            projectPath = listOf(ProjectPathEntry(1, "Backend")),
                         ),
                     )
                 }
@@ -68,7 +68,7 @@ class EmptyProjectContentScreenshotTest : GoldenScreenshotTest() {
     fun emptyProjectInLightThemeMatchesReference() = runDesktopComposeUiTest {
         setAndCaptureGolden(this, captureTag = PROJECTS_SCREEN_TAG, themeMode = ThemeMode.Light) {
             ProjectsContent(
-                TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(1, "Backend"))),
+                TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend"))),
             )
         }
     }
@@ -82,7 +82,7 @@ class EmptyProjectContentScreenshotTest : GoldenScreenshotTest() {
     private fun captureHelp(themeMode: ThemeMode) = runDesktopComposeUiTest {
         setGoldenContent(this, themeMode = themeMode) {
             ProjectsContent(
-                TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(1, "Backend"))),
+                TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend"))),
             )
         }
         onNodeWithContentDescription(getTestString(Res.string.projects_help_show)).performClick()

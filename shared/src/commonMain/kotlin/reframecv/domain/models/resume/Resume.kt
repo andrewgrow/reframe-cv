@@ -2,7 +2,7 @@ package reframecv.domain.models.resume
 
 import reframecv.domain.DomainModel
 
-/** Resume timestamps are milliseconds since the Unix epoch. */
+/** Represents a resume in a project workspace. */
 data class Resume(
     val id: Long = 0,
     val projectId: Long,

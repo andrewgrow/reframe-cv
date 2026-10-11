@@ -2,7 +2,7 @@ package reframecv.domain.models.project
 
 import reframecv.domain.DomainModel
 
-/** Project timestamps are milliseconds since the Unix epoch. */
+/** Groups job search work by role, company, or any structure the user chooses. */
 data class Project(
     val id: Long = 0,
     val name: String,

@@ -6,6 +6,7 @@ import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.resume.Resume
 
+/** Saves, loads, and searches resumes in the local database. */
 @Dao
 interface ResumeDao :
     ResumeQueries,

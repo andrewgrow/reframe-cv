@@ -5,9 +5,13 @@ import com.arkivanov.decompose.value.Value
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.context.AppComponentContext
 
+/** Lets the vacancy editor show save progress and failures. */
 enum class VacancySaveState { Idle, Saving, Failed }
+
+/** Controls inline deletion confirmation, progress, and failure feedback. */
 enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 
+/** Lets one dialog create, edit, or confirm deletion of a vacancy. */
 interface VacancyEditorComponent {
     val initialVacancy: Vacancy?
     val deleteState: Value<VacancyDeleteState>
@@ -17,6 +21,7 @@ interface VacancyEditorComponent {
     fun onClose()
 }
 
+/** Prevents untitled vacancies, accidental deletion, and dismissal during unfinished changes. */
 class DefaultVacancyEditorComponent(
     componentContext: AppComponentContext,
     private val save: (VacancyDraft) -> Unit,

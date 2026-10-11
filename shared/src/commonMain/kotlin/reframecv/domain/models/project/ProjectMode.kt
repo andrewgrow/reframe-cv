@@ -1,6 +1,6 @@
 package reframecv.domain.models.project
 
-/** A mode is committed only when the project first receives children or workspace data. */
+/** Keeps subproject organization and document workspaces mutually exclusive. */
 enum class ProjectMode {
     Unconfigured,
     Container,

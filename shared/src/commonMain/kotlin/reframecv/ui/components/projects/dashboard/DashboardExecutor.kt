@@ -9,6 +9,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 
+/** Keeps dashboard previews current as workspace documents change. */
 internal class DashboardExecutor(
     private val projectId: Long,
     private val resumes: ResumesRepository,

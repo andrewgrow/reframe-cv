@@ -5,7 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import kotlin.test.Test
 import reframecv.testing.GoldenScreenshotTest
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.compose.common.LOADING_INDICATOR_TAG
@@ -25,7 +25,7 @@ class ProjectsLoadingScreenshotTest : GoldenScreenshotTest() {
             ProjectsContent(
                 TestProjectsComponent(
                     initialState = UiState.Loading,
-                    projectPath = listOf(ProjectBreadcrumb(1, "Backend")),
+                    projectPath = listOf(ProjectPathEntry(1, "Backend")),
                 ),
             )
         }

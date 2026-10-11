@@ -24,7 +24,7 @@ val hintColorDark = Color(HINT_COLOR_DARK)
 val criticalColorLight = Color(CRITICAL_COLOR_LIGHT)
 val criticalColorDark = Color(CRITICAL_COLOR_DARK)
 
-/** Material colors plus application-specific semantic colors. */
+/** Keeps hints, warnings, and workspace sections visually consistent across themes. */
 @Immutable
 data class ReframeColorScheme(
     val material: ColorScheme,
@@ -57,10 +57,12 @@ private val LocalReframeColorScheme = staticCompositionLocalOf { lightReframeCol
 
 private val LocalUiTokens = staticCompositionLocalOf { createUiTokens(UiScale.Default) }
 
+/** Keeps all screens consistent with the selected color theme and interface scale. */
 object ReframeTheme {
     val tokens: UiTokens
         @Composable get() = LocalUiTokens.current
 
+    /** Lets screens and previews choose a light or dark appearance. */
     sealed interface ThemeMode {
         data object Dark : ThemeMode
         data object Light : ThemeMode

@@ -7,6 +7,7 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
 
+/** Loads and saves device preferences in the local database. */
 @Dao
 interface AppSettingsDao {
     @Query("SELECT * FROM app_settings WHERE id = 1")

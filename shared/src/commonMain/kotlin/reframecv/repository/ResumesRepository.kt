@@ -3,6 +3,7 @@ package reframecv.repository
 import kotlinx.coroutines.flow.Flow
 import reframecv.domain.models.resume.Resume
 
+/** Lets features manage and find project resumes independently of their storage. */
 interface ResumesRepository {
     fun observeResumes(projectId: Long): Flow<List<Resume>>
     suspend fun search(projectId: Long, keyword: String): List<Resume>

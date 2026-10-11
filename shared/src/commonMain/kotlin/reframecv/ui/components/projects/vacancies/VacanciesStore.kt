@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.core.store.Store
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.repository.VacanciesRepository
 
+/** Gives vacancy browsing and editing one source of state and operation results. */
 internal interface VacanciesStore : Store<VacanciesIntent, VacanciesState, VacanciesLabel>
 
 internal fun createVacanciesStore(

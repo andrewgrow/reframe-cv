@@ -4,13 +4,17 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import reframecv.ui.context.AppComponentContext
 
+/** Lets the project editor show save progress and failures. */
 enum class EditorSaveState { Idle, Saving, Failed }
+
+/** Lets the project editor show deletion progress and failures. */
 enum class EditorDeleteState { Idle, Deleting, Failed }
 
 internal const val DELETE_CONFIRMATION = "DELETE"
 
 internal fun String.isDeleteConfirmation(): Boolean = equals(DELETE_CONFIRMATION, ignoreCase = true)
 
+/** Lets one dialog create, rename, or delete a project. */
 interface EditorComponent {
     val initialName: String?
     val saveState: Value<EditorSaveState>
@@ -20,6 +24,7 @@ interface EditorComponent {
     fun onDelete(confirmation: String)
 }
 
+/** Prevents blank project names, accidental deletion, and dismissal during unfinished changes. */
 class DefaultEditorComponent(
     componentContext: AppComponentContext,
     private val onClosed: () -> Unit,

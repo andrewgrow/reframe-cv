@@ -3,6 +3,7 @@ package reframecv.repository
 import kotlinx.coroutines.flow.Flow
 import reframecv.domain.models.vacancy.Vacancy
 
+/** Lets features manage and find project vacancies independently of their storage. */
 interface VacanciesRepository {
     fun observeVacancies(projectId: Long): Flow<List<Vacancy>>
     suspend fun search(projectId: Long, keyword: String): List<Vacancy>

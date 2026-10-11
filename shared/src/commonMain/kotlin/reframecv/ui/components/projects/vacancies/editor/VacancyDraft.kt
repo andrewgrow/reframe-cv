@@ -2,6 +2,7 @@ package reframecv.ui.components.projects.vacancies.editor
 
 import reframecv.domain.models.vacancy.Vacancy
 
+/** Keeps unfinished vacancy edits separate from the saved record. */
 data class VacancyDraft(
     val title: String,
     val company: String = "",

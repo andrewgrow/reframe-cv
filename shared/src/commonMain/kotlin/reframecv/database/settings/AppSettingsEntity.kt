@@ -9,6 +9,7 @@ import reframecv.domain.models.settings.WindowSettings
 
 internal const val APP_SETTINGS_ID = 1
 
+/** Represents the device preferences record in the local database. */
 @Entity(tableName = "app_settings")
 data class AppSettingsEntity(
     @PrimaryKey val id: Int = APP_SETTINGS_ID,

@@ -7,6 +7,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 
+/** Gives all dashboard sections one source of workspace state. */
 internal interface DashboardStore : Store<DashboardIntent, DashboardState, Nothing>
 
 internal fun createDashboardStore(

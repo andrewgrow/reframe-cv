@@ -5,6 +5,7 @@ import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
 
+/** Represents a keyword associated with a vacancy in the local database. */
 @Entity(
     tableName = "vacancies_keywords",
     primaryKeys = ["record_id", "normalized_keyword"],

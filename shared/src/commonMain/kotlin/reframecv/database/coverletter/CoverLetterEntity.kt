@@ -10,6 +10,7 @@ import reframecv.database.DatabaseModelFactory
 import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.coverletter.CoverLetter
 
+/** Represents a cover letter record in the local database. */
 @Entity(
     tableName = "cover_letters",
     foreignKeys = [

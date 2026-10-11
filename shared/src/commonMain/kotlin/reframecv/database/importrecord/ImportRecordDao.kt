@@ -5,7 +5,7 @@ import androidx.room3.Insert
 import androidx.room3.Query
 import kotlinx.coroutines.flow.Flow
 
-/** Source payloads are immutable and can be physically deleted when no vacancy uses them. */
+/** Stores original import snapshots and removes snapshots no longer used by vacancies. */
 @Dao
 interface ImportRecordDao {
     @Insert

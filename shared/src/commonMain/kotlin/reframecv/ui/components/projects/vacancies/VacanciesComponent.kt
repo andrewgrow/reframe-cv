@@ -19,6 +19,7 @@ import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
+/** Lets the vacancy screen browse opportunities and manage them through a shared editor. */
 interface VacanciesComponent {
     val projectId: Long
     val uiState: Value<VacanciesState>
@@ -29,6 +30,7 @@ interface VacanciesComponent {
     fun onBack()
 }
 
+/** Keeps vacancy browsing and editing together without Back unexpectedly leaving the page. */
 class DefaultVacanciesComponent(
     componentContext: AppComponentContext,
     override val projectId: Long,
@@ -43,8 +45,13 @@ class DefaultVacanciesComponent(
     )
         .also { it.accept(VacanciesIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
+
+    /** Selects vacancy creation or editing. */
     private sealed interface EditorConfiguration {
+        /** Opens creation of a new vacancy. */
         data object Create : EditorConfiguration
+
+        /** Opens editing for an existing vacancy. */
         data class Edit(val vacancy: Vacancy) : EditorConfiguration
     }
 

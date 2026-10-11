@@ -22,6 +22,7 @@ import reframecv.database.vacancy.VacancyDao
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.database.vacancy.VacancyKeywordEntity
 
+/** Keeps projects, workspace documents, and device preferences in one local database. */
 @Database(
     entities = [
         AppSettingsEntity::class,
@@ -44,6 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun vacancyDao(): VacancyDao
 }
 
+/** Enables Room to create the shared database on each supported platform. */
 @Suppress("KotlinNoActualForExpect")
 expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
     override fun initialize(): AppDatabase

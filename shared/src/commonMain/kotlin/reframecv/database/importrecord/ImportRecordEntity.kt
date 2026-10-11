@@ -8,6 +8,7 @@ import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.domain.models.importrecord.ImportRecord
 
+/** Represents an original import snapshot record in the local database. */
 @Entity(
     tableName = "import_records",
     indices = [Index(value = ["provider", "external_id"])],

@@ -5,7 +5,7 @@ import androidx.room3.Relation
 import reframecv.database.DatabaseModel
 import reframecv.domain.models.resume.Resume
 
-/** A complete database record, including its separately indexed keywords. */
+/** Lets features receive a resume with its keywords as one complete model. */
 data class ResumeWithKeywords(
     @Embedded
     val entity: ResumeEntity,

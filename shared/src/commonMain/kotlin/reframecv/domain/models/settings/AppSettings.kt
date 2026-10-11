@@ -2,9 +2,10 @@ package reframecv.domain.models.settings
 
 import reframecv.domain.DomainModel
 
-/** Device-local application preferences, independent of individual projects. */
+/** Keeps device preferences consistent across projects and application launches. */
 data class AppSettings(val window: WindowSettings = WindowSettings()) : DomainModel
 
+/** Describes the window layout the user expects to see on the next launch. */
 data class WindowSettings(
     val width: Float = 800f,
     val height: Float = 600f,

@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 
+/** Lets users resize the vacancy editor while keeping it usable within the window. */
 internal class DialogResizeState {
     var width by mutableFloatStateOf(0f)
         private set

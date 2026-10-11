@@ -3,6 +3,7 @@ package reframecv.repository
 import kotlinx.coroutines.flow.Flow
 import reframecv.domain.models.coverletter.CoverLetter
 
+/** Lets features manage and find project letters independently of their storage. */
 interface CoverLettersRepository {
     fun observeCoverLetters(projectId: Long): Flow<List<CoverLetter>>
     suspend fun search(projectId: Long, keyword: String): List<CoverLetter>

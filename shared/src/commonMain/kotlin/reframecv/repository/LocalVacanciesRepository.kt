@@ -5,6 +5,7 @@ import reframecv.database.vacancy.VacancyDao
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.shared.nowMillis
 
+/** Keeps vacancies in local storage and removes discarded opportunities permanently. */
 class LocalVacanciesRepository(private val dao: VacancyDao) : VacanciesRepository {
     override fun observeVacancies(projectId: Long) = dao.observeActive(projectId).map { records ->
         records.map { it.toDomainModel() }

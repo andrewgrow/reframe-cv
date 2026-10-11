@@ -2,7 +2,7 @@ package reframecv.domain.models.vacancy
 
 import reframecv.domain.DomainModel
 
-/** Vacancy timestamps are milliseconds since the Unix epoch. */
+/** Represents a vacancy in a project workspace. */
 data class Vacancy(
     val id: Long = 0,
     val projectId: Long,

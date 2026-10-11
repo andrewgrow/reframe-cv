@@ -19,7 +19,7 @@ import kotlin.test.assertIs
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.components.application.RootComponent
 import reframecv.ui.components.application.TestRootComponent
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.dashboard.TestDashboardComponent
 import reframecv.ui.components.projects.vacancies.TestVacanciesComponent
@@ -34,7 +34,7 @@ class PageBackNavigationTest {
     fun projectArrowAndEscapeWorkWithMenuFocus() = runComposeUiTest {
         var backs = 0
         val projects = TestProjectsComponent(
-            projectPath = listOf(ProjectBreadcrumb(7, "Backend")),
+            projectPath = listOf(ProjectPathEntry(7, "Backend")),
             back = { backs++ },
         )
         setContent { ReframeTheme { RootContent(TestRootComponent(projectsComponent = projects)) } }
@@ -106,7 +106,7 @@ class PageBackNavigationTest {
     fun escapeClosesEditorBeforeReturningThroughPagesAndPreservesBusyGuard() {
         val parentId = 6L
         val projects = RootComponent.Child.Projects(
-            TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(parentId, "Parent"))),
+            TestProjectsComponent(projectPath = listOf(ProjectPathEntry(parentId, "Parent"))),
         )
         val stack = MutableValue(ChildStack<Unit, RootComponent.Child>(Unit, projects))
         fun show(child: RootComponent.Child) {

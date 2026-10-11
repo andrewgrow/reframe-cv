@@ -6,7 +6,7 @@ import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
-/** Low-level storage queries; use the DAO's transactional methods for writes. */
+/** Provides SQL queries for cover letter records and keywords. */
 interface CoverLetterQueries {
     @Insert
     suspend fun insertEntity(entity: CoverLetterEntity): Long

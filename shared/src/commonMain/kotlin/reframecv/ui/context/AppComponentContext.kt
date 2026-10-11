@@ -6,10 +6,12 @@ import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.GenericComponentContext
 import reframecv.dependencies.ApplicationDependencies
 
+/** Lets any screen use shared services through its existing component context. */
 interface AppComponentContext : GenericComponentContext<AppComponentContext> {
     val dependencies: ApplicationDependencies
 }
 
+/** Lets child screens inherit shared services without manual dependency wiring. */
 class DefaultAppComponentContext(
     private val componentContext: ComponentContext,
     override val dependencies: ApplicationDependencies,

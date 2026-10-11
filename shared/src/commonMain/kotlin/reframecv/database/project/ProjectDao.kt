@@ -9,6 +9,7 @@ import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
+/** Stores the project hierarchy and supports soft deletion of project subtrees. */
 @Dao
 interface ProjectDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)

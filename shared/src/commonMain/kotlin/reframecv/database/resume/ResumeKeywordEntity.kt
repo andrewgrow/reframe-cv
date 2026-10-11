@@ -5,6 +5,7 @@ import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
 
+/** Represents a keyword associated with a resume in the local database. */
 @Entity(
     tableName = "resumes_keywords",
     primaryKeys = ["record_id", "normalized_keyword"],

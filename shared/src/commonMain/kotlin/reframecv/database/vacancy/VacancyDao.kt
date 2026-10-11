@@ -6,6 +6,7 @@ import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.vacancy.Vacancy
 
+/** Saves, loads, searches, and permanently deletes vacancies in the local database. */
 @Dao
 interface VacancyDao :
     VacancyQueries,

@@ -8,6 +8,7 @@ import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
+/** Lets the dashboard show workspace documents and open their sections. */
 interface DashboardComponent {
     val projectId: Long
     val uiState: Value<DashboardState>
@@ -16,6 +17,7 @@ interface DashboardComponent {
     fun onRetry()
 }
 
+/** Keeps the dashboard current while its screen is active and handles leaving the workspace. */
 class DefaultDashboardComponent(
     componentContext: AppComponentContext,
     override val projectId: Long,

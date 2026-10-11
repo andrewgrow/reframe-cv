@@ -19,8 +19,9 @@ import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
+/** Lets the project screen browse children and manage projects through a shared editor. */
 interface ProjectsComponent {
-    val projectPath: List<ProjectBreadcrumb>
+    val projectPath: List<ProjectPathEntry>
     val uiState: Value<UiState>
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
@@ -31,10 +32,11 @@ interface ProjectsComponent {
     fun onEditProject(project: Project)
 }
 
+/** Keeps project browsing, editing, and Back behavior working together. */
 class DefaultProjectsComponent(
     componentContext: AppComponentContext,
     storeFactory: StoreFactory = DefaultStoreFactory(),
-    override val projectPath: List<ProjectBreadcrumb> = emptyList(),
+    override val projectPath: List<ProjectPathEntry> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
     private val onProjectConfigured: () -> Unit = {},
     private val back: () -> Unit = {},
@@ -50,8 +52,12 @@ class DefaultProjectsComponent(
         .also { it.accept(ProjectsIntent.LoadProjects) }
     override val uiState: Value<UiState> = bindStoreToLifecycle(stateStore, lifecycle)
 
+    /** Selects project creation or editing. */
     private sealed interface EditorConfiguration {
+        /** Opens creation in the current project list. */
         data object Create : EditorConfiguration
+
+        /** Opens editing for an existing project. */
         data class Update(val project: Project) : EditorConfiguration
     }
 

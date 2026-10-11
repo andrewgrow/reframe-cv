@@ -5,7 +5,7 @@ import androidx.room3.Relation
 import reframecv.database.DatabaseModel
 import reframecv.domain.models.vacancy.Vacancy
 
-/** A complete database record, including its separately indexed keywords. */
+/** Lets features receive a vacancy with its keywords as one complete model. */
 data class VacancyWithKeywords(
     @Embedded
     val entity: VacancyEntity,

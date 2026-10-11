@@ -5,6 +5,7 @@ import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
 
+/** Represents a keyword associated with a cover letter in the local database. */
 @Entity(
     tableName = "cover_letters_keywords",
     primaryKeys = ["record_id", "normalized_keyword"],

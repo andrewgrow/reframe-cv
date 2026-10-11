@@ -13,7 +13,7 @@ import reframecv.domain.models.project.ProjectMode
 import reframecv.ui.components.application.navigation.DefaultProjectTreeComponent
 import reframecv.ui.components.application.navigation.ProjectTreeComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DefaultDashboardComponent
@@ -21,18 +21,26 @@ import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.context.AppComponentContext
 
+/** Lets the application shell show the selected screen alongside project navigation. */
 interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
     val projectTree: ProjectTreeComponent
     fun onProjectsList()
 
+    /** Lets the application shell render the component belonging to the active destination. */
     sealed interface Child {
+        /** Lets the root render project organization screens. */
         data class Projects(val component: ProjectsComponent) : Child
+
+        /** Lets the root render the workspace overview. */
         data class Dashboard(val component: DashboardComponent) : Child
+
+        /** Lets the root render the selected project's vacancies. */
         data class Vacancies(val component: VacanciesComponent) : Child
     }
 }
 
+/** Lets users open projects and return to their parents from any entry point. */
 class DefaultRootComponent(componentContext: AppComponentContext) :
     RootComponent,
     AppComponentContext by componentContext {
@@ -54,7 +62,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
 
     override val projectTree = DefaultProjectTreeComponent(
         componentContext = componentContext,
-        openProject = { projects -> openPath(projects.map { ProjectBreadcrumb(it.id, it.name) }) },
+        openProject = { projects -> openPath(projects.map { ProjectPathEntry(it.id, it.name) }) },
         openProjectsList = ::onProjectsList,
         onProjectsChanged = ::onProjectsChanged,
     )
@@ -69,7 +77,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     }
 
     private fun openPath(
-        path: List<ProjectBreadcrumb>,
+        path: List<ProjectPathEntry>,
         mode: ProjectMode? = activeProjects.find { it.id == path.lastOrNull()?.id }?.mode,
     ) {
         val destination = if (mode == ProjectMode.Workspace) {
@@ -91,7 +99,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         }
     }
 
-    private fun openParentList(path: List<ProjectBreadcrumb>) {
+    private fun openParentList(path: List<ProjectPathEntry>) {
         if (path.isEmpty()) return
         val parentPath = path.dropLast(1)
         navigation.navigate(
@@ -132,7 +140,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                 },
                 onProjectOpened = { project ->
                     openPath(
-                        configuration.projectPath + ProjectBreadcrumb(project.id, project.name),
+                        configuration.projectPath + ProjectPathEntry(project.id, project.name),
                         project.mode,
                     )
                 },
@@ -159,11 +167,18 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         )
     }
 
+    /** Keeps each destination tied to its project so Back can reach the parent. */
     private sealed interface Configuration {
-        val projectPath: List<ProjectBreadcrumb>
-        data class Projects(override val projectPath: List<ProjectBreadcrumb> = emptyList()) :
+        val projectPath: List<ProjectPathEntry>
+
+        /** Identifies which project's children the destination should show. */
+        data class Projects(override val projectPath: List<ProjectPathEntry> = emptyList()) :
             Configuration
-        data class Dashboard(override val projectPath: List<ProjectBreadcrumb>) : Configuration
-        data class Vacancies(override val projectPath: List<ProjectBreadcrumb>) : Configuration
+
+        /** Identifies which workspace the destination should show. */
+        data class Dashboard(override val projectPath: List<ProjectPathEntry>) : Configuration
+
+        /** Identifies which project's vacancies the destination should show. */
+        data class Vacancies(override val projectPath: List<ProjectPathEntry>) : Configuration
     }
 }

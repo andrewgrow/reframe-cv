@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.setValue
 
+/** Lets users expand long descriptions without losing the chosen field height. */
 internal class DescriptionResizeState(initialHeight: Float) {
     var height by mutableFloatStateOf(initialHeight)
         private set

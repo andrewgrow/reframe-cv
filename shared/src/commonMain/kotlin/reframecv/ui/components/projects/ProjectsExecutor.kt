@@ -7,8 +7,10 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import reframecv.repository.ProjectsRepository
 
+/** Lets the project store use an interchangeable handler for loading and editing. */
 interface ProjectsExecutor : Executor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>
 
+/** Keeps project lists current and gives the editor feedback when changes succeed or fail. */
 class RealProjectsExecutor(
     private val projectsRepository: ProjectsRepository,
     private val parentId: Long? = null,

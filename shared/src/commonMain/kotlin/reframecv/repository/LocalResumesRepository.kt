@@ -5,6 +5,7 @@ import reframecv.database.resume.ResumeDao
 import reframecv.domain.models.resume.Resume
 import reframecv.shared.nowMillis
 
+/** Keeps resumes in local storage while retaining deleted versions. */
 class LocalResumesRepository(private val dao: ResumeDao) : ResumesRepository {
     override fun observeResumes(projectId: Long) = dao.observeActive(projectId).map { records ->
         records.map { it.toDomainModel() }

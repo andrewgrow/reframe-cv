@@ -2,6 +2,7 @@ package reframecv.ui.components.application.navigation
 
 import reframecv.domain.models.project.Project
 
+/** Remembers the user's place and expanded branches in project navigation. */
 data class ProjectTreeState(
     val projects: List<Project> = emptyList(),
     val expandedIds: Set<Long> = emptySet(),
@@ -10,6 +11,7 @@ data class ProjectTreeState(
     val failed: Boolean = false,
 )
 
+/** Lets the tree show each project's nesting and whether it can be expanded. */
 data class ProjectTreeRow(val project: Project, val depth: Int, val hasChildren: Boolean)
 
 fun ProjectTreeState.visibleRows(): List<ProjectTreeRow> {

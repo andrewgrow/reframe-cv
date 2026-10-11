@@ -26,7 +26,7 @@ import reframecv.shared.generated.resources.project_empty_help_footer
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.compose.projects.ProjectsContent
@@ -35,7 +35,7 @@ import reframecv.ui.compose.projects.ProjectsContent
 class EmptyProjectContentTest {
     @Test
     fun hoveringConfigureClearsAddFocusAfterCancellingDialog() = runComposeUiTest {
-        val component = TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(1, "Backend")))
+        val component = TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend")))
         setContent { ProjectsContent(component) }
         val add = onNodeWithText(getTestString(Res.string.project_add))
         val configure = onNodeWithText(getTestString(Res.string.project_configure))
@@ -53,7 +53,7 @@ class EmptyProjectContentTest {
 
     @Test
     fun rootProjectOffersConfigurationAndCreationAndTogglesHelp() = runComposeUiTest {
-        val component = TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(1, "Backend")))
+        val component = TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend")))
         val message = getTestString(Res.string.project_empty)
         val help = getTestString(Res.string.project_empty_help)
         val example = getTestString(Res.string.project_empty_help_example)
@@ -81,7 +81,7 @@ class EmptyProjectContentTest {
 
     @Test
     fun firstChildReplacesPlaceholderWithProjectList() = runComposeUiTest {
-        val component = TestProjectsComponent(projectPath = listOf(ProjectBreadcrumb(1, "Backend")))
+        val component = TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend")))
         setContent { ProjectsContent(component) }
         onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
         onNodeWithContentDescription(getTestString(Res.string.projects_help_show)).performClick()

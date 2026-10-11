@@ -2,7 +2,7 @@ package reframecv.domain.models.importrecord
 
 import reframecv.domain.DomainModel
 
-/** An immutable source snapshot. Timestamps are milliseconds since the Unix epoch. */
+/** Represents an original import snapshot and its source metadata. */
 data class ImportRecord(
     val id: Long = 0,
     val provider: String,

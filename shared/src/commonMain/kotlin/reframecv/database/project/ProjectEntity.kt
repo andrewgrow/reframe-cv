@@ -11,6 +11,7 @@ import reframecv.database.resume.ResumeEntity
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 
+/** Represents a project record in the local database. */
 @Entity(
     tableName = "projects",
     foreignKeys = [

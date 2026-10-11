@@ -5,6 +5,7 @@ import reframecv.database.coverletter.CoverLetterDao
 import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.shared.nowMillis
 
+/** Keeps letter drafts in local storage while retaining deleted versions. */
 class LocalCoverLettersRepository(private val dao: CoverLetterDao) : CoverLettersRepository {
     override fun observeCoverLetters(projectId: Long) =
         dao.observeActive(projectId).map { records ->

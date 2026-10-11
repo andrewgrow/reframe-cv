@@ -6,7 +6,7 @@ import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 
-/** Shared application services; owned and closed by the application host. */
+/** Defines the contract each platform implements to provide application dependencies. */
 interface ApplicationDependencies {
     val appSettingsRepository: AppSettingsRepository
     val projectsRepository: ProjectsRepository

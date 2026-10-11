@@ -29,7 +29,7 @@ import reframecv.shared.generated.resources.projects_help
 import reframecv.shared.generated.resources.projects_help_hide
 import reframecv.shared.generated.resources.projects_help_show
 import reframecv.testing.getTestString
-import reframecv.ui.components.projects.ProjectBreadcrumb
+import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.compose.projects.list.PROJECTS_LIST_TAG
@@ -40,7 +40,7 @@ class ProjectsContentTest {
     @Test
     fun emptyChildProjectShowsItsTitleAndAllowsCreation() = runComposeUiTest {
         val component = TestProjectsComponent(
-            projectPath = listOf(ProjectBreadcrumb(1, "Backend"), ProjectBreadcrumb(2, "Google")),
+            projectPath = listOf(ProjectPathEntry(1, "Backend"), ProjectPathEntry(2, "Google")),
         )
         setContent { ProjectsContent(component) }
         onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
@@ -61,8 +61,8 @@ class ProjectsContentTest {
                 TestProjectsComponent(
                     initialState = UiState.Projects(projects),
                     projectPath = listOf(
-                        ProjectBreadcrumb(id = 1, name = "Parent Project"),
-                        ProjectBreadcrumb(id = 2, name = "This Project"),
+                        ProjectPathEntry(id = 1, name = "Parent Project"),
+                        ProjectPathEntry(id = 2, name = "This Project"),
                     ),
                 ),
             )
@@ -88,8 +88,8 @@ class ProjectsContentTest {
                     initialState = UiState.Projects(listOf(project)),
                     projectPath =
                         List(10) {
-                            ProjectBreadcrumb(it.toLong(), "Parent project with a long name $it")
-                        } + ProjectBreadcrumb(id = 10, name = "This Project"),
+                            ProjectPathEntry(it.toLong(), "Parent project with a long name $it")
+                        } + ProjectPathEntry(id = 10, name = "This Project"),
                 ),
             )
         }

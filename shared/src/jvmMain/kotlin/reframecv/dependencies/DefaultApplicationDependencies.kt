@@ -13,6 +13,7 @@ import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 
+/** Gives all screens access to the same local data without reopening the database. */
 class DefaultApplicationDependencies(databaseFactory: () -> AppDatabase = ::openDefaultDatabase) :
     ApplicationDependencies {
     private val database = lazy(databaseFactory)

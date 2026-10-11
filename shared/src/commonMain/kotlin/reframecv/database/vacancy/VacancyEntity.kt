@@ -13,6 +13,7 @@ import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeEntity
 import reframecv.domain.models.vacancy.Vacancy
 
+/** Represents a vacancy record in the local database. */
 @Entity(
     tableName = "vacancies",
     foreignKeys = [

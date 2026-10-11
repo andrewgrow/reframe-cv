@@ -10,6 +10,7 @@ import reframecv.database.DatabaseModelFactory
 import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.resume.Resume
 
+/** Represents a resume record in the local database. */
 @Entity(
     tableName = "resumes",
     foreignKeys = [
