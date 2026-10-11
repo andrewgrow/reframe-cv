@@ -44,7 +44,7 @@ class LocalVacanciesRepositoryTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun scopesRecordsToActiveOwnerAndHidesDeletedProjects() = runBlocking<Unit> {
+    fun scopesRecordsToOwnerAndRemovesDeletedProjectRecords() = runBlocking<Unit> {
         val projectId = project()
         val otherId = project("Other")
         val repository = LocalVacanciesRepository(database.vacancyDao())
@@ -60,7 +60,7 @@ class LocalVacanciesRepositoryTest : WorkspaceDatabaseTest() {
                 it.id
             },
         )
-        assertEquals(id, database.vacancyDao().findById(id)?.entity?.id)
+        assertNull(database.vacancyDao().findById(id))
         assertFailsWith<IllegalStateException> { repository.create(vacancy(projectId)) }
     }
 }

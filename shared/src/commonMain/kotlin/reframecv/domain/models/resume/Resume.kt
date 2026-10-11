@@ -12,5 +12,4 @@ data class Resume(
     val content: String = "",
     val sourceResumeId: Long? = null,
     val keywords: List<String> = emptyList(),
-    val deletedAt: Long? = null,
 ) : DomainModel

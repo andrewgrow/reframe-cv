@@ -10,6 +10,6 @@ sealed interface ProjectsIntent {
     /** Requests a project name change. */
     data class UpdateProject(val id: Long, val name: String) : ProjectsIntent
 
-    /** Requests soft deletion of a project subtree. */
+    /** Requests permanent deletion of a project subtree. */
     data class DeleteProject(val id: Long) : ProjectsIntent
 }

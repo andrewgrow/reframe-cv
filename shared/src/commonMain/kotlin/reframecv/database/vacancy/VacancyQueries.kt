@@ -32,7 +32,7 @@ interface VacancyQueries {
     @Query(
         "SELECT * FROM vacancies WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL) " +
+            "WHERE projects.id = vacancies.project_id) " +
             "ORDER BY updated_at DESC, name ASC, id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<VacancyWithKeywords>>
@@ -40,7 +40,7 @@ interface VacancyQueries {
     @Query(
         "SELECT COUNT(*) FROM vacancies WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL)",
+            "WHERE projects.id = vacancies.project_id)",
     )
     fun observeCount(projectId: Long): Flow<Int>
 
@@ -48,7 +48,7 @@ interface VacancyQueries {
     @Query(
         "SELECT * FROM vacancies WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = vacancies.project_id AND projects.deleted_at IS NULL) AND " +
+            "WHERE projects.id = vacancies.project_id) AND " +
             "EXISTS (SELECT 1 FROM vacancies_keywords WHERE record_id = vacancies.id " +
             "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
     )

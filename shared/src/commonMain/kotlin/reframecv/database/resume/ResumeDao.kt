@@ -13,7 +13,6 @@ interface ResumeDao :
     WorkspaceDao {
     @Transaction
     suspend fun create(record: Resume): Long {
-        check(record.deletedAt == null) { "Cannot create a deleted record" }
         requireWorkspace(record.projectId, record.createdAt)
         record.sourceResumeId?.let { requireActiveResume(it, record.projectId) }
         val id = insertEntity(ResumeEntity.fromDomainModel(record))
@@ -24,7 +23,6 @@ interface ResumeDao :
     @Transaction
     suspend fun update(record: Resume) {
         val existing = checkNotNull(findById(record.id)) { "Record does not exist" }
-        check(existing.entity.deletedAt == null && record.deletedAt == null) { "Record is deleted" }
         require(existing.entity.projectId == record.projectId) {
             "Cannot move a record to another project"
         }
@@ -49,15 +47,13 @@ interface ResumeDao :
         searchNormalized(projectId, keyword.trim().lowercase())
 
     @Transaction
-    suspend fun softDelete(id: Long, deletedAt: Long): Int {
+    suspend fun delete(id: Long, updatedAt: Long): Int {
         val projectId = findById(id)?.entity?.projectId ?: return 0
-        val changed = markDeleted(id, deletedAt)
-        if (changed > 0) {
-            clearMainResume(id, deletedAt)
-            clearSourceResume(id, deletedAt)
-            clearVacancyResumes(id, deletedAt)
-            resetEmptyWorkspace(projectId, deletedAt)
-        }
+        clearMainResume(id, updatedAt)
+        clearSourceResume(id, updatedAt)
+        clearVacancyResumes(id, updatedAt)
+        val changed = deleteEntity(id)
+        if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
         return changed
     }
 }

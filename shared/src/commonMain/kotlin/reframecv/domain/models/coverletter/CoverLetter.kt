@@ -11,5 +11,4 @@ data class CoverLetter(
     val updatedAt: Long,
     val content: String = "",
     val keywords: List<String> = emptyList(),
-    val deletedAt: Long? = null,
 ) : DomainModel

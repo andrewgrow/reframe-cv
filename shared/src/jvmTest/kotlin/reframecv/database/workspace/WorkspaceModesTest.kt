@@ -72,7 +72,7 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
             ProjectEntity(name = "Child", createdAt = 200, updatedAt = 200, parentId = container),
         )
         val deleted = project("Deleted")
-        database.projectDao().markSubtreeDeleted(deleted, 200)
+        database.projectDao().deleteSubtree(deleted)
         for (id in listOf(container, deleted, -1L)) {
             assertFailsWith<IllegalStateException> { database.resumeDao().create(resume(id)) }
             assertFailsWith<IllegalStateException> { database.coverLetterDao().create(letter(id)) }
@@ -112,9 +112,9 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         val resumeId = database.resumeDao().create(resume(projectId))
         val letterId = database.coverLetterDao().create(letter(projectId))
         val vacancyId = database.vacancyDao().create(vacancy(projectId))
-        database.resumeDao().softDelete(resumeId, 300)
+        database.resumeDao().delete(resumeId, 300)
         assertEquals(ProjectMode.Workspace, database.projectDao().findById(projectId)?.mode)
-        database.coverLetterDao().softDelete(letterId, 400)
+        database.coverLetterDao().delete(letterId, 400)
         assertEquals(ProjectMode.Workspace, database.projectDao().findById(projectId)?.mode)
         assertEquals(1, database.vacancyDao().delete(vacancyId, 500))
         assertEquals(0, database.vacancyDao().delete(vacancyId, 600))
@@ -133,8 +133,8 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         val letterProject = project("Letters")
         val resumeId = database.resumeDao().create(resume(resumeProject))
         val letterId = database.coverLetterDao().create(letter(letterProject))
-        database.resumeDao().softDelete(resumeId, 300)
-        database.coverLetterDao().softDelete(letterId, 300)
+        database.resumeDao().delete(resumeId, 300)
+        database.coverLetterDao().delete(letterId, 300)
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(resumeProject)?.mode)
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(letterProject)?.mode)
         assertEquals(emptyList(), database.resumeDao().search(resumeProject, "kotlin"))
@@ -142,7 +142,7 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun deletedProjectsHideAllRecordsAndKeywordsWithoutPhysicallyRemovingThem() = runBlocking {
+    fun deletedProjectsPermanentlyRemoveAllRecordsAndKeywords() = runBlocking {
         val parent = project("Parent")
         val child = database.projectDao().insertWithParentMode(
             ProjectEntity(name = "Child", createdAt = 200, updatedAt = 200, parentId = parent),
@@ -150,7 +150,7 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         val resumeId = database.resumeDao().create(resume(child))
         val letterId = database.coverLetterDao().create(letter(child))
         val vacancyId = database.vacancyDao().create(vacancy(child))
-        database.projectDao().markSubtreeDeleted(parent, 300)
+        database.projectDao().deleteSubtree(parent)
         assertEquals(0, database.resumeDao().observeCount(child).first())
         assertEquals(0, database.coverLetterDao().observeCount(child).first())
         assertEquals(0, database.vacancyDao().observeCount(child).first())
@@ -160,8 +160,8 @@ class WorkspaceModesTest : WorkspaceDatabaseTest() {
         assertEquals(emptyList(), database.resumeDao().search(child, "kotlin"))
         assertEquals(emptyList(), database.coverLetterDao().search(child, "kotlin"))
         assertEquals(emptyList(), database.vacancyDao().search(child, "kotlin"))
-        assertEquals(null, database.resumeDao().findById(resumeId)?.entity?.deletedAt)
-        assertEquals(null, database.coverLetterDao().findById(letterId)?.entity?.deletedAt)
-        assertEquals(vacancyId, database.vacancyDao().findById(vacancyId)?.entity?.id)
+        assertEquals(null, database.resumeDao().findById(resumeId))
+        assertEquals(null, database.coverLetterDao().findById(letterId))
+        assertEquals(null, database.vacancyDao().findById(vacancyId))
     }
 }

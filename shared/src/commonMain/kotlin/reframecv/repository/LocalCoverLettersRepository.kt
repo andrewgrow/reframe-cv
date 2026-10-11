@@ -5,7 +5,7 @@ import reframecv.database.coverletter.CoverLetterDao
 import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.shared.nowMillis
 
-/** Keeps letter drafts in local storage while retaining deleted versions. */
+/** Keeps letter drafts in local storage with permanent deletion. */
 class LocalCoverLettersRepository(private val dao: CoverLetterDao) : CoverLettersRepository {
     override fun observeCoverLetters(projectId: Long) =
         dao.observeActive(projectId).map { records ->
@@ -26,6 +26,6 @@ class LocalCoverLettersRepository(private val dao: CoverLetterDao) : CoverLetter
     }
 
     override suspend fun delete(id: Long) {
-        check(dao.softDelete(id, nowMillis()) == 1) { "Active record does not exist" }
+        check(dao.delete(id, nowMillis()) == 1) { "Active record does not exist" }
     }
 }

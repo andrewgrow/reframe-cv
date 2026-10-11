@@ -64,10 +64,10 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         assertEquals(resumeId, dao.findById(projectId)?.mainResumeId)
         assertEquals(1, dao.setMainResume(projectId, null, 400))
         assertNull(dao.findById(projectId)?.mainResumeId)
-        database.resumeDao().softDelete(resumeId, 500)
+        database.resumeDao().delete(resumeId, 500)
         assertEquals(0, dao.setMainResume(projectId, resumeId, 600))
         assertEquals(0, dao.setMainResume(-1, otherResume, 600))
-        dao.markSubtreeDeleted(otherId, 700)
+        dao.deleteSubtree(otherId)
         assertEquals(0, dao.setMainResume(otherId, otherResume, 800))
     }
 
@@ -86,7 +86,7 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
             vacancy(projectId).copy(resumeId = resumeId, coverLetterId = letterId),
         )
         database.projectDao().setMainResume(projectId, resumeId, 300)
-        assertEquals(1, database.resumeDao().softDelete(resumeId, 400))
+        assertEquals(1, database.resumeDao().delete(resumeId, 400))
         assertNull(database.projectDao().findById(projectId)?.mainResumeId)
         assertNull(database.resumeDao().findById(adaptedId)?.entity?.sourceResumeId)
         assertEquals("Adapted", database.resumeDao().findById(adaptedId)?.entity?.content)
@@ -94,14 +94,14 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
             assertNull(database.vacancyDao().findById(id)?.entity?.resumeId)
             assertEquals(letterId, database.vacancyDao().findById(id)?.entity?.coverLetterId)
         }
-        assertEquals(1, database.coverLetterDao().softDelete(letterId, 500))
+        assertEquals(1, database.coverLetterDao().delete(letterId, 500))
         for (id in listOf(first, second)) {
             assertNull(database.vacancyDao().findById(id)?.entity?.coverLetterId)
             assertEquals("Job description", database.vacancyDao().findById(id)?.entity?.description)
         }
-        assertEquals(0, database.resumeDao().softDelete(resumeId, 600))
-        assertEquals(400L, database.resumeDao().findById(resumeId)?.entity?.deletedAt)
-        assertEquals(0, database.coverLetterDao().softDelete(letterId, 600))
+        assertEquals(0, database.resumeDao().delete(resumeId, 600))
+        assertEquals(null, database.resumeDao().findById(resumeId))
+        assertEquals(0, database.coverLetterDao().delete(letterId, 600))
         assertEquals(0, database.vacancyDao().delete(-1, 600))
     }
 
@@ -124,8 +124,8 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         assertFailsWith<IllegalArgumentException> {
             database.vacancyDao().create(vacancy(projectId).copy(resumeId = -1))
         }
-        database.resumeDao().softDelete(resumeId, 300)
-        database.coverLetterDao().softDelete(letterId, 300)
+        database.resumeDao().delete(resumeId, 300)
+        database.coverLetterDao().delete(letterId, 300)
         assertFailsWith<IllegalArgumentException> {
             database.vacancyDao().create(vacancy(otherId).copy(resumeId = resumeId))
         }

@@ -18,7 +18,7 @@ import reframecv.domain.models.coverletter.CoverLetter
             entity = ProjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["project_id"],
-            onDelete = ForeignKey.RESTRICT,
+            onDelete = ForeignKey.CASCADE,
         ),
     ],
     indices = [Index(value = ["project_id"])],
@@ -34,8 +34,6 @@ data class CoverLetterEntity(
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long,
     val content: String = "",
-    @ColumnInfo(name = "deleted_at")
-    val deletedAt: Long? = null,
 ) : DatabaseModel<CoverLetter> {
     override fun toDomainModel() = CoverLetter(
         id = id,
@@ -44,7 +42,6 @@ data class CoverLetterEntity(
         createdAt = createdAt,
         updatedAt = updatedAt,
         content = content,
-        deletedAt = deletedAt,
     )
 
     companion object : DatabaseModelFactory<CoverLetter, CoverLetterEntity> {
@@ -55,7 +52,6 @@ data class CoverLetterEntity(
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
             content = domainModel.content,
-            deletedAt = domainModel.deletedAt,
         )
     }
 }

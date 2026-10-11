@@ -26,36 +26,21 @@ interface CoverLetterQueries {
 
     @Transaction
     @Query(
-        "SELECT * FROM cover_letters WHERE project_id = :projectId AND " +
-            "cover_letters.deleted_at IS NULL AND EXISTS (SELECT 1 FROM " +
-            "projects WHERE projects.id = cover_letters.project_id AND " +
-            "projects.deleted_at IS NULL) " +
-            "ORDER BY updated_at DESC, name ASC, id ASC",
+        "SELECT * FROM cover_letters WHERE project_id = :projectId ORDER BY updated_at DESC, name ASC, id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<CoverLetterWithKeywords>>
 
-    @Query(
-        "SELECT COUNT(*) FROM cover_letters WHERE project_id = :projectId AND " +
-            "cover_letters.deleted_at IS NULL AND EXISTS (SELECT 1 FROM " +
-            "projects WHERE projects.id = cover_letters.project_id AND " +
-            "projects.deleted_at IS NULL)",
-    )
+    @Query("SELECT COUNT(*) FROM cover_letters WHERE project_id = :projectId")
     fun observeCount(projectId: Long): Flow<Int>
 
     @Transaction
     @Query(
         "SELECT * FROM cover_letters WHERE project_id = :projectId AND " +
-            "cover_letters.deleted_at IS NULL AND EXISTS (SELECT 1 FROM " +
-            "projects WHERE projects.id = cover_letters.project_id AND " +
-            "projects.deleted_at IS NULL) AND " +
             "EXISTS (SELECT 1 FROM cover_letters_keywords WHERE record_id = cover_letters.id " +
             "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<CoverLetterWithKeywords>
 
-    @Query(
-        "UPDATE cover_letters SET deleted_at = :deletedAt, updated_at = " +
-            ":deletedAt WHERE id = :id AND deleted_at IS NULL",
-    )
-    suspend fun markDeleted(id: Long, deletedAt: Long): Int
+    @Query("DELETE FROM cover_letters WHERE id = :id")
+    suspend fun deleteEntity(id: Long): Int
 }

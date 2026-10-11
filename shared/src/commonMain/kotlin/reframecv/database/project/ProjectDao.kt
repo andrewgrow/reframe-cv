@@ -1,73 +1,60 @@
 package reframecv.database.project
 
 import androidx.room3.Dao
-import androidx.room3.Delete
-import androidx.room3.Insert
-import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
 import androidx.room3.Transaction
-import androidx.room3.Update
-import kotlinx.coroutines.flow.Flow
+import reframecv.shared.nowMillis
 
-/** Stores the project hierarchy and supports soft deletion of project subtrees. */
+/** Stores the project hierarchy and permanently deletes project subtrees. */
 @Dao
-interface ProjectDao {
-    @Insert(onConflict = OnConflictStrategy.ABORT)
-    suspend fun insert(project: ProjectEntity): Long
-
+interface ProjectDao : ProjectQueries {
     @Transaction
     suspend fun insertWithParentMode(project: ProjectEntity): Long {
         project.parentId?.let { parentId ->
             val updatedRows = markAsContainer(parentId, project.createdAt)
             check(updatedRows == 1) {
-                "Parent project is missing, deleted, or configured as a workspace"
+                "Parent project is missing or configured as a workspace"
             }
         }
         return insert(project)
     }
 
-    @Query(
-        "UPDATE projects SET mode = 'Container', updated_at = :updatedAt " +
-            "WHERE id = :id AND deleted_at IS NULL AND mode IN ('Unconfigured', 'Container')",
-    )
-    suspend fun markAsContainer(id: Long, updatedAt: Long): Int
+    @Transaction
+    suspend fun delete(project: ProjectEntity) {
+        deleteSubtree(project.id)
+    }
 
     @Query(
-        "UPDATE projects SET main_resume_id = :resumeId, updated_at = :updatedAt " +
-            "WHERE id = :id AND deleted_at IS NULL AND mode = 'Workspace' AND " +
-            "(:resumeId IS NULL OR EXISTS (SELECT 1 FROM resumes WHERE resumes.id = :resumeId " +
-            "AND resumes.project_id = :id AND resumes.deleted_at IS NULL))",
+        "WITH RECURSIVE subtree(id) AS (SELECT id FROM projects WHERE id = :id UNION " +
+            "SELECT projects.id FROM projects JOIN subtree ON projects.parent_id = subtree.id) " +
+            "SELECT DISTINCT import_record_id FROM vacancies WHERE project_id IN " +
+            "(SELECT id FROM subtree) AND import_record_id IS NOT NULL",
     )
-    suspend fun setMainResume(id: Long, resumeId: Long?, updatedAt: Long): Int
+    suspend fun subtreeImportIds(id: Long): List<Long>
 
-    @Update
-    suspend fun update(project: ProjectEntity)
-
-    @Query("UPDATE projects SET name = :name, updated_at = :updatedAt WHERE id = :id")
-    suspend fun updateName(id: Long, name: String, updatedAt: Long): Int
-
-    @Delete
-    suspend fun delete(project: ProjectEntity)
+    @Query("DELETE FROM projects WHERE id = :id")
+    suspend fun deleteEntity(id: Long): Int
 
     @Query(
-        "WITH RECURSIVE subtree(id) AS (" +
-            "SELECT id FROM projects WHERE id = :id UNION " +
-            "SELECT projects.id FROM projects " +
-            "JOIN subtree ON projects.parent_id = subtree.id) " +
-            "UPDATE projects SET deleted_at = :deletedAt " +
-            "WHERE id IN (SELECT id FROM subtree) AND deleted_at IS NULL",
+        "DELETE FROM import_records WHERE id = :id AND NOT EXISTS " +
+            "(SELECT 1 FROM vacancies WHERE import_record_id = :id)",
     )
-    suspend fun markSubtreeDeleted(id: Long, deletedAt: Long): Int
+    suspend fun deleteUnusedImportRecord(id: Long)
 
-    @Query("SELECT * FROM projects WHERE id = :id")
-    suspend fun findById(id: Long): ProjectEntity?
+    @Transaction
+    suspend fun deleteSubtree(id: Long): Int {
+        val parentId = findById(id)?.parentId
+        val sourceIds = subtreeImportIds(id)
+        val changed = deleteEntity(id)
+        sourceIds.forEach { deleteUnusedImportRecord(it) }
+        if (changed > 0) parentId?.let { resetEmptyContainer(it, nowMillis()) }
+        return changed
+    }
 
     @Query(
-        "SELECT * FROM projects WHERE deleted_at IS NULL AND parent_id IS :parentId " +
-            "ORDER BY id ASC",
+        "UPDATE projects SET mode = 'Unconfigured', updated_at = :updatedAt " +
+            "WHERE id = :id AND mode = 'Container' AND NOT EXISTS " +
+            "(SELECT 1 FROM projects WHERE parent_id = :id)",
     )
-    fun observeChildren(parentId: Long?): Flow<List<ProjectEntity>>
-
-    @Query("SELECT * FROM projects WHERE deleted_at IS NULL ORDER BY id ASC")
-    fun observeAll(): Flow<List<ProjectEntity>>
+    suspend fun resetEmptyContainer(id: Long, updatedAt: Long)
 }

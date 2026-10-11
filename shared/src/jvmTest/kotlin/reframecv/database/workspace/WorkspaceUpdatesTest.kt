@@ -45,7 +45,7 @@ class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun missingAndDeletedRecordsCannotBeUpdatedOrCreatedAsDeleted() = runBlocking {
+    fun missingAndDeletedRecordsCannotBeUpdated() = runBlocking {
         val projectId = project()
         assertFailsWith<IllegalStateException> {
             database.resumeDao().update(resume(projectId).copy(id = -1))
@@ -56,17 +56,11 @@ class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
         assertFailsWith<IllegalStateException> {
             database.vacancyDao().update(vacancy(projectId).copy(id = -1))
         }
-        assertFailsWith<IllegalStateException> {
-            database.resumeDao().create(resume(projectId).copy(deletedAt = 300))
-        }
-        assertFailsWith<IllegalStateException> {
-            database.coverLetterDao().create(letter(projectId).copy(deletedAt = 300))
-        }
         val resumeId = database.resumeDao().create(resume(projectId))
         val letterId = database.coverLetterDao().create(letter(projectId))
         val vacancyId = database.vacancyDao().create(vacancy(projectId))
-        database.resumeDao().softDelete(resumeId, 300)
-        database.coverLetterDao().softDelete(letterId, 300)
+        database.resumeDao().delete(resumeId, 300)
+        database.coverLetterDao().delete(letterId, 300)
         database.vacancyDao().delete(vacancyId, 300)
         assertFailsWith<IllegalStateException> {
             database.resumeDao().update(resume(projectId).copy(id = resumeId))
@@ -77,7 +71,7 @@ class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
         assertFailsWith<IllegalStateException> {
             database.vacancyDao().update(vacancy(projectId).copy(id = vacancyId))
         }
-        assertEquals(0, database.resumeDao().softDelete(-1, 400))
-        assertEquals(0, database.coverLetterDao().softDelete(-1, 400))
+        assertEquals(0, database.resumeDao().delete(-1, 400))
+        assertEquals(0, database.coverLetterDao().delete(-1, 400))
     }
 }

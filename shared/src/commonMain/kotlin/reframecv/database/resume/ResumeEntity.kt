@@ -18,7 +18,7 @@ import reframecv.domain.models.resume.Resume
             entity = ProjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["project_id"],
-            onDelete = ForeignKey.RESTRICT,
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = ResumeEntity::class,
@@ -42,8 +42,6 @@ data class ResumeEntity(
     val content: String = "",
     @ColumnInfo(name = "source_resume_id")
     val sourceResumeId: Long? = null,
-    @ColumnInfo(name = "deleted_at")
-    val deletedAt: Long? = null,
 ) : DatabaseModel<Resume> {
     override fun toDomainModel() = Resume(
         id = id,
@@ -53,7 +51,6 @@ data class ResumeEntity(
         updatedAt = updatedAt,
         content = content,
         sourceResumeId = sourceResumeId,
-        deletedAt = deletedAt,
     )
 
     companion object : DatabaseModelFactory<Resume, ResumeEntity> {
@@ -65,7 +62,6 @@ data class ResumeEntity(
             updatedAt = domainModel.updatedAt,
             content = domainModel.content,
             sourceResumeId = domainModel.sourceResumeId,
-            deletedAt = domainModel.deletedAt,
         )
     }
 }

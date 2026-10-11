@@ -27,7 +27,7 @@ import reframecv.domain.models.vacancy.Vacancy
             entity = ProjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["project_id"],
-            onDelete = ForeignKey.RESTRICT,
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = ResumeEntity::class,

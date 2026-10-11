@@ -91,7 +91,7 @@ class LocalProjectsRepositoryModeTest {
         repository.deleteProject(deleted.id)
         assertFailsWith<IllegalStateException> { repository.createProject("Child", deleted.id) }
         assertFailsWith<IllegalStateException> { repository.createProject("Child", -1) }
-        assertEquals(ProjectMode.Unconfigured, dao.findById(deleted.id)?.mode)
+        assertNull(dao.findById(deleted.id))
         assertEquals(emptyList(), repository.observeProjects(deleted.id).first())
     }
 

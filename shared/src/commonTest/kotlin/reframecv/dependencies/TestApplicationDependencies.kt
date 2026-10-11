@@ -26,22 +26,29 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())
         override fun observeAllProjects() = projects.map { values ->
-            values.filter { it.deletedAt == null }.sortedBy { it.id }
+            values.sortedBy { it.id }
         }
 
         override fun observeProjects(parentId: Long?) = projects.map { values ->
-            values.filter { it.deletedAt == null && it.parentId == parentId }.sortedBy { it.id }
+            values.filter { it.parentId == parentId }.sortedBy { it.id }
         }
 
         override suspend fun deleteProject(id: Long) {
+            val parentId = projects.value.find { it.id == id }?.parentId
             val ids = mutableSetOf(id)
             do {
                 val added = projects.value.filter { it.parentId in ids }.map { it.id }
                 val changed = ids.addAll(added)
             } while (changed)
-            val deletedAt = nowMillis()
-            projects.value = projects.value.map {
-                if (it.id in ids && it.deletedAt == null) it.copy(deletedAt = deletedAt) else it
+            val remaining = projects.value.filterNot { it.id in ids }
+            projects.value = remaining.map {
+                if (it.id == parentId && it.mode == ProjectMode.Container &&
+                    remaining.none { child -> child.parentId == parentId }
+                ) {
+                    it.copy(mode = ProjectMode.Unconfigured, updatedAt = nowMillis())
+                } else {
+                    it
+                }
             }
         }
 
@@ -60,7 +67,7 @@ class TestApplicationDependencies : ApplicationDependencies {
         override suspend fun createProject(name: String, parentId: Long?): Project {
             require(name.isNotBlank())
             val parent = parentId?.let { id ->
-                checkNotNull(projects.value.find { it.id == id && it.deletedAt == null })
+                checkNotNull(projects.value.find { it.id == id })
                     .also { check(it.mode != ProjectMode.Workspace) }
             }
             val now = nowMillis()

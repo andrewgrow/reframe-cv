@@ -33,9 +33,9 @@ class WorkspaceObservationTest : WorkspaceDatabaseTest() {
                 awaitCounts(values, listOf(1, 1, 0))
                 database.coverLetterDao().create(letter(projectId))
                 awaitCounts(values, listOf(1, 1, 1))
-                database.resumeDao().softDelete(resumeId, 300)
+                database.resumeDao().delete(resumeId, 300)
                 awaitCounts(values, listOf(0, 1, 1))
-                database.projectDao().markSubtreeDeleted(projectId, 400)
+                database.projectDao().deleteSubtree(projectId)
                 awaitCounts(values, listOf(0, 0, 0))
             }
         } finally {

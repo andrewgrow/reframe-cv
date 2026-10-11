@@ -95,25 +95,17 @@ class AppDatabaseTest {
     }
 
     @Test
-    fun marksSubtreeWithOneTimestampAndPreservesEarlierDeletionTimes() = runBlocking {
+    fun permanentlyDeletesSubtreeAndPreservesOtherProjects() = runBlocking {
         val dao = database.projectDao()
         val root = dao.insert(entity("Root"))
-        val child = dao.insert(entity("Already deleted").copy(parentId = root, deletedAt = 100L))
+        val child = dao.insert(entity("Child").copy(parentId = root))
         val grandchild = dao.insert(entity("Grandchild").copy(parentId = child))
         val unrelated = dao.insert(entity("Unrelated"))
-
-        assertEquals(2, dao.markSubtreeDeleted(root, 300L))
-        assertEquals(300L, dao.findById(root)?.deletedAt)
-        assertEquals(100L, dao.findById(child)?.deletedAt)
-        assertEquals(300L, dao.findById(grandchild)?.deletedAt)
-        assertNull(dao.findById(unrelated)?.deletedAt)
+        assertEquals(1, dao.deleteSubtree(root))
+        listOf(root, child, grandchild).forEach { assertNull(dao.findById(it)) }
         assertEquals(listOf(unrelated), dao.observeAll().first().map { it.id })
-        assertEquals(0, dao.markSubtreeDeleted(root, 400L))
-        assertEquals(0, dao.markSubtreeDeleted(-1, 400L))
-        assertEquals(300L, dao.findById(root)?.deletedAt)
-        assertEquals(100L, dao.findById(child)?.deletedAt)
-        val stored = requireNotNull(dao.findById(grandchild))
-        assertEquals(stored, ProjectEntity.fromDomainModel(stored.toDomainModel()))
+        assertEquals(0, dao.deleteSubtree(root))
+        assertEquals(0, dao.deleteSubtree(-1))
     }
 
     @Test
@@ -136,7 +128,7 @@ class AppDatabaseTest {
     }
 
     @Test
-    fun rejectsMissingParentAndDeletingParentWithChildren() = runBlocking {
+    fun rejectsMissingParentAndCascadesParentDeletion() = runBlocking {
         val dao = database.projectDao()
         assertFailsWith<SQLiteException> {
             dao.insert(entity().copy(parentId = 99L))
@@ -146,10 +138,8 @@ class AppDatabaseTest {
         val child = entity("Child").copy(parentId = rootId)
         val childId = dao.insert(child)
 
-        assertFailsWith<SQLiteException> { dao.delete(root.copy(id = rootId)) }
-        assertEquals(rootId, dao.findById(childId)?.parentId)
-        dao.delete(child.copy(id = childId))
         dao.delete(root.copy(id = rootId))
+        assertNull(dao.findById(childId))
         assertNull(dao.findById(rootId))
     }
 
@@ -192,7 +182,7 @@ class AppDatabaseTest {
         dao.updateName(60, "Aardvark child", 5000)
         assertEquals(listOf(50L, 60L), dao.observeChildren(older.id).first().map { it.id })
         assertEquals(rootIds + listOf(50L, 60L), dao.observeAll().first().map { it.id })
-        dao.markSubtreeDeleted(50, 6000)
+        dao.deleteSubtree(50)
         assertEquals(listOf(60L), dao.observeChildren(older.id).first().map { it.id })
         assertEquals(rootIds + 60L, dao.observeAll().first().map { it.id })
     }

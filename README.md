@@ -90,7 +90,7 @@ ReframeCV stores its database as `reframe-cv.db` in its own application data dir
 - Windows: `%APPDATA%/ReframeCV/`.
 - Linux: `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset.
 
-During development, the database stays at schema version 1. After a schema change, close the application and delete the local database to recreate it; migrations will be introduced when real data needs to be preserved. Deleting a project sets `deleted_at` for that project and all descendants. These rows remain stored and are hidden from the project list; existing deletion timestamps are preserved.
+During development, the database stays at schema version 1. After a schema change, close the application and delete the local database to recreate it; migrations will be introduced when real data needs to be preserved. Deleting a project permanently removes its entire subtree, workspace records, and keywords. Unused source snapshots and their file copies are also removed; snapshots still referenced by another vacancy are preserved.
 
 ## UI tokens
 
@@ -216,7 +216,8 @@ files are neither parsed nor fetched from URLs.
 The editor can open, replace, or remove a saved snapshot. Missing or changed copies
 show a warning; vacancy data and snapshot metadata are retained. Reattach the original
 file or remove the snapshot to resolve the warning. Deleting a vacancy removes its
-snapshot and copy after the last reference; soft-deleting projects preserves them.
+snapshot and copy after the last reference. Deleting a project applies the same
+cleanup to all vacancies in its subtree.
 Unreferenced copies are cleaned when vacancy observation starts. Back up the database
 and its `attachments/` directory together.
 

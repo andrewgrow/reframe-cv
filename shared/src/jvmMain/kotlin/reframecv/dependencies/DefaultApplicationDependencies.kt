@@ -34,19 +34,20 @@ class DefaultApplicationDependencies(
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
-    private val repository by lazy { LocalProjectsRepository(database.value.projectDao()) }
+    private val repository by lazy {
+        LocalProjectsRepository(database.value.projectDao(), snapshotManager)
+    }
     private val resumeRepository by lazy { LocalResumesRepository(database.value.resumeDao()) }
-    private val vacancyRepository by lazy {
-        val dao = database.value.vacancyDao()
-        LocalVacanciesRepository(
-            dao,
-            VacancySnapshotManager(
-                dao,
-                database.value.importRecordDao(),
-                attachmentStorage,
-                logger,
-            ),
+    private val snapshotManager by lazy {
+        VacancySnapshotManager(
+            database.value.vacancyDao(),
+            database.value.importRecordDao(),
+            attachmentStorage,
+            logger,
         )
+    }
+    private val vacancyRepository by lazy {
+        LocalVacanciesRepository(database.value.vacancyDao(), snapshotManager)
     }
     private val coverLetterRepository by lazy {
         LocalCoverLettersRepository(database.value.coverLetterDao())

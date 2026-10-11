@@ -18,7 +18,7 @@ import reframecv.ui.threading.runOnUiThread
 
 class DashboardPersistenceTest : WorkspaceDatabaseTest() {
     @Test
-    fun loadsAllSectionsFromDatabaseAndObservesSoftDeletion() = runBlocking {
+    fun loadsAllSectionsFromDatabaseAndObservesPermanentDeletion() = runBlocking {
         val dependencies =
             DefaultApplicationDependencies(attachmentStorage = TestAttachmentStorage()) { database }
         val projectId = project()

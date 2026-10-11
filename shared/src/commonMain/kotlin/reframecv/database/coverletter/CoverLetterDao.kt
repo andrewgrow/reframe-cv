@@ -13,7 +13,6 @@ interface CoverLetterDao :
     WorkspaceDao {
     @Transaction
     suspend fun create(record: CoverLetter): Long {
-        check(record.deletedAt == null) { "Cannot create a deleted record" }
         requireWorkspace(record.projectId, record.createdAt)
         val id = insertEntity(CoverLetterEntity.fromDomainModel(record))
         replaceKeywords(id, record.keywords)
@@ -23,7 +22,6 @@ interface CoverLetterDao :
     @Transaction
     suspend fun update(record: CoverLetter) {
         val existing = checkNotNull(findById(record.id)) { "Record does not exist" }
-        check(existing.entity.deletedAt == null && record.deletedAt == null) { "Record is deleted" }
         require(existing.entity.projectId == record.projectId) {
             "Cannot move a record to another project"
         }
@@ -47,13 +45,11 @@ interface CoverLetterDao :
         searchNormalized(projectId, keyword.trim().lowercase())
 
     @Transaction
-    suspend fun softDelete(id: Long, deletedAt: Long): Int {
+    suspend fun delete(id: Long, updatedAt: Long): Int {
         val projectId = findById(id)?.entity?.projectId ?: return 0
-        val changed = markDeleted(id, deletedAt)
-        if (changed > 0) {
-            clearVacancyLetters(id, deletedAt)
-            resetEmptyWorkspace(projectId, deletedAt)
-        }
+        clearVacancyLetters(id, updatedAt)
+        val changed = deleteEntity(id)
+        if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
         return changed
     }
 }

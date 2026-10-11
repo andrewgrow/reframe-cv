@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "092209014257aecd75a7e8ba34da083c",
+    "identityHash": "920e37fe2a96d282dc9e713545c2e59b",
     "entities": [
       {
         "tableName": "app_settings",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "projects",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `parent_id` INTEGER, `deleted_at` INTEGER, `mode` TEXT NOT NULL DEFAULT 'Unconfigured', `main_resume_id` INTEGER, FOREIGN KEY(`parent_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`main_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `parent_id` INTEGER, `mode` TEXT NOT NULL DEFAULT 'Unconfigured', `main_resume_id` INTEGER, FOREIGN KEY(`parent_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`main_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,11 +71,6 @@
           {
             "fieldPath": "parentId",
             "columnName": "parent_id",
-            "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "deletedAt",
-            "columnName": "deleted_at",
             "affinity": "INTEGER"
           },
           {
@@ -120,7 +115,7 @@
         "foreignKeys": [
           {
             "table": "projects",
-            "onDelete": "RESTRICT",
+            "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "parent_id"
@@ -231,7 +226,7 @@
       },
       {
         "tableName": "resumes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `source_resume_id` INTEGER, `deleted_at` INTEGER, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`source_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `source_resume_id` INTEGER, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`source_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -273,11 +268,6 @@
             "fieldPath": "sourceResumeId",
             "columnName": "source_resume_id",
             "affinity": "INTEGER"
-          },
-          {
-            "fieldPath": "deletedAt",
-            "columnName": "deleted_at",
-            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -309,7 +299,7 @@
         "foreignKeys": [
           {
             "table": "projects",
-            "onDelete": "RESTRICT",
+            "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
@@ -394,7 +384,7 @@
       },
       {
         "tableName": "cover_letters",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `deleted_at` INTEGER, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -431,11 +421,6 @@
             "columnName": "content",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "deletedAt",
-            "columnName": "deleted_at",
-            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -458,7 +443,7 @@
         "foreignKeys": [
           {
             "table": "projects",
-            "onDelete": "RESTRICT",
+            "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
@@ -532,7 +517,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `import_record_id` INTEGER, FOREIGN KEY(`import_record_id`) REFERENCES `import_records`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `import_record_id` INTEGER, FOREIGN KEY(`import_record_id`) REFERENCES `import_records`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -656,7 +641,7 @@
           },
           {
             "table": "projects",
-            "onDelete": "RESTRICT",
+            "onDelete": "CASCADE",
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
@@ -753,7 +738,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '092209014257aecd75a7e8ba34da083c')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '920e37fe2a96d282dc9e713545c2e59b')"
     ]
   }
 }

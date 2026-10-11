@@ -9,7 +9,6 @@ data class Project(
     val createdAt: Long,
     val updatedAt: Long,
     val parentId: Long? = null,
-    val deletedAt: Long? = null,
     val mode: ProjectMode = ProjectMode.Unconfigured,
     val mainResumeId: Long? = null,
 ) : DomainModel

@@ -7,12 +7,14 @@ import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.project.Project
 import reframecv.shared.nowMillis
 
-/** Keeps project organization in local storage while retaining deleted subtrees. */
-class LocalProjectsRepository(private val projectDao: ProjectDao) : ProjectsRepository {
+/** Keeps project organization in local storage with permanent subtree deletion. */
+class LocalProjectsRepository(
+    private val projectDao: ProjectDao,
+    private val snapshots: VacancySnapshotManager? = null,
+) : ProjectsRepository {
     override suspend fun deleteProject(id: Long) {
-        val deletedAt = nowMillis()
-        val deletedRows = projectDao.markSubtreeDeleted(id, deletedAt)
-        check(deletedRows > 0) { "Project does not exist or is already deleted" }
+        val deletedRows = snapshots?.deleteProject(projectDao, id) ?: projectDao.deleteSubtree(id)
+        check(deletedRows > 0) { "Project does not exist" }
     }
 
     override suspend fun updateProject(id: Long, name: String) {

@@ -76,18 +76,18 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun projectDeletionPreservesSnapshotAndMissingFilePreservesMetadata() = runBlocking<Unit> {
+    fun missingFilePreservesMetadataUntilProjectDeletion() = runBlocking<Unit> {
         val snapshots = manager()
         val projectId = project()
         val id = snapshots.create(vacancy(projectId), attachment())
         val original = assertNotNull(snapshots.snapshot(id)).record
-        database.projectDao().markSubtreeDeleted(projectId, 400)
-        manager().cleanup()
-        assertEquals(AttachmentStatus.Available, snapshots.snapshot(id)?.status)
         Files.delete(temporaryFolder.root.toPath().resolve(original.filePath!!))
         val missing = assertNotNull(snapshots.snapshot(id))
         assertEquals(AttachmentStatus.Missing, missing.status)
         assertEquals(original, missing.record)
         assertNotNull(database.vacancyDao().findById(id))
+        assertEquals(1, snapshots.deleteProject(database.projectDao(), projectId))
+        assertNull(database.vacancyDao().findById(id))
+        assertNull(database.importRecordDao().findById(original.id))
     }
 }

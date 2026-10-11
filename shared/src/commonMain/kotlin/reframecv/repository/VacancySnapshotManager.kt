@@ -12,6 +12,7 @@ import reframecv.attachments.StoredAttachment
 import reframecv.attachments.storedAttachment
 import reframecv.database.importrecord.ImportRecordDao
 import reframecv.database.importrecord.ImportRecordEntity
+import reframecv.database.project.ProjectDao
 import reframecv.database.vacancy.VacancyDao
 import reframecv.domain.models.importrecord.ImportRecord
 import reframecv.domain.models.vacancy.Vacancy
@@ -81,6 +82,15 @@ class VacancySnapshotManager(
         }
     }
 
+    suspend fun deleteProject(projects: ProjectDao, id: Long): Int = mutex.withLock {
+        withContext(NonCancellable) {
+            val paths = projects.subtreeImportIds(id).mapNotNull { imports.findById(it)?.filePath }
+            val changed = projects.deleteSubtree(id)
+            paths.forEach { deleteIfUnreferenced(it) }
+            changed
+        }
+    }
+
     private suspend fun source(vacancyId: Long): ImportRecord? {
         val id = vacancies.findById(vacancyId)?.entity?.importRecordId ?: return null
         return imports.findById(id)?.toDomainModel()
@@ -106,20 +116,6 @@ class VacancySnapshotManager(
         }
     }
 
-    private fun StoredAttachment.toImportRecord(vacancy: Vacancy) =
-        ImportRecordEntity.fromDomainModel(
-            ImportRecord(
-                provider = "file",
-                createdAt = vacancy.updatedAt,
-                sourceUrl = vacancy.url.takeIf { it.isNotBlank() },
-                filePath = filePath,
-                fileName = fileName,
-                mediaType = mediaType,
-                fileSize = fileSize,
-                sha256 = sha256,
-            ),
-        )
-
     private suspend fun deleteIfUnreferenced(path: String) {
         reportCleanupFailure("Remove unused snapshot file") {
             if (!imports.referencesFile(path)) storage.delete(path)
@@ -138,3 +134,16 @@ class VacancySnapshotManager(
         }
     }
 }
+
+private fun StoredAttachment.toImportRecord(vacancy: Vacancy) = ImportRecordEntity.fromDomainModel(
+    ImportRecord(
+        provider = "file",
+        createdAt = vacancy.updatedAt,
+        sourceUrl = vacancy.url.takeIf { it.isNotBlank() },
+        filePath = filePath,
+        fileName = fileName,
+        mediaType = mediaType,
+        fileSize = fileSize,
+        sha256 = sha256,
+    ),
+)

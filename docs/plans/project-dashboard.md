@@ -27,31 +27,29 @@ without creating a resume. Relationships between records are optional.
 - Timestamps are `Long` values in milliseconds since the Unix epoch; use the
   existing `nowMillis()` helper to obtain the current time.
 - All three models have `keywords: List<String>`, defaulting to an empty list.
-- Resumes and cover letters are soft-deleted through `deletedAt`; lists and counts
-  exclude deleted records. Individual vacancies are physically deleted with their keywords.
-- Deleting a vacancy also deletes its source snapshot if no remaining vacancy references
-  it, including vacancies in deleted projects. Resume and letter records are preserved.
-- Vacancy deletion, unused-source cleanup, and resetting an empty workspace are atomic.
-- Deleting a project marks the project and its descendants as deleted, preserving
-  earlier deletion timestamps. Its resumes, vacancies, letters, keywords, and
-  relationships remain unchanged.
-- Lists, searches, and counts exclude records whose owning project is deleted;
-  record creation, updates, and relationship selection reject deleted projects.
-- Project restoration is outside this milestone. Future branch restoration must
-  distinguish descendants deleted with the parent from those deleted earlier.
+- Projects, resumes, cover letters, and vacancies are permanently deleted.
+  Models and tables have no `deletedAt` / `deleted_at` fields.
+- Deleting a project cascades through all descendants, workspace records, and keywords.
+- Deleting a vacancy or project also deletes affected snapshots after their last
+  vacancy reference. Shared snapshots referenced outside the deleted branch remain.
+- Project deletion and unused-source metadata cleanup form one database transaction.
+  File deletion follows commit under the same snapshot write/cleanup mutex.
+  Failed file deletion is logged and retried through orphan cleanup on restart.
+- Record creation, updates, and relationship selection reject missing projects/records.
+- Deleting a container's last child returns the parent to `Unconfigured`.
 - Resumes and letters initially store editable text.
 - A project may select one main resume through `Project.mainResumeId: Long?`.
 - Adaptations default to the main resume as their source; users may choose another.
 - Assign only an active resume belonging to the same project; clear the selection
-  atomically when that resume is soft-deleted.
+  atomically when that resume is deleted.
 - Opening the dashboard does not change the project's mode.
 - Creating the first record in any section changes the project to `Workspace`.
 - A project in `Container` mode cannot contain its own workspace records.
 - A project in `Workspace` mode cannot contain subprojects.
 - Record creation and the mode transition must occur in a single transaction.
-- Soft-deleting a resume clears the project's main selection, adaptation source
+- Deleting a resume clears the project's main selection, adaptation source
   references, and vacancy resume references in the same transaction.
-- Soft-deleting a letter clears vacancy letter references in the same transaction.
+- Deleting a letter clears vacancy letter references in the same transaction.
 - Clearing references preserves the independent text of adaptations and vacancies.
 - Deleting the last active record across all three sections returns the project
   to `Unconfigured` in the same transaction.
@@ -65,10 +63,10 @@ without creating a resume. Relationships between records are optional.
   No `deletedAt`: unused snapshots are physically deleted.
 - [x] Add optional `Vacancy.importRecordId` with an indexed foreign key.
 - [x] Allow repeated provider/external ID pairs and sharing a snapshot between vacancies.
-- [x] Preserve snapshots when vacancies are edited or their project is deleted.
-  Deleting an individual vacancy removes its snapshot only after the last reference.
+- [x] Preserve snapshots during ordinary vacancy edits. Vacancy and project deletion
+  remove affected snapshots only after the last reference.
 - [x] Allow physical deletion of unreferenced snapshots; preserve snapshots still
-  referenced by vacancies, including vacancies belonging to deleted projects.
+  referenced by remaining vacancies.
 - [x] Verify persistence, mapping, optional fields, deletion, and foreign-key rollback.
 - Keep schema version 1 while no real user data needs migration.
 
@@ -88,7 +86,7 @@ without creating a resume. Relationships between records are optional.
 - [x] Open, replace, and detach snapshots in both creation and editing dialogs.
   Retain metadata for missing files and warn when stored bytes have changed.
 - [x] Remove unused files after replacement or vacancy deletion. Preserve shared
-  snapshots and snapshots belonging to soft-deleted projects. Serialize orphan
+  snapshots referenced outside the deleted branch. Serialize orphan
   cleanup with writes; log failed cleanup. Failed startup cleanup retries on the
   next observation; leftover files from a failed deletion are removed on the next start.
 - [ ] Add URL fetching separately from parsing; vacancy fields remain independently editable.
@@ -132,8 +130,7 @@ Fields shared by `Resume`, `Vacancy`, and `CoverLetter`:
 | `createdAt` | `Long` | Creation timestamp |
 | `updatedAt` | `Long` | Last modification timestamp |
 
-`Resume` and `CoverLetter` additionally have `deletedAt: Long?` for soft deletion.
-`Vacancy` has no soft-deletion timestamp.
+No model has a deletion timestamp: all deletions are permanent.
 
 ### Resume
 
@@ -182,7 +179,7 @@ For indexed searches by individual keywords, use the database tables
 - Trim surrounding whitespace and remove empty values and duplicates when saving.
 - Searches are case-insensitive: `Kotlin` and `kotlin` match the same keyword.
 - Update a record and its keywords atomically.
-- Keyword searches exclude soft-deleted records.
+- Keyword searches exclude deleted records.
 
 ## Stage 1. Domain models
 
@@ -218,7 +215,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Provide observation of active projects for the navigation tree, including
   hierarchy and name changes.
 - [x] Validate that related records belong to the selected project.
-- [x] Reject relationships to missing or soft-deleted records.
+- [x] Reject relationships to missing or deleted records.
 - [x] Validate main-resume selection and clear it atomically on resume deletion.
 - [x] Use the existing time, error-handling, and lifecycle mechanisms.
 
@@ -267,7 +264,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Verify independent creation of vacancies and letters without a resume.
 - [x] Verify reuse of one resume and letter across multiple vacancies.
 - [x] Verify keyword normalization, deduplication, and case-insensitive searches.
-- [x] Verify that lists, searches, and counts exclude soft-deleted records.
+- [x] Verify that lists, searches, and counts exclude deleted records.
 - [x] Verify transactional mode changes: a failed write must not leave the project in `Workspace`.
 - [x] Verify that subprojects and workspace records cannot coexist in a project.
 - [x] Verify Configure and Back without changing project mode, including deletion of the open dashboard project.
@@ -332,7 +329,7 @@ For indexed searches by individual keywords, use the database tables
 ## Open questions
 
 - [ ] Define minimum name and content validation when creating records.
-- [x] Define relationship behavior when a resume or letter is soft-deleted or a vacancy is deleted.
+- [x] Define relationship behavior when a resume or letter is deleted or a vacancy is deleted.
 - [x] Define workspace-record behavior when their project is deleted.
 - [x] Decide whether a project stays in `Workspace` after its last record is deleted.
 - [ ] Define searches with multiple keywords: match all or any.
@@ -352,15 +349,14 @@ keyword tables, with foreign keys and indexes. Complete record reads include key
 in their saved order; writes normalize whitespace and deduplicate case-insensitively,
 while preserving the first spelling for display. Single-keyword searches are indexed.
 DAOs provide transactional creation, updates, deletion, active lists, and counts.
-Resumes and letters use soft deletion; vacancies use physical deletion with unused-source cleanup.
-Creation promotes a project to Workspace atomically and rejects missing, deleted,
-or Container projects. Relationship writes require active records in the same project.
+Resumes and letters use physical deletion; vacancies use physical deletion with unused-source cleanup.
+Creation promotes a project to Workspace atomically and rejects missing or Container projects. Relationship writes require active records in the same project.
 Main-resume selection and deletion cleanup are implemented; deleting the final active
 workspace record returns the project to Unconfigured.
-Lists, counts, and searches exclude records owned by deleted projects. Project deletion
-preserves its workspace records and relationships, including their existing deletion
-states; only projects and their descendants are marked deleted. Restoration is not
-implemented in this milestone.
+Project deletion physically removes its descendants and workspace records through foreign-key
+cascades, including keyword rows. Optional links from surviving records are cleared.
+Affected source snapshots are deleted only when no vacancy references them, and
+unused file copies are removed after commit. No restoration flow is planned.
 Separate repositories now encapsulate transactional DAO writes, active record
 observation, and keyword searches. ApplicationDependencies lazily shares one database
 across all four repositories and prevents service access after closing.
@@ -494,10 +490,10 @@ Dashboard and vacancy-list goldens were updated and visually reviewed in dark
 and light themes, including narrow layouts and increased UI scale.
 
 Repository and dashboard verification added on 2026-10-06 covers active-project
-scoping, keyword mappings, write timestamps, updates, soft deletion, dependency reuse,
+scoping, keyword mappings, write timestamps, updates, physical deletion, dependency reuse,
 combined initial reads, live updates, Retry, and cancellation on component destruction.
 An integration test observes all three sections through ApplicationDependencies and
-checks record deletion and project soft deletion against the real database.
+checks record deletion and project physical deletion against the real database.
 Dashboard goldens cover empty and populated columns in both themes, a failed read,
 narrow windows, 150% scale, and isolated populated / empty sections.
 
@@ -533,6 +529,22 @@ were visually reviewed. Description and dialog handles share the same resize com
 File attachment verification on 2026-10-11: all JVM tests, screenshot verification,
 ktlint, Detekt, coverage verification, and macOS packaging passed. Added tests cover
 original-byte copying, missing/changed files, rollback, replacement, shared snapshots,
-detachment, project soft deletion, serialized cleanup, failed file deletion, selection
+detachment, project physical deletion, serialized cleanup, failed file deletion, selection
 cancellation, and pending editor changes. Isolated snapshot goldens and updated
 vacancy-dialog goldens were reviewed in dark and light themes.
+
+
+## Permanent deletion decision
+
+Permanent deletion supersedes the earlier retention behavior recorded in verification
+history. Projects, resumes, and cover letters no longer retain deleted rows. Deleting
+a project removes its entire branch and workspace contents. Resume and letter deletion
+clears optional relationships while preserving surviving documents and vacancy text.
+Shared source snapshots are retained until their final vacancy reference is removed.
+The development schema remains version 1 and requires recreating the local database.
+
+Permanent deletion verification on 2026-10-11: all 283 JVM tests, screenshot
+verification, ktlint, Detekt, coverage verification, and macOS packaging passed.
+Tests cover recursive branch removal, document relationship cleanup, missing/deleted
+record rejection, shared and exclusive snapshot cleanup, persistence after reopening,
+and returning a parent with no remaining children to Unconfigured.

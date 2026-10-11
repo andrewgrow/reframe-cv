@@ -11,7 +11,7 @@ import reframecv.domain.models.project.ProjectMode
 
 class LocalCoverLettersRepositoryTest : WorkspaceDatabaseTest() {
     @Test
-    fun writesReadsSearchesUpdatesAndSoftDeletes() = runBlocking<Unit> {
+    fun writesReadsSearchesUpdatesAndPermanentlyDeletes() = runBlocking<Unit> {
         val projectId = project()
         val repository = LocalCoverLettersRepository(database.coverLetterDao())
         val draft = letter(projectId)
@@ -35,7 +35,7 @@ class LocalCoverLettersRepositoryTest : WorkspaceDatabaseTest() {
         repository.delete(id)
         assertEquals(emptyList(), repository.observeCoverLetters(projectId).first())
         assertEquals(emptyList(), repository.search(projectId, "JVM"))
-        assertTrue(database.coverLetterDao().findById(id)?.entity?.deletedAt != null)
+        assertEquals(null, database.coverLetterDao().findById(id))
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(projectId)?.mode)
         assertFailsWith<IllegalStateException> { repository.delete(id) }
         assertFailsWith<IllegalStateException> { repository.delete(-1) }
@@ -43,7 +43,7 @@ class LocalCoverLettersRepositoryTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun scopesRecordsToActiveOwnerAndHidesDeletedProjects() = runBlocking<Unit> {
+    fun scopesRecordsToOwnerAndRemovesDeletedProjectRecords() = runBlocking<Unit> {
         val projectId = project()
         val otherId = project("Other")
         val repository = LocalCoverLettersRepository(database.coverLetterDao())
@@ -59,7 +59,7 @@ class LocalCoverLettersRepositoryTest : WorkspaceDatabaseTest() {
                 it.id
             },
         )
-        assertEquals(null, database.coverLetterDao().findById(id)?.entity?.deletedAt)
+        assertEquals(null, database.coverLetterDao().findById(id))
         assertFailsWith<IllegalStateException> { repository.create(letter(projectId)) }
     }
 }

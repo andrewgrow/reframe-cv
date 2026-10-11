@@ -11,7 +11,7 @@ import reframecv.domain.models.project.ProjectMode
 
 class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
     @Test
-    fun writesReadsSearchesUpdatesAndSoftDeletes() = runBlocking<Unit> {
+    fun writesReadsSearchesUpdatesAndPermanentlyDeletes() = runBlocking<Unit> {
         val projectId = project()
         val repository = LocalResumesRepository(database.resumeDao())
         val draft = resume(projectId)
@@ -35,7 +35,7 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
         repository.delete(id)
         assertEquals(emptyList(), repository.observeResumes(projectId).first())
         assertEquals(emptyList(), repository.search(projectId, "JVM"))
-        assertTrue(database.resumeDao().findById(id)?.entity?.deletedAt != null)
+        assertEquals(null, database.resumeDao().findById(id))
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(projectId)?.mode)
         assertFailsWith<IllegalStateException> { repository.delete(id) }
         assertFailsWith<IllegalStateException> { repository.delete(-1) }
@@ -43,7 +43,7 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun scopesRecordsToActiveOwnerAndHidesDeletedProjects() = runBlocking<Unit> {
+    fun scopesRecordsToOwnerAndRemovesDeletedProjectRecords() = runBlocking<Unit> {
         val projectId = project()
         val otherId = project("Other")
         val repository = LocalResumesRepository(database.resumeDao())
@@ -59,7 +59,7 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
                 it.id
             },
         )
-        assertEquals(null, database.resumeDao().findById(id)?.entity?.deletedAt)
+        assertEquals(null, database.resumeDao().findById(id))
         assertFailsWith<IllegalStateException> { repository.create(resume(projectId)) }
     }
 }

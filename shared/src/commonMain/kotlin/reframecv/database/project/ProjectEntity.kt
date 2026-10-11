@@ -19,7 +19,7 @@ import reframecv.domain.models.project.ProjectMode
             entity = ProjectEntity::class,
             parentColumns = ["id"],
             childColumns = ["parent_id"],
-            onDelete = ForeignKey.RESTRICT,
+            onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
             entity = ResumeEntity::class,
@@ -40,8 +40,6 @@ data class ProjectEntity(
     val updatedAt: Long,
     @ColumnInfo(name = "parent_id")
     val parentId: Long? = null,
-    @ColumnInfo(name = "deleted_at")
-    val deletedAt: Long? = null,
     @ColumnInfo(defaultValue = "'Unconfigured'")
     val mode: ProjectMode = ProjectMode.Unconfigured,
     @ColumnInfo(name = "main_resume_id")
@@ -53,7 +51,6 @@ data class ProjectEntity(
         createdAt = createdAt,
         updatedAt = updatedAt,
         parentId = parentId,
-        deletedAt = deletedAt,
         mode = mode,
         mainResumeId = mainResumeId,
     )
@@ -65,7 +62,6 @@ data class ProjectEntity(
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
             parentId = domainModel.parentId,
-            deletedAt = domainModel.deletedAt,
             mode = domainModel.mode,
             mainResumeId = domainModel.mainResumeId,
         )

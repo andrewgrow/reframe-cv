@@ -53,7 +53,7 @@ class AppSettingsRepositoryTest : WorkspaceDatabaseTest() {
             repository.updateWindowSettings(expected)
             assertEquals(AppSettings(expected), observed.await())
             val id = project()
-            database.projectDao().markSubtreeDeleted(id, 1000)
+            database.projectDao().deleteSubtree(id)
             assertEquals(AppSettings(expected), repository.getSettings())
         }
 

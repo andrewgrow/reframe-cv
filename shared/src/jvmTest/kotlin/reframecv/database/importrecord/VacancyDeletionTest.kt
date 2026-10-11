@@ -42,21 +42,19 @@ class VacancyDeletionTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun retainsSharedSourceEvenWhenRemainingVacancyBelongsToDeletedProject() = runBlocking {
+    fun projectDeletionPreservesSharedSourceUntilLastVacancyIsDeleted() = runBlocking {
         val firstProject = project()
         val secondProject = project("Other")
         val sourceId = source()
         val dao = database.vacancyDao()
         val first = dao.create(vacancy(firstProject).copy(importRecordId = sourceId))
         val second = dao.create(vacancy(secondProject).copy(importRecordId = sourceId))
-        val before = dao.findById(second)?.toDomainModel()
-        database.projectDao().markSubtreeDeleted(secondProject, 400)
-        assertEquals(1, dao.delete(first, 500))
+        database.projectDao().deleteSubtree(secondProject)
+        assertNull(dao.findById(second))
         assertEquals(sourceId, database.importRecordDao().findById(sourceId)?.id)
-        assertEquals(before, dao.findById(second)?.toDomainModel())
-        assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(firstProject)?.mode)
-        assertEquals(1, dao.delete(second, 600))
+        assertEquals(1, dao.delete(first, 500))
         assertNull(database.importRecordDao().findById(sourceId))
+        assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(firstProject)?.mode)
         assertEquals(0, dao.delete(second, 700))
         assertEquals(0, dao.delete(-1, 700))
     }

@@ -26,33 +26,21 @@ interface ResumeQueries {
 
     @Transaction
     @Query(
-        "SELECT * FROM resumes WHERE project_id = :projectId AND " +
-            "resumes.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = resumes.project_id AND projects.deleted_at IS NULL) " +
-            "ORDER BY updated_at DESC, name ASC, id ASC",
+        "SELECT * FROM resumes WHERE project_id = :projectId ORDER BY updated_at DESC, name ASC, id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<ResumeWithKeywords>>
 
-    @Query(
-        "SELECT COUNT(*) FROM resumes WHERE project_id = :projectId AND " +
-            "resumes.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = resumes.project_id AND projects.deleted_at IS NULL)",
-    )
+    @Query("SELECT COUNT(*) FROM resumes WHERE project_id = :projectId")
     fun observeCount(projectId: Long): Flow<Int>
 
     @Transaction
     @Query(
         "SELECT * FROM resumes WHERE project_id = :projectId AND " +
-            "resumes.deleted_at IS NULL AND EXISTS (SELECT 1 FROM projects " +
-            "WHERE projects.id = resumes.project_id AND projects.deleted_at IS NULL) AND " +
             "EXISTS (SELECT 1 FROM resumes_keywords WHERE record_id = resumes.id " +
             "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<ResumeWithKeywords>
 
-    @Query(
-        "UPDATE resumes SET deleted_at = :deletedAt, updated_at = :deletedAt " +
-            "WHERE id = :id AND deleted_at IS NULL",
-    )
-    suspend fun markDeleted(id: Long, deletedAt: Long): Int
+    @Query("DELETE FROM resumes WHERE id = :id")
+    suspend fun deleteEntity(id: Long): Int
 }
