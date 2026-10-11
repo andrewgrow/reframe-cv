@@ -9,6 +9,7 @@ import io.klogging.config.loggingConfiguration
 import io.klogging.noCoLogger
 import kotlinx.coroutines.runBlocking
 import reframecv.dependencies.DefaultApplicationDependencies
+import reframecv.logging.ApplicationLogger
 import reframecv.repository.AppSettingsRepository
 import reframecv.ui.components.application.DefaultRootComponent
 import reframecv.ui.components.application.RootComponent
@@ -23,6 +24,19 @@ fun main() {
     noCoLogger("App").info("Application started")
 
     val dependencies = DefaultApplicationDependencies()
+    val previousHandler = Thread.getDefaultUncaughtExceptionHandler()
+    Thread.setDefaultUncaughtExceptionHandler { thread, error ->
+        dependencies.logger.error(
+            "Uncaught application error",
+            error,
+            mapOf("thread" to thread.name),
+        )
+        if (previousHandler != null) {
+            previousHandler.uncaughtException(thread, error)
+        } else {
+            error.printStackTrace()
+        }
+    }
     val lifecycle = LifecycleRegistry()
     try {
         val rootComponent = runOnUiThread {
@@ -30,7 +44,12 @@ fun main() {
                 DefaultAppComponentContext(DefaultComponentContext(lifecycle), dependencies)
             DefaultRootComponent(context)
         }
-        runApplication(rootComponent, lifecycle, dependencies.appSettingsRepository)
+        runApplication(
+            rootComponent,
+            lifecycle,
+            dependencies.appSettingsRepository,
+            dependencies.logger,
+        )
     } finally {
         runOnUiThread { lifecycle.destroy() }
         dependencies.close()
@@ -42,8 +61,9 @@ fun runApplication(
     rootComponent: RootComponent,
     lifecycle: LifecycleRegistry,
     settingsRepository: AppSettingsRepository,
+    logger: ApplicationLogger = ApplicationLogger.None,
 ) {
-    val settings = runBlocking { DesktopWindowSettingsStore.load(settingsRepository) }
+    val settings = runBlocking { DesktopWindowSettingsStore.load(settingsRepository, logger) }
     try {
         application {
             DesktopApplicationWindow(rootComponent, lifecycle, settings, ::exitApplication)

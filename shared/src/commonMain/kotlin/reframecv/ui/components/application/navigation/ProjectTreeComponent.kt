@@ -30,16 +30,24 @@ class DefaultProjectTreeComponent(
     private val onProjectsChanged: (List<Project>) -> Unit,
 ) : ProjectTreeComponent {
     override val state = MutableValue(ProjectTreeState())
+    private val history = componentContext.dependencies.eventHistory
+    private val logger = componentContext.dependencies.logger
     private val repository = componentContext.dependencies.projectsRepository
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observation: Job? = null
 
     init {
-        componentContext.lifecycle.doOnDestroy { scope.cancel() }
+        componentContext.lifecycle.doOnDestroy {
+            history.record("ProjectTree disposed")
+            scope.cancel()
+        }
         onRetry()
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     override fun onRetry() {
+        history.record("ProjectTree Load")
         observation?.cancel()
         state.value = state.value.copy(loading = true, failed = false)
         observation = scope.launch {
@@ -55,17 +63,21 @@ class DefaultProjectTreeComponent(
                         loading = false,
                         failed = false,
                     )
+                    history.record("ProjectTree Ready(count=${projects.size})")
                     onProjectsChanged(projects)
                 }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                history.record("ProjectTree LoadFailed")
+                logger.error("Load project tree", error, emptyMap())
                 state.value = state.value.copy(loading = false, failed = true)
             }
         }
     }
 
     fun select(id: Long?) {
+        history.record("ProjectTree Selected(projectId=$id)")
         val ancestors = id?.let { state.value.projects.pathTo(it).dropLast(1) }.orEmpty()
         state.value = state.value.copy(
             selectedId = id,
@@ -75,6 +87,7 @@ class DefaultProjectTreeComponent(
 
     override fun onToggle(id: Long) {
         val expanded = state.value.expandedIds
+        history.record("ProjectTree Toggle(projectId=$id, expanded=${id !in expanded})")
         state.value = state.value.copy(
             expandedIds = if (id in expanded) expanded - id else expanded + id,
         )
@@ -82,8 +95,12 @@ class DefaultProjectTreeComponent(
 
     override fun onProjectSelected(id: Long) {
         val path = state.value.projects.pathTo(id)
+        history.record("ProjectTree OpenProject(projectId=$id, path=${path.map { it.id }})")
         if (path.isNotEmpty()) openProject(path)
     }
 
-    override fun onProjectsList() = openProjectsList()
+    override fun onProjectsList() {
+        history.record("ProjectTree OpenProjectsList")
+        openProjectsList()
+    }
 }

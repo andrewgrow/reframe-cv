@@ -5,12 +5,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.WindowPlacement
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import reframecv.domain.models.settings.AppSettings
 import reframecv.domain.models.settings.WindowSettings
+import reframecv.logging.ApplicationLogger
 import reframecv.repository.AppSettingsRepository
 
 class DesktopWindowSettingsTest {
@@ -34,10 +36,17 @@ class DesktopWindowSettingsTest {
     @Test
     fun failedSaveCanBeRetriedWithoutLosingTheLatestWindowSize() = runBlocking {
         val repository = MemorySettingsRepository()
-        val store = DesktopWindowSettingsStore.load(repository)
+        var loggedError: Throwable? = null
+        val logger = ApplicationLogger { operation, error, context ->
+            assertEquals("Save window settings", operation)
+            assertEquals(mapOf("settings" to WindowSettings(1000f, 700f)), context)
+            loggedError = error
+        }
+        val store = DesktopWindowSettingsStore.load(repository, logger)
         store.update(WindowSettings(1000f, 700f))
         repository.failWrites = true
         store.save()
+        assertEquals("Test write failure", assertIs<IllegalStateException>(loggedError).message)
         assertEquals(WindowSettings(), repository.getSettings().window)
         repository.failWrites = false
         store.update(WindowSettings(900f, 650f, true))

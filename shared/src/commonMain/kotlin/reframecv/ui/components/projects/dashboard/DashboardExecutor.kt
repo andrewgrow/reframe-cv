@@ -5,6 +5,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import reframecv.logging.ApplicationLogger
 import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
@@ -15,9 +16,12 @@ internal class DashboardExecutor(
     private val resumes: ResumesRepository,
     private val vacancies: VacanciesRepository,
     private val letters: CoverLettersRepository,
+    private val logger: ApplicationLogger,
 ) : CoroutineExecutor<DashboardIntent, Nothing, DashboardState, DashboardState, Nothing>() {
     private var observation: Job? = null
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     override fun executeIntent(intent: DashboardIntent) {
         observation?.cancel()
         dispatch(DashboardState.Loading)
@@ -32,7 +36,8 @@ internal class DashboardExecutor(
                 }.collect { dispatch(it) }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error("Load dashboard", error, mapOf("projectId" to projectId))
                 dispatch(DashboardState.LoadFailed)
             }
         }

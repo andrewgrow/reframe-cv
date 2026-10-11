@@ -4,7 +4,6 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.store.StoreFactory
-import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
@@ -21,7 +20,7 @@ interface DashboardComponent {
 class DefaultDashboardComponent(
     componentContext: AppComponentContext,
     override val projectId: Long,
-    storeFactory: StoreFactory = DefaultStoreFactory(),
+    storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
     private val openVacancies: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : DashboardComponent,
@@ -32,6 +31,7 @@ class DefaultDashboardComponent(
         dependencies.resumesRepository,
         dependencies.vacanciesRepository,
         dependencies.coverLettersRepository,
+        dependencies.logger,
     ).also { it.accept(DashboardIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
 

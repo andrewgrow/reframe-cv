@@ -195,6 +195,12 @@ Open the database folder in Finder on MacOS and looking up to `reframe-cv.db`:
 open "$HOME/Library/Application Support/ReframeCV"
 ```
 
+Errors are appended with timestamps, operation context, and stack traces to `stacktrace.txt`
+in the same application data directory as `reframe-cv.db`. The file is preserved across launches. Each error includes the latest 200 in-memory Store and
+project-tree events before its stack trace. Event summaries contain types, IDs, and counts;
+document contents and project names are omitted. The event history starts fresh on each launch.
+Print in the terminal `open "$HOME/Library/Application Support/ReframeCV"`
+
 ## License
 
 ReframeCV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.

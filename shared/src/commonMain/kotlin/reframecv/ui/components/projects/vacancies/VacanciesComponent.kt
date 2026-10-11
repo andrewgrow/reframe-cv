@@ -10,7 +10,6 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
-import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
@@ -35,13 +34,14 @@ class DefaultVacanciesComponent(
     componentContext: AppComponentContext,
     override val projectId: Long,
     private val back: () -> Unit,
-    storeFactory: StoreFactory = DefaultStoreFactory(),
+    storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
 ) : VacanciesComponent,
     AppComponentContext by componentContext {
     private val store = createVacanciesStore(
         storeFactory,
         projectId,
         dependencies.vacanciesRepository,
+        dependencies.logger,
     )
         .also { it.accept(VacanciesIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)

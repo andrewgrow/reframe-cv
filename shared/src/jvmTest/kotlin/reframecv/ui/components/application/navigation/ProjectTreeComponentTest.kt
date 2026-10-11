@@ -18,6 +18,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.dependencies.TestApplicationDependencies
 import reframecv.domain.models.project.Project
+import reframecv.logging.EventHistory
 import reframecv.repository.ProjectsRepository
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -65,6 +66,7 @@ class ProjectTreeComponentTest {
             withTimeout(10_000L.milliseconds) {
                 assertTrue(states.receive().loading)
                 assertTrue(states.receive().failed)
+                assertLoadFailure(dependencies)
                 runOnUiThread {
                     component.select(2)
                     component.onRetry()
@@ -78,8 +80,11 @@ class ProjectTreeComponentTest {
                 runOnUiThread {
                     component.onProjectSelected(99)
                     assertTrue(opened.isEmpty())
+                    component.onToggle(1)
                     component.onProjectSelected(2)
+                    component.onProjectsList()
                     assertEquals(listOf(projects), opened)
+                    assertNavigationHistory(dependencies.eventHistory)
                 }
             }
         } finally {
@@ -87,5 +92,23 @@ class ProjectTreeComponentTest {
         }
         withTimeout(10_000L.milliseconds) { cancelled.await() }
         assertEquals(2, attempts)
+    }
+
+    private suspend fun assertLoadFailure(dependencies: TestApplicationDependencies) {
+        assertTrue(dependencies.eventHistory.snapshot().last().endsWith("LoadFailed"))
+        val logged = dependencies.logger.failures.receive()
+        assertEquals("Load project tree", logged.operation)
+        assertTrue(logged.context.isEmpty())
+        assertEquals("Read failed", logged.error.message)
+    }
+
+    private fun assertNavigationHistory(events: EventHistory) {
+        val history = events.snapshot().joinToString("\n")
+        assertTrue(history.contains("Selected(projectId=2)"))
+        assertTrue(history.contains("Toggle(projectId=1, expanded=false)"))
+        assertTrue(history.contains("OpenProject(projectId=2, path=[1, 2])"))
+        assertTrue(history.contains("OpenProjectsList"))
+        assertFalse(history.contains("Backend"))
+        assertFalse(history.contains("Java"))
     }
 }

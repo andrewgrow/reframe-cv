@@ -6,6 +6,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +67,7 @@ class DashboardComponentTest : ComponentTest() {
             assertEquals(listOf(letter), ready.coverLetters)
             runOnUiThread { lifecycle.destroy() }
             cancellations.receive()
+            assertTrue(dependencies.logger.failures.tryReceive().isFailure)
         }
         states.close()
         cancellations.close()
@@ -73,10 +75,11 @@ class DashboardComponentTest : ComponentTest() {
 
     @Test
     fun failedReadCanBeRetriedAndReplacesPreviousObservation() = runBlocking<Unit> {
+        val failure = IllegalStateException("Cannot read records")
         var fail = true
         val repository = object : ResumesRepository by dependencies.resumesRepository {
             override fun observeResumes(projectId: Long): Flow<List<Resume>> = flow {
-                if (fail) error("Cannot read records")
+                if (fail) throw failure
                 emit(emptyList())
             }
         }
@@ -87,10 +90,15 @@ class DashboardComponentTest : ComponentTest() {
             component = DefaultDashboardComponent(context(repository), 7)
             component.uiState.subscribe { states.trySend(it) }
         }
-        withTimeout(10_000) {
+        withTimeout(10_000.milliseconds) {
             while (states.receive() !=
                 DashboardState.LoadFailed
             ) { /* Wait for the failed read. */ }
+            val logged = dependencies.logger.failures.receive()
+            assertEquals("Load dashboard", logged.operation)
+            assertEquals(mapOf("projectId" to 7L), logged.context)
+            // combine can copy exceptions while recovering coroutine stacks.
+            assertTrue(generateSequence(logged.error) { it.cause }.any { it === failure })
             runOnUiThread {
                 fail = false
                 component.onRetry()

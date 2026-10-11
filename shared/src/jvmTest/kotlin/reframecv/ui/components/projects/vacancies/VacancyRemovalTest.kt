@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
@@ -67,10 +68,11 @@ class VacancyRemovalTest : ComponentTest() {
     fun failedDeletionCanBeRetriedWithoutLosingDialog() = runBlocking {
         val original = vacancy()
         dependencies.vacanciesRepository.records.value = listOf(original)
+        val failure = IllegalStateException("Delete failed")
         var fail = true
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
             override suspend fun delete(id: Long) {
-                if (fail) error("Delete failed")
+                if (fail) throw failure
                 dependencies.vacanciesRepository.delete(id)
             }
         }
@@ -91,6 +93,10 @@ class VacancyRemovalTest : ComponentTest() {
             ) { /* Wait for deletion failure. */ }
             assertEquals(listOf(original), dependencies.vacanciesRepository.records.value)
             val closed = CompletableDeferred<Unit>()
+            val logged = dependencies.logger.failures.receive()
+            assertSame(failure, logged.error)
+            assertEquals("Delete vacancy", logged.operation)
+            assertEquals(mapOf("projectId" to 7L, "vacancyId" to original.id), logged.context)
             runOnUiThread {
                 fail = false
                 component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }

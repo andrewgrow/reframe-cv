@@ -23,7 +23,6 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import java.awt.datatransfer.DataFlavor
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import reframecv.domain.models.project.Project
 import reframecv.ui.theme.ReframeTheme
 
@@ -36,7 +35,6 @@ class ProjectListTest {
         var opened = 0
         var copied: ClipEntry? = null
         val clipboard = object : Clipboard {
-            override val nativeClipboard = java.awt.datatransfer.Clipboard("test")
             override suspend fun getClipEntry(): ClipEntry? = copied
             override suspend fun setClipEntry(clipEntry: ClipEntry?) {
                 copied = clipEntry
@@ -60,9 +58,10 @@ class ProjectListTest {
             val text = copied?.asAwtTransferable?.getTransferData(
                 DataFlavor.stringFlavor,
             ) as? String
-            assertTrue(
-                text?.contains("Android") == true,
-                "Expected selected project name to be copied",
+            assertEquals(
+                true,
+                text?.contains("Android"),
+                "Expected selected project name to be copied"
             )
             assertEquals(0, opened)
         }

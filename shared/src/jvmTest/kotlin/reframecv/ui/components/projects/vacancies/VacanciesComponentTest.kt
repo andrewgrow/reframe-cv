@@ -6,6 +6,8 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -57,6 +59,7 @@ class VacanciesComponentTest : ComponentTest() {
             )
             runOnUiThread { lifecycle.destroy() }
             cancellations.receive()
+            assertTrue(dependencies.logger.failures.tryReceive().isFailure)
         }
         states.close()
         cancellations.close()
@@ -64,10 +67,11 @@ class VacanciesComponentTest : ComponentTest() {
 
     @Test
     fun failedReadCanBeRetriedAndReplacesPreviousObservation() = runBlocking<Unit> {
+        val failure = IllegalStateException("Cannot read records")
         var fail = true
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
             override fun observeVacancies(projectId: Long): Flow<List<Vacancy>> = flow {
-                if (fail) error("Cannot read records")
+                if (fail) throw failure
                 emit(emptyList())
             }
         }
@@ -82,6 +86,10 @@ class VacanciesComponentTest : ComponentTest() {
             while (states.receive() !=
                 VacanciesState.LoadFailed
             ) { /* Wait for the failed read. */ }
+            val logged = dependencies.logger.failures.receive()
+            assertEquals("Load vacancies", logged.operation)
+            assertEquals(mapOf("projectId" to 7L), logged.context)
+            assertSame(failure, logged.error)
             runOnUiThread {
                 fail = false
                 component.onRetry()

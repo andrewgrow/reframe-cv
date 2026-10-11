@@ -5,6 +5,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.logging.ApplicationLogger
 import reframecv.repository.VacanciesRepository
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 
@@ -12,6 +13,7 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 internal class VacanciesExecutor(
     private val projectId: Long,
     private val repository: VacanciesRepository,
+    private val logger: ApplicationLogger,
 ) : CoroutineExecutor<VacanciesIntent, Nothing, VacanciesState, VacanciesState, VacanciesLabel>() {
     private var observation: Job? = null
 
@@ -26,6 +28,8 @@ internal class VacanciesExecutor(
         }
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     private fun save(draft: VacancyDraft, original: Vacancy? = null) {
         if (draft.title.isBlank() || saving?.isActive == true) return
         require(original == null || original.projectId == projectId)
@@ -40,12 +44,20 @@ internal class VacanciesExecutor(
                 publish(VacanciesLabel.Saved)
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                val operation = if (original == null) "Create vacancy" else "Update vacancy"
+                logger.error(
+                    operation,
+                    error,
+                    mapOf("projectId" to projectId, "vacancyId" to original?.id),
+                )
                 publish(VacanciesLabel.SaveFailed)
             }
         }
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     private fun delete(id: Long) {
         if (saving?.isActive == true) return
         publish(VacanciesLabel.Deleting)
@@ -55,12 +67,22 @@ internal class VacanciesExecutor(
                 publish(VacanciesLabel.Deleted)
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error(
+                    "Delete vacancy",
+                    error,
+                    mapOf(
+                        "projectId" to projectId,
+                        "vacancyId" to id,
+                    ),
+                )
                 publish(VacanciesLabel.DeleteFailed)
             }
         }
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     private fun observe() {
         observation?.cancel()
         dispatch(VacanciesState.Loading)
@@ -71,7 +93,8 @@ internal class VacanciesExecutor(
                 }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error("Load vacancies", error, mapOf("projectId" to projectId))
                 dispatch(VacanciesState.LoadFailed)
             }
         }

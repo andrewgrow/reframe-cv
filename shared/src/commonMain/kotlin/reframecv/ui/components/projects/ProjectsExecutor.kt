@@ -5,6 +5,7 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import reframecv.logging.ApplicationLogger
 import reframecv.repository.ProjectsRepository
 
 /** Lets the project store use an interchangeable handler for loading and editing. */
@@ -14,6 +15,7 @@ interface ProjectsExecutor : Executor<ProjectsIntent, Nothing, UiState, UiState,
 class RealProjectsExecutor(
     private val projectsRepository: ProjectsRepository,
     private val parentId: Long? = null,
+    private val logger: ApplicationLogger = ApplicationLogger.None,
 ) : CoroutineExecutor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>(),
     ProjectsExecutor {
     private var observation: Job? = null
@@ -23,11 +25,19 @@ class RealProjectsExecutor(
         when (intent) {
             ProjectsIntent.LoadProjects -> observeProjects()
 
-            is ProjectsIntent.CreateProject -> saveProject(intent.name) {
+            is ProjectsIntent.CreateProject -> saveProject(
+                intent.name,
+                "Create project",
+                mapOf("parentId" to parentId),
+            ) {
                 ProjectsLabel.Created(projectsRepository.createProject(it, parentId))
             }
 
-            is ProjectsIntent.UpdateProject -> saveProject(intent.name) {
+            is ProjectsIntent.UpdateProject -> saveProject(
+                intent.name,
+                "Update project",
+                mapOf("projectId" to intent.id),
+            ) {
                 projectsRepository.updateProject(intent.id, it)
                 ProjectsLabel.Saved
             }
@@ -36,6 +46,8 @@ class RealProjectsExecutor(
         }
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     private fun observeProjects() {
         observation?.cancel()
         dispatch(UiState.Loading)
@@ -53,13 +65,21 @@ class RealProjectsExecutor(
                 }
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error("Load projects", error, mapOf("parentId" to parentId))
                 dispatch(UiState.LoadFailed)
             }
         }
     }
 
-    private fun saveProject(name: String, save: suspend (String) -> ProjectsLabel) {
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
+    private fun saveProject(
+        name: String,
+        operation: String,
+        context: Map<String, Any?>,
+        save: suspend (String) -> ProjectsLabel,
+    ) {
         val trimmedName = name.trim()
         if (trimmedName.isEmpty() || saving?.isActive == true) return
         publish(ProjectsLabel.Saving)
@@ -68,12 +88,15 @@ class RealProjectsExecutor(
                 publish(save(trimmedName))
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error(operation, error, context)
                 publish(ProjectsLabel.SaveFailed)
             }
         }
     }
 
+    // Repository implementations can fail with different exceptions; keep the screen usable.
+    @Suppress("TooGenericExceptionCaught")
     private fun deleteProject(id: Long) {
         if (saving?.isActive == true) return
         publish(ProjectsLabel.Deleting)
@@ -83,7 +106,8 @@ class RealProjectsExecutor(
                 publish(ProjectsLabel.Deleted)
             } catch (exception: CancellationException) {
                 throw exception
-            } catch (_: Exception) {
+            } catch (error: Exception) {
+                logger.error("Delete project", error, mapOf("projectId" to id))
                 publish(ProjectsLabel.DeleteFailed)
             }
         }

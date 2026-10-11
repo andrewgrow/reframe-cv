@@ -10,7 +10,6 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
-import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.domain.models.project.Project
 import reframecv.ui.components.projects.editor.DefaultEditorComponent
 import reframecv.ui.components.projects.editor.EditorComponent
@@ -35,7 +34,7 @@ interface ProjectsComponent {
 /** Keeps project browsing, editing, and Back behavior working together. */
 class DefaultProjectsComponent(
     componentContext: AppComponentContext,
-    storeFactory: StoreFactory = DefaultStoreFactory(),
+    storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
     override val projectPath: List<ProjectPathEntry> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
     private val onProjectConfigured: () -> Unit = {},
@@ -44,11 +43,16 @@ class DefaultProjectsComponent(
         RealProjectsExecutor(
             componentContext.dependencies.projectsRepository,
             projectPath.lastOrNull()?.id,
+            componentContext.dependencies.logger,
         )
     },
 ) : ProjectsComponent,
     AppComponentContext by componentContext {
-    private val stateStore = createProjectsStore(storeFactory, executorFactory)
+    private val stateStore = createProjectsStore(
+        storeFactory,
+        projectPath.lastOrNull()?.id,
+        executorFactory,
+    )
         .also { it.accept(ProjectsIntent.LoadProjects) }
     override val uiState: Value<UiState> = bindStoreToLifecycle(stateStore, lifecycle)
 

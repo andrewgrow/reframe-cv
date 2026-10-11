@@ -2,6 +2,10 @@ package reframecv.dependencies
 
 import reframecv.database.AppDatabase
 import reframecv.database.openDefaultDatabase
+import reframecv.logging.ApplicationLogger
+import reframecv.logging.EventHistory
+import reframecv.logging.FileApplicationLogger
+import reframecv.logging.createHistoryStoreFactory
 import reframecv.repository.AppSettingsRepository
 import reframecv.repository.CoverLettersRepository
 import reframecv.repository.LocalAppSettingsRepository
@@ -14,8 +18,12 @@ import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 
 /** Gives all screens access to the same local data without reopening the database. */
-class DefaultApplicationDependencies(databaseFactory: () -> AppDatabase = ::openDefaultDatabase) :
-    ApplicationDependencies {
+class DefaultApplicationDependencies(
+    override val eventHistory: EventHistory = EventHistory(),
+    override val logger: ApplicationLogger = FileApplicationLogger(history = eventHistory),
+    databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
+) : ApplicationDependencies {
+    override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
     private val repository by lazy { LocalProjectsRepository(database.value.projectDao()) }
     private val resumeRepository by lazy { LocalResumesRepository(database.value.resumeDao()) }

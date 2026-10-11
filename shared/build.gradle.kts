@@ -1,3 +1,5 @@
+@file:OptIn(com.github.takahirom.roborazzi.ExperimentalRoborazziApi::class)
+
 plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
@@ -32,6 +34,7 @@ kotlin {
             implementation(libs.decompose.extensionsCompose)
             api(libs.mvikotlin.core)
             implementation(libs.mvikotlin.main)
+            implementation(libs.mvikotlin.logging)
             api(libs.mvikotlin.coroutines)
             implementation(libs.kotlinx.coroutinesCore)
             api(libs.kotlinx.datetime)
@@ -42,10 +45,11 @@ kotlin {
             implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
+            implementation(libs.klogging)
             implementation(libs.kotlinx.coroutinesSwing)
         }
         jvmTest.dependencies {
-            implementation(compose.desktop.uiTestJUnit4)
+            implementation(libs.compose.uiTestJunit4)
             implementation(libs.roborazzi.composeDesktop)
         }
     }

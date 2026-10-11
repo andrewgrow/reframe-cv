@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.channels.Channel
@@ -64,10 +65,11 @@ class VacancyEditingTest : ComponentTest() {
     fun failedUpdateStaysOpenAndCanBeRetried() = runBlocking {
         val original = original()
         dependencies.vacanciesRepository.records.value = listOf(original)
+        val failure = IllegalStateException("Update failed")
         var fail = true
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
             override suspend fun update(record: Vacancy) {
-                if (fail) error("Update failed")
+                if (fail) throw failure
                 dependencies.vacanciesRepository.update(record)
             }
         }
@@ -92,6 +94,10 @@ class VacancyEditingTest : ComponentTest() {
             while (states.receive() != VacancySaveState.Failed) { /* Wait for update failure. */ }
             assertEquals(listOf(original), dependencies.vacanciesRepository.records.value)
             val closed = CompletableDeferred<Unit>()
+            val logged = dependencies.logger.failures.receive()
+            assertSame(failure, logged.error)
+            assertEquals("Update vacancy", logged.operation)
+            assertEquals(mapOf("projectId" to 7L, "vacancyId" to 12L), logged.context)
             runOnUiThread {
                 fail = false
                 component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }

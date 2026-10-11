@@ -112,6 +112,8 @@ class ApplicationDependenciesTest {
         }
         try {
             assertEquals(0, opened)
+            assertSame(dependencies.storeFactory, dependencies.storeFactory)
+            assertSame(dependencies.eventHistory, dependencies.eventHistory)
             val repository = dependencies.projectsRepository
             assertSame(repository, dependencies.projectsRepository)
             assertSame(dependencies.appSettingsRepository, dependencies.appSettingsRepository)

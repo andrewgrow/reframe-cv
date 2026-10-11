@@ -4,6 +4,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
+import reframecv.logging.EventHistory
+import reframecv.logging.RecordingApplicationLogger
+import reframecv.logging.createHistoryStoreFactory
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
@@ -12,6 +15,9 @@ import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 
 class TestApplicationDependencies : ApplicationDependencies {
+    override val eventHistory = EventHistory()
+    override val storeFactory = createHistoryStoreFactory(eventHistory)
+    override val logger = RecordingApplicationLogger()
     override val appSettingsRepository = TestAppSettingsRepository()
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())

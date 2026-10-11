@@ -7,6 +7,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
@@ -85,11 +86,12 @@ class VacancyCreationTest : ComponentTest() {
 
     @Test
     fun failedSaveCanBeRetriedAndCancelDoesNotNavigateAway() = runBlocking {
+        val failure = IllegalStateException("Write failed")
         var fail = true
         var backs = 0
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
             override suspend fun create(record: Vacancy): Long {
-                if (fail) error("Write failed")
+                if (fail) throw failure
                 return dependencies.vacanciesRepository.create(record)
             }
         }
@@ -103,9 +105,13 @@ class VacancyCreationTest : ComponentTest() {
             editor.saveState.subscribe { states.trySend(it) }
             editor.onSave(VacancyDraft("Backend"))
         }
-        withTimeout(10_000) {
+        withTimeout(10_000.milliseconds) {
             while (states.receive() != VacancySaveState.Failed) { /* Wait for write failure. */ }
             val closed = CompletableDeferred<Unit>()
+            val logged = dependencies.logger.failures.receive()
+            assertSame(failure, logged.error)
+            assertEquals("Create vacancy", logged.operation)
+            assertEquals(mapOf("projectId" to 7L, "vacancyId" to null), logged.context)
             runOnUiThread {
                 fail = false
                 component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }

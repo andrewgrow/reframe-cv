@@ -8,24 +8,24 @@ Third-party software remains subject to its own license terms. The following tab
 
 | Project | Version used | License | License reference |
 | --- | --- | --- | --- |
-| Kotlin, Kotlin Gradle plugins, and Kotlin Test | 2.4.10 | Apache License 2.0 | [Kotlin license](https://github.com/JetBrains/kotlin/blob/master/license/LICENSE.txt) |
-| Compose Multiplatform | 1.11.1 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
+| Kotlin, Kotlin Gradle plugins, and Kotlin Test | 2.4.21 | Apache License 2.0 | [Kotlin license](https://github.com/JetBrains/kotlin/blob/master/license/LICENSE.txt) |
+| Compose Multiplatform | 1.12.1 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
 | Compose Material Icons Extended | 1.7.3 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
-| Compose Material 3 | 1.11.0-alpha07 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
-| AndroidX Lifecycle for Compose | 2.11.0-beta01 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
-| Room | 3.0.1 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
-| AndroidX SQLite | 2.7.0 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
-| SQLite | Bundled by AndroidX SQLite 2.7.0 | Public domain | [SQLite copyright](https://www.sqlite.org/copyright.html) |
+| Compose Material 3 | 1.12.0-alpha03 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
+| AndroidX Lifecycle for Compose | 2.11.0 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
+| Room | 3.0.3 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
+| AndroidX SQLite | 2.7.1 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
+| SQLite | Bundled by AndroidX SQLite 2.7.1 | Public domain | [SQLite copyright](https://www.sqlite.org/copyright.html) |
 | Decompose and Essenty | 3.5.0 / 2.5.0 | Apache License 2.0 | [Decompose license](https://github.com/arkivanov/Decompose/blob/master/LICENSE), [Essenty license](https://github.com/arkivanov/Essenty/blob/master/LICENSE) |
 | kotlinx.coroutines | 1.11.0 | Apache License 2.0 | [kotlinx.coroutines license](https://github.com/Kotlin/kotlinx.coroutines/blob/master/LICENSE.txt) |
 | kotlinx-datetime | 0.8.0 compatibility artifact (`0.8.0-0.6.x-compat`) | Apache License 2.0 | [kotlinx-datetime license](https://github.com/Kotlin/kotlinx-datetime/blob/master/LICENSE.txt) |
 | Klogging | 0.11.8 | Apache License 2.0 | [Klogging license](https://github.com/klogging/klogging/blob/main/LICENSE.txt) |
 | MVIKotlin | 4.4.0 | Apache License 2.0 | [MVIKotlin license](https://github.com/arkivanov/MVIKotlin/blob/master/LICENSE) |
-| Kotlin Symbol Processing (KSP) | 2.3.11 | Apache License 2.0 | [KSP license](https://github.com/google/ksp/blob/main/LICENSE) |
-| Roborazzi | 1.70.0 | Apache License 2.0 | [Roborazzi license](https://github.com/takahirom/roborazzi/blob/main/LICENSE) |
+| Kotlin Symbol Processing (KSP) | 2.3.12 | Apache License 2.0 | [KSP license](https://github.com/google/ksp/blob/main/LICENSE) |
+| Roborazzi | 1.76.0 | Apache License 2.0 | [Roborazzi license](https://github.com/takahirom/roborazzi/blob/main/LICENSE) |
 | JUnit 4 | 4.13.2 | Eclipse Public License 1.0 | [JUnit 4 license](https://github.com/junit-team/junit4/blob/main/LICENSE-junit.txt) |
-| Gradle Wrapper and Gradle build tool | 9.3.1 | Apache License 2.0 | [Gradle license](https://github.com/gradle/gradle/blob/master/LICENSE) |
-| Kover | 0.9.9 | Apache License 2.0 | [Kover license](https://github.com/Kotlin/kotlinx-kover/blob/main/LICENSE) |
+| Gradle Wrapper and Gradle build tool | 9.7.0 | Apache License 2.0 | [Gradle license](https://github.com/gradle/gradle/blob/master/LICENSE) |
+| Kover | 0.9.11 | Apache License 2.0 | [Kover license](https://github.com/Kotlin/kotlinx-kover/blob/main/LICENSE) |
 | Detekt | 2.0.0-alpha.6 | Apache License 2.0 | [Detekt license](https://github.com/detekt/detekt/blob/main/LICENSE) |
 | ktlint | 1.8.0 | MIT License | [ktlint license](https://github.com/ktlint/ktlint/blob/master/LICENSE) |
 | ktlint Gradle plugin | 14.2.0 | MIT License | [ktlint Gradle plugin license](https://github.com/JLLeitschuh/ktlint-gradle/blob/main/LICENSE.txt) |

@@ -8,14 +8,14 @@ import reframecv.ui.components.projects.UiState.Loading
 /** Gives project browsing and editing one source of state and operation results. */
 internal interface ProjectsStore : Store<ProjectsIntent, UiState, ProjectsLabel>
 
-private const val PROJECTS_STORE_NAME = "ProjectsStore"
 internal fun createProjectsStore(
     storeFactory: StoreFactory,
+    parentId: Long? = null,
     executorFactory: () -> ProjectsExecutor,
 ): ProjectsStore = object :
     ProjectsStore,
     Store<ProjectsIntent, UiState, ProjectsLabel> by storeFactory.create(
-        name = PROJECTS_STORE_NAME,
+        name = "ProjectsStore(parentId=$parentId)",
         initialState = Loading,
         executorFactory = executorFactory,
         reducer = Reducer<UiState, UiState> { message -> message },
