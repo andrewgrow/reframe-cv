@@ -22,6 +22,11 @@ class TestVacancyEditorComponent(
         }
     }
     override fun onClose() {
+        if (saveState.value == VacancySaveState.Saving ||
+            deleteState.value == VacancyDeleteState.Deleting
+        ) {
+            return
+        }
         if (deleteState.value !=
             VacancyDeleteState.Idle
         ) {

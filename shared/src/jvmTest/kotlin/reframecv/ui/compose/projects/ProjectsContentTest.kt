@@ -38,13 +38,13 @@ import reframecv.ui.compose.projects.list.projectRowTag
 class ProjectsContentTest {
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun emptyChildProjectAllowsCreationWithoutRepeatingItsName() = runComposeUiTest {
+    fun emptyChildProjectShowsItsTitleAndAllowsCreation() = runComposeUiTest {
         val component = TestProjectsComponent(
             projectPath = listOf(ProjectBreadcrumb(1, "Backend"), ProjectBreadcrumb(2, "Google")),
         )
         setContent { ProjectsContent(component) }
         onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
-        onNodeWithText("Google").assertDoesNotExist()
+        onNodeWithText("Google").assertIsDisplayed()
         onNodeWithText("Backend").assertDoesNotExist()
         onNodeWithText(getTestString(Res.string.project_add)).performClick()
         onNodeWithText(createTitle).assertIsDisplayed()
@@ -80,7 +80,7 @@ class ProjectsContentTest {
 
     @OptIn(ExperimentalTestApi::class)
     @Test
-    fun deepProjectPathDoesNotRepeatNamesAboveContent() = runComposeUiTest {
+    fun deepProjectPathShowsOnlyTheCurrentProjectTitle() = runComposeUiTest {
         val project = Project(id = 1, name = "Child Project", createdAt = 0, updatedAt = 0)
         setContent {
             ProjectsContent(
@@ -93,7 +93,7 @@ class ProjectsContentTest {
                 ),
             )
         }
-        onNodeWithText("This Project").assertDoesNotExist()
+        onNodeWithText("This Project").assertIsDisplayed()
         onNodeWithText("Parent project with a long name 0").assertDoesNotExist()
         onNodeWithText(project.name).assertIsDisplayed()
         onNodeWithText(addProjectLabel).assertIsDisplayed()

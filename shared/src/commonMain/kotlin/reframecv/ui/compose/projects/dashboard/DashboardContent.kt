@@ -5,9 +5,11 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
@@ -23,10 +25,13 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.dashboard_cover_letters
 import reframecv.shared.generated.resources.dashboard_resumes
+import reframecv.shared.generated.resources.dashboard_title
 import reframecv.shared.generated.resources.dashboard_vacancies
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DashboardState
 import reframecv.ui.compose.common.LoadingContent
+import reframecv.ui.compose.common.PageHeader
+import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.theme.ReframeTheme
 
 internal const val DASHBOARD_TAG = "project.dashboard"
@@ -36,15 +41,20 @@ private const val SECTION_COUNT = 3
 fun DashboardContent(component: DashboardComponent) {
     val state by component.uiState.subscribeAsState()
     key(component.projectId) {
-        Box(
+        Column(
             Modifier.fillMaxSize().background(
                 MaterialTheme.colorScheme.background,
-            ).testTag(DASHBOARD_TAG),
+            ).testTag(DASHBOARD_TAG).safeContentPadding().pageBackHandler(component::onBack),
         ) {
-            when (val current = state) {
-                DashboardState.Loading -> LoadingContent()
-                DashboardState.LoadFailed -> DashboardLoadError(component::onRetry)
-                is DashboardState.Ready -> DashboardLayout(current, component::onOpenVacancies)
+            Box(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
+                PageHeader(stringResource(Res.string.dashboard_title), component::onBack)
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                when (val current = state) {
+                    DashboardState.Loading -> LoadingContent()
+                    DashboardState.LoadFailed -> DashboardLoadError(component::onRetry)
+                    is DashboardState.Ready -> DashboardLayout(current, component::onOpenVacancies)
+                }
             }
         }
     }
@@ -57,7 +67,11 @@ private fun DashboardLayout(state: DashboardState.Ready, onOpenVacancies: () -> 
     val appColors = ReframeTheme.colorScheme
     BoxWithConstraints(
         Modifier.fillMaxSize()
-            .safeContentPadding().padding(tokens.spacing.medium),
+            .padding(
+                start = tokens.spacing.medium,
+                end = tokens.spacing.medium,
+                bottom = tokens.spacing.medium,
+            ),
     ) {
         val availableWidth = maxWidth - tokens.spacing.medium * (SECTION_COUNT - 1)
         val sectionWidth = (availableWidth / SECTION_COUNT)

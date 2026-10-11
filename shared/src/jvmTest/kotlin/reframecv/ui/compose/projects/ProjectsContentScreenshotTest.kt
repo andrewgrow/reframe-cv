@@ -24,6 +24,17 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 @OptIn(ExperimentalTestApi::class)
 class ProjectsContentScreenshotTest : GoldenScreenshotTest() {
     @Test
+    fun emptyChildProjectInLightThemeMatchesReference() = runComposeUiTest {
+        setAndCaptureGolden(this, themeMode = ThemeMode.Light, captureTag = PROJECTS_SCREEN_TAG) {
+            ProjectsContent(
+                TestProjectsComponent(
+                    projectPath = listOf(ProjectBreadcrumb(1, "Android Developer")),
+                ),
+            )
+        }
+    }
+
+    @Test
     fun emptyChildProjectMatchesReference() = runComposeUiTest {
         captureProjectsGolden(
             this,

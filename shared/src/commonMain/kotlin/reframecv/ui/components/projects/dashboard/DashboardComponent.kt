@@ -1,6 +1,8 @@
 package reframecv.ui.components.projects.dashboard
 
 import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.backhandler.BackCallback
+import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import com.arkivanov.mvikotlin.main.store.DefaultStoreFactory
 import reframecv.ui.context.AppComponentContext
@@ -10,6 +12,7 @@ interface DashboardComponent {
     val projectId: Long
     val uiState: Value<DashboardState>
     fun onOpenVacancies()
+    fun onBack()
     fun onRetry()
 }
 
@@ -18,6 +21,7 @@ class DefaultDashboardComponent(
     override val projectId: Long,
     storeFactory: StoreFactory = DefaultStoreFactory(),
     private val openVacancies: () -> Unit = {},
+    private val back: () -> Unit = {},
 ) : DashboardComponent,
     AppComponentContext by componentContext {
     private val store = createDashboardStore(
@@ -28,6 +32,14 @@ class DefaultDashboardComponent(
         dependencies.coverLettersRepository,
     ).also { it.accept(DashboardIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
+
+    init {
+        val callback = BackCallback { onBack() }
+        backHandler.register(callback)
+        lifecycle.doOnDestroy { backHandler.unregister(callback) }
+    }
+
+    override fun onBack() = back()
 
     override fun onOpenVacancies() = openVacancies()
 

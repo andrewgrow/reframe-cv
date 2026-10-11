@@ -17,6 +17,31 @@ import reframecv.ui.threading.runOnUiThread
 
 class RootDashboardTest : ComponentTest() {
     @Test
+    fun unconfiguredProjectBackReturnsToItsOriginatingList() = runBlocking<Unit> {
+        val parent = dependencies.projectsRepository.createProject("Parent")
+        val child = dependencies.projectsRepository.createProject("Child", parent.id)
+        runOnUiThread {
+            lifecycle.resume()
+            val root = DefaultRootComponent(appComponentContext())
+            val rootList =
+                assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+            rootList.component.onOpenProject(parent)
+            val parentScreen =
+                assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+            parentScreen.component.onOpenProject(child)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onBack()
+            assertEquals(parentScreen, root.childStack.value.active.instance)
+            parentScreen.component.onOpenProject(child)
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(parentScreen, root.childStack.value.active.instance)
+            parentScreen.component.onBack()
+            assertEquals(rootList, root.childStack.value.active.instance)
+            assertEquals(1, root.childStack.value.items.size)
+        }
+    }
+
+    @Test
     fun configureKeepsSelectionAndBackReturnsWithoutChangingMode() = runBlocking<Unit> {
         val project = dependencies.projectsRepository.createProject("Backend")
         lateinit var root: DefaultRootComponent

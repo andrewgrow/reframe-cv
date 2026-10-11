@@ -9,18 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.navigation_back
 import reframecv.shared.generated.resources.navigation_retry
 import reframecv.shared.generated.resources.vacancy_add
 import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun VacanciesControls(
-    onAdd: () -> Unit,
-    onBack: () -> Unit,
-    onRetry: (() -> Unit)? = null,
-) {
+internal fun VacanciesControls(onAdd: () -> Unit, onRetry: (() -> Unit)? = null) {
     val tokens = ReframeTheme.tokens
     FlowRow(
         Modifier.fillMaxWidth().padding(tokens.spacing.medium),
@@ -42,10 +37,5 @@ internal fun VacanciesControls(
                 outlineState = FillButton.OutlineState.Visible,
             )
         }
-        FillButton(
-            text = stringResource(Res.string.navigation_back),
-            onClick = onBack,
-            outlineState = FillButton.OutlineState.Visible,
-        )
     }
 }

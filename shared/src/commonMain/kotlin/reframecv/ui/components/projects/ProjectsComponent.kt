@@ -23,6 +23,7 @@ interface ProjectsComponent {
     val uiState: Value<UiState>
     val editorSlot: Value<ChildSlot<*, EditorComponent>>
 
+    fun onBack()
     fun onConfigureProject()
     fun onAddProject()
     fun onOpenProject(project: Project)
@@ -35,6 +36,7 @@ class DefaultProjectsComponent(
     override val projectPath: List<ProjectBreadcrumb> = emptyList(),
     private val onProjectOpened: (Project) -> Unit = {},
     private val onProjectConfigured: () -> Unit = {},
+    private val back: () -> Unit = {},
     executorFactory: () -> ProjectsExecutor = {
         RealProjectsExecutor(
             componentContext.dependencies.projectsRepository,
@@ -106,6 +108,8 @@ class DefaultProjectsComponent(
         )
         lifecycle.doOnDestroy { subscription.dispose() }
     }
+
+    override fun onBack() = back()
 
     override fun onConfigureProject() {
         if (projectPath.isNotEmpty()) onProjectConfigured()

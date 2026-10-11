@@ -56,7 +56,7 @@ class DashboardContentTest {
         onNodeWithText("Cover letters").performScrollTo().assertIsDisplayed()
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
-        onAllNodes(hasClickAction()).assertCountEquals(1)
+        onAllNodes(hasClickAction()).assertCountEquals(2)
     }
 
     @Test

@@ -27,6 +27,8 @@ import reframecv.shared.generated.resources.vacancies_empty
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesState
 import reframecv.ui.compose.common.LoadingContent
+import reframecv.ui.compose.common.PageHeader
+import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.compose.projects.vacancies.editor.VacancyEditorContent
 import reframecv.ui.theme.ReframeTheme
 
@@ -40,16 +42,13 @@ fun VacanciesContent(component: VacanciesComponent) {
             Column(
                 Modifier.fillMaxSize().background(
                     MaterialTheme.colorScheme.background,
-                ).safeContentPadding(),
+                ).safeContentPadding().pageBackHandler(component::onBack, editor.child == null),
             ) {
                 Column(
                     Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
                     verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
                 ) {
-                    SelectableText(
-                        stringResource(Res.string.dashboard_vacancies),
-                        style = MaterialTheme.typography.titleLarge,
-                    )
+                    PageHeader(stringResource(Res.string.dashboard_vacancies), component::onBack)
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         when (val current = state) {
                             VacanciesState.Loading -> LoadingContent()
@@ -71,7 +70,6 @@ fun VacanciesContent(component: VacanciesComponent) {
                 HorizontalDivider()
                 VacanciesControls(
                     onAdd = component::onAdd,
-                    onBack = component::onBack,
                     onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
                 )
             }

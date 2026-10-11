@@ -5,6 +5,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -44,7 +45,7 @@ class VacanciesContentTest {
         onNodeWithText("Cancel").performClick()
         onNodeWithText("Vacancy 29").assertIsDisplayed()
         assertEquals(0, backs)
-        onNodeWithText("Back").assertIsDisplayed().performClick()
+        onNodeWithContentDescription("Back").assertIsDisplayed().performClick()
         assertEquals(1, backs)
         runOnIdle { component.uiState.value = VacanciesState.Ready(listOf(sample)) }
         onNodeWithText("2026-10-10").assertIsDisplayed()
@@ -71,10 +72,8 @@ class VacanciesContentTest {
         onNodeWithTag(LOADING_INDICATOR_TAG).assertDoesNotExist()
         val addBounds = onNodeWithText("Add").fetchSemanticsNode().boundsInRoot
         val retryBounds = onNodeWithText("Retry").fetchSemanticsNode().boundsInRoot
-        val backBounds = onNodeWithText("Back").fetchSemanticsNode().boundsInRoot
-        assertTrue(addBounds.right < retryBounds.left && retryBounds.right < backBounds.left)
+        assertTrue(addBounds.right < retryBounds.left)
         assertEquals(addBounds.top, retryBounds.top)
-        assertEquals(retryBounds.top, backBounds.top)
         onNodeWithText("Retry").performClick()
         assertEquals(1, retries)
         runOnIdle { component.uiState.value = VacanciesState.Ready(emptyList()) }

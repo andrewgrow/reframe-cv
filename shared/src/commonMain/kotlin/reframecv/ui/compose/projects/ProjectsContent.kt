@@ -2,7 +2,9 @@ package reframecv.ui.compose.projects
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +21,8 @@ import reframecv.shared.generated.resources.projects_load_error
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.UiState
 import reframecv.ui.compose.common.LoadingContent
+import reframecv.ui.compose.common.PageHeader
+import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.compose.projects.editor.EditorContent
 import reframecv.ui.compose.projects.empty.EmptyProjectContent
 import reframecv.ui.compose.projects.list.NoProjectsContent
@@ -35,8 +39,18 @@ fun ProjectsContent(component: ProjectsComponent) {
         Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .testTag(PROJECTS_SCREEN_TAG),
     ) {
-        Box(Modifier.fillMaxSize().safeContentPadding()) {
-            ProjectBody(state, component)
+        Column(
+            Modifier.fillMaxSize().safeContentPadding().pageBackHandler(
+                component::onBack,
+                enabled = component.projectPath.isNotEmpty() && editorSlot.child == null,
+            ),
+        ) {
+            component.projectPath.lastOrNull()?.let { project ->
+                Box(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
+                    PageHeader(project.name, component::onBack)
+                }
+            }
+            Box(Modifier.weight(1f).fillMaxWidth()) { ProjectBody(state, component) }
         }
         editorSlot.child?.instance?.let { EditorContent(it) }
     }

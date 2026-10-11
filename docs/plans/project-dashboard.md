@@ -289,13 +289,13 @@ For indexed searches by individual keywords, use the database tables
 - [x] Show dates as YYYY-MM-DD in the device's local time zone.
 - [x] Use a table in wider panes and stacked records in narrow panes or at larger UI scales.
 - [x] Observe active vacancies through VacanciesRepository with delayed loading, empty, and error states.
-- [x] Show Retry only on load failure, between Add and Back in the bottom controls.
+- [x] Show Retry only on load failure, beside Add in the bottom controls.
 - [x] Cancel observation when the component is destroyed.
-- [x] Keep Back anchored at the bottom and return to the dashboard through existing navigation.
+- [x] Show Back in the vacancy page header and return to the dashboard.
 - [x] Remove the vacancy screen from history when its project is deleted.
 - [x] Cover navigation, loading, live updates, cancellation, scrolling, date boundaries,
   and dark / light / narrow / increased-scale screenshots.
-- [x] Add a visible Add button beside Back that opens the vacancy creation dialog.
+- [x] Add a visible Add button in the bottom controls that opens the vacancy creation dialog.
 - [x] Add a creation dialog with Title, Company, Description, URL, and comma-separated Keywords.
 - [x] Allow resizing the vacancy dialog horizontally and vertically with a bottom-right handle.
   Preserve the initial rendered size as its minimum, keep the dialog centered, constrain it
@@ -327,8 +327,8 @@ For indexed searches by individual keywords, use the database tables
 - [ ] Define searches with multiple keywords: match all or any.
 - [x] Agree on the dashboard layout for narrow windows.
 - [ ] Agree on left-pane sizing and how deep nesting behaves in narrow windows.
-- [ ] Decide how Back behaves when switching between unrelated tree branches
-  and when returning from an unconfigured project's dashboard.
+- [x] Define Back behavior across tree branches and project screens: return through
+  navigation history; Configure returns to its originating project screen.
 - [ ] Before implementing section screens, agree on their navigation, editors,
   and the workflow for creating a resume adaptation.
 
@@ -358,7 +358,7 @@ remains an open question for the editors.
 Configure opens the dashboard in the existing Decompose stack,
 with three full-height section columns and no selection or creation actions.
 It preserves the tree selection and does not change the project's mode.
-Back returns to the project's empty screen; deleting the project removes its dashboard
+Back returns to the screen that opened the dashboard; deleting the project removes its dashboard
 from history and returns to the nearest surviving project or the root.
 Dashboard columns use dedicated theme background colors and token-based spacing.
 They share the available width and retain a minimum width of 160 dp at default scale;
@@ -398,7 +398,8 @@ title, company, and creation date, with the fixed-width date column last;
 missing companies have an explicit placeholder.
 Dates use the device's local time zone and ISO calendar-date format. Table widths
 and the switch to stacked records use scalable UI tokens. The list scrolls while
-Back remains anchored at the bottom. Retry replaces the active observation.
+Add and optional Retry remain anchored at the bottom. Back is in the page header.
+Retry replaces the active observation.
 
 Add now opens a dialog. Only Title is required; Keywords are comma-separated.
 Saving creates a vacancy in the selected project and updates observable lists/counts.
@@ -429,16 +430,45 @@ Dashboard verification includes dark / light full-screen goldens, a narrow layou
 and 150% scale. Functional tests cover Configure, Back, unchanged project mode,
 project deletion while viewing the dashboard, and scrolling to all three sections.
 
-## Follow-up after this milestone: user-accessible Back navigation
+## User-accessible Back navigation — completed
 
-- [ ] Discuss keyboard shortcuts and hardware Back input on supported platforms.
-- [ ] Discuss an on-screen Back button, possibly at the top; placement is undecided.
-- [ ] Once agreed, connect both input paths to the existing navigation history and
-  define their behavior at the root and while a dialog is open.
+Back navigation work is complete for the current milestone. Header buttons,
+Escape, hardware Back, dialog priority, and navigation-history returns are
+implemented and verified; no Back-related work remains open in this plan.
 
-The vacancy list has a contextual Back button returning to its dashboard.
-Global Back navigation is available programmatically; desktop keyboard input and
-an application-wide Back button are not connected yet.
+- [x] Add a Back arrow beside the Vacancies heading; return to the project's dashboard.
+- [x] Add a Dashboard heading with the same arrow; return to the previous screen
+  in navigation history. Opening a workspace from a project list returns to that
+  list; Configure returns to the empty project screen from which it was invoked.
+- [x] Handle Escape on the active page, including when the left tree has focus.
+- [x] Give the vacancy editor priority: Escape cancels deletion confirmation first,
+  then closes the dialog; saving and deletion block closing. A later Escape returns
+  from the page. Handle key-down only to avoid navigating on the dialog's key-up.
+- [x] Connect hardware Back to the same dashboard return destination.
+- [x] Remove Back from the vacancy footer; keep Add and optional Retry there.
+- [x] Show the current project title and Back arrow on an opened project's screen,
+  including configuration and subproject lists. The page callback and Escape return
+  through navigation history; an open project editor retains dismissal priority.
+  Keep the root project list without a Back arrow or Escape navigation action.
+
+Project-screen Back verification on 2026-10-11: all 238 JVM tests, screenshot
+verification, ktlint, Detekt, and coverage verification passed. Tests cover arrow
+clicks, Escape with tree focus, returning from nested unconfigured projects,
+hardware Back, and the absence of Back at the root. Configuration, subproject-list,
+and loading goldens were updated; light, dark, and narrow help layouts were reviewed.
+
+Dashboard Back regression fixed on 2026-10-11: return through navigation history
+instead of synthesizing the workspace's configuration screen. A database-backed
+test covers workspaces with saved vacancies opened from root and nested project
+lists, checking both the page callback and hardware Back. All 234 JVM tests,
+screenshot verification, ktlint, Detekt, and coverage verification passed.
+
+Back navigation verification on 2026-10-11: all 233 JVM tests, screenshot
+verification, ktlint, Detekt, and coverage verification passed using the full
+command above. Tests cover header clicks, Escape with tree focus, dialog priority,
+the saving guard, and returning from a workspace opened directly from the tree.
+Dashboard and vacancy-list goldens were updated and visually reviewed in dark
+and light themes, including narrow layouts and increased UI scale.
 
 Repository and dashboard verification added on 2026-10-06 covers active-project
 scoping, keyword mappings, write timestamps, updates, soft deletion, dependency reuse,

@@ -26,6 +26,7 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_resize_dialog
 import reframecv.ui.compose.common.ResizeHandle
+import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
@@ -44,7 +45,9 @@ internal fun VacancyEditorDialog(
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
             size.widthIn(dimensions.vacancyDialogMinWidth, dimensions.vacancyDialogDefaultWidth)
-                .testTag(VACANCY_EDITOR_TAG)
+                .testTag(
+                    VACANCY_EDITOR_TAG,
+                ).pageBackHandler(onDismissRequest, destination = resizingEnabled)
                 .onSizeChanged { state.captureMinimum(it, density) },
         ) {
             Surface(

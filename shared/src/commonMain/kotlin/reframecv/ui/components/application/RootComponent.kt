@@ -113,6 +113,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
             DefaultProjectsComponent(
                 componentContext,
                 projectPath = configuration.projectPath,
+                back = { navigation.pop() },
                 onProjectConfigured = {
                     navigation.pushNew(Configuration.Dashboard(configuration.projectPath))
                 },
@@ -129,6 +130,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
             DefaultDashboardComponent(
                 componentContext,
                 configuration.projectPath.last().id,
+                back = { navigation.pop() },
                 openVacancies = {
                     navigation.pushNew(Configuration.Vacancies(configuration.projectPath))
                 },

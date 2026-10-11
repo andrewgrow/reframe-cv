@@ -14,12 +14,15 @@ class TestProjectsComponent(
     private val onProjectOpened: (Project) -> Unit = {},
     private val onAddProjectClick: () -> Unit = {},
     private val onConfigureProjectClick: () -> Unit = {},
+    private val back: () -> Unit = {},
 ) : ProjectsComponent {
     override val uiState = MutableValue(initialState)
     override val editorSlot =
         MutableValue<ChildSlot<*, EditorComponent>>(
             if (editorInitiallyOpen) createEditorSlot() else ChildSlot(),
         )
+
+    override fun onBack() = back()
 
     override fun onConfigureProject() = onConfigureProjectClick()
 

@@ -28,7 +28,7 @@ class ProjectsLoadingTest {
         )
         setContent { ReframeTheme { ProjectsContent(component) } }
         mainClock.advanceTimeByFrame()
-        onNodeWithText("Backend").assertDoesNotExist()
+        onNodeWithText("Backend").assertIsDisplayed()
         onNodeWithText(getTestString(Res.string.project_empty)).assertDoesNotExist()
         mainClock.advanceTimeBy(900)
         onNodeWithTag(LOADING_INDICATOR_TAG).assertDoesNotExist()
@@ -38,7 +38,7 @@ class ProjectsLoadingTest {
         mainClock.advanceTimeByFrame()
         onNodeWithTag(LOADING_INDICATOR_TAG).assertDoesNotExist()
         onNodeWithText(getTestString(Res.string.projects_load_error)).assertIsDisplayed()
-        onNodeWithText("Backend").assertDoesNotExist()
+        onNodeWithText("Backend").assertIsDisplayed()
     }
 
     @Test
