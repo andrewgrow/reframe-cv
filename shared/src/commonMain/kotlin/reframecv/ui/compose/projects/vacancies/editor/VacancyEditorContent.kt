@@ -12,6 +12,7 @@ import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
+import reframecv.shared.generated.resources.vacancy_title_required
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
@@ -35,6 +36,11 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     }
     val isBusy = saveState == VacancySaveState.Saving || deleteState == VacancyDeleteState.Deleting
     val confirming = deleteState != VacancyDeleteState.Idle
+    val titleError = if (snapshot.selected != null && draft.title.isBlank()) {
+        stringResource(Res.string.vacancy_title_required)
+    } else {
+        null
+    }
     val save = { if (!confirming && !isBusy && !snapshot.selecting) component.onSave(draft) }
     VacancyEditorDialog(
         resizingEnabled = !isBusy && !confirming,
@@ -51,7 +57,14 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
             )
         },
         text = {
-            VacancyEditorFields(draft, { draft = it }, saveState, save, !isBusy && !confirming) {
+            VacancyEditorFields(
+                draft,
+                { draft = it },
+                saveState,
+                save,
+                !isBusy && !confirming,
+                titleError,
+            ) {
                 VacancySnapshotContent(component.snapshot, enabled = !isBusy && !confirming)
             }
         },

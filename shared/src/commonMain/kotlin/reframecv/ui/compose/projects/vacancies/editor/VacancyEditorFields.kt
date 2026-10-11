@@ -44,6 +44,7 @@ internal fun VacancyEditorFields(
     saveState: VacancySaveState,
     onSave: () -> Unit,
     enabled: Boolean,
+    titleError: String?,
     attachment: @Composable () -> Unit,
 ) {
     val titleFocus = remember { FocusRequester() }
@@ -62,6 +63,7 @@ internal fun VacancyEditorFields(
             enabled,
             submit,
             Modifier.testTag("vacancy.title").focusRequester(titleFocus),
+            error = titleError,
         ) {
             onChange(draft.copy(title = it))
         }
@@ -87,6 +89,12 @@ internal fun VacancyEditorFields(
         }
     }
     LaunchedEffect(Unit) { titleFocus.requestFocus() }
+    LaunchedEffect(titleError) {
+        if (titleError != null) {
+            scroll.animateScrollTo(0)
+            titleFocus.requestFocus()
+        }
+    }
 }
 
 @Composable
@@ -128,6 +136,7 @@ private fun VacancyField(
     enabled: Boolean,
     onSubmit: () -> Unit,
     modifier: Modifier,
+    error: String? = null,
     onChange: (String) -> Unit,
 ) {
     OutlinedTextField(
@@ -135,6 +144,8 @@ private fun VacancyField(
         onValueChange = onChange,
         modifier = modifier.fillMaxWidth(),
         label = { Text(label) },
+        isError = error != null,
+        supportingText = error?.let { message -> { Text(message) } },
         singleLine = true,
         enabled = enabled,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

@@ -7,13 +7,28 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import kotlin.test.Test
+import reframecv.attachments.SelectedAttachment
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.vacancies.editor.TestVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
+import reframecv.ui.components.projects.vacancies.editor.VacancySnapshotState
 import reframecv.ui.theme.ReframeTheme.ThemeMode
 
 @OptIn(ExperimentalTestApi::class)
 class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
+    @Test
+    fun attachmentWithoutTitleMatchesReference() = runDesktopComposeUiTest {
+        val component = TestVacancyEditorComponent()
+        setGoldenContent(this) { VacancyEditorContent(component) }
+        onNodeWithText("Attach source file").performScrollTo()
+        runOnIdle {
+            component.snapshot.state.value = VacancySnapshotState(
+                selected = SelectedAttachment("unused", "job.pdf"),
+            )
+        }
+        captureGolden(this, VACANCY_EDITOR_TAG)
+    }
+
     @Test
     fun emptyDialogMatchesReference() = runDesktopComposeUiTest {
         setGoldenContent(this) { VacancyEditorContent(TestVacancyEditorComponent()) }

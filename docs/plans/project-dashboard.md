@@ -315,6 +315,9 @@ For indexed searches by individual keywords, use the database tables
   keep Save and Cancel anchored and disable resizing while saving or confirming deletion.
 - [x] Require only a nonblank Title; optional fields may be empty.
 - [x] Save through the repository; keep the form open on failure and allow retry.
+- [x] After selecting a source file, highlight a blank or whitespace-only Title,
+  show a required-title hint, and reveal/focus the field. Clear the error when a
+  title is entered; optional fields do not block saving.
 - [x] Prevent duplicate writes and dismissal while saving; focus Title on opening.
 - [x] Cover creation, cancellation, validation, failure/retry, and dialog screenshots.
 - [x] Open the same dialog from a vacancy row with prefilled fields and Edit vacancy title.
