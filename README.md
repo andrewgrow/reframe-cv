@@ -23,7 +23,14 @@ Within a project, users will be able to keep source resumes, create and rewrite 
 5. Keep related resumes and their versions organized within the project.
 6. Export a resume as a PDF.
 
-The current application provides a project list, project creation and editing, and local storage. Storing resume documents within projects, resume-specific editing, tailoring, version management, and PDF export are planned.
+The current application provides a project tree, project management, a dashboard,
+and vacancy creation/editing with source-file attachments. Resume and cover-letter
+storage models are implemented; their editors, tailoring workflows, version management,
+and PDF export are planned.
+
+The [development log](docs/development-log.md) records the completed dashboard milestone
+and subsequent decisions. The [active plan](docs/plans/workspace-editors.md) tracks
+remaining editors and source workflows.
 
 ## Architecture
 

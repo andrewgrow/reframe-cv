@@ -1,11 +1,21 @@
-# Plan: workspace models and project dashboard
+# Development log: workspace models and project dashboard
 
-## Working with this plan
+## Status
 
-- Complete the stages in order and check off items after verification.
-- Before resuming work, read this file and inspect the current code.
-- Keep agreed decisions, remaining questions, and verification results here.
-- Do not treat open questions as agreed requirements; resolve them before dependent work.
+Archived on 2026-10-12. The original milestone—workspace models, local persistence,
+project-tree navigation, and the dashboard—is complete. Vacancy management, source
+file attachments, Back navigation, and permanent deletion were added during this work.
+
+This file records development history and the reasons behind decisions. It is not
+an active implementation plan. Some passages describe earlier behavior that was
+later replaced; current code and active plans take priority.
+
+Unfinished work and open questions have moved to
+[Workspace editors and vacancy sources](plans/workspace-editors.md).
+Completed checkboxes below describe what was verified at the time. Deferred entries
+preserve the old scope without claiming that the work was completed.
+
+## Historical scope and decisions
 
 ## Goal
 
@@ -89,7 +99,7 @@ without creating a resume. Relationships between records are optional.
   snapshots referenced outside the deleted branch. Serialize orphan
   cleanup with writes; log failed cleanup. Failed startup cleanup retries on the
   next observation; leftover files from a failed deletion are removed on the next start.
-- [ ] Add URL fetching separately from parsing; vacancy fields remain independently editable.
+- Deferred: Add URL fetching separately from parsing; vacancy fields remain independently editable.
 
 Import workflows and repositories will be added when scraper integration begins.
 
@@ -255,7 +265,7 @@ For indexed searches by individual keywords, use the database tables
 - [x] Use English string resources and the tokens and colors from `ReframeTheme`.
 - [x] Use `SelectableText` for ordinary text where it does not interfere with interaction.
 - [x] Support narrow windows and increased UI scale without clipping content.
-- [ ] Connect creation actions when their corresponding editors are implemented.
+- Deferred: Connect creation actions when their corresponding editors are implemented.
   Vacancy creation is connected through the list's Add dialog; other sections follow later.
 
 ## Stage 6. Verification
@@ -331,19 +341,19 @@ For indexed searches by individual keywords, use the database tables
 
 ## Open questions
 
-- [ ] Define minimum name and content validation when creating records.
+- Deferred: Define minimum name and content validation when creating records.
 - [x] Define relationship behavior when a resume or letter is deleted or a vacancy is deleted.
 - [x] Define workspace-record behavior when their project is deleted.
 - [x] Decide whether a project stays in `Workspace` after its last record is deleted.
-- [ ] Define searches with multiple keywords: match all or any.
+- Deferred: Define searches with multiple keywords: match all or any.
 - [x] Agree on the dashboard layout for narrow windows.
-- [ ] Agree on left-pane sizing and how deep nesting behaves in narrow windows.
+- Deferred: Agree on left-pane sizing and how deep nesting behaves in narrow windows.
 - [x] Define Back behavior across tree branches and project screens: project and
   dashboard Back opens the parent project list regardless of the entry route.
-- [ ] Before implementing section screens, agree on their navigation, editors,
+- Deferred: Before implementing section screens, agree on their navigation, editors,
   and the workflow for creating a resume adaptation.
 
-## Current state
+## Recorded implementation state
 
 The three domain models are implemented with the agreed fields and optional defaults.
 The project model and version 1 schema include nullable `mainResumeId` / `main_resume_id`.
@@ -551,3 +561,15 @@ verification, ktlint, Detekt, coverage verification, and macOS packaging passed.
 Tests cover recursive branch removal, document relationship cleanup, missing/deleted
 record rejection, shared and exclusive snapshot cleanup, persistence after reopening,
 and returning a parent with no remaining children to Unconfigured.
+
+
+## Milestone closure — 2026-10-12
+
+The original dashboard milestone is complete. Resume and cover-letter domain models,
+DAOs, repositories, and dashboard observation exist, but their section screens and
+editors do not. Main-resume selection exists in the model and DAO, without a user-facing
+selection flow. Resume adaptation, URL fetching, and source parsing are future work.
+
+Gradle Wrapper was upgraded from 9.7.0 to 9.8.1. All 286 tests, screenshot verification,
+ktlint, Detekt, coverage reports and verification, and macOS packaging passed.
+The new required-title feedback after selecting a vacancy attachment is also implemented.
