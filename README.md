@@ -24,9 +24,9 @@ Within a project, users will be able to keep source resumes, create and rewrite 
 6. Export a resume as a PDF.
 
 The current application provides a project tree, project management, a dashboard,
-and vacancy creation/editing with source-file attachments. Resume and cover-letter
-storage models are implemented, including structured resume sections stored as versioned
-JSON; their editors, tailoring workflows, version management,
+a project-scoped resume list, and vacancy creation/editing with source-file attachments.
+Resume and cover-letter storage models are implemented, including structured resume
+sections stored as versioned JSON; their editors, tailoring workflows, version management,
 and PDF export are planned. The [resume JSON Schema](docs/schemas/resume-content-v1.schema.json)
 describes the versioned storage document; processors can reuse its `$defs/ResumeContent`
 definition independently. Missing optional fields use model defaults; explicit null is

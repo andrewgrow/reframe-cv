@@ -17,6 +17,8 @@ import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DefaultDashboardComponent
+import reframecv.ui.components.projects.resumes.DefaultResumesComponent
+import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.context.AppComponentContext
@@ -34,6 +36,9 @@ interface RootComponent {
 
         /** Lets the root render the workspace overview. */
         data class Dashboard(val component: DashboardComponent) : Child
+
+        /** Lets the root render the selected project's resumes. */
+        data class Resumes(val component: ResumesComponent) : Child
 
         /** Lets the root render the selected project's vacancies. */
         data class Vacancies(val component: VacanciesComponent) : Child
@@ -159,9 +164,20 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                 componentContext,
                 configuration.projectPath.last().id,
                 back = { openParentList(configuration.projectPath) },
+                openResumes = {
+                    navigation.pushNew(Configuration.Resumes(configuration.projectPath))
+                },
                 openVacancies = {
                     navigation.pushNew(Configuration.Vacancies(configuration.projectPath))
                 },
+            ),
+        )
+
+        is Configuration.Resumes -> RootComponent.Child.Resumes(
+            DefaultResumesComponent(
+                componentContext,
+                configuration.projectPath.last().id,
+                back = { navigation.pop() },
             ),
         )
 
@@ -184,6 +200,9 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
 
         /** Identifies which workspace the destination should show. */
         data class Dashboard(override val projectPath: List<ProjectPathEntry>) : Configuration
+
+        /** Identifies which project's resumes the destination should show. */
+        data class Resumes(override val projectPath: List<ProjectPathEntry>) : Configuration
 
         /** Identifies which project's vacancies the destination should show. */
         data class Vacancies(override val projectPath: List<ProjectPathEntry>) : Configuration

@@ -18,12 +18,13 @@ import reframecv.domain.models.vacancy.Vacancy
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_company_missing
+import reframecv.ui.compose.common.documentDate
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun VacancyRow(vacancy: Vacancy, timeZone: TimeZone, table: Boolean, onEdit: () -> Unit) {
     val company = vacancy.company.ifBlank { stringResource(Res.string.vacancy_company_missing) }
-    val date = vacancyDate(vacancy.createdAt, timeZone)
+    val date = documentDate(vacancy.createdAt, timeZone)
     if (table) {
         Row(
             Modifier.fillMaxWidth(),
@@ -44,7 +45,9 @@ internal fun VacancyRow(vacancy: Vacancy, timeZone: TimeZone, table: Boolean, on
             SelectableText(
                 date,
                 modifier = vacancyTextClick(onEdit),
-                selectionModifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyDateWidth),
+                selectionModifier = Modifier.width(
+                    ReframeTheme.tokens.dimensions.documentDateWidth,
+                ),
                 style = MaterialTheme.typography.bodyMedium,
             )
         }

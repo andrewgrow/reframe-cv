@@ -20,6 +20,8 @@ for the first resume editor.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
   persisted as versioned JSON; section editing and import are still future work.
+- The resume list opens from its dashboard card and observes project-scoped data.
+  Resume creation/editing is not implemented yet; Add is disabled.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO, but there is no selection UI or adaptation workflow.
 - All deletion is permanent. Deleting a project removes its subtree and contents;
@@ -35,8 +37,8 @@ for the first resume editor.
 ## 1. Resume list and editor
 
 - [ ] Agree on list columns, editor fields, and minimum name/content validation.
-- [ ] Open the project's resume list from its dashboard section.
-- [ ] Observe ResumesRepository with loading, empty, error, and Retry states.
+- [x] Open the project's resume list from its dashboard section.
+- [x] Observe ResumesRepository with loading, empty, error, and Retry states.
 - [x] Define typed resume content and verify versioned JSON storage and independent adaptations.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
 - [ ] Add creation and editing using the structured content model.

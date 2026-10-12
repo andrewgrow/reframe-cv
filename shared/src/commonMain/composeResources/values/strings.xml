@@ -65,4 +65,9 @@
     <string name="resize_dialog">Resize dialog</string>
     <string name="dashboard_title">Dashboard</string>
     <string name="vacancy_title_required">Enter a title to save the vacancy.</string>
+    <string name="resumes_empty">You have no resumes yet.</string>
+    <string name="resumes_load_error">Could not load resumes. Please try again.</string>
+    <string name="resume_name">Name</string>
+    <string name="resume_added">Added</string>
+    <string name="resume_add">Add</string>
 </resources>

@@ -56,7 +56,7 @@ class DashboardContentTest {
         onNodeWithText("Cover letters").performScrollTo().assertIsDisplayed()
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
-        onAllNodes(hasClickAction()).assertCountEquals(2)
+        onAllNodes(hasClickAction()).assertCountEquals(3)
     }
 
     @Test
@@ -73,8 +73,11 @@ class DashboardContentTest {
         onNodeWithText("30").assertIsDisplayed()
         onNodeWithText("2").assertIsDisplayed()
         onNodeWithText("1").assertIsDisplayed()
-        onNodeWithTag("dashboard.records.Resumes").performScrollToNode(hasText("Resume 29"))
-        onNodeWithText("Resume 29").assertIsDisplayed()
+        onNodeWithTag(
+            "dashboard.records.Resumes",
+            useUnmergedTree = true,
+        ).performScrollToNode(hasText("Resume 29"))
+        onNodeWithText("Resume 29", useUnmergedTree = true).assertIsDisplayed()
         onNodeWithText("Kotlin Developer").assertIsDisplayed()
         runOnIdle { component.uiState.value = sample }
         onNodeWithText("30").assertDoesNotExist()
@@ -117,6 +120,23 @@ class DashboardContentTest {
         onNodeWithText("Vacancies").performClick()
         onNodeWithText("Kotlin Developer", useUnmergedTree = true).performMouseInput { click() }
         onNodeWithTag("dashboard.section.Vacancies").performMouseInput {
+            click(bottomCenter - androidx.compose.ui.geometry.Offset(0f, 10f))
+        }
+        assertEquals(3, opened)
+    }
+
+    @Test
+    fun entireResumesSectionInvokesNavigation() = runComposeUiTest {
+        var opened = 0
+        val component = TestDashboardComponent(
+            initialState = dashboardSample(),
+            openResumes = { opened++ },
+        )
+        setContent { ReframeTheme { DashboardContent(component) } }
+        onNodeWithText("View all").assertDoesNotExist()
+        onNodeWithText("Resumes").performClick()
+        onNodeWithText("Android Developer", useUnmergedTree = true).performMouseInput { click() }
+        onNodeWithTag("dashboard.section.Resumes").performMouseInput {
             click(bottomCenter - androidx.compose.ui.geometry.Offset(0f, 10f))
         }
         assertEquals(3, opened)

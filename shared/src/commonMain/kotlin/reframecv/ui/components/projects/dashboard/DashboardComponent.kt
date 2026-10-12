@@ -11,6 +11,7 @@ import reframecv.ui.store.bindStoreToLifecycle
 interface DashboardComponent {
     val projectId: Long
     val uiState: Value<DashboardState>
+    fun onOpenResumes()
     fun onOpenVacancies()
     fun onBack()
     fun onRetry()
@@ -22,6 +23,7 @@ class DefaultDashboardComponent(
     override val projectId: Long,
     storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
     private val openVacancies: () -> Unit = {},
+    private val openResumes: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : DashboardComponent,
     AppComponentContext by componentContext {
@@ -42,6 +44,8 @@ class DefaultDashboardComponent(
     }
 
     override fun onBack() = back()
+
+    override fun onOpenResumes() = openResumes()
 
     override fun onOpenVacancies() = openVacancies()
 

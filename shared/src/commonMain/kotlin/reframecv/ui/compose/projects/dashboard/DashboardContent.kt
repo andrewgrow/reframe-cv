@@ -52,8 +52,14 @@ fun DashboardContent(component: DashboardComponent) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 when (val current = state) {
                     DashboardState.Loading -> LoadingContent()
+
                     DashboardState.LoadFailed -> DashboardLoadError(component::onRetry)
-                    is DashboardState.Ready -> DashboardLayout(current, component::onOpenVacancies)
+
+                    is DashboardState.Ready -> DashboardLayout(
+                        current,
+                        component::onOpenVacancies,
+                        component::onOpenResumes,
+                    )
                 }
             }
         }
@@ -61,7 +67,11 @@ fun DashboardContent(component: DashboardComponent) {
 }
 
 @Composable
-private fun DashboardLayout(state: DashboardState.Ready, onOpenVacancies: () -> Unit) {
+private fun DashboardLayout(
+    state: DashboardState.Ready,
+    onOpenVacancies: () -> Unit,
+    onOpenResumes: () -> Unit,
+) {
     val tokens = ReframeTheme.tokens
     val colors = MaterialTheme.colorScheme
     val appColors = ReframeTheme.colorScheme
@@ -86,6 +96,7 @@ private fun DashboardLayout(state: DashboardState.Ready, onOpenVacancies: () -> 
                 appColors.dashboardResumes,
                 colors.onSurface,
                 Modifier.width(sectionWidth).fillMaxHeight(),
+                onClick = onOpenResumes,
             )
             DashboardSection(
                 stringResource(Res.string.dashboard_vacancies),

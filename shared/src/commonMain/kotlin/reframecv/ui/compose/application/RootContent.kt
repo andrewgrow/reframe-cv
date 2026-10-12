@@ -16,6 +16,7 @@ import reframecv.ui.components.application.RootComponent
 import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.compose.projects.ProjectsContent
 import reframecv.ui.compose.projects.dashboard.DashboardContent
+import reframecv.ui.compose.projects.resumes.ResumesContent
 import reframecv.ui.compose.projects.vacancies.VacanciesContent
 
 @Composable
@@ -30,7 +31,7 @@ fun RootContent(component: RootComponent) {
             editor.child != null
         }
 
-        is RootComponent.Child.Dashboard -> false
+        is RootComponent.Child.Dashboard, is RootComponent.Child.Resumes -> false
     }
     Row(
         Modifier.testTag(
@@ -43,6 +44,7 @@ fun RootContent(component: RootComponent) {
             destination = active,
             onBack = {
                 when (active) {
+                    is RootComponent.Child.Resumes -> active.component.onBack()
                     is RootComponent.Child.Dashboard -> active.component.onBack()
                     is RootComponent.Child.Vacancies -> active.component.onBack()
                     is RootComponent.Child.Projects -> active.component.onBack()
@@ -58,6 +60,7 @@ fun RootContent(component: RootComponent) {
         ) { child ->
             when (val instance = child.instance) {
                 is RootComponent.Child.Projects -> ProjectsContent(instance.component)
+                is RootComponent.Child.Resumes -> ResumesContent(instance.component)
                 is RootComponent.Child.Dashboard -> DashboardContent(instance.component)
                 is RootComponent.Child.Vacancies -> VacanciesContent(instance.component)
             }

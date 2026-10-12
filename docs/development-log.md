@@ -649,3 +649,24 @@ Kotlin serializer descriptors. Production storage still uses Kotlin serializatio
 Verification: all 302 JVM tests, screenshot verification, ktlint, Detekt, coverage
 verification, and macOS packaging passed. The schema is loaded from repository
 resources by the standard test suite; its validator is not packaged with the app.
+
+
+## Resume list page — 2026-10-12
+
+The entire Resumes dashboard card opens the current project's resume list. The
+list has a Back header, scrolling rows with name and added date, and fixed footer
+controls. Narrow panes and increased UI scale place dates below names. Loading
+uses the shared delayed indicator; failures show Retry in the footer and log the
+operation with projectId. Repository updates are observed until component disposal.
+
+Page Back, Escape (including focus in project navigation), and hardware Back return
+to the same dashboard while retaining project selection. Add is deliberately disabled
+until the resume creation flow is implemented; rows do not open an editor yet.
+The added-date formatter and date-column width token are shared with vacancies.
+
+Verification: all 315 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed. Added references cover populated
+and empty lists, load failures, both themes, narrow panes, and 150% scale. Dashboard
+references were updated for the clickable Resumes card. Tests cover live updates,
+observation cancellation, retry/logging, fixed controls, card clicks, and return
+to the dashboard using page, Escape, and hardware Back.

@@ -36,7 +36,7 @@ internal fun VacancyTableHeader() {
         )
         SelectableText(
             stringResource(Res.string.vacancy_added),
-            selectionModifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyDateWidth),
+            selectionModifier = Modifier.width(ReframeTheme.tokens.dimensions.documentDateWidth),
             style = MaterialTheme.typography.titleMedium,
         )
     }

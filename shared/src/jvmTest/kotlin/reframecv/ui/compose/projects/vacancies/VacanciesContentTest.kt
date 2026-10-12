@@ -20,6 +20,7 @@ import kotlinx.datetime.TimeZone
 import reframecv.ui.components.projects.vacancies.TestVacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesState
 import reframecv.ui.compose.common.LOADING_INDICATOR_TAG
+import reframecv.ui.compose.common.documentDate
 import reframecv.ui.theme.ReframeTheme
 
 @OptIn(ExperimentalTestApi::class)
@@ -102,8 +103,8 @@ class VacanciesContentTest {
     @Test
     fun creationDateUsesRequestedTimeZoneIncludingDateBoundary() {
         val instant = Instant.parse("2026-10-10T00:30:00Z").toEpochMilliseconds()
-        assertEquals("2026-10-10", vacancyDate(instant, TimeZone.UTC))
-        assertEquals("2026-10-09", vacancyDate(instant, TimeZone.of("America/Los_Angeles")))
-        assertEquals("2026-10-10", vacancyDate(instant, TimeZone.of("Europe/Warsaw")))
+        assertEquals("2026-10-10", documentDate(instant, TimeZone.UTC))
+        assertEquals("2026-10-09", documentDate(instant, TimeZone.of("America/Los_Angeles")))
+        assertEquals("2026-10-10", documentDate(instant, TimeZone.of("Europe/Warsaw")))
     }
 }
