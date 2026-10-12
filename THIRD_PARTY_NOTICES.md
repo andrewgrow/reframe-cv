@@ -17,6 +17,8 @@ Third-party software remains subject to its own license terms. The following tab
 | AndroidX SQLite | 2.7.1 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
 | SQLite | Bundled by AndroidX SQLite 2.7.1 | Public domain | [SQLite copyright](https://www.sqlite.org/copyright.html) |
 | Decompose and Essenty | 3.5.0 / 2.5.0 | Apache License 2.0 | [Decompose license](https://github.com/arkivanov/Decompose/blob/master/LICENSE), [Essenty license](https://github.com/arkivanov/Essenty/blob/master/LICENSE) |
+| kotlinx.serialization | 1.8.1 | Apache License 2.0 | [kotlinx.serialization license](https://github.com/Kotlin/kotlinx.serialization/blob/master/LICENSE.txt) |
+| NetworkNT JSON Schema Validator (tests only) | 2.0.4 | Apache License 2.0 | [NetworkNT license](https://github.com/networknt/json-schema-validator/blob/master/LICENSE) |
 | kotlinx.coroutines | 1.11.0 | Apache License 2.0 | [kotlinx.coroutines license](https://github.com/Kotlin/kotlinx.coroutines/blob/master/LICENSE.txt) |
 | kotlinx-datetime | 0.8.0 compatibility artifact (`0.8.0-0.6.x-compat`) | Apache License 2.0 | [kotlinx-datetime license](https://github.com/Kotlin/kotlinx-datetime/blob/master/LICENSE.txt) |
 | Klogging | 0.11.8 | Apache License 2.0 | [Klogging license](https://github.com/klogging/klogging/blob/main/LICENSE.txt) |

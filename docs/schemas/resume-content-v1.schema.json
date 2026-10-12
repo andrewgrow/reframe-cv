@@ -1,0 +1,478 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:resume-content:1",
+  "title": "Reframe CV resume document — version 1",
+  "description": "Stored resume document. Content definitions can also be used independently for processors. Omitted optional properties use Kotlin model defaults; null is only supported for dates.",
+  "$comment": "Keep this contract synchronized with ResumeContent serializers and ResumeContentJson. Tests validate serialized documents and compare serializer descriptors.",
+  "type": "object",
+  "properties": {
+    "formatVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "content": {
+      "$ref": "#/$defs/ResumeContent"
+    }
+  },
+  "required": [
+    "formatVersion",
+    "content"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "ResumeContent": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/$defs/ResumeProfile"
+        },
+        "sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeSection"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeProfile": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "headline": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeDate": {
+      "type": "object",
+      "properties": {
+        "year": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9999
+        },
+        "month": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 12
+        }
+      },
+      "required": [
+        "year"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeDateRange": {
+      "type": "object",
+      "properties": {
+        "start": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResumeDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "end": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ResumeDate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "isCurrent": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "isCurrent": {
+                "const": true
+              }
+            },
+            "required": [
+              "isCurrent"
+            ]
+          },
+          "then": {
+            "properties": {
+              "end": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ResumeSkillGroup": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeSkillOrTool": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeProject": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "skillsOrTools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeSkillOrTool"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeExperience": {
+      "type": "object",
+      "properties": {
+        "position": {
+          "type": "string"
+        },
+        "company": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string"
+        },
+        "period": {
+          "$ref": "#/$defs/ResumeDateRange"
+        },
+        "achievements": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeProject"
+          }
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeEducation": {
+      "type": "object",
+      "properties": {
+        "institution": {
+          "type": "string"
+        },
+        "degree": {
+          "type": "string"
+        },
+        "specialty": {
+          "type": "string"
+        },
+        "period": {
+          "$ref": "#/$defs/ResumeDateRange"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeLanguage": {
+      "type": "object",
+      "properties": {
+        "language": {
+          "type": "string"
+        },
+        "level": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeContact": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ResumeSummarySection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "summary"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeSkillsSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "skills"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeSkillGroup"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeExperienceSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "experience"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeExperience"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeEducationSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "education"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeEducation"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeLanguagesSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "languages"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeLanguage"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeSoftSkillsSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "softSkills"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeContactsSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "contacts"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ResumeContact"
+          }
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeTextSection": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "const": "text"
+        },
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "boolean"
+        },
+        "text": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": false
+    },
+    "ResumeSection": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ResumeSummarySection"
+        },
+        {
+          "$ref": "#/$defs/ResumeSkillsSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeExperienceSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeEducationSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeLanguagesSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeSoftSkillsSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeContactsSection"
+        },
+        {
+          "$ref": "#/$defs/ResumeTextSection"
+        }
+      ]
+    }
+  }
+}

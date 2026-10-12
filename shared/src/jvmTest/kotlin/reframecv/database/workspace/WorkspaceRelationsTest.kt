@@ -10,6 +10,8 @@ import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.resume.ResumeEntity
 import reframecv.database.resume.ResumeKeywordEntity
 import reframecv.database.vacancy.VacancyEntity
+import reframecv.domain.models.resume.content.ResumeContent
+import reframecv.domain.models.resume.content.ResumeSummarySection
 
 class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
     @Test
@@ -76,7 +78,12 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         val projectId = project()
         val resumeId = database.resumeDao().create(resume(projectId))
         val adaptedId = database.resumeDao().create(
-            resume(projectId).copy(sourceResumeId = resumeId, content = "Adapted"),
+            resume(
+                projectId,
+            ).copy(
+                sourceResumeId = resumeId,
+                content = ResumeContent(sections = listOf(ResumeSummarySection(text = "Adapted"))),
+            ),
         )
         val letterId = database.coverLetterDao().create(letter(projectId))
         val first = database.vacancyDao().create(
@@ -89,7 +96,10 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         assertEquals(1, database.resumeDao().delete(resumeId, 400))
         assertNull(database.projectDao().findById(projectId)?.mainResumeId)
         assertNull(database.resumeDao().findById(adaptedId)?.entity?.sourceResumeId)
-        assertEquals("Adapted", database.resumeDao().findById(adaptedId)?.entity?.content)
+        assertEquals(
+            ResumeContent(sections = listOf(ResumeSummarySection(text = "Adapted"))),
+            database.resumeDao().findById(adaptedId)?.toDomainModel()?.content,
+        )
         for (id in listOf(first, second)) {
             assertNull(database.vacancyDao().findById(id)?.entity?.resumeId)
             assertEquals(letterId, database.vacancyDao().findById(id)?.entity?.coverLetterId)

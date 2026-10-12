@@ -10,6 +10,8 @@ import reframecv.database.createDatabaseBuilder
 import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeContent
+import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.vacancy.Vacancy
 
 abstract class WorkspaceDatabaseTest {
@@ -38,7 +40,7 @@ abstract class WorkspaceDatabaseTest {
         name = "Resume",
         createdAt = 200,
         updatedAt = 200,
-        content = "Experience",
+        content = ResumeContent(sections = listOf(ResumeSummarySection(text = "Experience"))),
         keywords = listOf(" Kotlin ", "kotlin", "", " Android ", "   ", "Résumé"),
     )
 

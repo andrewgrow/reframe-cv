@@ -17,6 +17,9 @@ for the first resume editor.
   DAOs, repositories, optional relationships, and observable project-scoped lists.
 - Vacancy list, full-page creation/editing, permanent deletion, and source-file
   attachment are implemented. URL fetching and source parsing are not implemented.
+- Resume content is a typed document with ordered, titled, hideable sections,
+  free skill categories, professional projects, and partial/ongoing dates. It is
+  persisted as versioned JSON; section editing and import are still future work.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO, but there is no selection UI or adaptation workflow.
 - All deletion is permanent. Deleting a project removes its subtree and contents;
@@ -34,7 +37,9 @@ for the first resume editor.
 - [ ] Agree on list columns, editor fields, and minimum name/content validation.
 - [ ] Open the project's resume list from its dashboard section.
 - [ ] Observe ResumesRepository with loading, empty, error, and Retry states.
-- [ ] Add creation and editing, initially using the existing editable text content.
+- [x] Define typed resume content and verify versioned JSON storage and independent adaptations.
+- [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
+- [ ] Add creation and editing using the structured content model.
 - [ ] Add permanent deletion with confirmation and existing relationship cleanup.
 - [ ] Preserve drafts on failure, block duplicate writes, and follow existing Back behavior.
 - [ ] Verify navigation, persistence, count/mode updates, failures, and relevant goldens.

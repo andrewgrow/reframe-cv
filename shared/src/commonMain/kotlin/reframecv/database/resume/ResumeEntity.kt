@@ -9,6 +9,7 @@ import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.database.project.ProjectEntity
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeContent
 
 /** Represents a resume record in the local database. */
 @Entity(
@@ -39,7 +40,8 @@ data class ResumeEntity(
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")
     val updatedAt: Long,
-    val content: String = "",
+    @ColumnInfo(name = "content")
+    val contentJson: String = ResumeContentJson.encode(ResumeContent()),
     @ColumnInfo(name = "source_resume_id")
     val sourceResumeId: Long? = null,
 ) : DatabaseModel<Resume> {
@@ -49,7 +51,7 @@ data class ResumeEntity(
         name = name,
         createdAt = createdAt,
         updatedAt = updatedAt,
-        content = content,
+        content = ResumeContentJson.decode(contentJson),
         sourceResumeId = sourceResumeId,
     )
 
@@ -60,7 +62,7 @@ data class ResumeEntity(
             name = domainModel.name,
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
-            content = domainModel.content,
+            contentJson = ResumeContentJson.encode(domainModel.content),
             sourceResumeId = domainModel.sourceResumeId,
         )
     }

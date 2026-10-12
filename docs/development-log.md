@@ -608,3 +608,44 @@ verification, and macOS packaging passed. Mouse tests cover both axes, minimum a
 window limits, reverse dragging, preserved input/size, deletion confirmation, and
 disabled handles during writes. Project-dialog goldens were updated and reviewed,
 including an expanded editor. The initial create-dialog dimensions remain unchanged.
+
+
+## Structured resume content — 2026-10-12
+
+Resume.content now holds a typed ResumeContent document. Profile fields are separate
+from ordered sections: summary, grouped skills, experience, education, languages,
+soft skills, contacts, and custom text. Section titles and visibility are editable
+data; professional projects live within experience and use ResumeProject to avoid
+confusion with workspace projects. Empty drafts and partial entries are valid.
+Dates support year-only or year/month precision and explicit ongoing periods.
+
+Room keeps the existing TEXT content column; ResumeEntity.contentJson stores a
+formatVersion/content JSON envelope. Database mapping handles serialization and
+rejects malformed data, unknown fields/types, and unsupported versions instead of
+silently replacing content. The database schema version remains 1. Existing plain-text
+resume content is not migrated; there was no resume editor in the application.
+This supersedes the earlier plan to start with a single free-text editor.
+
+Verification: all 298 JVM tests, unchanged screenshot references, ktlint, Detekt,
+coverage reports/verification, and macOS packaging passed. Tests cover full/empty/partial
+content, section order and visibility, Unicode and multiline text, year-only/ongoing
+dates, malformed or unsupported JSON, entity mapping, independent adaptations,
+keyword updates, and persistence after reopening the database.
+
+
+## Resume JSON Schema — 2026-10-12
+
+The version 1 storage contract is published in docs/schemas/resume-content-v1.schema.json
+using JSON Schema Draft 2020-12. Its root covers formatVersion/content, and the
+ResumeContent definition is reusable independently by future processors. Optional
+fields match serializer defaults; date precision, current-period constraints, typed
+section discriminators, and rejection of unknown fields are explicit.
+
+NetworkNT validation runs only in JVM tests. Tests check the schema against its
+meta-schema, validate full/empty/partial documents and negative cases, and recursively
+compare fields, requiredness, nullable types, lists, and section variants against
+Kotlin serializer descriptors. Production storage still uses Kotlin serialization.
+
+Verification: all 302 JVM tests, screenshot verification, ktlint, Detekt, coverage
+verification, and macOS packaging passed. The schema is loaded from repository
+resources by the standard test suite; its validator is not packaged with the app.

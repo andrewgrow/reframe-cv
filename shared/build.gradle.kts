@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.kover)
     alias(libs.plugins.kotlinMultiplatform)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.ksp)
@@ -38,6 +39,7 @@ kotlin {
             api(libs.mvikotlin.coroutines)
             implementation(libs.kotlinx.coroutinesCore)
             api(libs.kotlinx.datetime)
+            implementation(libs.kotlinx.serializationJson)
             api(libs.room.runtime)
             implementation(libs.sqlite.bundled)
         }
@@ -48,7 +50,9 @@ kotlin {
             implementation(libs.klogging)
             implementation(libs.kotlinx.coroutinesSwing)
         }
+        getByName("jvmTest").resources.srcDir(rootProject.file("docs/schemas"))
         jvmTest.dependencies {
+            implementation(libs.jsonSchemaValidator)
             implementation(libs.compose.uiTestJunit4)
             implementation(libs.roborazzi.composeDesktop)
         }

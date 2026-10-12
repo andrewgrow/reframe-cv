@@ -25,8 +25,12 @@ Within a project, users will be able to keep source resumes, create and rewrite 
 
 The current application provides a project tree, project management, a dashboard,
 and vacancy creation/editing with source-file attachments. Resume and cover-letter
-storage models are implemented; their editors, tailoring workflows, version management,
-and PDF export are planned.
+storage models are implemented, including structured resume sections stored as versioned
+JSON; their editors, tailoring workflows, version management,
+and PDF export are planned. The [resume JSON Schema](docs/schemas/resume-content-v1.schema.json)
+describes the versioned storage document; processors can reuse its `$defs/ResumeContent`
+definition independently. Missing optional fields use model defaults; explicit null is
+allowed only for date fields.
 
 The [development log](docs/development-log.md) records the completed dashboard milestone
 and subsequent decisions. The [active plan](docs/plans/workspace-editors.md) tracks

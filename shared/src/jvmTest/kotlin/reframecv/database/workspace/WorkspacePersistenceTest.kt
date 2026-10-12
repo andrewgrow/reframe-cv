@@ -5,30 +5,33 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import reframecv.domain.models.resume.content.ResumeContent
+import reframecv.domain.models.resume.content.ResumeSummarySection
+import reframecv.domain.models.resume.content.sampleResumeContent
 
 class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
     @Test
     fun resumesRoundTripWithIndependentAdaptationAndAtomicKeywordUpdates() = runBlocking {
         val projectId = project()
         val dao = database.resumeDao()
-        val source = resume(projectId)
+        val source = resume(projectId).copy(content = sampleResumeContent())
         val sourceId = dao.create(source)
         val adaptation = source.copy(
             name = "Adapted",
             sourceResumeId = sourceId,
-            content = "Adapted text",
+            content = ResumeContent(sections = listOf(ResumeSummarySection(text = "Adapted text"))),
         )
         val id = dao.create(adaptation)
         val stored = adaptation.copy(id = id, keywords = listOf("Kotlin", "Android", "Résumé"))
         assertEquals(stored, dao.findById(id)?.toDomainModel())
         val updated = stored.copy(
-            content = "New text",
+            content = ResumeContent(sections = listOf(ResumeSummarySection(text = "New text"))),
             updatedAt = 300,
             keywords = listOf(" Java ", "JAVA"),
         )
         dao.update(updated)
         assertEquals(updated.copy(keywords = listOf("Java")), dao.findById(id)?.toDomainModel())
-        assertEquals(source.content, dao.findById(sourceId)?.entity?.content)
+        assertEquals(source.content, dao.findById(sourceId)?.toDomainModel()?.content)
         assertEquals(listOf(sourceId), dao.search(projectId, " KOTLIN ").map { it.entity.id })
         assertEquals(listOf(id), dao.search(projectId, "java").map { it.entity.id })
         assertEquals(
@@ -83,7 +86,9 @@ class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
     @Test
     fun allRecordsAndKeywordsPersistAfterReopening() = runBlocking {
         val projectId = project()
-        val resumeId = database.resumeDao().create(resume(projectId))
+        val resumeId = database.resumeDao().create(
+            resume(projectId).copy(content = sampleResumeContent()),
+        )
         val letterId = database.coverLetterDao().create(letter(projectId))
         val vacancyId = database.vacancyDao().create(
             vacancy(projectId).copy(resumeId = resumeId, coverLetterId = letterId),
