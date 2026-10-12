@@ -30,14 +30,14 @@ class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
-    fun emptyDialogMatchesReference() = runDesktopComposeUiTest {
+    fun emptyPageMatchesReference() = runDesktopComposeUiTest {
         setGoldenContent(this) { VacancyEditorContent(TestVacancyEditorComponent()) }
         onNodeWithText("Cancel").performClick()
         captureGolden(this, VACANCY_EDITOR_TAG)
     }
 
     @Test
-    fun filledDialogInLightThemeMatchesReference() = runDesktopComposeUiTest {
+    fun filledPageInLightThemeMatchesReference() = runDesktopComposeUiTest {
         setGoldenContent(this, themeMode = ThemeMode.Light) {
             VacancyEditorContent(TestVacancyEditorComponent())
         }

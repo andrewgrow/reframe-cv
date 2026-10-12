@@ -196,7 +196,7 @@ Running opencode: Open a terminal in the project root and run:
 opencode
 ```
 
-Open the database folder in Finder on MacOS and looking up to `reframe-cv.db`:
+Open the database folder in Finder on MacOS and looking up to `reframe-cv.db`:  
 
 ```shell
 open "$HOME/Library/Application Support/ReframeCV"

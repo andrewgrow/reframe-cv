@@ -15,7 +15,7 @@ for the first resume editor.
 - Projects have a tree, mode-based routing, and a three-section dashboard.
 - Resume, Vacancy, and CoverLetter have domain models, Room entities, keyword tables,
   DAOs, repositories, optional relationships, and observable project-scoped lists.
-- Vacancy list, creation/editing dialogs, permanent deletion, and source-file
+- Vacancy list, full-page creation/editing, permanent deletion, and source-file
   attachment are implemented. URL fetching and source parsing are not implemented.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO, but there is no selection UI or adaptation workflow.
@@ -23,7 +23,10 @@ for the first resume editor.
   shared source snapshots survive until their last vacancy reference is removed.
 - Creating the first workspace record sets Workspace; deleting the last returns
   Unconfigured. Opening Configure alone does not persist a mode change.
-- Back returns section → dashboard → parent project list. Dialogs handle Escape first.
+- Vacancy editing uses a nested list/editor stack with a component-owned draft.
+  Back returns editor → list → dashboard → parent project list; deletion confirmation
+  is cancelled first. Project dialogs still handle Escape before page navigation.
+- Project creation/editing uses the shared ResizableDialog for future dialog reuse.
 - Keep the development schema at version 1 until real data requires migrations.
 
 ## 1. Resume list and editor

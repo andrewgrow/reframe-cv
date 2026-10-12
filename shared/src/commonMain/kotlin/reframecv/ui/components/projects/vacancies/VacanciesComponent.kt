@@ -1,10 +1,10 @@
 package reframecv.ui.components.projects.vacancies
 
-import com.arkivanov.decompose.router.slot.ChildSlot
-import com.arkivanov.decompose.router.slot.SlotNavigation
-import com.arkivanov.decompose.router.slot.activate
-import com.arkivanov.decompose.router.slot.childSlot
-import com.arkivanov.decompose.router.slot.dismiss
+import com.arkivanov.decompose.router.stack.ChildStack
+import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.pop
+import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -22,7 +22,18 @@ import reframecv.ui.store.bindStoreToLifecycle
 interface VacanciesComponent {
     val projectId: Long
     val uiState: Value<VacanciesState>
-    val editorSlot: Value<ChildSlot<*, VacancyEditorComponent>>
+    val childStack: Value<ChildStack<*, Child>>
+    val editor: VacancyEditorComponent?
+        get() = (childStack.value.active.instance as? Child.Editor)?.component
+
+    /** Identifies the vacancy list or its full-page editor. */
+    sealed interface Child {
+        /** Displays the current project's vacancy list. */
+        data object List : Child
+
+        /** Displays creation or editing without covering the application shell. */
+        data class Editor(val component: VacancyEditorComponent) : Child
+    }
     fun onEdit(vacancy: Vacancy)
     fun onAdd()
     fun onRetry()
@@ -48,6 +59,9 @@ class DefaultVacanciesComponent(
 
     /** Selects vacancy creation or editing. */
     private sealed interface EditorConfiguration {
+        /** Opens the vacancy list. */
+        data object List : EditorConfiguration
+
         /** Opens creation of a new vacancy. */
         data object Create : EditorConfiguration
 
@@ -55,44 +69,54 @@ class DefaultVacanciesComponent(
         data class Edit(val vacancy: Vacancy) : EditorConfiguration
     }
 
-    private val editorNavigation = SlotNavigation<EditorConfiguration>()
-    override val editorSlot: Value<ChildSlot<*, VacancyEditorComponent>> = childSlot(
+    private val editorNavigation = StackNavigation<EditorConfiguration>()
+    override val childStack: Value<ChildStack<*, VacanciesComponent.Child>> = childStack(
         source = editorNavigation,
         serializer = null,
+        initialConfiguration = EditorConfiguration.List,
+        handleBackButton = false,
     ) { configuration, childContext ->
-        val original = (configuration as? EditorConfiguration.Edit)?.vacancy
-        DefaultVacancyEditorComponent(
-            childContext,
-            save = { draft ->
-                store.accept(
-                    if (original == null) {
-                        VacanciesIntent.Create(draft)
-                    } else {
-                        VacanciesIntent.Update(original, draft)
+        if (configuration == EditorConfiguration.List) {
+            VacanciesComponent.Child.List
+        } else {
+            val original = (configuration as? EditorConfiguration.Edit)?.vacancy
+            VacanciesComponent.Child.Editor(
+                DefaultVacancyEditorComponent(
+                    childContext,
+                    save = { draft ->
+                        store.accept(
+                            if (original == null) {
+                                VacanciesIntent.Create(draft)
+                            } else {
+                                VacanciesIntent.Update(original, draft)
+                            },
+                        )
                     },
-                )
-            },
-            initialVacancy = original,
-            delete = { original?.let { store.accept(VacanciesIntent.Delete(it.id)) } },
-            close = { editorNavigation.dismiss() },
-        )
+                    initialVacancy = original,
+                    delete = { original?.let { store.accept(VacanciesIntent.Delete(it.id)) } },
+                    close = { editorNavigation.pop() },
+                ),
+            )
+        }
     }
 
     init {
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
-        val slotSubscription = editorSlot.subscribe { editorBack.isEnabled = it.child != null }
+        val stackSubscription = childStack.subscribe {
+            editorBack.isEnabled = it.active.instance is VacanciesComponent.Child.Editor
+        }
         lifecycle.doOnDestroy {
-            slotSubscription.cancel()
+            stackSubscription.cancel()
             backHandler.unregister(editorBack)
         }
         val subscription = store.labels(
             observer { label ->
-                val editor = editorSlot.value.child?.instance as? DefaultVacancyEditorComponent
+                val editor = editor as? DefaultVacancyEditorComponent
                 when (label) {
                     VacanciesLabel.Saving -> editor?.saveState?.value = VacancySaveState.Saving
 
-                    VacanciesLabel.Saved, VacanciesLabel.Deleted -> editorNavigation.dismiss()
+                    VacanciesLabel.Saved, VacanciesLabel.Deleted -> editorNavigation.pop()
 
                     VacanciesLabel.Deleting ->
                         editor?.deleteState?.value =
@@ -110,18 +134,18 @@ class DefaultVacanciesComponent(
     }
 
     override fun onAdd() {
-        if (editorSlot.value.child == null) editorNavigation.activate(EditorConfiguration.Create)
+        if (editor == null) editorNavigation.pushNew(EditorConfiguration.Create)
     }
 
     override fun onEdit(vacancy: Vacancy) {
-        if (editorSlot.value.child == null && vacancy.projectId == projectId) {
-            editorNavigation.activate(EditorConfiguration.Edit(vacancy))
+        if (editor == null && vacancy.projectId == projectId) {
+            editorNavigation.pushNew(EditorConfiguration.Edit(vacancy))
         }
     }
 
     override fun onRetry() = store.accept(VacanciesIntent.Load)
     override fun onBack() {
-        val editor = editorSlot.value.child?.instance
+        val editor = editor
         if (editor != null) editor.onClose() else back()
     }
 }

@@ -90,7 +90,7 @@ class VacanciesContentTest {
         for (text in listOf(sample.name, sample.company, "2026-10-10")) {
             onNodeWithText(text).performMouseInput { click() }
             onNodeWithText("Edit vacancy").assertIsDisplayed()
-            assertEquals(sample, component.editorSlot.value.child?.instance?.initialVacancy)
+            assertEquals(sample, component.editor?.initialVacancy)
             onNodeWithText("Cancel").performClick()
         }
         onNodeWithTag("vacancies.row.${sample.id}").performMouseInput {

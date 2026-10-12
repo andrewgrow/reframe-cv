@@ -93,7 +93,7 @@ class PageBackNavigationTest {
         onNodeWithTag("vacancies.editor").performKeyInput { pressKey(Key.Escape) }
         assertEquals(
             VacancyDeleteState.Idle,
-            vacancies.editorSlot.value.child?.instance?.deleteState?.value,
+            vacancies.editor?.deleteState?.value,
         )
         onNodeWithText("Edit vacancy").assertExists()
         assertEquals(0, backs)
@@ -126,16 +126,16 @@ class PageBackNavigationTest {
             setContent { ReframeTheme { RootContent(root) } }
             onNodeWithText("Add").performClick()
             val editor = assertIs<TestVacancyEditorComponent>(
-                vacancies.editorSlot.value.child?.instance,
+                vacancies.editor,
             )
             runOnIdle { editor.saveState.value = VacancySaveState.Saving }
             onNodeWithTag("vacancy.title").performKeyInput { pressKey(Key.Escape) }
-            assertEquals(editor, vacancies.editorSlot.value.child?.instance)
+            assertEquals(editor, vacancies.editor)
             runOnIdle { editor.saveState.value = VacancySaveState.Idle }
             onNodeWithTag("vacancy.title").performKeyInput { pressKey(Key.Escape) }
             onNodeWithText("Add vacancy").assertDoesNotExist()
             assertIs<RootComponent.Child.Vacancies>(root.childStack.value.active.instance)
-            // Headless tests do not reactivate the native parent window after Dialog dismissal.
+            // Ensure Escape also works when the application shell has focus.
             onNodeWithTag("app.root").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
             onNodeWithTag("app.root").performKeyInput { pressKey(Key.Escape) }
             waitForIdle()

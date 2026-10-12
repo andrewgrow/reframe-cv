@@ -25,7 +25,7 @@ data class VacancySnapshotState(
     val selecting: Boolean = false,
 )
 
-/** Lets the vacancy dialog select, inspect, or detach an original snapshot. */
+/** Lets the vacancy editor select, inspect, or detach an original snapshot. */
 interface VacancySnapshotComponent {
     val state: Value<VacancySnapshotState>
     val change: SnapshotChange

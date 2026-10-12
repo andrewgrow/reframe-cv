@@ -46,14 +46,20 @@ class VacancyEditingTest : ComponentTest() {
             lifecycle.resume()
             component = DefaultVacanciesComponent(appComponentContext(), 7, back = {})
             component.onEdit(original)
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            val editor = requireNotNull(component.editor)
             assertEquals(original, editor.initialVacancy)
-            component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
+            component.childStack.subscribe {
+                if (it.active.instance ==
+                    VacanciesComponent.Child.List
+                ) {
+                    closed.complete(Unit)
+                }
+            }
             editor.onSave(draft)
         }
         withTimeout(10_000.milliseconds) { closed.await() }
         runOnUiThread {
-            assertNull(component.editorSlot.value.child)
+            assertNull(component.editor)
             assertEquals(
                 listOf(draft.applyTo(original), another),
                 dependencies.vacanciesRepository.records.value,
@@ -86,7 +92,7 @@ class VacancyEditingTest : ComponentTest() {
             )
             component = DefaultVacanciesComponent(context, 7, back = {})
             component.onEdit(original)
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            val editor = requireNotNull(component.editor)
             editor.saveState.subscribe { states.trySend(it) }
             editor.onSave(draft)
         }
@@ -100,8 +106,14 @@ class VacancyEditingTest : ComponentTest() {
             assertEquals(mapOf("projectId" to 7L, "vacancyId" to 12L), logged.context)
             runOnUiThread {
                 fail = false
-                component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
-                requireNotNull(component.editorSlot.value.child).instance.onSave(draft)
+                component.childStack.subscribe {
+                    if (it.active.instance ==
+                        VacanciesComponent.Child.List
+                    ) {
+                        closed.complete(Unit)
+                    }
+                }
+                requireNotNull(component.editor).onSave(draft)
             }
             closed.await()
         }
@@ -118,10 +130,10 @@ class VacancyEditingTest : ComponentTest() {
         val original = original()
         dependencies.vacanciesRepository.records.value = listOf(original)
         component.onEdit(original.copy(projectId = 8))
-        assertNull(component.editorSlot.value.child)
+        assertNull(component.editor)
         component.onEdit(original)
-        requireNotNull(component.editorSlot.value.child).instance.onClose()
-        assertNull(component.editorSlot.value.child)
+        requireNotNull(component.editor).onClose()
+        assertNull(component.editor)
         assertEquals(listOf(original), dependencies.vacanciesRepository.records.value)
     }
 }

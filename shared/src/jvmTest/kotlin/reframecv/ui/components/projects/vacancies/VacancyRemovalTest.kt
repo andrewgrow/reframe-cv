@@ -42,8 +42,14 @@ class VacancyRemovalTest : ComponentTest() {
             lifecycle.resume()
             val component = DefaultVacanciesComponent(context(repository), 7, back = {})
             component.onEdit(original)
-            component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            component.childStack.subscribe {
+                if (it.active.instance ==
+                    VacanciesComponent.Child.List
+                ) {
+                    closed.complete(Unit)
+                }
+            }
+            val editor = requireNotNull(component.editor)
             editor.onDelete()
             assertEquals(VacancyDeleteState.Confirming, editor.deleteState.value)
             assertEquals(true, writes.tryReceive().isFailure)
@@ -53,7 +59,7 @@ class VacancyRemovalTest : ComponentTest() {
             editor.onSave(VacancyDraft("Changed"))
             editor.onClose()
             component.onBack()
-            assertEquals(editor, component.editorSlot.value.child?.instance)
+            assertEquals(editor, component.editor)
         }
         withTimeout(10_000.milliseconds) {
             assertEquals(original.id, writes.receive())
@@ -65,7 +71,7 @@ class VacancyRemovalTest : ComponentTest() {
     }
 
     @Test
-    fun failedDeletionCanBeRetriedWithoutLosingDialog() = runBlocking {
+    fun failedDeletionCanBeRetriedWithoutLeavingPage() = runBlocking {
         val original = vacancy()
         dependencies.vacanciesRepository.records.value = listOf(original)
         val failure = IllegalStateException("Delete failed")
@@ -82,7 +88,7 @@ class VacancyRemovalTest : ComponentTest() {
             lifecycle.resume()
             component = DefaultVacanciesComponent(context(repository), 7, back = {})
             component.onEdit(original)
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            val editor = requireNotNull(component.editor)
             editor.deleteState.subscribe { states.trySend(it) }
             editor.onDelete()
             editor.onDelete()
@@ -99,8 +105,14 @@ class VacancyRemovalTest : ComponentTest() {
             assertEquals(mapOf("projectId" to 7L, "vacancyId" to original.id), logged.context)
             runOnUiThread {
                 fail = false
-                component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
-                requireNotNull(component.editorSlot.value.child).instance.onDelete()
+                component.childStack.subscribe {
+                    if (it.active.instance ==
+                        VacanciesComponent.Child.List
+                    ) {
+                        closed.complete(Unit)
+                    }
+                }
+                requireNotNull(component.editor).onDelete()
             }
             closed.await()
         }
@@ -112,15 +124,15 @@ class VacancyRemovalTest : ComponentTest() {
         lifecycle.resume()
         val component = DefaultVacanciesComponent(appComponentContext(), 7, back = {})
         component.onEdit(vacancy())
-        val editor = requireNotNull(component.editorSlot.value.child).instance
+        val editor = requireNotNull(component.editor)
         editor.onDelete()
         component.onBack()
         assertEquals(VacancyDeleteState.Idle, editor.deleteState.value)
-        assertEquals(editor, component.editorSlot.value.child?.instance)
+        assertEquals(editor, component.editor)
         editor.onClose()
-        assertNull(component.editorSlot.value.child)
+        assertNull(component.editor)
         component.onAdd()
-        val creator = requireNotNull(component.editorSlot.value.child).instance
+        val creator = requireNotNull(component.editor)
         creator.onDelete()
         assertEquals(VacancyDeleteState.Idle, creator.deleteState.value)
     }

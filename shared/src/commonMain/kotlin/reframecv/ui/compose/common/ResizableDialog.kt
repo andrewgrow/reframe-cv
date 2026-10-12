@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects.vacancies.editor
+package reframecv.ui.compose.common
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,15 +24,15 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.vacancy_resize_dialog
-import reframecv.ui.compose.common.ResizeHandle
-import reframecv.ui.compose.common.pageBackHandler
+import reframecv.shared.generated.resources.resize_dialog
 import reframecv.ui.theme.ReframeTheme
 
+/** Provides a reusable dialog with user-controlled size and fixed title/actions. */
 @Composable
-internal fun VacancyEditorDialog(
+internal fun ResizableDialog(
     onDismissRequest: () -> Unit,
-    resizingEnabled: Boolean,
+    resizingEnabled: Boolean = true,
+    modifier: Modifier = Modifier,
     title: @Composable () -> Unit,
     text: @Composable () -> Unit,
     actions: @Composable () -> Unit,
@@ -44,31 +44,38 @@ internal fun VacancyEditorDialog(
     val size = if (state.resized) Modifier.size(state.width.dp, state.height.dp) else Modifier
     Dialog(onDismissRequest, DialogProperties(usePlatformDefaultWidth = false)) {
         Box(
-            size.widthIn(dimensions.vacancyDialogMinWidth, dimensions.vacancyDialogDefaultWidth)
-                .testTag(
-                    VACANCY_EDITOR_TAG,
-                ).pageBackHandler(onDismissRequest, destination = resizingEnabled)
+            modifier.then(
+                if (state.resized) {
+                    size
+                } else {
+                    Modifier.widthIn(
+                        dimensions.dialogMinWidth,
+                        dimensions.dialogDefaultWidth,
+                    )
+                },
+            ).pageBackHandler(onDismissRequest, destination = resizingEnabled)
                 .onSizeChanged { state.captureMinimum(it, density) },
         ) {
             Surface(
                 modifier = if (state.resized) Modifier.fillMaxSize() else Modifier,
                 shape = AlertDialogDefaults.shape,
                 color = AlertDialogDefaults.containerColor,
+                tonalElevation = AlertDialogDefaults.TonalElevation,
             ) {
-                VacancyDialogLayout(state.resized, title, text, actions)
+                ResizableDialogLayout(state.resized, title, text, actions)
             }
             ResizeHandle(
-                label = stringResource(Res.string.vacancy_resize_dialog),
+                label = stringResource(Res.string.resize_dialog),
                 enabled = resizingEnabled,
                 onDrag = { delta, _ -> state.resize(delta, density, window) },
-                modifier = Modifier.align(Alignment.BottomEnd).testTag("vacancy.dialog.resize"),
+                modifier = Modifier.align(Alignment.BottomEnd).testTag("dialog.resize"),
             )
         }
     }
 }
 
 @Composable
-private fun VacancyDialogLayout(
+private fun ResizableDialogLayout(
     resized: Boolean,
     title: @Composable () -> Unit,
     text: @Composable () -> Unit,

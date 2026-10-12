@@ -23,10 +23,7 @@ fun RootContent(component: RootComponent) {
     val stack by component.childStack.subscribeAsState()
     val active = stack.active.instance
     val editorOpen = when (active) {
-        is RootComponent.Child.Vacancies -> {
-            val editor by active.component.editorSlot.subscribeAsState()
-            editor.child != null
-        }
+        is RootComponent.Child.Vacancies -> false
 
         is RootComponent.Child.Projects -> {
             val editor by active.component.editorSlot.subscribeAsState()

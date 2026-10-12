@@ -11,12 +11,17 @@ enum class VacancySaveState { Idle, Saving, Failed }
 /** Controls inline deletion confirmation, progress, and failure feedback. */
 enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 
-/** Lets one dialog create, edit, or confirm deletion of a vacancy. */
+/** Lets the vacancy page create, edit, or confirm deletion of a vacancy. */
 interface VacancyEditorComponent {
+    val draft: Value<VacancyDraft>
+    fun onDraftChange(draft: VacancyDraft)
     val snapshot: VacancySnapshotComponent
     val initialVacancy: Vacancy?
     val deleteState: Value<VacancyDeleteState>
     val saveState: Value<VacancySaveState>
+    val isBusy: Boolean
+        get() = saveState.value == VacancySaveState.Saving ||
+            deleteState.value == VacancyDeleteState.Deleting
     fun onSave(draft: VacancyDraft)
     fun onDelete()
     fun onClose()
@@ -31,6 +36,8 @@ class DefaultVacancyEditorComponent(
     private val delete: () -> Unit = {},
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
+    override val draft =
+        MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     override val snapshot = DefaultVacancySnapshotComponent(
         componentContext,
         initialVacancy?.id,
@@ -38,9 +45,9 @@ class DefaultVacancyEditorComponent(
     )
     override val saveState = MutableValue(VacancySaveState.Idle)
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
-    private val isBusy: Boolean
-        get() = saveState.value == VacancySaveState.Saving ||
-            deleteState.value == VacancyDeleteState.Deleting
+    override fun onDraftChange(draft: VacancyDraft) {
+        if (!isBusy && deleteState.value == VacancyDeleteState.Idle) this.draft.value = draft
+    }
 
     override fun onSave(draft: VacancyDraft) {
         if (isBusy || snapshot.state.value.selecting) return

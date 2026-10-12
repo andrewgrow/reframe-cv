@@ -24,7 +24,7 @@ class VacancyEditScreenshotTest : GoldenScreenshotTest() {
     )
 
     @Test
-    fun editDialogMatchesReference() = runDesktopComposeUiTest {
+    fun editPageMatchesReference() = runDesktopComposeUiTest {
         setGoldenContent(this) { VacancyEditorContent(component()) }
         onNodeWithText("Cancel").performClick()
         captureGolden(this, VACANCY_EDITOR_TAG)

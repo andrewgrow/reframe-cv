@@ -1,6 +1,5 @@
 package reframecv.ui.compose.projects.editor
 
-import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +19,7 @@ import reframecv.shared.generated.resources.project_editor_edit_title
 import reframecv.ui.components.projects.editor.EditorComponent
 import reframecv.ui.components.projects.editor.EditorDeleteState
 import reframecv.ui.components.projects.editor.EditorSaveState
+import reframecv.ui.compose.common.ResizableDialog
 
 internal const val PROJECT_EDITOR_TAG = "projects.editor"
 
@@ -52,8 +52,9 @@ fun EditorContent(
         },
     )
 
-    AlertDialog(
+    ResizableDialog(
         onDismissRequest = component::onClose,
+        resizingEnabled = !isBusy,
         modifier = Modifier.testTag(PROJECT_EDITOR_TAG),
         title = { SelectableText(title) },
         text = {
@@ -61,7 +62,7 @@ fun EditorContent(
                 name = it
             }, focusOrder, mode, onSave)
         },
-        confirmButton = {
+        actions = {
             EditorActions(
                 mode = mode,
                 name = name.text,

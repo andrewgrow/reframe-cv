@@ -573,3 +573,38 @@ selection flow. Resume adaptation, URL fetching, and source parsing are future w
 Gradle Wrapper was upgraded from 9.7.0 to 9.8.1. All 286 tests, screenshot verification,
 ktlint, Detekt, coverage reports and verification, and macOS packaging passed.
 The new required-title feedback after selecting a vacancy attachment is also implemented.
+
+
+## Vacancy editor page — 2026-10-12
+
+Vacancy creation and editing now open as full pages in the project pane, leaving
+the project tree available. A nested list/editor navigation stack preserves the
+list position, and the editor component owns the draft for future processing tools.
+The header provides Back; Escape and hardware Back use the same behavior.
+Confirmation is cancelled before leaving, and navigation is blocked during writes.
+
+The form scrolls independently of the fixed action footer. Source attachments,
+required-title feedback, save/delete failures, and description resizing are retained.
+The former dialog resize controls and their tests were removed.
+
+Verification: all 286 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports and verification, and macOS packaging passed. Updated editor references
+and new application-shell references were visually reviewed in dark/light themes
+and at a narrow window width. Navigation tests cover draft ownership, return to
+the list, hardware Back, and blocking tree navigation during saving/deletion.
+
+
+## Reusable resizable dialog — 2026-10-12
+
+Dialog resizing is retained as a shared ResizableDialog and DialogResizeState in
+ui.compose.common, now used by project creation and editing. Dragging the lower-right
+handle changes both dimensions, bounded by the initial minimum and the application
+window. Title and actions remain fixed while the form scrolls. Size persists across
+form changes, including opening/cancelling deletion confirmation; writes disable
+the handle. Dialog dimensions and the resize label are no longer vacancy-specific.
+
+Verification: all 291 JVM tests, screenshot verification, ktlint, Detekt, coverage
+verification, and macOS packaging passed. Mouse tests cover both axes, minimum and
+window limits, reverse dragging, preserved input/size, deletion confirmation, and
+disabled handles during writes. Project-dialog goldens were updated and reviewed,
+including an expanded editor. The initial create-dialog dimensions remain unchanged.

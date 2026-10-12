@@ -62,7 +62,7 @@
     <string name="vacancy_snapshot_selected">This file will be copied when you save the vacancy.</string>
     <string name="vacancy_snapshot_imported">Original import data is attached.</string>
     <string name="vacancy_resize_description">Resize description</string>
-    <string name="vacancy_resize_dialog">Resize vacancy dialog</string>
+    <string name="resize_dialog">Resize dialog</string>
     <string name="dashboard_title">Dashboard</string>
     <string name="vacancy_title_required">Enter a title to save the vacancy.</string>
 </resources>

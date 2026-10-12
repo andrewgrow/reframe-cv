@@ -25,7 +25,7 @@ import reframecv.ui.threading.runOnUiThread
 
 class VacancyCreationTest : ComponentTest() {
     @Test
-    fun savesToSelectedProjectOnceAndClosesDialogAfterSuccess() = runBlocking {
+    fun savesToSelectedProjectOnceAndReturnsToListAfterSuccess() = runBlocking {
         val writes = Channel<Vacancy>(Channel.UNLIMITED)
         val finish = CompletableDeferred<Unit>()
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
@@ -40,7 +40,7 @@ class VacancyCreationTest : ComponentTest() {
             lifecycle.resume()
             component = DefaultVacanciesComponent(context(repository), 7, back = {})
             component.onAdd()
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            val editor = requireNotNull(component.editor)
             editor.onSave(VacancyDraft("   "))
             assertEquals(VacancySaveState.Idle, editor.saveState.value)
             editor.onSave(
@@ -56,7 +56,7 @@ class VacancyCreationTest : ComponentTest() {
             editor.onSave(VacancyDraft("Duplicate"))
             editor.onClose()
             (component.backHandler as BackDispatcher).back()
-            assertEquals(editor, component.editorSlot.value.child?.instance)
+            assertEquals(editor, component.editor)
         }
         withTimeout(10_000.milliseconds) {
             val saved = writes.receive()
@@ -73,13 +73,19 @@ class VacancyCreationTest : ComponentTest() {
             assertEquals(true, writes.tryReceive().isFailure)
             val closed = CompletableDeferred<Unit>()
             runOnUiThread {
-                component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
+                component.childStack.subscribe {
+                    if (it.active.instance ==
+                        VacanciesComponent.Child.List
+                    ) {
+                        closed.complete(Unit)
+                    }
+                }
                 finish.complete(Unit)
             }
             closed.await()
         }
         runOnUiThread {
-            assertNull(component.editorSlot.value.child)
+            assertNull(component.editor)
             assertEquals(1, dependencies.vacanciesRepository.records.value.size)
         }
     }
@@ -101,7 +107,7 @@ class VacancyCreationTest : ComponentTest() {
             lifecycle.resume()
             component = DefaultVacanciesComponent(context(repository), 7, back = { backs++ })
             component.onAdd()
-            val editor = requireNotNull(component.editorSlot.value.child).instance
+            val editor = requireNotNull(component.editor)
             editor.saveState.subscribe { states.trySend(it) }
             editor.onSave(VacancyDraft("Backend"))
         }
@@ -114,17 +120,23 @@ class VacancyCreationTest : ComponentTest() {
             assertEquals(mapOf("projectId" to 7L, "vacancyId" to null), logged.context)
             runOnUiThread {
                 fail = false
-                component.editorSlot.subscribe { if (it.child == null) closed.complete(Unit) }
+                component.childStack.subscribe {
+                    if (it.active.instance ==
+                        VacanciesComponent.Child.List
+                    ) {
+                        closed.complete(Unit)
+                    }
+                }
                 requireNotNull(
-                    component.editorSlot.value.child,
-                ).instance.onSave(VacancyDraft("Backend"))
+                    component.editor,
+                ).onSave(VacancyDraft("Backend"))
             }
             closed.await()
         }
         runOnUiThread {
             component.onAdd()
             (component.backHandler as BackDispatcher).back()
-            assertNull(component.editorSlot.value.child)
+            assertNull(component.editor)
             assertEquals(0, backs)
             component.onBack()
             assertEquals(1, backs)
@@ -150,10 +162,10 @@ class VacancyCreationTest : ComponentTest() {
             val component = DefaultVacanciesComponent(context(repository), 7, back = {})
             component.onAdd()
             requireNotNull(
-                component.editorSlot.value.child,
-            ).instance.onSave(VacancyDraft("Backend"))
+                component.editor,
+            ).onSave(VacancyDraft("Backend"))
         }
-        withTimeout(10_000) {
+        withTimeout(10_000.milliseconds) {
             started.await()
             runOnUiThread { lifecycle.destroy() }
             cancelled.await()

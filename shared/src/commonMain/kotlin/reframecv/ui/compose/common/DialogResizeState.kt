@@ -1,4 +1,4 @@
-package reframecv.ui.compose.projects.vacancies.editor
+package reframecv.ui.compose.common
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -8,7 +8,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.unit.IntSize
 
-/** Lets users resize the vacancy editor while keeping it usable within the window. */
+/** Lets users resize a dialog while keeping it usable within the window. */
 internal class DialogResizeState {
     var width by mutableFloatStateOf(0f)
         private set

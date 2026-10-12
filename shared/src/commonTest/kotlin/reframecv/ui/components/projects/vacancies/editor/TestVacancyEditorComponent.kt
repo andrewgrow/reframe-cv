@@ -9,6 +9,11 @@ class TestVacancyEditorComponent(
     private val close: () -> Unit = {},
     private val delete: () -> Unit = {},
 ) : VacancyEditorComponent {
+    override val draft =
+        MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
+    override fun onDraftChange(draft: VacancyDraft) {
+        this.draft.value = draft
+    }
     override val snapshot = TestVacancySnapshotComponent()
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     override val saveState = MutableValue(VacancySaveState.Idle)

@@ -19,14 +19,18 @@ import reframecv.shared.generated.resources.navigation_back
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun PageHeader(title: String, onBack: () -> Unit) {
+internal fun PageHeader(title: String, onBack: () -> Unit, enabled: Boolean = true) {
     val tokens = ReframeTheme.tokens
     Row(
         Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = onBack, modifier = Modifier.size(tokens.dimensions.iconButtonSize)) {
+        IconButton(
+            onClick = onBack,
+            enabled = enabled,
+            modifier = Modifier.size(tokens.dimensions.iconButtonSize),
+        ) {
             Icon(
                 Icons.AutoMirrored.Outlined.ArrowBack,
                 contentDescription = stringResource(Res.string.navigation_back),
