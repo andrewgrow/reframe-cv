@@ -89,7 +89,8 @@ class ResumesComponentTest : ComponentTest() {
             val logged = dependencies.logger.failures.receive()
             assertEquals("Load resumes", logged.operation)
             assertEquals(mapOf("projectId" to 7L), logged.context)
-            assertSame(failure, logged.error)
+            // combine may wrap the exception when recovering its coroutine stack trace.
+            assertSame(failure, logged.error.cause ?: logged.error)
             runOnUiThread {
                 fail = false
                 component.onRetry()

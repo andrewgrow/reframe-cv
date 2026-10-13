@@ -3,9 +3,11 @@ package reframecv.ui.components.projects.resumes
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import reframecv.domain.models.resume.Resume
 import reframecv.logging.ApplicationLogger
+import reframecv.repository.MainResumeChange
 import reframecv.repository.ResumesRepository
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 
@@ -22,23 +24,42 @@ internal class ResumesExecutor(
     override fun executeIntent(intent: ResumesIntent) {
         when (intent) {
             ResumesIntent.Load -> observe()
-            is ResumesIntent.Create -> save(intent.draft)
-            is ResumesIntent.Update -> save(intent.draft, intent.resume)
+
+            is ResumesIntent.Create -> save(
+                intent.draft,
+                mainResumeChange = intent.mainResumeChange,
+            )
+
+            is ResumesIntent.Update -> save(intent.draft, intent.resume, intent.mainResumeChange)
         }
     }
 
     // Storage failures must retain the draft and preserve coroutine cancellation.
     @Suppress("TooGenericExceptionCaught")
-    private fun save(draft: ResumeDraft, original: Resume? = null) {
+    private fun save(
+        draft: ResumeDraft,
+        original: Resume? = null,
+        mainResumeChange: MainResumeChange,
+    ) {
         if (!draft.isValid || saving?.isActive == true) return
         require(original == null || original.projectId == projectId)
         publish(ResumesLabel.Saving)
         saving = scope.launch {
             try {
                 if (original == null) {
-                    repository.create(draft.toResume(projectId))
+                    val record = draft.toResume(projectId)
+                    if (mainResumeChange == MainResumeChange.Keep) {
+                        repository.create(record)
+                    } else {
+                        repository.create(record, mainResumeChange)
+                    }
                 } else {
-                    repository.update(draft.applyTo(original))
+                    val record = draft.applyTo(original)
+                    if (mainResumeChange == MainResumeChange.Keep) {
+                        repository.update(record)
+                    } else {
+                        repository.update(record, mainResumeChange)
+                    }
                 }
                 publish(ResumesLabel.Saved)
             } catch (exception: CancellationException) {
@@ -63,7 +84,15 @@ internal class ResumesExecutor(
         dispatch(ResumesState.Loading)
         observation = scope.launch {
             try {
-                repository.observeResumes(projectId).collect { dispatch(ResumesState.Ready(it)) }
+                combine(
+                    repository.observeResumes(projectId),
+                    repository.observeMainResumeId(projectId),
+                ) {
+                        records,
+                        mainId,
+                    ->
+                    ResumesState.Ready(records, mainId)
+                }.collect { dispatch(it) }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (error: Exception) {

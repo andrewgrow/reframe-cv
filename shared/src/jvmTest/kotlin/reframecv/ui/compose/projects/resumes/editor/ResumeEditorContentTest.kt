@@ -27,11 +27,24 @@ import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeEditorContentTest : GoldenScreenshotTest() {
+    @Test
+    fun mainResumeCheckboxIsEditableAndBlockedDuringSaving() = runDesktopComposeUiTest {
+        val component = TestResumeEditorComponent(ResumeDraft("Main", role = ResumeRole.Main))
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Main resume").performClick()
+        assertEquals(ResumeRole.Regular, component.draft.value.role)
+        onNodeWithText("Main resume").performClick()
+        assertEquals(ResumeRole.Main, component.draft.value.role)
+        runOnIdle { component.saveState.value = ResumeSaveState.Saving }
+        onNodeWithText("Main resume").assertIsNotEnabled()
+    }
+
     @Test
     fun editingLoadsSectionsAndSubmitsChangesWithOriginalIdentity() = runDesktopComposeUiTest {
         val original = Resume(

@@ -8,5 +8,5 @@ sealed interface ResumesState {
     data object LoadFailed : ResumesState
 
     /** Supplies the loaded resumes. */
-    data class Ready(val resumes: List<Resume>) : ResumesState
+    data class Ready(val resumes: List<Resume>, val mainResumeId: Long? = null) : ResumesState
 }

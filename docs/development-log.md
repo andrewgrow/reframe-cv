@@ -726,3 +726,27 @@ wide/narrow layouts, full structured round trips, section edits, cancellation,
 failed-write retry, duplicate updates, lifecycle cancellation, and persistence
 after reopening without creating a duplicate or changing provenance. Added
 goldens cover editing in the application shell and a failed update in light theme.
+
+## Main resume selection in the editor — 2026-10-13
+
+Creation and editing now show a Main resume checkbox with an explanation of the
+single selection per project. The form starts unchecked for new resumes and
+restores the current Project.mainResumeId when editing. Save/Update selects this
+resume, replaces the previous choice, or clears the choice when unchecking its
+current owner. Cancel discards the selection draft; ordinary resume saves retain
+another resume's main status. Selection remains a project reference, outside the
+resume document JSON.
+
+ResumesRepository observes the project's main ID and supports atomic document/choice
+writes. ResumeDao wraps creation/update and main selection in one transaction;
+failed selection rolls back content, keywords, inserted records, and project changes.
+Clearing is conditional on the saved resume still owning the selection. The resume
+list Store observes both records and the main ID so subsequent editors open with
+the current choice. Profile fields and the role control have separate UI files.
+
+Verification: all 355 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed. Tests cover creating, replacing,
+clearing, preserving another selection, reopening the database, Cancel, checkbox
+disablement while saving, and rollback after an injected SQL failure. Form goldens
+were updated for checked/unchecked choices, light/dark themes, narrow panes, errors,
+and increased scale.

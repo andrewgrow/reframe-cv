@@ -57,19 +57,11 @@ internal fun ResumeEditorFields(
             color = ReframeTheme.colorScheme.hint,
             style = ReframeTheme.tokens.typography.bodySmall,
         )
+        form.RoleField(draft.role) { onChange(draft.copy(role = it)) }
         form.Field(draft.keywords, Res.string.resume_keywords, {
             onChange(draft.copy(keywords = it))
         })
-        form.Heading(Res.string.resume_profile)
-        form.Field(draft.profile.name, Res.string.resume_profile_name, {
-            onChange(draft.copy(profile = draft.profile.copy(name = it)))
-        })
-        form.Field(draft.profile.headline, Res.string.resume_headline, {
-            onChange(draft.copy(profile = draft.profile.copy(headline = it)))
-        })
-        form.Field(draft.profile.location, Res.string.resume_location, {
-            onChange(draft.copy(profile = draft.profile.copy(location = it)))
-        })
+        form.ProfileFields(draft.profile) { onChange(draft.copy(profile = it)) }
         form.Heading(Res.string.resume_sections)
         draft.sections.forEachIndexed { index, section ->
             key(section.id) {

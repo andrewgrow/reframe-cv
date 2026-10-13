@@ -11,8 +11,10 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.domain.models.resume.Resume
+import reframecv.repository.MainResumeChange
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
+import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
@@ -79,19 +81,32 @@ class DefaultResumesComponent(
             ResumesComponent.Child.List
         } else {
             val original = (configuration as? EditorConfiguration.Edit)?.resume
+            val initialRole = if (original != null &&
+                original.id == (uiState.value as? ResumesState.Ready)?.mainResumeId
+            ) {
+                ResumeRole.Main
+            } else {
+                ResumeRole.Regular
+            }
             ResumesComponent.Child.Editor(
                 DefaultResumeEditorComponent(
                     childContext,
                     save = { draft ->
+                        val change = when {
+                            draft.role == ResumeRole.Main -> MainResumeChange.Select
+                            initialRole == ResumeRole.Main -> MainResumeChange.Clear
+                            else -> MainResumeChange.Keep
+                        }
                         store.accept(
                             if (original == null) {
-                                ResumesIntent.Create(draft)
+                                ResumesIntent.Create(draft, change)
                             } else {
-                                ResumesIntent.Update(original, draft)
+                                ResumesIntent.Update(original, draft, change)
                             },
                         )
                     },
                     initialResume = original,
+                    initialRole = initialRole,
                     close = { editorNavigation.pop() },
                 ),
             )

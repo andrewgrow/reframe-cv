@@ -26,7 +26,8 @@ Later sections are separate work, not prerequisites for the first resume editor.
   Clicking a saved name or date opens the same form in Update mode. Date fields
   accept an optional year or year-month and an ongoing period.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
-  validated by the DAO, but there is no selection UI or adaptation workflow.
+  validated by the DAO. Creation/editing can select or clear the main resume;
+  document and selection changes are saved atomically. Adaptation remains planned.
 - All deletion is permanent. Deleting a project removes its subtree and contents;
   shared source snapshots survive until their last vacancy reference is removed.
 - Creating the first workspace record sets Workspace; deleting the last returns
@@ -54,8 +55,8 @@ Later sections are separate work, not prerequisites for the first resume editor.
 
 ## 2. Main resume and adaptations
 
-- [ ] Expose validated main-resume assignment through the repository.
-- [ ] Add user-facing selection, clearing, and indication of the main resume.
+- [x] Expose validated main-resume assignment through the repository.
+- [x] Add user-facing selection, clearing, and indication in resume creation/editing.
 - [ ] Agree on how users start an adaptation from a vacancy or the resume list.
 - [ ] Use the main resume as the default source, with an explicit alternative choice.
 - [ ] Create an independent editable resume linked by sourceResumeId; decide which

@@ -22,6 +22,7 @@ import reframecv.ui.components.application.TestRootComponent
 import reframecv.ui.components.application.navigation.ProjectTreeState
 import reframecv.ui.components.projects.resumes.TestResumesComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.components.projects.resumes.editor.ResumeSectionDraft
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
@@ -33,6 +34,15 @@ import reframecv.ui.theme.UiScale
 @OptIn(ExperimentalTestApi::class)
 class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     @Test
+    fun mainResumeCreationMatchesReference() = runDesktopComposeUiTest {
+        val component =
+            TestResumeEditorComponent(ResumeDraft("Android Developer", role = ResumeRole.Main))
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Cancel").performClick()
+        captureGolden(this)
+    }
+
+    @Test
     fun editingPageMatchesReference() = runDesktopComposeUiTest {
         val resume = Resume(
             id = 12,
@@ -43,7 +53,8 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
             content = sampleResumeContent(),
             keywords = listOf("Kotlin", "Compose"),
         )
-        val component = TestResumeEditorComponent(initialResume = resume)
+        val component =
+            TestResumeEditorComponent(initialResume = resume, initialRole = ResumeRole.Main)
         val root = TestRootComponent(
             resumesComponent = TestResumesComponent(initialEditor = component),
             initialTreeState = ProjectTreeState(

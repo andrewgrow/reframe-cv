@@ -26,9 +26,15 @@ class DefaultResumeEditorComponent(
     private val save: (ResumeDraft) -> Unit,
     private val close: () -> Unit,
     override val initialResume: Resume? = null,
+    initialRole: ResumeRole = ResumeRole.Regular,
 ) : ResumeEditorComponent,
     AppComponentContext by componentContext {
-    override val draft = MutableValue(initialResume?.let(ResumeDraft::fromResume) ?: ResumeDraft())
+    override val draft =
+        MutableValue(
+            initialResume?.let {
+                ResumeDraft.fromResume(it, initialRole)
+            } ?: ResumeDraft(),
+        )
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
 

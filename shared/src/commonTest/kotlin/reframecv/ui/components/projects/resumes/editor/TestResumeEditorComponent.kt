@@ -6,11 +6,15 @@ import reframecv.domain.models.resume.Resume
 class TestResumeEditorComponent(
     initialDraft: ResumeDraft? = null,
     override val initialResume: Resume? = null,
+    initialRole: ResumeRole = ResumeRole.Regular,
     private val save: (ResumeDraft) -> Unit = {},
     private val close: () -> Unit = {},
 ) : ResumeEditorComponent {
     override val draft =
-        MutableValue(initialDraft ?: initialResume?.let(ResumeDraft::fromResume) ?: ResumeDraft())
+        MutableValue(
+            initialDraft ?: initialResume?.let { ResumeDraft.fromResume(it, initialRole) }
+                ?: ResumeDraft(),
+        )
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
     override fun onDraftChange(draft: ResumeDraft) {

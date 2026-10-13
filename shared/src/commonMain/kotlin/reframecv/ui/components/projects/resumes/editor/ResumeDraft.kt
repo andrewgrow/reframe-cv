@@ -12,6 +12,7 @@ data class ResumeDraft(
     val profile: ResumeProfile = ResumeProfile(),
     val sections: List<ResumeSectionDraft> = emptyList(),
     val nextSectionId: Long = 1,
+    val role: ResumeRole = ResumeRole.Regular,
 ) {
     val isValid: Boolean
         get() = name.isNotBlank() && sections.all { it.isValid }
@@ -50,7 +51,8 @@ data class ResumeDraft(
     }
 
     companion object {
-        fun fromResume(resume: Resume) = ResumeDraft(
+        fun fromResume(resume: Resume, role: ResumeRole = ResumeRole.Regular) = ResumeDraft(
+            role = role,
             name = resume.name,
             keywords = resume.keywords.joinToString(", "),
             profile = resume.content.profile,

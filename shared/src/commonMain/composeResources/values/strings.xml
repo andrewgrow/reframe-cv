@@ -129,4 +129,6 @@
     <string name="resume_dates_error">Check the dates in Work experience and Education. Use YYYY or YYYY-MM.</string>
     <string name="resume_edit">Edit resume</string>
     <string name="resume_update">Update</string>
+    <string name="resume_main">Main resume</string>
+    <string name="resume_main_hint">Only one resume can be the main resume for a project. Selecting this replaces the current main resume.</string>
 </resources>

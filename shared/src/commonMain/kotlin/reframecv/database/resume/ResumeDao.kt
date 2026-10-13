@@ -1,16 +1,61 @@
 package reframecv.database.resume
 
 import androidx.room3.Dao
+import androidx.room3.Query
 import androidx.room3.Transaction
+import kotlinx.coroutines.flow.Flow
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.resume.Resume
+import reframecv.repository.MainResumeChange
 
 /** Saves, loads, and searches resumes in the local database. */
 @Dao
 interface ResumeDao :
     ResumeQueries,
     WorkspaceDao {
+    @Query("SELECT main_resume_id FROM projects WHERE id = :projectId")
+    fun observeMainResumeId(projectId: Long): Flow<Long?>
+
+    @Query(
+        "UPDATE projects SET main_resume_id = :resumeId, updated_at = :updatedAt " +
+            "WHERE id = :projectId AND mode = 'Workspace' AND EXISTS " +
+            "(SELECT 1 FROM resumes WHERE id = :resumeId AND project_id = :projectId)",
+    )
+    suspend fun selectMainResume(projectId: Long, resumeId: Long, updatedAt: Long): Int
+
+    @Transaction
+    suspend fun create(record: Resume, mainResumeChange: MainResumeChange): Long {
+        val id = create(record)
+        applyMainResumeChange(record.projectId, id, record.updatedAt, mainResumeChange)
+        return id
+    }
+
+    @Transaction
+    suspend fun update(record: Resume, mainResumeChange: MainResumeChange) {
+        update(record)
+        applyMainResumeChange(record.projectId, record.id, record.updatedAt, mainResumeChange)
+    }
+
+    private suspend fun applyMainResumeChange(
+        projectId: Long,
+        resumeId: Long,
+        updatedAt: Long,
+        change: MainResumeChange,
+    ) {
+        when (change) {
+            MainResumeChange.Keep -> Unit
+
+            MainResumeChange.Select -> check(
+                selectMainResume(projectId, resumeId, updatedAt) == 1,
+            ) {
+                "Main resume must belong to the project workspace"
+            }
+
+            MainResumeChange.Clear -> clearMainResume(resumeId, updatedAt)
+        }
+    }
+
     @Transaction
     suspend fun create(record: Resume): Long {
         requireWorkspace(record.projectId, record.createdAt)
