@@ -14,6 +14,9 @@ internal sealed interface ResumesIntent {
         val mainResumeChange: MainResumeChange = MainResumeChange.Keep,
     ) : ResumesIntent
 
+    /** Permanently removes the selected resume and its owned data. */
+    data class Delete(val id: Long) : ResumesIntent
+
     /** Submits changes while retaining the saved resume's identity and provenance. */
     data class Update(
         val resume: Resume,
@@ -23,4 +26,4 @@ internal sealed interface ResumesIntent {
 }
 
 /** Lets the resume editor display progress and close only after a successful write. */
-internal enum class ResumesLabel { Saving, Saved, SaveFailed }
+internal enum class ResumesLabel { Saving, Saved, SaveFailed, Deleting, Deleted, DeleteFailed }

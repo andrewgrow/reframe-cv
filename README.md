@@ -24,7 +24,8 @@ Within a project, users will be able to keep source resumes, create and rewrite 
 6. Export a resume as a PDF.
 
 The current application provides a project tree, project management, a dashboard,
-a project-scoped resume list, structured resume creation/editing, and vacancy creation/editing
+a project-scoped resume list, structured resume creation/editing with confirmed deletion,
+and vacancy creation/editing
 with source-file attachments. Resume forms can select the project's main resume.
 Resume sections are stored as versioned JSON.
 The cover-letter editor, tailoring workflows, version management,

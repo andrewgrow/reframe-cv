@@ -3,6 +3,7 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -62,7 +63,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
             save = { saved = it.applyTo(original) },
         )
         setGoldenContent(this) { ResumeEditorContent(component) }
-        onNodeWithText("Edit resume").assertExists()
+        onNodeWithText("Resume").assertExists()
         onNodeWithTag("resume.name").performTextReplacement("Backend")
         onNodeWithText(
             "Professional headline",
@@ -90,12 +91,15 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
         val component = TestResumeEditorComponent(save = { writes++ })
         setGoldenContent(this) { ResumeEditorContent(component) }
         val sections = listOf(
-            ResumeSkillsSection(groups = listOf(ResumeSkillGroup("Mobile"))),
-            ResumeSoftSkillsSection(),
+            ResumeSkillsSection(
+                groups = listOf(ResumeSkillGroup("Mobile", listOf(" Kotlin ", " Compose "))),
+            ),
+            ResumeSoftSkillsSection(items = listOf(" Kotlin ", " Compose ")),
         )
         sections.forEach { section ->
             runOnIdle { component.onDraftChange(ResumeDraft("Draft").addSection(section)) }
             onNodeWithText("Items (comma-separated)").performScrollTo()
+                .assertTextContains("Kotlin, Compose")
                 .performTextReplacement(" Kotlin, Compose, , Coroutines, ")
             // Typing preserves separators and spaces until Save converts the draft.
             val expected = listOf("Kotlin", "Compose", "Coroutines")

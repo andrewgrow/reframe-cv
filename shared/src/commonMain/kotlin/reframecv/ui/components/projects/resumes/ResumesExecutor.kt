@@ -30,6 +30,8 @@ internal class ResumesExecutor(
                 mainResumeChange = intent.mainResumeChange,
             )
 
+            is ResumesIntent.Delete -> delete(intent.id)
+
             is ResumesIntent.Update -> save(intent.draft, intent.resume, intent.mainResumeChange)
         }
     }
@@ -73,6 +75,31 @@ internal class ResumesExecutor(
                 }
                 logger.error(operation, error, context)
                 publish(ResumesLabel.SaveFailed)
+            }
+        }
+    }
+
+    // Repository failures must keep the confirmation available for retry.
+    @Suppress("TooGenericExceptionCaught")
+    private fun delete(id: Long) {
+        if (saving?.isActive == true) return
+        publish(ResumesLabel.Deleting)
+        saving = scope.launch {
+            try {
+                repository.delete(id)
+                publish(ResumesLabel.Deleted)
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (error: Exception) {
+                logger.error(
+                    "Delete resume",
+                    error,
+                    mapOf(
+                        "projectId" to projectId,
+                        "resumeId" to id,
+                    ),
+                )
+                publish(ResumesLabel.DeleteFailed)
             }
         }
     }

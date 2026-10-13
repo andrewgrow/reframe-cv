@@ -13,6 +13,25 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 
 class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
     @Test
+    fun listAndSearchKeepIdOrderAfterEditing() = runBlocking<Unit> {
+        val projectId = project()
+        val dao = database.resumeDao()
+        val ids = listOf(
+            dao.create(resume(projectId).copy(name = "Zulu", updatedAt = 5_000)),
+            dao.create(resume(projectId).copy(name = "Alpha", updatedAt = 3_000)),
+            dao.create(resume(projectId).copy(name = "Middle", updatedAt = 8_000)),
+        )
+        dao.create(resume(project("Other")).copy(name = "Excluded", updatedAt = 10_000))
+        val repository = LocalResumesRepository(dao)
+        assertEquals(ids, repository.observeResumes(projectId).first().map { it.id })
+        assertEquals(ids, repository.search(projectId, "Kotlin").map { it.id })
+        val edited = repository.observeResumes(projectId).first()[1]
+        repository.update(edited.copy(name = "Newest update"))
+        assertEquals(ids, repository.observeResumes(projectId).first().map { it.id })
+        assertEquals(ids, repository.search(projectId, "Kotlin").map { it.id })
+    }
+
+    @Test
     fun editedDraftKeepsSourceAndCreationDateAfterReopeningDatabase() = runBlocking<Unit> {
         val projectId = project()
         val repository = LocalResumesRepository(database.resumeDao())

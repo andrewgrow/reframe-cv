@@ -13,6 +13,7 @@ import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.domain.models.resume.Resume
 import reframecv.repository.MainResumeChange
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorComponent
+import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
@@ -105,6 +106,7 @@ class DefaultResumesComponent(
                             },
                         )
                     },
+                    delete = { original?.let { store.accept(ResumesIntent.Delete(it.id)) } },
                     initialResume = original,
                     initialRole = initialRole,
                     close = { editorNavigation.pop() },
@@ -128,7 +130,15 @@ class DefaultResumesComponent(
                 val editor = editor as? DefaultResumeEditorComponent
                 when (label) {
                     ResumesLabel.Saving -> editor?.saveState?.value = ResumeSaveState.Saving
-                    ResumesLabel.Saved -> editorNavigation.pop()
+
+                    ResumesLabel.Saved, ResumesLabel.Deleted -> editorNavigation.pop()
+
+                    ResumesLabel.Deleting -> editor?.deleteState?.value = ResumeDeleteState.Deleting
+
+                    ResumesLabel.DeleteFailed ->
+                        editor?.deleteState?.value =
+                            ResumeDeleteState.Failed
+
                     ResumesLabel.SaveFailed -> editor?.saveState?.value = ResumeSaveState.Failed
                 }
             },

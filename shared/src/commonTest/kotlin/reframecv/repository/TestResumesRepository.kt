@@ -44,6 +44,10 @@ class TestResumesRepository : ResumesRepository {
         records.value = records.value.map { if (it.id == record.id) record else it }
     }
     override suspend fun delete(id: Long) {
-        records.value = records.value.filterNot { it.id == id }
+        records.value = records.value.filterNot { it.id == id }.map {
+            if (it.sourceResumeId == id) it.copy(sourceResumeId = null) else it
+        }
+        mainResumeIds.value =
+            mainResumeIds.value.mapValues { (_, value) -> if (value == id) null else value }
     }
 }

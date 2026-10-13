@@ -1,6 +1,11 @@
 package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import reframecv.domain.models.resume.content.ResumeContact
 import reframecv.domain.models.resume.content.ResumeContactsSection
 import reframecv.domain.models.resume.content.ResumeLanguage
@@ -36,15 +41,9 @@ internal fun ResumeFormScope.SimpleSectionFields(
             onChange(section.copy(text = it))
         }, multiline = true)
 
-        is ResumeSoftSkillsSection -> Field(
-            section.items.joinToString(
-                ",",
-            ),
-            Res.string.resume_items,
-            {
-                onChange(section.copy(items = it.split(',')))
-            },
-        )
+        is ResumeSoftSkillsSection -> CommaSeparatedItemsField(section.items) {
+            onChange(section.copy(items = it))
+        }
 
         is ResumeSkillsSection -> Entries(
             section.groups,
@@ -53,9 +52,9 @@ internal fun ResumeFormScope.SimpleSectionFields(
             Res.string.resume_add_group,
         ) { group, change ->
             Field(group.title, Res.string.resume_group, { change(group.copy(title = it)) })
-            Field(group.items.joinToString(","), Res.string.resume_items, {
-                change(group.copy(items = it.split(',')))
-            })
+            CommaSeparatedItemsField(group.items) {
+                change(group.copy(items = it))
+            }
         }
 
         is ResumeLanguagesSection -> Entries(
@@ -79,4 +78,21 @@ internal fun ResumeFormScope.SimpleSectionFields(
 
         else -> error("Work and education sections have dedicated editors")
     }
+}
+
+@Composable
+private fun ResumeFormScope.CommaSeparatedItemsField(
+    items: List<String>,
+    onChange: (List<String>) -> Unit,
+) {
+    var input by remember { mutableStateOf(items.joinToString(", ") { it.trim() }) }
+    LaunchedEffect(items) {
+        if (input.split(',') != items) {
+            input = items.joinToString(", ") { it.trim() }
+        }
+    }
+    Field(input, Res.string.resume_items, {
+        input = it
+        onChange(it.split(','))
+    })
 }

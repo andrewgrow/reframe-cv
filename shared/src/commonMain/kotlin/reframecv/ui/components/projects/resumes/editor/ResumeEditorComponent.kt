@@ -3,18 +3,57 @@ package reframecv.ui.components.projects.resumes.editor
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import reframecv.domain.models.resume.Resume
+import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.resume_cancel
+import reframecv.shared.generated.resources.resume_delete_confirm
+import reframecv.shared.generated.resources.resume_delete_error
+import reframecv.shared.generated.resources.resume_delete_prompt
+import reframecv.shared.generated.resources.resume_delete_title
+import reframecv.shared.generated.resources.resume_delete_warning
+import reframecv.ui.components.common.confirmation.ConfirmationDialogAction
+import reframecv.ui.components.common.confirmation.ConfirmationDialogContent
+import reframecv.ui.components.common.confirmation.ConfirmationDialogTone
 import reframecv.ui.context.AppComponentContext
 
 /** Reports resume save progress without discarding a failed draft. */
 enum class ResumeSaveState { Idle, Saving, Failed }
+
+/** Keeps typed deletion confirmation and failed deletions on the management page. */
+enum class ResumeDeleteState { Idle, Confirming, Deleting, Failed }
 
 /** Lets creation and editing share a structured draft and save feedback. */
 interface ResumeEditorComponent {
     val initialResume: Resume?
     val draft: Value<ResumeDraft>
     val saveState: Value<ResumeSaveState>
+    val deleteState: Value<ResumeDeleteState>
+    val deleteConfirmation: Value<String>
     val validationRequested: Value<Boolean>
-    val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving
+    val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving ||
+        deleteState.value == ResumeDeleteState.Deleting
+    val canConfirmDelete: Boolean get() = initialResume != null && !isBusy &&
+        deleteState.value != ResumeDeleteState.Idle &&
+        deleteConfirmation.value.isResumeDeleteConfirmation()
+    val deleteDialogContent: ConfirmationDialogContent get() = ConfirmationDialogContent(
+        title = Res.string.resume_delete_title,
+        message = Res.string.resume_delete_warning,
+        confirmLabel = Res.string.resume_delete_confirm,
+        cancelLabel = Res.string.resume_cancel,
+        subject = initialResume?.name,
+        inputLabel = Res.string.resume_delete_prompt,
+        failureMessage = Res.string.resume_delete_error,
+        tone = ConfirmationDialogTone.Critical,
+    )
+    fun onDeleteDialogAction(action: ConfirmationDialogAction) {
+        when (action) {
+            ConfirmationDialogAction.Back, ConfirmationDialogAction.Cancel -> onCancelDelete()
+            ConfirmationDialogAction.Confirm -> onConfirmDelete()
+        }
+    }
+    fun onRequestDelete()
+    fun onDeleteConfirmationChange(value: String)
+    fun onConfirmDelete()
+    fun onCancelDelete()
     fun onDraftChange(draft: ResumeDraft)
     fun onSave()
     fun onClose()
@@ -27,6 +66,7 @@ class DefaultResumeEditorComponent(
     private val close: () -> Unit,
     override val initialResume: Resume? = null,
     initialRole: ResumeRole = ResumeRole.Regular,
+    private val delete: () -> Unit = {},
 ) : ResumeEditorComponent,
     AppComponentContext by componentContext {
     override val draft =
@@ -35,20 +75,53 @@ class DefaultResumeEditorComponent(
                 ResumeDraft.fromResume(it, initialRole)
             } ?: ResumeDraft(),
         )
+    override val deleteState = MutableValue(ResumeDeleteState.Idle)
+    override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
 
     override fun onDraftChange(draft: ResumeDraft) {
-        if (!isBusy) this.draft.value = draft
+        if (!isBusy && deleteState.value == ResumeDeleteState.Idle) this.draft.value = draft
     }
 
     override fun onSave() {
-        if (isBusy) return
+        if (isBusy || deleteState.value != ResumeDeleteState.Idle) return
         validationRequested.value = true
         if (draft.value.isValid) save(draft.value)
     }
 
+    override fun onRequestDelete() {
+        if (initialResume != null && !isBusy && deleteState.value == ResumeDeleteState.Idle) {
+            deleteConfirmation.value = ""
+            deleteState.value = ResumeDeleteState.Confirming
+        }
+    }
+
+    override fun onDeleteConfirmationChange(value: String) {
+        if (!isBusy && deleteState.value != ResumeDeleteState.Idle) deleteConfirmation.value = value
+    }
+
+    override fun onConfirmDelete() {
+        if (canConfirmDelete) delete()
+    }
+
+    override fun onCancelDelete() {
+        if (!isBusy) {
+            deleteState.value = ResumeDeleteState.Idle
+            deleteConfirmation.value = ""
+        }
+    }
+
     override fun onClose() {
-        if (!isBusy) close()
+        if (!isBusy) {
+            if (deleteState.value != ResumeDeleteState.Idle) {
+                onDeleteDialogAction(ConfirmationDialogAction.Back)
+            } else {
+                close()
+            }
+        }
     }
 }
+
+internal fun String.isResumeDeleteConfirmation(): Boolean =
+    trim().equals("DELETE", ignoreCase = true)

@@ -28,6 +28,7 @@ import reframecv.shared.generated.resources.resume_edit
 import reframecv.shared.generated.resources.resume_save
 import reframecv.shared.generated.resources.resume_save_error
 import reframecv.shared.generated.resources.resume_update
+import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.compose.common.FillButton
@@ -38,9 +39,10 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 fun ResumeEditorContent(component: ResumeEditorComponent) {
     val draft by component.draft.subscribeAsState()
+    val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val validationRequested by component.validationRequested.subscribeAsState()
-    val busy = saveState == ResumeSaveState.Saving
+    val busy = saveState == ResumeSaveState.Saving || deleteState == ResumeDeleteState.Deleting
     val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -77,5 +79,6 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
             HorizontalDivider()
             ResumeEditorActions(component)
         }
+        if (deleteState != ResumeDeleteState.Idle) ResumeDeleteConfirmation(component)
     }
 }

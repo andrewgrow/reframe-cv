@@ -127,8 +127,13 @@
     <string name="resume_contact_label">Display label</string>
     <string name="resume_contact_value">Value</string>
     <string name="resume_dates_error">Check the dates in Work experience and Education. Use YYYY or YYYY-MM.</string>
-    <string name="resume_edit">Edit resume</string>
+    <string name="resume_edit">Resume</string>
     <string name="resume_update">Update</string>
     <string name="resume_main">Main resume</string>
     <string name="resume_main_hint">Only one resume can be the main resume for a project. Selecting this replaces the current main resume.</string>
+    <string name="resume_delete_title">Delete resume?</string>
+    <string name="resume_delete_warning">This permanently deletes the resume and its stored content. Links from vacancies and derived resumes will be cleared. This cannot be undone.</string>
+    <string name="resume_delete_prompt">Type DELETE to confirm</string>
+    <string name="resume_delete_confirm">Permanently delete</string>
+    <string name="resume_delete_error">Could not delete the resume. Please try again.</string>
 </resources>

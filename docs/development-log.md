@@ -750,3 +750,55 @@ clearing, preserving another selection, reopening the database, Cancel, checkbox
 disablement while saving, and rollback after an injected SQL failure. Form goldens
 were updated for checked/unchecked choices, light/dark themes, narrow panes, errors,
 and increased scale.
+
+## Resume management and permanent deletion — 2026-10-13
+
+The saved-resume page is now titled Resume and has a critical-colored Delete action
+on the left of its fixed footer. Delete opens the shared resizable dialog, identifies
+the saved resume, warns that deletion is permanent, and requires DELETE (case-insensitive,
+with surrounding whitespace ignored). Physical Enter confirms valid input. Cancel,
+Escape, and hardware Back dismiss confirmation before leaving the management page.
+Creation has no Delete action. Deletion does not depend on unsaved name/content validity.
+
+The Store calls the existing permanent repository deletion and returns to the list
+after success. Pending deletion blocks duplicate requests, editing, dismissal, and
+project navigation. Failures retain confirmation for retry and log projectId/resumeId
+with a stack trace. Owned document content and keywords are removed, main-resume
+selection and vacancy/source references are cleared, and the last workspace record
+returns the project to Unconfigured. Independent vacancies, adaptations, letters,
+and their files remain. Resumes currently have no file-attachment model or storage.
+
+Verification: all 362 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed. Added tests cover validation,
+physical Enter/Escape, creation guards, Back ordering, failed deletion/retry,
+duplicate-write protection, busy confirmation, and clearing the last main resume.
+Existing persistence tests verify permanent deletion and relationship cleanup.
+New dialog goldens cover empty confirmation and a failed deletion in light theme;
+management-page references were updated for Resume and Delete.
+
+## Shared confirmation dialog — 2026-10-13
+
+ConfirmationDialog is a reusable UI element configured with localized title/message,
+subject, button labels, optional input, and Standard/Critical appearance. Its state
+contains component-owned input, confirmation availability, progress, and an optional
+error. It reports typed Back, Cancel, or Confirm actions; the owning component decides
+navigation, validates input again, and performs the operation. The shared UI has no
+resume or DELETE-specific validation.
+
+ResumeEditorComponent supplies its deletion copy and maps dialog actions to its
+existing guarded handlers. ResumeDeleteConfirmation only observes feature state and
+connects it to the common element. Hardware Back uses the same action route. Existing
+resume confirmation layout and golden references remain unchanged.
+
+Verification: all 367 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed. New independent tests cover the
+three action types, caller-defined validation (READY), optional input, and busy guards.
+Added common-element goldens cover standard confirmation without input and critical
+confirmation with input/error. Existing resume deletion and navigation tests still pass.
+
+## Stable resume ordering — 2026-10-13
+
+Resume observation and keyword search now order by ascending ID. Names and update
+timestamps do not change list position. Added a repository regression test with
+conflicting names/timestamps, project scoping, and an edit of the middle record.
+The resume repository tests, ktlint, and Detekt passed.

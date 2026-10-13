@@ -6,8 +6,9 @@ Active follow-up to the completed workspace/dashboard milestone, as of 2026-10-1
 The [development log](../development-log.md) preserves earlier decisions and verification.
 This plan tracks remaining work; unchecked items are not implemented.
 
-Resume browsing, creation, and editing are implemented; confirmed deletion is
-the next resume step. Agree on each editor's UX and validation before implementing it.
+Resume browsing, creation, editing, main-resume selection, and confirmed deletion
+are implemented. Main-resume adaptations are the next resume workflow. Agree on
+each editor's UX and validation before implementing it.
 Later sections are separate work, not prerequisites for the first resume editor.
 
 ## Existing foundation
@@ -19,12 +20,13 @@ Later sections are separate work, not prerequisites for the first resume editor.
   attachment are implemented. URL fetching and source parsing are not implemented.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
-  persisted as versioned JSON. Creation and editing support every section type; importing documents remains
-  future work.
+  persisted as versioned JSON. Creation and editing support every section type;
+  importing documents remains future work.
 - The resume list opens from its dashboard card and observes project-scoped data.
-  Add opens a full-page structured creation form. Only the resume name is required;
-  Clicking a saved name or date opens the same form in Update mode. Date fields
-  accept an optional year or year-month and an ongoing period.
+  Add opens a full-page structured creation form. Only the resume name is required.
+  Clicking a saved name or date opens the same form as Resume, with Update and
+  permanent Delete actions. Deletion requires typing DELETE in a confirmation dialog.
+  Date fields accept an optional year or year-month and an ongoing period.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO. Creation/editing can select or clear the main resume;
   document and selection changes are saved atomically. Adaptation remains planned.
@@ -47,11 +49,11 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
 - [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
 - [x] Add editing of saved resumes using the structured content model.
-- [ ] Add permanent deletion with confirmation and existing relationship cleanup.
+- [x] Add permanent deletion with a typed DELETE dialog and existing relationship cleanup.
 - [x] Preserve creation/editing drafts on failure, block duplicate writes, and follow existing Back behavior.
 - [x] Verify creation navigation, persistence, count/mode updates, failures, and relevant goldens.
 - [x] Verify editing navigation, persistence, preserved identity/provenance, failures, and goldens.
-- [ ] Verify deletion navigation, persistence, relationship cleanup, and goldens.
+- [x] Verify deletion navigation, persistence, relationship cleanup, and goldens.
 
 ## 2. Main resume and adaptations
 

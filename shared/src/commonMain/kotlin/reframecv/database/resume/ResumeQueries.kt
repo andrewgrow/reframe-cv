@@ -26,7 +26,7 @@ interface ResumeQueries {
 
     @Transaction
     @Query(
-        "SELECT * FROM resumes WHERE project_id = :projectId ORDER BY updated_at DESC, name ASC, id ASC",
+        "SELECT * FROM resumes WHERE project_id = :projectId ORDER BY id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<ResumeWithKeywords>>
 
@@ -37,7 +37,7 @@ interface ResumeQueries {
     @Query(
         "SELECT * FROM resumes WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM resumes_keywords WHERE record_id = resumes.id " +
-            "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
+            "AND normalized_keyword = :keyword) ORDER BY id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<ResumeWithKeywords>
 
