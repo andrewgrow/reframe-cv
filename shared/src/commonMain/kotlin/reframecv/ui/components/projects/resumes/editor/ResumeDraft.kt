@@ -36,15 +36,28 @@ data class ResumeDraft(
         return copy(sections = reordered)
     }
 
-    fun toResume(projectId: Long): Resume {
+    fun toResume(projectId: Long) = applyTo(
+        Resume(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),
+    )
+
+    fun applyTo(resume: Resume): Resume {
         require(isValid)
-        return Resume(
-            projectId = projectId,
+        return resume.copy(
             name = name.trim(),
-            createdAt = 0,
-            updatedAt = 0,
             keywords = keywords.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct(),
             content = ResumeContent(profile, sections.map { it.toSection() }),
+        )
+    }
+
+    companion object {
+        fun fromResume(resume: Resume) = ResumeDraft(
+            name = resume.name,
+            keywords = resume.keywords.joinToString(", "),
+            profile = resume.content.profile,
+            sections = resume.content.sections.mapIndexed { index, section ->
+                ResumeSectionDraft(index.toLong() + 1, section)
+            },
+            nextSectionId = resume.content.sections.size.toLong() + 1,
         )
     }
 }

@@ -3,6 +3,7 @@ package reframecv.ui.components.projects.resumes
 import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.MutableValue
+import reframecv.domain.models.resume.Resume
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 
 class TestResumesComponent(
@@ -10,6 +11,7 @@ class TestResumesComponent(
     initialState: ResumesState = ResumesState.Ready(emptyList()),
     private val retry: () -> Unit = {},
     initialEditor: ResumeEditorComponent? = null,
+    private val edit: (Resume) -> Unit = {},
     private val add: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : ResumesComponent {
@@ -23,6 +25,7 @@ class TestResumesComponent(
             backStack = emptyList(),
         ),
     )
+    override fun onEdit(resume: Resume) = edit(resume)
     override fun onAdd() = add()
     override val uiState = MutableValue(initialState)
     override fun onRetry() = retry()

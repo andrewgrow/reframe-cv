@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import reframecv.domain.models.project.Project
+import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeSection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
@@ -31,6 +32,48 @@ import reframecv.ui.theme.UiScale
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
+    @Test
+    fun editingPageMatchesReference() = runDesktopComposeUiTest {
+        val resume = Resume(
+            id = 12,
+            projectId = 1,
+            name = "Mobile developer",
+            createdAt = 10,
+            updatedAt = 20,
+            content = sampleResumeContent(),
+            keywords = listOf("Kotlin", "Compose"),
+        )
+        val component = TestResumeEditorComponent(initialResume = resume)
+        val root = TestRootComponent(
+            resumesComponent = TestResumesComponent(initialEditor = component),
+            initialTreeState = ProjectTreeState(
+                projects = listOf(Project(id = 1, name = "Mobile", createdAt = 0, updatedAt = 0)),
+                selectedId = 1,
+                loading = false,
+            ),
+        )
+        setGoldenContent(this) { RootContent(root) }
+        onNodeWithText("Cancel").performClick()
+        captureGolden(this)
+    }
+
+    @Test
+    fun failedUpdateInLightThemeMatchesReference() = runDesktopComposeUiTest {
+        val resume = Resume(
+            id = 12,
+            projectId = 1,
+            name = "Mobile developer",
+            createdAt = 10,
+            updatedAt = 20,
+            content = sampleResumeContent(),
+        )
+        val component = TestResumeEditorComponent(initialResume = resume)
+        component.saveState.value = ResumeSaveState.Failed
+        setGoldenContent(this, themeMode = ThemeMode.Light) { ResumeEditorContent(component) }
+        onNodeWithText("Cancel").performClick()
+        captureGolden(this)
+    }
+
     @Test
     fun emptyCreationPageMatchesReference() = runDesktopComposeUiTest {
         val component = TestResumeEditorComponent()

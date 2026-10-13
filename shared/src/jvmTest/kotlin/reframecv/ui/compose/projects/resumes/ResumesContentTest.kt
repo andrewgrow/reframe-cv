@@ -1,5 +1,8 @@
 package reframecv.ui.compose.projects.resumes
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
@@ -13,6 +16,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.ui.components.application.TestRootComponent
@@ -24,6 +28,30 @@ import reframecv.ui.theme.ReframeTheme
 
 @OptIn(ExperimentalTestApi::class)
 class ResumesContentTest {
+    @Test
+    fun titleAndDateOpenTheSelectedResumeInBothLayouts() = runComposeUiTest {
+        val resume = resumeSamples().first()
+        val edits = mutableListOf<Long>()
+        val component = TestResumesComponent(
+            initialState = ResumesState.Ready(listOf(resume)),
+            edit = { edits += it.id },
+        )
+        val narrow = androidx.compose.runtime.mutableStateOf(false)
+        setContent {
+            ReframeTheme {
+                Box(if (narrow.value) Modifier.width(280.dp) else Modifier.width(800.dp)) {
+                    ResumesContent(component)
+                }
+            }
+        }
+        listOf(false, true).forEach { size ->
+            runOnIdle { narrow.value = size }
+            onNodeWithText(resume.name).performClick()
+            onNodeWithText("2026-10-10").performClick()
+        }
+        assertEquals(List(4) { resume.id }, edits)
+    }
+
     @Test
     fun showsNamesAndDatesAndKeepsAddAnchoredWhileScrolling() = runComposeUiTest {
         var adds = 0

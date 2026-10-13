@@ -3,6 +3,8 @@ package reframecv.ui.components.projects.resumes.editor
 import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.ResumeSection
+import reframecv.domain.models.resume.content.ResumeSkillsSection
+import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 
 /** Gives sections stable editor identities and preserves unfinished work/education dates. */
 data class ResumeSectionDraft(
@@ -22,6 +24,12 @@ data class ResumeSectionDraft(
         }
 
     fun toSection(): ResumeSection = when (val section = value) {
+        is ResumeSkillsSection -> section.copy(
+            groups = section.groups.map { group -> group.copy(items = group.items.cleanedItems()) },
+        )
+
+        is ResumeSoftSkillsSection -> section.copy(items = section.items.cleanedItems())
+
         is ResumeExperienceSection -> section.copy(
             entries = section.entries.mapIndexed { index, entry ->
                 entry.copy(period = periods[index].toPeriod())
@@ -37,3 +45,5 @@ data class ResumeSectionDraft(
         else -> section
     }
 }
+
+private fun List<String>.cleanedItems(): List<String> = map { it.trim() }.filter { it.isNotEmpty() }

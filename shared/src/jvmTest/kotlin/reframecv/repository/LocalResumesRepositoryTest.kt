@@ -13,6 +13,34 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 
 class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
     @Test
+    fun editedDraftKeepsSourceAndCreationDateAfterReopeningDatabase() = runBlocking<Unit> {
+        val projectId = project()
+        val repository = LocalResumesRepository(database.resumeDao())
+        val sourceId = repository.create(resume(projectId))
+        val derivedId = repository.create(
+            resume(projectId).copy(
+                sourceResumeId = sourceId,
+                content = sampleResumeContent(),
+            ),
+        )
+        val original = repository.observeResumes(projectId).first().single { it.id == derivedId }
+        val draft = ResumeDraft.fromResume(original).copy(name = "Tailored", keywords = "Compose")
+        repository.update(draft.applyTo(original))
+        database.close()
+        openDatabase()
+        val records = LocalResumesRepository(database.resumeDao()).observeResumes(projectId).first()
+        assertEquals(2, records.size)
+        val saved = records.single { it.id == derivedId }
+        assertEquals("Tailored", saved.name)
+        assertEquals(listOf("Compose"), saved.keywords)
+        assertEquals(sourceId, saved.sourceResumeId)
+        assertEquals(original.createdAt, saved.createdAt)
+        assertTrue(saved.updatedAt >= original.updatedAt)
+        assertEquals(original.content, saved.content)
+        assertEquals("Resume", records.single { it.id == sourceId }.name)
+    }
+
+    @Test
     fun creationDraftPersistsStructuredContentAndActivatesWorkspace() = runBlocking<Unit> {
         val projectId = project()
         val content = sampleResumeContent()

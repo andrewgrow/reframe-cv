@@ -699,3 +699,30 @@ ordering/visibility, validation, failed-write retry, duplicate saves, Back behav
 and database persistence after reopening. Goldens cover the full shell, narrow panes,
 150% scale, light/dark themes, missing name, save failure, and individual section editors.
 Resume-list goldens were updated for the enabled Add button.
+
+## Comma-separated resume skills — 2026-10-13
+
+Skills and Soft skills now use single-line Items (comma-separated) fields, like
+vacancy keywords. Drafts retain spaces and trailing separators while typing; saving
+trims each item and drops empty entries. The schema still stores arrays of strings.
+Updated the two section references and added a UI test covering both skill types.
+
+## Saved resume editing — 2026-10-13
+
+Clicking a resume name or added date opens the existing full-page form with an
+Edit resume header and Update action. ResumeDraft restores profile, keywords,
+all section types, order, visibility, professional projects/tools, and partial
+or ongoing dates. Updating changes the existing record while preserving its ID,
+project, creation timestamp, and sourceResumeId; the repository refreshes updatedAt.
+
+Cancel, Escape, and hardware Back discard edits and return to the list. Failed
+updates preserve the draft for retry and log projectId/resumeId with the stack trace.
+Saving retains the shared duplicate-write and navigation guards. Editor footer
+actions were extracted into ResumeEditorActions for reuse by both modes.
+
+Verification: all 350 JVM tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed. New tests cover row clicks in
+wide/narrow layouts, full structured round trips, section edits, cancellation,
+failed-write retry, duplicate updates, lifecycle cancellation, and persistence
+after reopening without creating a duplicate or changing provenance. Added
+goldens cover editing in the application shell and a failed update in light theme.

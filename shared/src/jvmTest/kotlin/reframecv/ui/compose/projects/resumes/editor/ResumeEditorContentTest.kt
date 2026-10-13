@@ -3,6 +3,9 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -14,15 +17,95 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
+import reframecv.domain.models.resume.content.ResumeSkillGroup
+import reframecv.domain.models.resume.content.ResumeSkillsSection
+import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
+import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeEditorContentTest : GoldenScreenshotTest() {
+    @Test
+    fun editingLoadsSectionsAndSubmitsChangesWithOriginalIdentity() = runDesktopComposeUiTest {
+        val original = Resume(
+            id = 12,
+            projectId = 7,
+            name = "Mobile",
+            createdAt = 10,
+            updatedAt = 20,
+            content = sampleResumeContent(),
+            sourceResumeId = 11,
+        )
+        var saved: Resume? = null
+        val component = TestResumeEditorComponent(
+            initialResume = original,
+            save = { saved = it.applyTo(original) },
+        )
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Edit resume").assertExists()
+        onNodeWithTag("resume.name").performTextReplacement("Backend")
+        onNodeWithText(
+            "Professional headline",
+        ).performScrollTo().performTextReplacement("Backend engineer")
+        val customSection = hasAnyAncestor(hasTestTag("resume.section.8"))
+        onNode(hasText("Section title") and customSection).performScrollTo()
+            .performTextReplacement("Certificates")
+        onNode(hasText("Include in resume") and customSection).performScrollTo().performClick()
+        onNode(hasText("Move up") and customSection).performScrollTo().performClick()
+        onNodeWithText("Update").performClick()
+        val result = checkNotNull(saved)
+        assertEquals("Backend", result.name)
+        assertEquals("Backend engineer", result.content.profile.headline)
+        assertEquals(original.id, result.id)
+        assertEquals(original.createdAt, result.createdAt)
+        assertEquals(original.sourceResumeId, result.sourceResumeId)
+        assertEquals("Certificates", result.content.sections[6].title)
+        assertFalse(result.content.sections[6].visible)
+        assertEquals(original.content, sampleResumeContent())
+    }
+
+    @Test
+    fun skillListsUseCommasAndSaveTrimmedNonEmptyItems() = runDesktopComposeUiTest {
+        var writes = 0
+        val component = TestResumeEditorComponent(save = { writes++ })
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        val sections = listOf(
+            ResumeSkillsSection(groups = listOf(ResumeSkillGroup("Mobile"))),
+            ResumeSoftSkillsSection(),
+        )
+        sections.forEach { section ->
+            runOnIdle { component.onDraftChange(ResumeDraft("Draft").addSection(section)) }
+            onNodeWithText("Items (comma-separated)").performScrollTo()
+                .performTextReplacement(" Kotlin, Compose, , Coroutines, ")
+            // Typing preserves separators and spaces until Save converts the draft.
+            val expected = listOf("Kotlin", "Compose", "Coroutines")
+            onNodeWithText("Save").performClick()
+            val saved = component.draft.value.toResume(1).content.sections.single()
+            val items = when (saved) {
+                is ResumeSkillsSection -> saved.groups.single().items
+                is ResumeSoftSkillsSection -> saved.items
+                else -> error("Unexpected section")
+            }
+            assertEquals(expected, items)
+            assertEquals(
+                " Kotlin, Compose, , Coroutines, ",
+                when (val raw = component.draft.value.sections.single().value) {
+                    is ResumeSkillsSection -> raw.groups.single().items.joinToString(",")
+                    is ResumeSoftSkillsSection -> raw.items.joinToString(",")
+                    else -> error("Unexpected section")
+                },
+            )
+        }
+        assertEquals(2, writes)
+    }
+
     @Test
     fun validatesNameAndSavesProfileSummaryAndKeywordsWithFixedControls() =
         runDesktopComposeUiTest {

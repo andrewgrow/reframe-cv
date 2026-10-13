@@ -17,7 +17,7 @@ import reframecv.ui.theme.ReframeTheme
 internal const val RESUMES_LIST_TAG = "resumes.list"
 
 @Composable
-internal fun ResumesList(resumes: List<Resume>, timeZone: TimeZone) {
+internal fun ResumesList(resumes: List<Resume>, timeZone: TimeZone, onEdit: (Resume) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val table = maxWidth >= ReframeTheme.tokens.dimensions.resumeTableMinWidth
         Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium)) {
@@ -32,7 +32,7 @@ internal fun ResumesList(resumes: List<Resume>, timeZone: TimeZone) {
                             ReframeTheme.tokens.spacing.medium,
                         ),
                     ) {
-                        ResumeRow(resume, timeZone, table)
+                        ResumeRow(resume, timeZone, table) { onEdit(resume) }
                         HorizontalDivider()
                     }
                 }

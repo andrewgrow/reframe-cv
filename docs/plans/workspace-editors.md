@@ -2,12 +2,12 @@
 
 ## Status and scope
 
-Active follow-up to the completed workspace/dashboard milestone, as of 2026-10-12.
+Active follow-up to the completed workspace/dashboard milestone, as of 2026-10-13.
 The [development log](../development-log.md) preserves earlier decisions and verification.
 This plan tracks remaining work; unchecked items are not implemented.
 
-Resume browsing and creation are implemented; editing and confirmed deletion are
-the next resume steps. Agree on each editor's UX and validation before implementing it.
+Resume browsing, creation, and editing are implemented; confirmed deletion is
+the next resume step. Agree on each editor's UX and validation before implementing it.
 Later sections are separate work, not prerequisites for the first resume editor.
 
 ## Existing foundation
@@ -19,18 +19,19 @@ Later sections are separate work, not prerequisites for the first resume editor.
   attachment are implemented. URL fetching and source parsing are not implemented.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
-  persisted as versioned JSON. Creation edits every section type; editing saved
-  resumes and importing documents remain future work.
+  persisted as versioned JSON. Creation and editing support every section type; importing documents remains
+  future work.
 - The resume list opens from its dashboard card and observes project-scoped data.
   Add opens a full-page structured creation form. Only the resume name is required;
-  date fields accept an optional year or year-month and an ongoing period.
+  Clicking a saved name or date opens the same form in Update mode. Date fields
+  accept an optional year or year-month and an ongoing period.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO, but there is no selection UI or adaptation workflow.
 - All deletion is permanent. Deleting a project removes its subtree and contents;
   shared source snapshots survive until their last vacancy reference is removed.
 - Creating the first workspace record sets Workspace; deleting the last returns
   Unconfigured. Opening Configure alone does not persist a mode change.
-- Vacancy editing uses a nested list/editor stack with a component-owned draft.
+- Vacancy and resume editing use nested list/editor stacks with component-owned drafts.
   Back returns editor → list → dashboard → parent project list; deletion confirmation
   is cancelled first. Project dialogs still handle Escape before page navigation.
 - Project creation/editing uses the shared ResizableDialog for future dialog reuse.
@@ -44,11 +45,12 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - [x] Define typed resume content and verify versioned JSON storage and independent adaptations.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
 - [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
-- [ ] Add editing of saved resumes using the structured content model.
+- [x] Add editing of saved resumes using the structured content model.
 - [ ] Add permanent deletion with confirmation and existing relationship cleanup.
-- [x] Preserve creation drafts on failure, block duplicate writes, and follow existing Back behavior.
+- [x] Preserve creation/editing drafts on failure, block duplicate writes, and follow existing Back behavior.
 - [x] Verify creation navigation, persistence, count/mode updates, failures, and relevant goldens.
-- [ ] Verify editing/deletion navigation, persistence, relationship cleanup, and goldens.
+- [x] Verify editing navigation, persistence, preserved identity/provenance, failures, and goldens.
+- [ ] Verify deletion navigation, persistence, relationship cleanup, and goldens.
 
 ## 2. Main resume and adaptations
 

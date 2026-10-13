@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeDate
 import reframecv.domain.models.resume.content.ResumeDateRange
 import reframecv.domain.models.resume.content.ResumeEducationSection
@@ -13,6 +14,37 @@ import reframecv.domain.models.resume.content.ResumeTextSection
 import reframecv.domain.models.resume.content.sampleResumeContent
 
 class ResumeDraftTest {
+    @Test
+    fun editingDraftRestoresAllSectionsDatesAndRecordIdentity() {
+        val original = Resume(
+            id = 12,
+            projectId = 7,
+            name = "Mobile",
+            createdAt = 10,
+            updatedAt = 20,
+            content = sampleResumeContent(),
+            sourceResumeId = 11,
+            keywords = listOf("Kotlin", "Compose"),
+        )
+        val draft = ResumeDraft.fromResume(original)
+        assertEquals(original, draft.applyTo(original))
+        assertEquals((1L..8L).toList(), draft.sections.map { it.id })
+        assertEquals(9L, draft.addSection(ResumeTextSection("Extra")).sections.last().id)
+        val changed = draft.copy(
+            name = "  Backend  ",
+            profile = draft.profile.copy(headline = "Engineer"),
+        )
+            .moveSection(8, -1).applyTo(original)
+        assertEquals("Backend", changed.name)
+        assertEquals("Engineer", changed.content.profile.headline)
+        assertEquals(original.id, changed.id)
+        assertEquals(original.projectId, changed.projectId)
+        assertEquals(original.createdAt, changed.createdAt)
+        assertEquals(original.sourceResumeId, changed.sourceResumeId)
+        assertEquals("Certifications", changed.content.sections[6].title)
+        assertEquals(original.content, sampleResumeContent())
+    }
+
     @Test
     fun preservesAllStructuredContentInSchemaOrder() {
         val content = sampleResumeContent()

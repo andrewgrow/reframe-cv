@@ -2,13 +2,15 @@ package reframecv.ui.components.projects.resumes.editor
 
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import reframecv.domain.models.resume.Resume
 import reframecv.ui.context.AppComponentContext
 
 /** Reports resume save progress without discarding a failed draft. */
 enum class ResumeSaveState { Idle, Saving, Failed }
 
-/** Lets the creation page edit a structured draft and submit it to its project. */
+/** Lets creation and editing share a structured draft and save feedback. */
 interface ResumeEditorComponent {
+    val initialResume: Resume?
     val draft: Value<ResumeDraft>
     val saveState: Value<ResumeSaveState>
     val validationRequested: Value<Boolean>
@@ -18,14 +20,15 @@ interface ResumeEditorComponent {
     fun onClose()
 }
 
-/** Validates creation and blocks edits or dismissal while a resume is being saved. */
+/** Validates resume changes and prevents dismissal while saving. */
 class DefaultResumeEditorComponent(
     componentContext: AppComponentContext,
     private val save: (ResumeDraft) -> Unit,
     private val close: () -> Unit,
+    override val initialResume: Resume? = null,
 ) : ResumeEditorComponent,
     AppComponentContext by componentContext {
-    override val draft = MutableValue(ResumeDraft())
+    override val draft = MutableValue(initialResume?.let(ResumeDraft::fromResume) ?: ResumeDraft())
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
 

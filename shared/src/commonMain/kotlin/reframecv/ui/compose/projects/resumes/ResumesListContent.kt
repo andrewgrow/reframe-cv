@@ -60,7 +60,7 @@ internal fun ResumesListContent(component: ResumesComponent) {
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             } else {
-                                ResumesList(current.resumes, timeZone)
+                                ResumesList(current.resumes, timeZone, component::onEdit)
                             }
                         }
                     }

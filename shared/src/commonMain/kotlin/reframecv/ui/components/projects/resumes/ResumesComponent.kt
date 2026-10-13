@@ -10,13 +10,14 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import reframecv.domain.models.resume.Resume
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
-/** Lets a project browse its resumes and create structured drafts. */
+/** Lets a project browse, create, and edit its structured resumes. */
 interface ResumesComponent {
     val projectId: Long
     val uiState: Value<ResumesState>
@@ -29,9 +30,10 @@ interface ResumesComponent {
         /** Displays the current project's resume list. */
         data object List : Child
 
-        /** Displays resume creation within the application shell. */
+        /** Displays resume creation or editing within the application shell. */
         data class Editor(val component: ResumeEditorComponent) : Child
     }
+    fun onEdit(resume: Resume)
     fun onAdd()
     fun onRetry()
     fun onBack()
@@ -54,13 +56,16 @@ class DefaultResumesComponent(
         .also { it.accept(ResumesIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
 
-    /** Selects the resume list or creation page. */
+    /** Selects the resume list, creation page, or a saved resume. */
     private sealed interface EditorConfiguration {
         /** Opens the resume list. */
         data object List : EditorConfiguration
 
         /** Opens creation of a new resume. */
         data object Create : EditorConfiguration
+
+        /** Opens an independent draft of the selected saved resume. */
+        data class Edit(val resume: Resume) : EditorConfiguration
     }
 
     private val editorNavigation = StackNavigation<EditorConfiguration>()
@@ -73,10 +78,20 @@ class DefaultResumesComponent(
         if (configuration == EditorConfiguration.List) {
             ResumesComponent.Child.List
         } else {
+            val original = (configuration as? EditorConfiguration.Edit)?.resume
             ResumesComponent.Child.Editor(
                 DefaultResumeEditorComponent(
                     childContext,
-                    save = { draft -> store.accept(ResumesIntent.Create(draft)) },
+                    save = { draft ->
+                        store.accept(
+                            if (original == null) {
+                                ResumesIntent.Create(draft)
+                            } else {
+                                ResumesIntent.Update(original, draft)
+                            },
+                        )
+                    },
+                    initialResume = original,
                     close = { editorNavigation.pop() },
                 ),
             )
@@ -108,6 +123,12 @@ class DefaultResumesComponent(
 
     override fun onAdd() {
         if (editor == null) editorNavigation.pushNew(EditorConfiguration.Create)
+    }
+
+    override fun onEdit(resume: Resume) {
+        if (editor == null && resume.projectId == projectId && resume.id > 0) {
+            editorNavigation.pushNew(EditorConfiguration.Edit(resume))
+        }
     }
 
     override fun onRetry() = store.accept(ResumesIntent.Load)

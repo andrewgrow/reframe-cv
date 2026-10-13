@@ -1,13 +1,16 @@
 package reframecv.ui.components.projects.resumes.editor
 
 import com.arkivanov.decompose.value.MutableValue
+import reframecv.domain.models.resume.Resume
 
 class TestResumeEditorComponent(
-    initialDraft: ResumeDraft = ResumeDraft(),
+    initialDraft: ResumeDraft? = null,
+    override val initialResume: Resume? = null,
     private val save: (ResumeDraft) -> Unit = {},
     private val close: () -> Unit = {},
 ) : ResumeEditorComponent {
-    override val draft = MutableValue(initialDraft)
+    override val draft =
+        MutableValue(initialDraft ?: initialResume?.let(ResumeDraft::fromResume) ?: ResumeDraft())
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
     override fun onDraftChange(draft: ResumeDraft) {

@@ -24,8 +24,10 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_create
 import reframecv.shared.generated.resources.resume_dates_error
+import reframecv.shared.generated.resources.resume_edit
 import reframecv.shared.generated.resources.resume_save
 import reframecv.shared.generated.resources.resume_save_error
+import reframecv.shared.generated.resources.resume_update
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.compose.common.FillButton
@@ -39,6 +41,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
     val saveState by component.saveState.subscribeAsState()
     val validationRequested by component.validationRequested.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving
+    val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
@@ -50,7 +53,13 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                 Modifier.weight(1f).fillMaxWidth().padding(tokens.spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
             ) {
-                PageHeader(stringResource(Res.string.resume_create), component::onClose, !busy)
+                PageHeader(
+                    stringResource(
+                        if (editing) Res.string.resume_edit else Res.string.resume_create,
+                    ),
+                    component::onClose,
+                    !busy,
+                )
                 if (saveState == ResumeSaveState.Failed) {
                     SelectableText(
                         stringResource(Res.string.resume_save_error),
@@ -66,24 +75,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                 ResumeEditorFields(draft, component::onDraftChange, !busy, validationRequested)
             }
             HorizontalDivider()
-            FlowRow(
-                Modifier.fillMaxWidth().padding(tokens.spacing.medium),
-                horizontalArrangement = Arrangement.spacedBy(tokens.spacing.medium, Alignment.End),
-                verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
-            ) {
-                FillButton(
-                    stringResource(Res.string.resume_save),
-                    component::onSave,
-                    enabled = !busy,
-                    outlineState = FillButton.OutlineState.Visible,
-                )
-                FillButton(
-                    stringResource(Res.string.resume_cancel),
-                    component::onClose,
-                    enabled = !busy,
-                    outlineState = FillButton.OutlineState.Visible,
-                )
-            }
+            ResumeEditorActions(component)
         }
     }
 }

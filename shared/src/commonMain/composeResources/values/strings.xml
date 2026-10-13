@@ -100,7 +100,7 @@
     <string name="resume_custom_text">Custom text</string>
     <string name="resume_text">Text</string>
     <string name="resume_group">Skill group</string>
-    <string name="resume_items">Items (one per line)</string>
+    <string name="resume_items">Items (comma-separated)</string>
     <string name="resume_add_entry">Add entry</string>
     <string name="resume_add_group">Add group</string>
     <string name="resume_position">Position</string>
@@ -127,4 +127,6 @@
     <string name="resume_contact_label">Display label</string>
     <string name="resume_contact_value">Value</string>
     <string name="resume_dates_error">Check the dates in Work experience and Education. Use YYYY or YYYY-MM.</string>
+    <string name="resume_edit">Edit resume</string>
+    <string name="resume_update">Update</string>
 </resources>

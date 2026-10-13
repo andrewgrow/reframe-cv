@@ -38,13 +38,12 @@ internal fun ResumeFormScope.SimpleSectionFields(
 
         is ResumeSoftSkillsSection -> Field(
             section.items.joinToString(
-                "\n",
+                ",",
             ),
             Res.string.resume_items,
             {
-                onChange(section.copy(items = it.split('\n')))
+                onChange(section.copy(items = it.split(',')))
             },
-            multiline = true,
         )
 
         is ResumeSkillsSection -> Entries(
@@ -54,9 +53,9 @@ internal fun ResumeFormScope.SimpleSectionFields(
             Res.string.resume_add_group,
         ) { group, change ->
             Field(group.title, Res.string.resume_group, { change(group.copy(title = it)) })
-            Field(group.items.joinToString("\n"), Res.string.resume_items, {
-                change(group.copy(items = it.split('\n')))
-            }, multiline = true)
+            Field(group.items.joinToString(","), Res.string.resume_items, {
+                change(group.copy(items = it.split(',')))
+            })
         }
 
         is ResumeLanguagesSection -> Entries(
