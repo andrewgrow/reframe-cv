@@ -670,3 +670,32 @@ and empty lists, load failures, both themes, narrow panes, and 150% scale. Dashb
 references were updated for the clickable Resumes card. Tests cover live updates,
 observation cancellation, retry/logging, fixed controls, card clicks, and return
 to the dashboard using page, Escape, and hardware Back.
+
+## Structured resume creation — 2026-10-12
+
+Add in the resume list opens a full-page creation component within the application
+shell. The form edits a version name, comma-separated keywords, profile, and every
+version 1 section type: summary, grouped skills, work experience (including professional
+projects and categorized tools), education, languages, soft skills, contacts, and
+custom text. Sections have editable titles and export visibility, can be reordered
+or removed, and expand/collapse with animation. Repeated entries can be added or removed.
+
+Only the version name is required; incomplete documents can be saved. Work and
+education dates accept blank, YYYY, or YYYY-MM. Present omits the end date from
+the stored document while retaining the typed end in the draft if toggled off.
+Invalid dates remain editable, mark their fields/section, and prevent saving.
+
+The component owns the draft; repository writes run through ResumesStore with
+progress/failure labels, duplicate-write protection, and contextual error logging.
+Failed writes retain the form for retry. Back, Cancel, Escape, and hardware Back
+return to the resume list; saving blocks dismissal, edits, and project-tree navigation.
+Saving stores typed content through the existing versioned JSON codec and refreshes
+observed lists/dashboard counts. The repository activates Workspace on first creation.
+Editing/deleting saved resumes and choosing a main resume remain planned work.
+
+Verification: all 340 JVM tests, ktlint, Detekt, coverage reports/verification, and
+macOS packaging passed. Creation tests cover all schema section types, partial dates,
+ordering/visibility, validation, failed-write retry, duplicate saves, Back behavior,
+and database persistence after reopening. Goldens cover the full shell, narrow panes,
+150% scale, light/dark themes, missing name, save failure, and individual section editors.
+Resume-list goldens were updated for the enabled Add button.

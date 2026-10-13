@@ -6,9 +6,9 @@ Active follow-up to the completed workspace/dashboard milestone, as of 2026-10-1
 The [development log](../development-log.md) preserves earlier decisions and verification.
 This plan tracks remaining work; unchecked items are not implemented.
 
-The proposed next step is the resume list and editor. Agree on each editor's UX and
-validation before implementing it. Later sections are separate work, not prerequisites
-for the first resume editor.
+Resume browsing and creation are implemented; editing and confirmed deletion are
+the next resume steps. Agree on each editor's UX and validation before implementing it.
+Later sections are separate work, not prerequisites for the first resume editor.
 
 ## Existing foundation
 
@@ -19,9 +19,11 @@ for the first resume editor.
   attachment are implemented. URL fetching and source parsing are not implemented.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
-  persisted as versioned JSON; section editing and import are still future work.
+  persisted as versioned JSON. Creation edits every section type; editing saved
+  resumes and importing documents remain future work.
 - The resume list opens from its dashboard card and observes project-scoped data.
-  Resume creation/editing is not implemented yet; Add is disabled.
+  Add opens a full-page structured creation form. Only the resume name is required;
+  date fields accept an optional year or year-month and an ongoing period.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO, but there is no selection UI or adaptation workflow.
 - All deletion is permanent. Deleting a project removes its subtree and contents;
@@ -36,15 +38,17 @@ for the first resume editor.
 
 ## 1. Resume list and editor
 
-- [ ] Agree on list columns, editor fields, and minimum name/content validation.
+- [x] Agree on list columns, editor fields, and minimum name/content validation.
 - [x] Open the project's resume list from its dashboard section.
 - [x] Observe ResumesRepository with loading, empty, error, and Retry states.
 - [x] Define typed resume content and verify versioned JSON storage and independent adaptations.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
-- [ ] Add creation and editing using the structured content model.
+- [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
+- [ ] Add editing of saved resumes using the structured content model.
 - [ ] Add permanent deletion with confirmation and existing relationship cleanup.
-- [ ] Preserve drafts on failure, block duplicate writes, and follow existing Back behavior.
-- [ ] Verify navigation, persistence, count/mode updates, failures, and relevant goldens.
+- [x] Preserve creation drafts on failure, block duplicate writes, and follow existing Back behavior.
+- [x] Verify creation navigation, persistence, count/mode updates, failures, and relevant goldens.
+- [ ] Verify editing/deletion navigation, persistence, relationship cleanup, and goldens.
 
 ## 2. Main resume and adaptations
 

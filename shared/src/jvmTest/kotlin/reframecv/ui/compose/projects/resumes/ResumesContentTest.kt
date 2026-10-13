@@ -3,7 +3,7 @@ package reframecv.ui.compose.projects.resumes
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -26,8 +26,10 @@ import reframecv.ui.theme.ReframeTheme
 class ResumesContentTest {
     @Test
     fun showsNamesAndDatesAndKeepsAddAnchoredWhileScrolling() = runComposeUiTest {
+        var adds = 0
         val sample = resumeSamples().first()
         val component = TestResumesComponent(
+            add = { adds++ },
             initialState = ResumesState.Ready(
                 List(30) { sample.copy(id = it.toLong(), name = "Resume $it") },
             ),
@@ -36,7 +38,8 @@ class ResumesContentTest {
         onNodeWithText("Resume 0").assertIsDisplayed()
         onNodeWithTag(RESUMES_LIST_TAG).performScrollToNode(hasText("Resume 29"))
         onNodeWithText("Resume 29").assertIsDisplayed()
-        onNodeWithText("Add").assertIsDisplayed().assertIsNotEnabled()
+        onNodeWithText("Add").assertIsDisplayed().assertIsEnabled().performClick()
+        assertEquals(1, adds)
         runOnIdle { component.uiState.value = ResumesState.Ready(listOf(sample)) }
         onNodeWithText(sample.name).assertIsDisplayed()
         onNodeWithText("2026-10-10").assertIsDisplayed()

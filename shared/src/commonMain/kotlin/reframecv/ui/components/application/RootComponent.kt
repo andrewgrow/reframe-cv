@@ -53,7 +53,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     private var activeProjects: List<Project> = emptyList()
 
     override fun onProjectsList() {
-        if (isVacancyEditorBusy()) return
+        if (isDocumentEditorBusy()) return
         navigation.popTo(0)
     }
 
@@ -69,7 +69,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     override val projectTree = DefaultProjectTreeComponent(
         componentContext = componentContext,
         openProject = { projects ->
-            if (!isVacancyEditorBusy()) openPath(projects.map { ProjectPathEntry(it.id, it.name) })
+            if (!isDocumentEditorBusy()) openPath(projects.map { ProjectPathEntry(it.id, it.name) })
         },
         openProjectsList = ::onProjectsList,
         onProjectsChanged = ::onProjectsChanged,
@@ -84,9 +84,13 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         lifecycle.doOnDestroy { subscription.cancel() }
     }
 
-    private fun isVacancyEditorBusy(): Boolean =
-        (childStack.value.active.instance as? RootComponent.Child.Vacancies)
-            ?.component?.editor?.isBusy == true
+    private fun isDocumentEditorBusy(): Boolean = when (
+        val child = childStack.value.active.instance
+    ) {
+        is RootComponent.Child.Vacancies -> child.component.editor?.isBusy == true
+        is RootComponent.Child.Resumes -> child.component.editor?.isBusy == true
+        else -> false
+    }
 
     private fun openPath(
         path: List<ProjectPathEntry>,

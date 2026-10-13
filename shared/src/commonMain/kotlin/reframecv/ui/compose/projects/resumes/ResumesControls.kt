@@ -15,7 +15,7 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun ResumesControls(onRetry: (() -> Unit)? = null) {
+internal fun ResumesControls(onAdd: () -> Unit, onRetry: (() -> Unit)? = null) {
     val tokens = ReframeTheme.tokens
     FlowRow(
         Modifier.fillMaxWidth().padding(tokens.spacing.medium),
@@ -27,8 +27,7 @@ internal fun ResumesControls(onRetry: (() -> Unit)? = null) {
     ) {
         FillButton(
             text = stringResource(Res.string.resume_add),
-            onClick = {},
-            enabled = false,
+            onClick = onAdd,
             outlineState = FillButton.OutlineState.Visible,
         )
         onRetry?.let { retry ->

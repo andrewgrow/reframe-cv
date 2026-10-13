@@ -8,8 +8,33 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.resume.content.sampleResumeContent
+import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 
 class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
+    @Test
+    fun creationDraftPersistsStructuredContentAndActivatesWorkspace() = runBlocking<Unit> {
+        val projectId = project()
+        val content = sampleResumeContent()
+        val initial = ResumeDraft("  Mobile  ", profile = content.profile)
+        val draft = content.sections.fold(initial) { value, section ->
+            value.addSection(section)
+        }
+        val repository = LocalResumesRepository(database.resumeDao())
+        val id = repository.create(draft.toResume(projectId))
+        database.close()
+        openDatabase()
+        val saved = LocalResumesRepository(
+            database.resumeDao(),
+        ).observeResumes(projectId).first().single()
+        assertEquals(id, saved.id)
+        assertEquals("Mobile", saved.name)
+        assertEquals(content, saved.content)
+        assertTrue(saved.createdAt > 0)
+        assertEquals(saved.createdAt, saved.updatedAt)
+        assertEquals(ProjectMode.Workspace, database.projectDao().findById(projectId)?.mode)
+    }
+
     @Test
     fun writesReadsSearchesUpdatesAndPermanentlyDeletes() = runBlocking<Unit> {
         val projectId = project()

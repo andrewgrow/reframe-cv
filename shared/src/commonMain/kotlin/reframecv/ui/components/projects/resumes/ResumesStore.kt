@@ -7,7 +7,7 @@ import reframecv.logging.ApplicationLogger
 import reframecv.repository.ResumesRepository
 
 /** Gives resume browsing a lifecycle-bound source of observable state. */
-internal interface ResumesStore : Store<ResumesIntent, ResumesState, Nothing>
+internal interface ResumesStore : Store<ResumesIntent, ResumesState, ResumesLabel>
 
 internal fun createResumesStore(
     storeFactory: StoreFactory,
@@ -16,7 +16,7 @@ internal fun createResumesStore(
     logger: ApplicationLogger,
 ): ResumesStore = object :
     ResumesStore,
-    Store<ResumesIntent, ResumesState, Nothing> by storeFactory.create(
+    Store<ResumesIntent, ResumesState, ResumesLabel> by storeFactory.create(
         name = "ResumesStore(projectId=$projectId)",
         initialState = ResumesState.Loading,
         executorFactory = { ResumesExecutor(projectId, repository, logger) },
