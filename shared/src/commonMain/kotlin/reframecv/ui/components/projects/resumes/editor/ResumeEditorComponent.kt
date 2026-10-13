@@ -28,6 +28,7 @@ interface ResumeEditorComponent {
     val saveState: Value<ResumeSaveState>
     val deleteState: Value<ResumeDeleteState>
     val deleteConfirmation: Value<String>
+    val exportVisible: Value<Boolean>
     val validationRequested: Value<Boolean>
     val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving ||
         deleteState.value == ResumeDeleteState.Deleting
@@ -56,6 +57,8 @@ interface ResumeEditorComponent {
     fun onCancelDelete()
     fun onDraftChange(draft: ResumeDraft)
     fun onSave()
+    fun onExport()
+    fun onCloseExport()
     fun onClose()
 }
 
@@ -79,19 +82,49 @@ class DefaultResumeEditorComponent(
     override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val validationRequested = MutableValue(false)
+    override val exportVisible = MutableValue(false)
+    internal var savedRole = initialRole
+        private set
+    private var exportAfterSave = false
 
     override fun onDraftChange(draft: ResumeDraft) {
-        if (!isBusy && deleteState.value == ResumeDeleteState.Idle) this.draft.value = draft
+        if (!isBusy && !exportVisible.value && deleteState.value == ResumeDeleteState.Idle) {
+            this.draft.value = draft
+        }
     }
 
-    override fun onSave() {
-        if (isBusy || deleteState.value != ResumeDeleteState.Idle) return
+    override fun onSave() = requestSave(export = false)
+
+    override fun onExport() {
+        if (initialResume != null) requestSave(export = true)
+    }
+
+    private fun requestSave(export: Boolean) {
+        if (isBusy || exportVisible.value || deleteState.value != ResumeDeleteState.Idle) return
         validationRequested.value = true
-        if (draft.value.isValid) save(draft.value)
+        if (!draft.value.isValid) return
+        exportAfterSave = export
+        saveState.value = ResumeSaveState.Saving
+        save(draft.value)
+    }
+
+    internal fun onSaveCompleted(state: ResumeSaveState): Boolean {
+        saveState.value = state
+        if (state == ResumeSaveState.Idle) {
+            savedRole = draft.value.role
+            exportVisible.value = exportAfterSave
+        }
+        exportAfterSave = false
+        return exportVisible.value
+    }
+
+    override fun onCloseExport() {
+        exportVisible.value = false
     }
 
     override fun onRequestDelete() {
-        if (initialResume != null && !isBusy && deleteState.value == ResumeDeleteState.Idle) {
+        if (initialResume == null || isBusy) return
+        if (!exportVisible.value && deleteState.value == ResumeDeleteState.Idle) {
             deleteConfirmation.value = ""
             deleteState.value = ResumeDeleteState.Confirming
         }
@@ -114,7 +147,9 @@ class DefaultResumeEditorComponent(
 
     override fun onClose() {
         if (!isBusy) {
-            if (deleteState.value != ResumeDeleteState.Idle) {
+            if (exportVisible.value) {
+                onCloseExport()
+            } else if (deleteState.value != ResumeDeleteState.Idle) {
                 onDeleteDialogAction(ConfirmationDialogAction.Back)
             } else {
                 close()

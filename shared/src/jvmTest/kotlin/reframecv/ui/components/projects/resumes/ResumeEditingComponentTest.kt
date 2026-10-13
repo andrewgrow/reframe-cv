@@ -6,10 +6,12 @@ import com.arkivanov.essenty.lifecycle.destroy
 import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.runBlocking
@@ -21,6 +23,7 @@ import reframecv.repository.ResumesRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -86,7 +89,7 @@ class ResumeEditingComponentTest : ComponentTest() {
             editor.onDraftChange(changed)
             editor.onSave()
         }
-        withTimeout(10_000) {
+        withTimeout(10_000.milliseconds) {
             val logged = dependencies.logger.failures.receive()
             assertSame(failure, logged.error)
             assertEquals("Update resume", logged.operation)
@@ -128,11 +131,105 @@ class ResumeEditingComponentTest : ComponentTest() {
         val component = component(repository)
         val editor = openEditor(component, original())
         runOnUiThread { editor.onSave() }
-        withTimeout(10_000) {
+        withTimeout(10_000.milliseconds) {
             entered.await()
             runOnUiThread { lifecycle.destroy() }
             cancelled.await()
             assertTrue(dependencies.logger.failures.tryReceive().isFailure)
+        }
+    }
+
+    @Test
+    fun exportWaitsForSuccessfulSaveAndFailureCanBeRetried() = runBlocking<Unit> {
+        val original = original()
+        dependencies.resumesRepository.records.value = listOf(original)
+        var fail = true
+        var writes = 0
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val repository = object : ResumesRepository by dependencies.resumesRepository {
+            override suspend fun update(record: Resume) {
+                writes++
+                if (fail) error("Disk full")
+                entered.complete(Unit)
+                release.await()
+                dependencies.resumesRepository.update(record)
+            }
+        }
+        val component = component(repository)
+        val editor = openEditor(component, original)
+        runOnUiThread {
+            editor.onDraftChange(editor.draft.value.copy(name = " "))
+            editor.onExport()
+            assertTrue(editor.validationRequested.value)
+            assertFalse(editor.exportVisible.value)
+            assertEquals(0, writes)
+            editor.onDraftChange(editor.draft.value.copy(name = "Backend"))
+            editor.onExport()
+        }
+        withTimeout(10_000.milliseconds) {
+            dependencies.logger.failures.receive()
+            runOnUiThread {
+                assertEquals(ResumeSaveState.Failed, editor.saveState.value)
+                assertFalse(editor.exportVisible.value)
+                assertSame(editor, component.editor)
+                fail = false
+                editor.onExport()
+                editor.onExport()
+                editor.onSave()
+                component.onBack()
+                assertFalse(editor.exportVisible.value)
+                assertSame(editor, component.editor)
+            }
+            entered.await()
+            assertEquals(2, writes)
+            val shown = CompletableDeferred<Unit>()
+            val subscription = runOnUiThread {
+                editor.exportVisible.subscribe { if (it) shown.complete(Unit) }
+            }
+            release.complete(Unit)
+            shown.await()
+            runOnUiThread {
+                subscription.cancel()
+                assertEquals("Backend", dependencies.resumesRepository.records.value.single().name)
+                assertEquals(ResumeSaveState.Idle, editor.saveState.value)
+                assertSame(editor, component.editor)
+                (component.backHandler as BackDispatcher).back()
+                assertFalse(editor.exportVisible.value)
+                assertSame(editor, component.editor)
+            }
+        }
+    }
+
+    @Test
+    fun saveAfterExportCanClearNewMainSelectionAndReturnToList() = runBlocking<Unit> {
+        val original = original()
+        dependencies.resumesRepository.records.value = listOf(original)
+        val component = component(dependencies.resumesRepository)
+        val editor = openEditor(component, original)
+        val exported = CompletableDeferred<Unit>()
+        val finished = CompletableDeferred<Unit>()
+        val subscription = runOnUiThread {
+            component.childStack.subscribe { if (component.editor == null) finished.complete(Unit) }
+            editor.exportVisible.subscribe { if (it) exported.complete(Unit) }.also {
+                editor.onDraftChange(editor.draft.value.copy(role = ResumeRole.Main))
+                editor.onExport()
+            }
+        }
+        withTimeout(10_000.milliseconds) {
+            exported.await()
+            runOnUiThread {
+                assertEquals(original.id, dependencies.resumesRepository.mainResumeIds.value[7])
+                editor.onCloseExport()
+                editor.onDraftChange(editor.draft.value.copy(role = ResumeRole.Regular))
+                editor.onSave()
+            }
+            finished.await()
+            runOnUiThread {
+                subscription.cancel()
+                assertNull(component.editor)
+                assertNull(dependencies.resumesRepository.mainResumeIds.value[7])
+            }
         }
     }
 

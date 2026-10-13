@@ -802,3 +802,27 @@ Resume observation and keyword search now order by ascending ID. Names and updat
 timestamps do not change list position. Added a repository regression test with
 conflicting names/timestamps, project scoping, and an edit of the middle record.
 The resume repository tests, ktlint, and Detekt passed.
+
+## Resume export dialog placeholder — 2026-10-13
+
+Saved resume management now has an Export action; creation does not. The dialog offers a
+format dropdown with as JSON selected by default. Cancel, Download, and Escape
+only dismiss the dialog; no document is generated or saved. Added behavior tests
+and dark/light dialog goldens, and updated page references for the new action.
+
+Verification: all tests, screenshot verification, ktlint, Detekt, and coverage
+verification passed. Updated a pre-existing persistence-test expectation to match
+the ascending resume ID order.
+
+## Save before resume export — 2026-10-13
+
+Export now runs the same validation and persistence as Update, then opens the
+export dialog only after success without leaving the management page. Invalid
+drafts and storage failures keep the dialog closed; failures remain retryable.
+Pending saves block duplicate requests and navigation. Cancel, Download, and Back
+only close the export dialog; actual file generation is still unimplemented.
+The saved main-resume role is refreshed so later edits can clear a selection made
+during export. Component tests cover validation, delayed writes, failure/retry,
+duplicate requests, Back ordering, and main selection after an export.
+
+Verification: all tests, goldens, ktlint, Detekt, and coverage verification passed.

@@ -18,6 +18,7 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.resume_cancel
+import reframecv.shared.generated.resources.resume_export
 import reframecv.shared.generated.resources.resume_save
 import reframecv.shared.generated.resources.resume_update
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
@@ -27,7 +28,7 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun ResumeEditorActions(component: ResumeEditorComponent) {
+internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () -> Unit) {
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving || deleteState != ResumeDeleteState.Idle
@@ -49,6 +50,14 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent) {
                     ),
                 ) { Text(stringResource(Res.string.action_delete)) }
             }
+        }
+        if (editing) {
+            FillButton(
+                stringResource(Res.string.resume_export),
+                onExport,
+                enabled = !busy,
+                outlineState = FillButton.OutlineState.Visible,
+            )
         }
         FillButton(
             stringResource(

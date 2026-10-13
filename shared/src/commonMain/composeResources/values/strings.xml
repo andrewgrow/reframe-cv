@@ -136,4 +136,9 @@
     <string name="resume_delete_prompt">Type DELETE to confirm</string>
     <string name="resume_delete_confirm">Permanently delete</string>
     <string name="resume_delete_error">Could not delete the resume. Please try again.</string>
+    <string name="resume_export">Export</string>
+    <string name="resume_export_title">Export resume</string>
+    <string name="resume_export_format">Format</string>
+    <string name="resume_export_json">as JSON</string>
+    <string name="resume_export_download">Download</string>
 </resources>

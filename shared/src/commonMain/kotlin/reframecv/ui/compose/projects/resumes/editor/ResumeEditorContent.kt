@@ -38,6 +38,7 @@ import reframecv.ui.theme.ReframeTheme
 
 @Composable
 fun ResumeEditorContent(component: ResumeEditorComponent) {
+    val exportVisible by component.exportVisible.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
@@ -49,7 +50,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
         Column(
             Modifier.testTag("resumes.editor").fillMaxSize()
                 .background(MaterialTheme.colorScheme.background).safeContentPadding()
-                .pageBackHandler(component::onClose, enabled = !busy),
+                .pageBackHandler(component::onClose, enabled = !busy && !exportVisible),
         ) {
             Column(
                 Modifier.weight(1f).fillMaxWidth().padding(tokens.spacing.medium),
@@ -77,8 +78,9 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                 ResumeEditorFields(draft, component::onDraftChange, !busy, validationRequested)
             }
             HorizontalDivider()
-            ResumeEditorActions(component)
+            ResumeEditorActions(component, onExport = component::onExport)
         }
         if (deleteState != ResumeDeleteState.Idle) ResumeDeleteConfirmation(component)
+        if (exportVisible) ResumeExportDialog(onClose = component::onCloseExport)
     }
 }

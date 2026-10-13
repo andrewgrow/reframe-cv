@@ -35,7 +35,7 @@ class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
         assertEquals(listOf(sourceId), dao.search(projectId, " KOTLIN ").map { it.entity.id })
         assertEquals(listOf(id), dao.search(projectId, "java").map { it.entity.id })
         assertEquals(
-            listOf(id, sourceId),
+            listOf(sourceId, id),
             dao.observeActive(projectId).first().map {
                 it.entity.id
             },

@@ -27,6 +27,9 @@ Later sections are separate work, not prerequisites for the first resume editor.
   Clicking a saved name or date opens the same form as Resume, with Update and
   permanent Delete actions. Deletion requires typing DELETE in a confirmation dialog.
   Date fields accept an optional year or year-month and an ongoing period.
+- Export saves the current resume draft before opening the dialog with as JSON
+  selected. Invalid drafts and failed saves keep the dialog closed. Cancel and
+  Download only dismiss it; actual file export remains unimplemented.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO. Creation/editing can select or clear the main resume;
   document and selection changes are saved atomically. Adaptation remains planned.

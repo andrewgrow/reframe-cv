@@ -93,9 +93,10 @@ class DefaultResumesComponent(
                 DefaultResumeEditorComponent(
                     childContext,
                     save = { draft ->
+                        val savedRole = (editor as? DefaultResumeEditorComponent)?.savedRole
                         val change = when {
                             draft.role == ResumeRole.Main -> MainResumeChange.Select
-                            initialRole == ResumeRole.Main -> MainResumeChange.Clear
+                            savedRole == ResumeRole.Main -> MainResumeChange.Clear
                             else -> MainResumeChange.Keep
                         }
                         store.accept(
@@ -131,7 +132,12 @@ class DefaultResumesComponent(
                 when (label) {
                     ResumesLabel.Saving -> editor?.saveState?.value = ResumeSaveState.Saving
 
-                    ResumesLabel.Saved, ResumesLabel.Deleted -> editorNavigation.pop()
+                    ResumesLabel.Saved -> {
+                        val exported = editor?.onSaveCompleted(ResumeSaveState.Idle) == true
+                        if (!exported) editorNavigation.pop()
+                    }
+
+                    ResumesLabel.Deleted -> editorNavigation.pop()
 
                     ResumesLabel.Deleting -> editor?.deleteState?.value = ResumeDeleteState.Deleting
 
@@ -139,7 +145,7 @@ class DefaultResumesComponent(
                         editor?.deleteState?.value =
                             ResumeDeleteState.Failed
 
-                    ResumesLabel.SaveFailed -> editor?.saveState?.value = ResumeSaveState.Failed
+                    ResumesLabel.SaveFailed -> editor?.onSaveCompleted(ResumeSaveState.Failed)
                 }
             },
         )
