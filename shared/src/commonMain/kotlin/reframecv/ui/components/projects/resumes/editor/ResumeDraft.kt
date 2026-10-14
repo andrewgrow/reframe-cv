@@ -13,6 +13,9 @@ data class ResumeDraft(
     val sections: List<ResumeSectionDraft> = emptyList(),
     val nextSectionId: Long = 1,
     val role: ResumeRole = ResumeRole.Regular,
+    val language: String = "",
+    val consentStatement: String = "",
+    val consentStatementVisible: Boolean = true,
 ) {
     val isValid: Boolean
         get() = name.isNotBlank() && sections.all { it.isValid }
@@ -46,7 +49,13 @@ data class ResumeDraft(
         return resume.copy(
             name = name.trim(),
             keywords = keywords.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct(),
-            content = ResumeContent(profile, sections.map { it.toSection() }),
+            content = ResumeContent(
+                profile = profile,
+                sections = sections.map { it.toSection() },
+                language = language.trim().uppercase(),
+                consentStatement = consentStatement,
+                consentStatementVisible = consentStatementVisible,
+            ),
         )
     }
 
@@ -56,6 +65,9 @@ data class ResumeDraft(
             name = resume.name,
             keywords = resume.keywords.joinToString(", "),
             profile = resume.content.profile,
+            language = resume.content.language,
+            consentStatement = resume.content.consentStatement,
+            consentStatementVisible = resume.content.consentStatementVisible,
             sections = resume.content.sections.mapIndexed { index, section ->
                 ResumeSectionDraft(index.toLong() + 1, section)
             },

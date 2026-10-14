@@ -11,17 +11,14 @@ import reframecv.domain.models.resume.content.ResumeContactsSection
 import reframecv.domain.models.resume.content.ResumeLanguage
 import reframecv.domain.models.resume.content.ResumeLanguagesSection
 import reframecv.domain.models.resume.content.ResumeSection
-import reframecv.domain.models.resume.content.ResumeSkillGroup
 import reframecv.domain.models.resume.content.ResumeSkillsSection
 import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.ResumeTextSection
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.resume_add_group
 import reframecv.shared.generated.resources.resume_contact_label
 import reframecv.shared.generated.resources.resume_contact_type
 import reframecv.shared.generated.resources.resume_contact_value
-import reframecv.shared.generated.resources.resume_group
 import reframecv.shared.generated.resources.resume_items
 import reframecv.shared.generated.resources.resume_language
 import reframecv.shared.generated.resources.resume_level
@@ -45,16 +42,8 @@ internal fun ResumeFormScope.SimpleSectionFields(
             onChange(section.copy(items = it))
         }
 
-        is ResumeSkillsSection -> Entries(
-            section.groups,
-            { onChange(section.copy(groups = it)) },
-            ::ResumeSkillGroup,
-            Res.string.resume_add_group,
-        ) { group, change ->
-            Field(group.title, Res.string.resume_group, { change(group.copy(title = it)) })
-            CommaSeparatedItemsField(group.items) {
-                change(group.copy(items = it))
-            }
+        is ResumeSkillsSection -> SkillGroupFields(section.groups) {
+            onChange(section.copy(groups = it))
         }
 
         is ResumeLanguagesSection -> Entries(
@@ -81,7 +70,7 @@ internal fun ResumeFormScope.SimpleSectionFields(
 }
 
 @Composable
-private fun ResumeFormScope.CommaSeparatedItemsField(
+internal fun ResumeFormScope.CommaSeparatedItemsField(
     items: List<String>,
     onChange: (List<String>) -> Unit,
 ) {
@@ -94,5 +83,5 @@ private fun ResumeFormScope.CommaSeparatedItemsField(
     Field(input, Res.string.resume_items, {
         input = it
         onChange(it.split(','))
-    })
+    }, multiline = true, minLines = 1)
 }

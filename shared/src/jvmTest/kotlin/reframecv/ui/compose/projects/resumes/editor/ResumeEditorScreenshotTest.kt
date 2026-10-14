@@ -9,13 +9,17 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeSection
+import reframecv.domain.models.resume.content.ResumeSkillGroup
+import reframecv.domain.models.resume.content.ResumeSkillsSection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.application.TestRootComponent
@@ -50,7 +54,10 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
             name = "Mobile developer",
             createdAt = 10,
             updatedAt = 20,
-            content = sampleResumeContent(),
+            content = sampleResumeContent().copy(
+                language = "EN",
+                consentStatement = "Recruitment consent statement.",
+            ),
             keywords = listOf("Kotlin", "Compose"),
         )
         val component =
@@ -91,6 +98,26 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
         val component = TestResumeEditorComponent(initialResume = resume)
         component.saveState.value = ResumeSaveState.Saved
         setGoldenContent(this) { ResumeEditorContent(component) }
+        captureGolden(this)
+    }
+
+    @Test
+    fun consentStatementInLightThemeMatchesReference() = runDesktopComposeUiTest {
+        val resume = Resume(
+            id = 12,
+            projectId = 1,
+            name = "Mobile",
+            createdAt = 0,
+            updatedAt = 0,
+            content = sampleResumeContent().copy(
+                language = "EN",
+                consentStatement = "Recruitment consent statement.\nAdditional user-written text.",
+                consentStatementVisible = false,
+            ),
+        )
+        val component = TestResumeEditorComponent(initialResume = resume)
+        setGoldenContent(this, themeMode = ThemeMode.Light) { ResumeEditorContent(component) }
+        onNodeWithTag("resume.consent").performScrollTo()
         captureGolden(this)
     }
 
@@ -157,7 +184,30 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     fun skillsSectionInLightThemeMatchesReference() = captureSection(2, ThemeMode.Light)
 
     @Test
+    fun skillGroupRemovalMatchesReference() = captureSection(
+        sampleResumeContent().sections[2],
+        ThemeMode.Dark,
+        scrollTo = "Remove Skill Group",
+        confirmRemoval = true,
+    )
+
+    @Test
     fun experienceSectionMatchesReference() = captureSection(3)
+
+    @Test
+    fun experienceProjectControlsMatchReference() = captureSection(
+        sampleResumeContent().sections[3],
+        ThemeMode.Dark,
+        scrollTo = "Add Position",
+    )
+
+    @Test
+    fun experienceProjectRemovalInLightThemeMatchesReference() = captureSection(
+        sampleResumeContent().sections[3],
+        ThemeMode.Light,
+        scrollTo = "Remove Project",
+        confirmRemoval = true,
+    )
 
     @Test
     fun educationSectionMatchesReference() = captureSection(4)
@@ -174,28 +224,55 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     @Test
     fun customTextSectionMatchesReference() = captureSection(7)
 
+    @Test
+    fun multilineSkillItemsMatchReference() = captureSection(
+        ResumeSkillsSection(
+            groups = listOf(
+                ResumeSkillGroup(
+                    "Mobile",
+                    listOf(
+                        "Kotlin and Android application development",
+                        "Compose\nMultiplatform user interfaces",
+                        "Coroutines and structured concurrency",
+                    ),
+                ),
+            ),
+        ),
+        ThemeMode.Light,
+    )
+
     private fun captureSection(index: Int, theme: ThemeMode = ThemeMode.Dark) =
-        runDesktopComposeUiTest {
-            val section: ResumeSection = sampleResumeContent().sections[index]
-            setGoldenContent(this, themeMode = theme) {
-                Column(
-                    Modifier.fillMaxSize().background(
-                        MaterialTheme.colorScheme.background,
-                    ).verticalScroll(
-                        rememberScrollState(),
-                    ).padding(ReframeTheme.tokens.spacing.medium),
-                ) {
-                    ResumeSectionEditor(
-                        ResumeSectionDraft(1, section),
-                        ResumeFormScope(true),
-                        {},
-                        {},
-                        {},
-                        first = true,
-                        last = true,
-                    )
-                }
+        captureSection(sampleResumeContent().sections[index], theme)
+
+    private fun captureSection(
+        section: ResumeSection,
+        theme: ThemeMode,
+        scrollTo: String? = null,
+        confirmRemoval: Boolean = false,
+    ) = runDesktopComposeUiTest {
+        setGoldenContent(this, themeMode = theme) {
+            Column(
+                Modifier.fillMaxSize().background(
+                    MaterialTheme.colorScheme.background,
+                ).verticalScroll(
+                    rememberScrollState(),
+                ).padding(ReframeTheme.tokens.spacing.medium),
+            ) {
+                ResumeSectionEditor(
+                    ResumeSectionDraft(1, section),
+                    ResumeFormScope(true),
+                    {},
+                    {},
+                    {},
+                    first = true,
+                    last = true,
+                )
             }
-            captureGolden(this)
         }
+        if (scrollTo != null) {
+            onNodeWithText(scrollTo).performScrollTo()
+            if (confirmRemoval) onNodeWithText(scrollTo).performClick()
+        }
+        captureGolden(this, if (confirmRemoval) "resume.item.remove.dialog" else null)
+    }
 }

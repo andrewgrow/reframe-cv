@@ -6,6 +6,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeDate
 import reframecv.domain.models.resume.content.ResumeDateRange
 import reframecv.domain.models.resume.content.ResumeEducationSection
@@ -43,6 +44,29 @@ class ResumeDraftTest {
         assertEquals(original.sourceResumeId, changed.sourceResumeId)
         assertEquals("Certifications", changed.content.sections[6].title)
         assertEquals(original.content, sampleResumeContent())
+    }
+
+    @Test
+    fun documentLanguageIsNormalizedAndConsentSurvivesEditingAndClearing() {
+        val statement = "Recruitment consent.\nSecond line."
+        val created = ResumeDraft(
+            "Mobile",
+            language = " de ",
+            consentStatement = statement,
+            consentStatementVisible = false,
+        )
+            .toResume(7)
+        assertEquals("DE", created.content.language)
+        assertEquals(statement, created.content.consentStatement)
+        val restored = ResumeDraft.fromResume(created)
+        assertEquals("DE", restored.language)
+        assertEquals(statement, restored.consentStatement)
+        assertFalse(restored.consentStatementVisible)
+        assertEquals(created, restored.applyTo(created))
+        val cleared = restored.copy(language = " ", consentStatement = "").applyTo(created)
+        assertEquals("", cleared.content.language)
+        assertEquals("", cleared.content.consentStatement)
+        assertEquals(ResumeContent(), ResumeDraft("Draft").toResume(7).content)
     }
 
     @Test

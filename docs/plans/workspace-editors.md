@@ -21,7 +21,10 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
   persisted as versioned JSON. Creation and editing support every section type;
-  importing documents remains future work.
+  importing documents remains future work. Optional document language and a free-text
+  consent statement are editable and included in JSON exports. Consent has an
+  Include in resume flag that preserves its text when switched off. Summary uses
+  a fixed heading, and comma-separated item fields grow to fit wrapped/multiline text.
 - The resume list opens from its dashboard card and observes project-scoped data.
   Add opens a full-page structured creation form. Only the resume name is required.
   Clicking a saved name or date opens the same form as Resume, with Save and
@@ -54,6 +57,8 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
 - [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
 - [x] Add editing of saved resumes using the structured content model.
+- [x] Group resume metadata responsively and separate Profile/Sections visually.
+- [x] Clarify experience position/project actions and confirm nested removal.
 - [x] Add permanent deletion with a typed DELETE dialog and existing relationship cleanup.
 - [x] Preserve creation/editing drafts on failure, block duplicate writes, and follow existing Back behavior.
 - [x] Verify creation navigation, persistence, count/mode updates, failures, and relevant goldens.

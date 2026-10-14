@@ -12,7 +12,10 @@ import reframecv.domain.models.resume.content.sampleResumeContent
 class ResumeContentJsonTest {
     @Test
     fun preservesEverySectionItsOrderVisibilityAndPartialDates() {
-        val content = sampleResumeContent()
+        val content = sampleResumeContent().copy(
+            language = "DE",
+            consentStatement = "Consent\nText",
+        )
         val encoded = ResumeContentJson.encode(content)
         assertTrue(encoded.contains("\"formatVersion\":1"))
         assertEquals(content, ResumeContentJson.decode(encoded))
@@ -25,6 +28,9 @@ class ResumeContentJsonTest {
         val minimal = """{"formatVersion":1,"content":{"profile":{"name":"Alex"}}}"""
         assertEquals("Alex", ResumeContentJson.decode(minimal).profile.name)
         assertEquals(emptyList(), ResumeContentJson.decode(minimal).sections)
+        assertEquals("", ResumeContentJson.decode(minimal).language)
+        assertEquals("", ResumeContentJson.decode(minimal).consentStatement)
+        assertTrue(ResumeContentJson.decode(minimal).consentStatementVisible)
         assertEquals(
             empty,
             ResumeEntity(

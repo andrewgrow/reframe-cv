@@ -37,6 +37,13 @@ class ResumeContentSchemaTest {
         val values = listOf(
             ResumeContentJson.encode(sampleResumeContent()),
             ResumeContentJson.encode(ResumeContent()),
+            ResumeContentJson.encode(
+                sampleResumeContent().copy(
+                    language = "EN",
+                    consentStatement = "Consent\nText",
+                    consentStatementVisible = false,
+                ),
+            ),
             """{"formatVersion":1,"content":{"profile":{"name":"Alex"}}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"summary"}]}}""",
         )
@@ -60,6 +67,9 @@ class ResumeContentSchemaTest {
             """{"formatVersion":1}""",
             """{"formatVersion":1,"content":{"unknown":true}}""",
             """{"formatVersion":1,"content":{"profile":null}}""",
+            """{"formatVersion":1,"content":{"language":null}}""",
+            """{"formatVersion":1,"content":{"consentStatement":42}}""",
+            """{"formatVersion":1,"content":{"consentStatementVisible":"yes"}}""",
             """{"formatVersion":1,"content":{"sections":[{}]}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"future"}]}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"summary","text":null}]}}""",

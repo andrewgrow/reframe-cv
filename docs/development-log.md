@@ -899,3 +899,94 @@ Additional hover-without-click checks verify Escape closes vacancy management an
 the Create project dialog without saving or deleting. Those actions currently use
 TextButton, whose hover does not explicitly clear focus; both screens still benefit
 from the shared Back-handler fallback. Their UI/focus/navigation tests and linters passed.
+
+## Resume document language and consent statement — 2026-10-14
+
+ResumeContent and the version-1 JSON schema now include optional language and
+consentStatement strings. Existing documents without them decode to empty values;
+the database table/schema requires no migration because content remains serialized
+JSON. Language is editable near the document name and normalized with trim/uppercase
+on save. Consent statement is an optional multiline field after the sections;
+its user-written text and line breaks are preserved. Both fields restore on edit
+and are included in formatted JSON exports. They do not make an incomplete resume
+invalid. Document language is separate from the language proficiency section.
+
+Added draft, codec/schema, persistence/reopening, export, and UI checks for the
+fields and legacy documents. Editor goldens include language and consent content.
+
+Verification: all 386 tests, goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed. Resume deletion dialog goldens now render the dialog
+independently so changes in the underlying form cannot affect transparent corners.
+
+## Resume section controls and growing item fields — 2026-10-14
+
+Summary displays a fixed heading instead of an editable Section title field;
+existing stored title metadata is preserved. Consent statement has Include in
+resume, backed by the optional consentStatementVisible flag in content, draft,
+and JSON schema. It defaults to true for older documents. Switching it off keeps
+the text editable and stored; JSON preserves text and visibility just like other
+hidden sections. The consent controls are grouped in their own UI file.
+
+Skills and Soft skills Items fields wrap and grow vertically from a single-line
+minimum without a fixed maximum. Commas still separate items; explicit line breaks
+within an item remain part of its text. Tests cover actual field growth, unchanged
+summary content, visibility toggling/busy guards, JSON compatibility, persistence
+after reopening the database, and exporting hidden consent without losing text.
+
+Verification: all tests, goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed. Updated Summary and consent goldens and added an
+independent multiline Skills golden.
+
+## Resume section action row and removal confirmation — 2026-10-14
+
+Include in resume now sits with Collapse/Expand and movement actions in a shared
+control row. Remove is anchored at the far right; the remaining controls can wrap
+within their available width on narrow screens. Actions were extracted from the
+section editor into a dedicated UI file.
+
+Section Remove opens the existing shared confirmation dialog with the section
+name and a critical warning. Its optional input label is omitted, so confirmation
+requires only the second Remove click. Cancel or Escape preserves the entire
+draft and leaves the editor open. Confirm removes only the selected section from
+the draft; saving remains an explicit action. Strict whole-resume deletion still
+uses typed DELETE validation. No additional hardness flag is needed: the shared
+contract already supports button-only and caller-validated input confirmations.
+
+UI tests cover control placement, visibility changes, no deletion on the first
+click, cancellation/Escape, and deleting only the selected section.
+
+Verification: all tests, updated section goldens, new dark/light confirmation
+goldens, ktlint, Detekt, coverage reports/verification, and macOS packaging passed.
+
+## Resume metadata layout and experience actions — 2026-10-14
+
+Language, Main resume, and Keywords share a row when the form is wide enough;
+Keywords wraps below on narrow screens. Language examples moved to a placeholder,
+and the Main resume explanation sits below the group. Profile and Sections have
+larger token-based separation from preceding content.
+
+Work experience uses Add Position and right-aligned Remove Position / Remove
+Project actions. Position, project, and nested skill/tool removal reuse the shared
+button-only confirmation dialog; Cancel or Escape preserves the draft. Removing a
+position also removes its matching period and nested projects. Project groups and
+Add project have larger gaps. Metadata, projects, and confirmation actions are
+split into dedicated UI files.
+
+Checks cover wide/narrow alignment, cancel/Escape, targeted nested removal, and
+position/period consistency. Updated form goldens and added project-control and
+light-theme project-confirmation screenshots.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.
+
+## Skill-group removal — 2026-10-14
+
+Skill groups now place Remove Skill Group at the right edge directly below Items, with
+no extra layout gap. The shared button-only confirmation shows the group name;
+Cancel/Escape keeps the draft, and confirmation removes only the selected group
+and its items. Saving remains explicit. Group fields have their own UI file.
+
+Added placement and confirmation/cancellation checks and a confirmation golden;
+updated Skills and multiline Items goldens.
+
+Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.

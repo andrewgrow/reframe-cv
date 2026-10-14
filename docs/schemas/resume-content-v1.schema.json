@@ -31,6 +31,21 @@
           "items": {
             "$ref": "#/$defs/ResumeSection"
           }
+        },
+        "language": {
+          "type": "string",
+          "description": "Language of the resume document, such as EN, DE, or RU. An empty string means unspecified.",
+          "default": ""
+        },
+        "consentStatement": {
+          "type": "string",
+          "description": "Optional user-written recruitment consent statement.",
+          "default": ""
+        },
+        "consentStatementVisible": {
+          "type": "boolean",
+          "description": "Whether to include the consent statement when rendering the resume. The stored text is preserved when false.",
+          "default": true
         }
       },
       "required": [],

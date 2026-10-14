@@ -144,4 +144,22 @@
     <string name="resume_close">Close</string>
     <string name="resume_save_success">Resume saved successfully</string>
     <string name="resume_update">Update</string>
+    <string name="resume_document_language">Language</string>
+    <string name="resume_consent_statement">Consent statement</string>
+    <string name="resume_remove_section_title">Remove section?</string>
+    <string name="resume_remove_section_question">Are you sure you want to remove this section and its contents?</string>
+    <string name="resume_document_language_hint">EN, DE, RU...</string>
+    <string name="resume_add_position">Add Position</string>
+    <string name="resume_remove_position">Remove Position</string>
+    <string name="resume_remove_position_title">Remove position?</string>
+    <string name="resume_remove_position_question">Are you sure you want to remove this position and all its projects?</string>
+    <string name="resume_remove_project">Remove Project</string>
+    <string name="resume_remove_project_title">Remove project?</string>
+    <string name="resume_remove_project_question">Are you sure you want to remove this project and its contents?</string>
+    <string name="resume_remove_tool">Remove skill or tool</string>
+    <string name="resume_remove_tool_title">Remove skill or tool?</string>
+    <string name="resume_remove_tool_question">Are you sure you want to remove this skill or tool?</string>
+    <string name="resume_remove_skill_group">Remove Skill Group</string>
+    <string name="resume_remove_skill_group_title">Remove skill group?</string>
+    <string name="resume_remove_skill_group_question">Are you sure you want to remove this skill group and all its items?</string>
 </resources>

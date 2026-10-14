@@ -29,7 +29,11 @@ class DesktopResumeExporterTest {
         id = 12,
         projectId = 7,
         name = "Mobile",
-        content = sampleResumeContent(),
+        content = sampleResumeContent().copy(
+            language = "RU",
+            consentStatement = "Consent\nText",
+            consentStatementVisible = false,
+        ),
         createdAt = 0,
         updatedAt = 0,
     )

@@ -3,10 +3,13 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -16,10 +19,12 @@ import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
@@ -144,8 +149,8 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
             ).performScrollTo().performTextReplacement("Kotlin, Compose")
             onNodeWithText("Add section").performScrollTo().performClick()
             onNodeWithText("Summary").performClick()
-            onNodeWithText(
-                "Text",
+            onNode(
+                hasText("Text") and hasAnyAncestor(hasTestTag("resume.section.1")),
             ).performScrollTo().performTextReplacement("Builds reliable applications.")
             onNodeWithText("Save").performClick()
             assertEquals(1, writes)
@@ -192,7 +197,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
         onNodeWithTag("resume.name").performTextReplacement("Developer")
         onNodeWithText("Add section").performScrollTo().performClick()
         onNodeWithText("Work experience").performClick()
-        onNodeWithText("Add entry").performScrollTo().performClick()
+        onNodeWithText("Add Position").performScrollTo().performClick()
         onNodeWithText("Position").performScrollTo().performTextReplacement("Mobile developer")
         onNodeWithText("Add project").performScrollTo().performClick()
         onNodeWithText("Project name").performScrollTo().performTextReplacement("Banking app")
@@ -298,5 +303,118 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
         assertEquals(0, writes)
         assertEquals(0, deletes)
         assertFalse(component.exportVisible.value)
+    }
+
+    @Test
+    fun creationAndEditingSupportOptionalLanguageAndMultilineConsent() {
+        val original = Resume(
+            id = 12,
+            projectId = 1,
+            name = "Mobile",
+            createdAt = 0,
+            updatedAt = 0,
+            content = sampleResumeContent().copy(
+                language = "DE",
+                consentStatement = "Original",
+                consentStatementVisible = false,
+            ),
+        )
+        listOf(null, original).forEach { record ->
+            runDesktopComposeUiTest {
+                var saved: Resume? = null
+                val component = TestResumeEditorComponent(
+                    initialResume = record,
+                    save = { saved = if (record == null) it.toResume(1) else it.applyTo(record) },
+                )
+                setGoldenContent(this) { ResumeEditorContent(component) }
+                onNodeWithTag("resume.name").performTextReplacement("Mobile")
+                onNodeWithTag("resume.language").performScrollTo()
+                    .assertTextContains(record?.content?.language.orEmpty())
+                    .performTextReplacement(" en ")
+                onNodeWithTag("resume.consent").performScrollTo()
+                    .assertTextContains(record?.content?.consentStatement.orEmpty())
+                    .performTextReplacement("Consent\nSecond line")
+                onNodeWithTag("resume.consent.visibility").performScrollTo()
+                val toggle = onNode(
+                    isToggleable() and hasAnyAncestor(hasTestTag("resume.consent.visibility")),
+                )
+                if (record == null) toggle.assertIsOn() else toggle.assertIsOff()
+                toggle.performClick()
+                onNodeWithText("Save").performClick()
+                assertEquals(record != null, saved?.content?.consentStatementVisible)
+                assertEquals("EN", saved?.content?.language)
+                assertEquals("Consent\nSecond line", saved?.content?.consentStatement)
+                runOnIdle { component.saveState.value = ResumeSaveState.Saving }
+                onNodeWithTag("resume.consent").assertIsNotEnabled()
+                onNodeWithTag("resume.language").assertIsNotEnabled()
+                toggle.assertIsNotEnabled()
+            }
+        }
+    }
+
+    @Test
+    fun summaryHasNoEditableTitleAndKeepsItsExistingContent() = runDesktopComposeUiTest {
+        val section = ResumeSummarySection(title = "Existing title", text = "Summary text")
+        val component = TestResumeEditorComponent(ResumeDraft("Mobile").addSection(section))
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Section title").assertDoesNotExist()
+        onNodeWithTag("resume.section.1").performScrollTo()
+        onNodeWithText("Summary text").assertExists()
+        onNodeWithText("Save").performClick()
+        assertEquals(section, component.draft.value.toResume(1).content.sections.single())
+    }
+
+    @Test
+    fun commaSeparatedItemsGrowForWrappedTextAndNewlines() {
+        listOf(
+            ResumeSkillsSection(groups = listOf(ResumeSkillGroup("Mobile", listOf("Kotlin")))),
+            ResumeSoftSkillsSection(items = listOf("Kotlin")),
+        ).forEach { section ->
+            runDesktopComposeUiTest {
+                val component = TestResumeEditorComponent(ResumeDraft("Mobile").addSection(section))
+                setGoldenContent(this) { ResumeEditorContent(component) }
+                val field = onNodeWithText("Items (comma-separated)").performScrollTo()
+                val initialHeight = field.fetchSemanticsNode().boundsInRoot.height
+                val wrapped = (1..12).joinToString(", ") { "Long skill description $it" }
+                field.performTextReplacement(wrapped)
+                field.performScrollTo()
+                assertTrue(field.fetchSemanticsNode().boundsInRoot.height > initialHeight)
+                val multiline = "Kotlin, Compose\nMultiplatform,\nCoroutines"
+                field.performTextReplacement(multiline)
+                field.performScrollTo()
+                field.assertTextContains(multiline)
+                assertTrue(field.fetchSemanticsNode().boundsInRoot.height > initialHeight)
+                onNodeWithText("Save").performClick()
+                val saved = component.draft.value.toResume(1).content.sections.single()
+                val items = when (saved) {
+                    is ResumeSkillsSection -> saved.groups.single().items
+                    is ResumeSoftSkillsSection -> saved.items
+                    else -> error("Unexpected section")
+                }
+                assertEquals(listOf("Kotlin", "Compose\nMultiplatform", "Coroutines"), items)
+            }
+        }
+    }
+
+    @Test
+    fun metadataSharesOneRowAndWrapsOnNarrowScreens() {
+        listOf(800.dp, 320.dp).forEach { width ->
+            val size = ScreenSize(width, 600.dp)
+            runDesktopComposeUiTest(size) {
+                setGoldenContent(this, screenSize = size) {
+                    ResumeEditorContent(TestResumeEditorComponent())
+                }
+                onNodeWithTag("resume.metadata").performScrollTo()
+                val language = onNodeWithTag("resume.language").fetchSemanticsNode().boundsInRoot
+                val keywords = onNodeWithTag("resume.keywords").fetchSemanticsNode().boundsInRoot
+                if (width == 800.dp) {
+                    val main = onNodeWithText("Main resume").fetchSemanticsNode().boundsInRoot
+                    assertEquals(language.center.y, keywords.center.y, 1f)
+                    assertEquals(language.center.y, main.center.y, 1f)
+                } else {
+                    assertTrue(keywords.top >= language.bottom)
+                }
+            }
+        }
     }
 }

@@ -31,14 +31,17 @@ internal class ResumeFormScope(val enabled: Boolean) {
         multiline: Boolean = false,
         tag: String = "",
         error: String? = null,
+        minLines: Int = if (multiline) DEFAULT_MULTILINE_MIN_LINES else 1,
+        placeholder: StringResource? = null,
     ) {
         OutlinedTextField(
             value = value,
             onValueChange = onChange,
             modifier = Modifier.fillMaxWidth().testTag(tag),
             label = { Text(stringResource(label)) },
+            placeholder = placeholder?.let { hint -> { Text(stringResource(hint)) } },
             singleLine = !multiline,
-            minLines = if (multiline) 3 else 1,
+            minLines = minLines,
             enabled = enabled,
             isError = error != null,
             supportingText = error?.let { message -> { Text(message) } },
@@ -69,6 +72,9 @@ internal class ResumeFormScope(val enabled: Boolean) {
         onChange: (List<T>) -> Unit,
         create: () -> T,
         addLabel: StringResource = Res.string.resume_add_entry,
+        removeAction: @Composable (T, () -> Unit) -> Unit = { _, remove ->
+            FlowRow { Action(Res.string.resume_remove, remove) }
+        },
         fields: @Composable ResumeFormScope.(T, (T) -> Unit) -> Unit,
     ) {
         items.forEachIndexed { index, item ->
@@ -77,9 +83,7 @@ internal class ResumeFormScope(val enabled: Boolean) {
                     verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
                 ) {
                     fields(item) { replacement -> onChange(items.replacedAt(index, replacement)) }
-                    FlowRow {
-                        Action(Res.string.resume_remove, { onChange(items.removedAt(index)) })
-                    }
+                    removeAction(item) { onChange(items.removedAt(index)) }
                 }
             }
         }
@@ -91,3 +95,5 @@ internal fun <T> List<T>.replacedAt(index: Int, replacement: T): List<T> =
     mapIndexed { i, value -> if (i == index) replacement else value }
 
 internal fun <T> List<T>.removedAt(index: Int): List<T> = filterIndexed { i, _ -> i != index }
+
+private const val DEFAULT_MULTILINE_MIN_LINES = 3

@@ -39,7 +39,11 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
         val derivedId = repository.create(
             resume(projectId).copy(
                 sourceResumeId = sourceId,
-                content = sampleResumeContent(),
+                content = sampleResumeContent().copy(
+                    language = "DE",
+                    consentStatement = "Consent\nText",
+                    consentStatementVisible = false,
+                ),
             ),
         )
         val original = repository.observeResumes(projectId).first().single { it.id == derivedId }
@@ -62,8 +66,18 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
     @Test
     fun creationDraftPersistsStructuredContentAndActivatesWorkspace() = runBlocking<Unit> {
         val projectId = project()
-        val content = sampleResumeContent()
-        val initial = ResumeDraft("  Mobile  ", profile = content.profile)
+        val content = sampleResumeContent().copy(
+            language = "EN",
+            consentStatement = "Consent",
+            consentStatementVisible = false,
+        )
+        val initial = ResumeDraft(
+            "  Mobile  ",
+            profile = content.profile,
+            language = " en ",
+            consentStatement = content.consentStatement,
+            consentStatementVisible = content.consentStatementVisible,
+        )
         val draft = content.sections.fold(initial) { value, section ->
             value.addSection(section)
         }
