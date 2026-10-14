@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.resume.Resume
+import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotos
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorComponent
@@ -128,6 +129,7 @@ class ResumePhotoComponentTest : ComponentTest() {
         val photos = Photos()
         val loaded = CompletableDeferred<Unit>()
         var saved: ResumeDraft? = null
+        val writes = Channel<ResumeDraft>(Channel.UNLIMITED)
         val editor = runOnUiThread {
             lifecycle.resume()
             DefaultResumeEditorComponent(
@@ -137,7 +139,10 @@ class ResumePhotoComponentTest : ComponentTest() {
                         override val resumePhotos = photos
                     },
                 ),
-                save = { saved = it },
+                save = {
+                    saved = it
+                    writes.trySend(it)
+                },
                 close = {},
                 initialResume = Resume(
                     id = 1,
@@ -161,7 +166,9 @@ class ResumePhotoComponentTest : ComponentTest() {
             runOnUiThread {
                 assertEquals(null, saved)
                 editor.onSave()
-                assertEquals("new", saved?.photoPath)
+            }
+            assertEquals("new", writes.receive().photoPath)
+            runOnUiThread {
                 editor.onSaveCompleted(ResumeSaveState.Failed)
                 assertEquals("new", editor.draft.value.photoPath)
                 editor.onSave()
@@ -169,6 +176,43 @@ class ResumePhotoComponentTest : ComponentTest() {
                 lifecycle.destroy()
             }
             assertTrue(photos.discarded.tryReceive().isFailure)
+        }
+    }
+
+    @Test
+    fun rendersOnlyOnSavePreservesFramingOnFailureAndRetainsSourceAfterSuccess() = runBlocking {
+        val photos = Photos()
+        val changed = Channel<String?>(Channel.UNLIMITED)
+        val component = component(photos, null, changed::trySend)
+        withTimeout(10_000) {
+            runOnUiThread { component.onChoose() }
+            assertEquals("new", changed.receive())
+            runOnUiThread { component.onCropChange(PhotoCrop(2f, 0.5f, -0.5f)) }
+            assertTrue(photos.renders.tryReceive().isFailure)
+            photos.rendering = { _, _ -> error("Cannot write photo") }
+            val failed = CompletableDeferred<Boolean>()
+            runOnUiThread { component.prepareSave { failed.complete(it) } }
+            assertFalse(failed.await())
+            assertEquals("Render resume photo", dependencies.logger.failures.receive().operation)
+            assertEquals("new" to PhotoCrop(2f, 0.5f, -0.5f), photos.renders.receive())
+            photos.rendering = { _, _ -> "portrait" }
+            val saved = CompletableDeferred<Boolean>()
+            runOnUiThread { component.prepareSave { saved.complete(it) } }
+            assertTrue(saved.await())
+            assertEquals("portrait", changed.receive())
+            photos.renders.receive()
+            runOnUiThread {
+                component.onSaved()
+                component.onCropChange(PhotoCrop(3f))
+            }
+            photos.rendering = { _, _ -> "portrait-2" }
+            val resaved = CompletableDeferred<Boolean>()
+            runOnUiThread { component.prepareSave { resaved.complete(it) } }
+            assertTrue(resaved.await())
+            assertEquals("new" to PhotoCrop(3f), photos.renders.receive())
+            runOnUiThread { lifecycle.destroy() }
+            val removed = setOf(photos.discarded.receive(), photos.discarded.receive())
+            assertEquals(setOf("new", "portrait-2"), removed)
         }
     }
 
@@ -192,9 +236,16 @@ class ResumePhotoComponentTest : ComponentTest() {
         val discarded = Channel<String>(Channel.UNLIMITED)
         var selection: suspend () -> String? = { "new" }
         var selections = 0
+        val renders = Channel<Pair<String, PhotoCrop>>(Channel.UNLIMITED)
+        var rendering: suspend (String, PhotoCrop) -> String = { path, _ -> path }
         override suspend fun choose(): String? {
             selections++
             return selection()
+        }
+        override suspend fun copySource(path: String) = path
+        override suspend fun render(path: String, crop: PhotoCrop): String {
+            renders.send(path to crop)
+            return rendering(path, crop)
         }
         override suspend fun read(path: String): ByteArray? {
             reads.send(path)

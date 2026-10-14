@@ -12,6 +12,7 @@ import reframecv.importing.ResumeImporter
 import reframecv.logging.EventHistory
 import reframecv.logging.RecordingApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
+import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotos
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.TestAppSettingsRepository
@@ -30,6 +31,8 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val resumeImporter = ResumeImporter { null }
     override val resumePhotos = object : ResumePhotos {
         override suspend fun choose(): String? = null
+        override suspend fun copySource(path: String) = path
+        override suspend fun render(path: String, crop: PhotoCrop) = path
         override suspend fun read(path: String): ByteArray? = null
         override suspend fun discard(path: String) = Unit
     }

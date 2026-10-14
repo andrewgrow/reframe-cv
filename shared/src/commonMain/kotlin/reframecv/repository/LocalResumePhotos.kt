@@ -9,6 +9,7 @@ import reframecv.database.project.ProjectDao
 import reframecv.database.resume.ResumeDao
 import reframecv.domain.models.resume.Resume
 import reframecv.logging.ApplicationLogger
+import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotoPicker
 import reframecv.photos.ResumePhotoStorage
 import reframecv.photos.ResumePhotos
@@ -22,7 +23,11 @@ class LocalResumePhotos(
 ) : ResumePhotos {
     private val mutex = Mutex()
 
-    override suspend fun choose(): String? = picker.pick()?.let { storage.prepare(it) }
+    override suspend fun choose(): String? = picker.pick()?.let { storage.prepareSource(it) }
+
+    override suspend fun copySource(path: String) = storage.copySource(path)
+
+    override suspend fun render(path: String, crop: PhotoCrop) = storage.render(path, crop)
 
     override suspend fun read(path: String) = storage.read(path)
 

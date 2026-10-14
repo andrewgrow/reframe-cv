@@ -2,9 +2,11 @@ package reframecv.photos
 
 import reframecv.attachments.SelectedAttachment
 
-/** Stores print-ready portrait copies without changing the user's original images. */
+/** Stores draft sources and print-ready portraits without changing original images. */
 interface ResumePhotoStorage {
-    suspend fun prepare(selection: SelectedAttachment): String
+    suspend fun prepareSource(selection: SelectedAttachment): String
+    suspend fun copySource(path: String): String
+    suspend fun render(path: String, crop: PhotoCrop): String
     suspend fun read(path: String): ByteArray?
     suspend fun delete(path: String)
 }
@@ -17,6 +19,8 @@ fun interface ResumePhotoPicker {
 /** Gives editors photo preparation and safe disposal of uncommitted copies. */
 interface ResumePhotos {
     suspend fun choose(): String?
+    suspend fun copySource(path: String): String
+    suspend fun render(path: String, crop: PhotoCrop): String
     suspend fun read(path: String): ByteArray?
     suspend fun discard(path: String)
 }

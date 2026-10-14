@@ -143,7 +143,9 @@ class DefaultResumeEditorComponent(
         importComponent.onReset()
         exportAfterSave = export
         saveState.value = ResumeSaveState.Saving
-        save(draft.value)
+        photoComponent.prepareSave { prepared ->
+            if (prepared) save(draft.value) else onSaveCompleted(ResumeSaveState.Failed)
+        }
     }
 
     internal fun onSaveCompleted(state: ResumeSaveState): Boolean {

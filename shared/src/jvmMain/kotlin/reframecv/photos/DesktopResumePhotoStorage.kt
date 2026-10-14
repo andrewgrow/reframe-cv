@@ -18,16 +18,28 @@ class DesktopResumePhotoStorage(directory: Path) : ResumePhotoStorage {
     private val root = directory.toAbsolutePath().normalize()
     private val photos = root.resolve("documents/resume-photos")
 
-    override suspend fun prepare(selection: SelectedAttachment): String {
+    override suspend fun prepareSource(selection: SelectedAttachment): String = createCopy("png") {
+        ImageIO.write(PrintPortrait.read(Path.of(selection.source)), "png", it.toFile())
+    }
+
+    override suspend fun copySource(path: String): String = createCopy("png") {
+        ImageIO.write(PrintPortrait.read(resolve(path)), "png", it.toFile())
+    }
+
+    override suspend fun render(path: String, crop: PhotoCrop): String = createCopy("jpg") {
+        PrintPortrait.write(resolve(path), it, crop)
+    }
+
+    private suspend fun createCopy(extension: String, write: (Path) -> Unit): String {
         var destination: Path? = null
         var transferred = false
         try {
             val path = withContext(Dispatchers.IO) {
                 Files.createDirectories(photos)
                 val temporary = Files.createTempFile(photos, "photo-", ".tmp")
-                destination = photos.resolve("${UUID.randomUUID()}.jpg")
+                destination = photos.resolve("${UUID.randomUUID()}.$extension")
                 try {
-                    PrintPortrait.write(Path.of(selection.source), temporary)
+                    write(temporary)
                     Files.move(temporary, checkNotNull(destination), ATOMIC_MOVE)
                     "documents/resume-photos/${checkNotNull(destination).fileName}"
                 } finally {

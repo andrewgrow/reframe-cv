@@ -196,6 +196,13 @@
     <string name="resume_photo_choose">Choose photo</string>
     <string name="resume_photo_delete_confirm">Yes, remove photo</string>
     <string name="resume_photo_delete_question">Remove this photo? The change will be saved when you save the resume.</string>
+    <string name="resume_photo_up">Move photo up</string>
+    <string name="resume_photo_down">Move photo down</string>
+    <string name="resume_photo_left">Move photo left</string>
+    <string name="resume_photo_right">Move photo right</string>
+    <string name="resume_photo_zoom_in">Zoom in</string>
+    <string name="resume_photo_zoom_out">Zoom out</string>
+    <string name="resume_photo_reset">Reset</string>
     <string name="resume_photo_hint">35 × 45 mm at 300 dpi. Photo changes are saved with the resume. Photos are excluded from JSON exports.</string>
     <string name="resume_photo_error">Could not load or prepare the photo. Please choose a valid JPG or PNG image.</string>
     <string name="resume_photo_missing">The photo file is missing. Choose a new photo or remove this reference.</string>

@@ -240,13 +240,14 @@ need recreation before running this version; no migration is provided.
 
 ### Resume photographs
 
-Select a PNG or JPEG from the photo block in the resume editor. ReframeCV creates a
-center-cropped, proportionally scaled JPEG at 413 × 531 pixels (35 × 45 mm, 300 dpi),
-including camera orientation handling. Original files remain untouched. Copies live
+Select a PNG or JPEG from the photo block in the resume editor. Use the arrows,
+zoom controls, and Reset to frame the portrait under the fixed 35 × 45 crop mask.
+Save produces a proportionally scaled JPEG of the chosen frame at 413 × 531 pixels
+(35 × 45 mm, 300 dpi), including camera orientation handling. Original files remain untouched. Copies live
 in `documents/resume-photos/` beside the database; resumes store relative paths.
 Photos are excluded from JSON import/export.
 
-Photo replacement and removal take effect with Save. Closing the editor without
+Photo replacement, framing, and removal take effect with Save. Closing the editor without
 saving discards new copies and preserves the previous saved photo. The photo dialog
 confirms removal inline. Missing or unreadable files show a warning and can be
 replaced or removed without losing resume content. Permanent resume/project deletion

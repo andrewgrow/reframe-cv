@@ -1,6 +1,7 @@
 package reframecv.ui.components.projects.resumes.editor
 
 import com.arkivanov.decompose.value.MutableValue
+import reframecv.photos.PhotoCrop
 
 class TestResumePhotoComponent(path: String? = null, private val changed: (String?) -> Unit = {}) :
     ResumePhotoComponent {
@@ -25,5 +26,9 @@ class TestResumePhotoComponent(path: String? = null, private val changed: (Strin
     override fun onClose() {
         if (confirmingDelete.value) confirmingDelete.value = false else visible.value = false
     }
+    override fun onCropChange(crop: PhotoCrop) {
+        state.value = state.value.copy(crop = crop.constrained())
+    }
+    override fun prepareSave(finished: (Boolean) -> Unit) = finished(true)
     override fun onSaved() = Unit
 }

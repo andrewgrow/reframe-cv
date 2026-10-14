@@ -1156,3 +1156,27 @@ Independent photo-state/dialog goldens accompany the updated editor references.
 
 Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
 and macOS packaging passed.
+
+## Manual portrait framing — 2026-10-14
+
+The photo dialog now places the full selected image beneath a fixed 35 × 45 frame,
+with dimmed surroundings, four directional controls, zoom out/in, and Reset. Cover
+scaling supplies the initial view; constrained zoom and offsets prevent empty edges.
+The form thumbnail and print renderer share the same dimension-independent placement
+calculation. Crop controls adapt to narrower dialogs and lock during processing or
+inline deletion confirmation.
+
+Selection creates an orientation-corrected temporary source without cropping. Save
+renders the selected frame as the existing 413 × 531, 300-dpi JPEG before submitting
+the resume write. Rendering failures preserve the draft and allow retry. Prepared
+sources remain owned by the editor so users can adjust again after saving; closing
+cleans them, while committed portraits survive. Existing saved portraits are copied
+before replacement so database cleanup cannot remove the source of a later adjustment.
+The database schema and JSON content format remain unchanged.
+
+Tests cover crop boundaries, equivalent preview/print placement, full-source retention,
+selected pixels in rendered portraits, delayed rendering, failure/retry, repeated Save,
+inline confirmation, reset, and narrow/light/dark/adjusted-frame goldens.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

@@ -8,8 +8,6 @@ import javax.imageio.IIOImage
 import javax.imageio.ImageIO
 import javax.imageio.ImageWriteParam
 import javax.imageio.metadata.IIOMetadataNode
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 /** Creates a 35-by-45-mm, 300-dpi JPEG with proportional center cropping. */
@@ -19,7 +17,7 @@ internal object PrintPortrait {
     const val DPI = 300
     private const val QUALITY = 0.92f
 
-    fun write(source: Path, destination: Path) {
+    fun write(source: Path, destination: Path, crop: PhotoCrop = PhotoCrop()) {
         val input = read(source)
         val output = BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB)
         val graphics = output.createGraphics()
@@ -30,15 +28,18 @@ internal object PrintPortrait {
                 RenderingHints.KEY_INTERPOLATION,
                 RenderingHints.VALUE_INTERPOLATION_BICUBIC,
             )
-            val scale = max(WIDTH.toDouble() / input.width, HEIGHT.toDouble() / input.height)
-            val width = (input.width * scale).roundToInt()
-            val height = (input.height * scale).roundToInt()
+            val placement = crop.placement(
+                input.width.toFloat(),
+                input.height.toFloat(),
+                WIDTH.toFloat(),
+                HEIGHT.toFloat(),
+            )
             graphics.drawImage(
                 input,
-                (WIDTH - width) / 2,
-                (HEIGHT - height) / 2,
-                width,
-                height,
+                placement.left.roundToInt(),
+                placement.top.roundToInt(),
+                placement.width.roundToInt(),
+                placement.height.roundToInt(),
                 null,
             )
         } finally {
@@ -47,7 +48,7 @@ internal object PrintPortrait {
         writeJpeg(output, destination)
     }
 
-    private fun read(source: Path): BufferedImage =
+    internal fun read(source: Path): BufferedImage =
         ImageIO.createImageInputStream(source.toFile()).use { stream ->
             require(stream != null) { "Photo cannot be opened" }
             val readers = ImageIO.getImageReaders(stream)
@@ -56,16 +57,7 @@ internal object PrintPortrait {
             try {
                 reader.input = stream
                 val orientation = photoOrientation(reader.getImageMetadata(0))
-                val swapped = orientation in 5..8
-                val width = if (swapped) HEIGHT else WIDTH
-                val height = if (swapped) WIDTH else HEIGHT
-                val sample = min(
-                    reader.getWidth(0) / width,
-                    reader.getHeight(0) / height,
-                ).coerceAtLeast(1)
-                val parameters = reader.defaultReadParam
-                parameters.setSourceSubsampling(sample, sample, 0, 0)
-                orientPhoto(reader.read(0, parameters), orientation)
+                orientPhoto(reader.read(0), orientation)
             } finally {
                 reader.dispose()
             }

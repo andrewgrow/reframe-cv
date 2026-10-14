@@ -16,6 +16,7 @@ import reframecv.database.resume.ResumeContentJson
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.logging.ApplicationLogger
 import reframecv.photos.DesktopResumePhotoStorage
+import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotoPicker
 import reframecv.photos.photoBytes
 
@@ -80,7 +81,9 @@ class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
         val source = temporaryFolder.newFile("$name.png").toPath()
         val original = photoBytes(color)
         Files.write(source, original)
-        val path = storage.prepare(SelectedAttachment(source.toString(), "$name.png"))
+        val draft = storage.prepareSource(SelectedAttachment(source.toString(), "$name.png"))
+        val path = storage.render(draft, PhotoCrop())
+        storage.delete(draft)
         assertContentEquals(original, Files.readAllBytes(source))
         return path
     }

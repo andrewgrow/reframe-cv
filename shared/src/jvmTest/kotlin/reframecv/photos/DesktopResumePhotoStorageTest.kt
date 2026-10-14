@@ -28,7 +28,9 @@ class DesktopResumePhotoStorageTest {
         val source = folder.newFile("source.png").toPath()
         Files.write(source, original)
         val storage = DesktopResumePhotoStorage(folder.root.toPath())
-        val path = storage.prepare(SelectedAttachment(source.toString(), "source.png"))
+        val draft = storage.prepareSource(SelectedAttachment(source.toString(), "source.png"))
+        val path = storage.render(draft, PhotoCrop())
+        storage.delete(draft)
         assertTrue(path.startsWith("documents/resume-photos/"))
         val copy = folder.root.toPath().resolve(path)
         val image = ImageIO.read(copy.toFile())
@@ -62,7 +64,7 @@ class DesktopResumePhotoStorageTest {
         Files.writeString(source, "not an image")
         val storage = DesktopResumePhotoStorage(folder.root.toPath())
         assertFailsWith<IllegalArgumentException> {
-            storage.prepare(SelectedAttachment(source.toString(), "invalid.png"))
+            storage.prepareSource(SelectedAttachment(source.toString(), "invalid.png"))
         }
         val photos = folder.root.toPath().resolve("documents/resume-photos")
         assertTrue(Files.list(photos).use { it.toList().isEmpty() })
@@ -71,6 +73,38 @@ class DesktopResumePhotoStorageTest {
                 assertFailsWith<IllegalArgumentException> { storage.delete(path) }
             }
         assertEquals("not an image", Files.readString(source))
+    }
+
+    @Test
+    fun retainsFullSourceUntilSaveAndRendersUserSelectedFrame() = runBlocking {
+        val source = folder.newFile("wide.png").toPath()
+        val image = BufferedImage(900, 400, BufferedImage.TYPE_INT_RGB)
+        val graphics = image.createGraphics()
+        try {
+            listOf(Color.RED, Color.GREEN, Color.BLUE).forEachIndexed { index, color ->
+                graphics.color = color
+                graphics.fillRect(index * 300, 0, 300, 400)
+            }
+        } finally {
+            graphics.dispose()
+        }
+        ImageIO.write(image, "png", source.toFile())
+        val original = Files.readAllBytes(source)
+        val storage = DesktopResumePhotoStorage(folder.root.toPath())
+        val draft = storage.prepareSource(SelectedAttachment(source.toString(), "wide.png"))
+        assertEquals(900, ImageIO.read(folder.root.toPath().resolve(draft).toFile()).width)
+        val centered = storage.render(draft, PhotoCrop())
+        val shifted = storage.render(draft, PhotoCrop(zoom = 2f, x = 1f))
+        val center = ImageIO.read(folder.root.toPath().resolve(centered).toFile())
+        val left = ImageIO.read(folder.root.toPath().resolve(shifted).toFile())
+        assertTrue(Color(center.getRGB(206, 265)).green > 240)
+        assertTrue(Color(left.getRGB(206, 265)).red > 240)
+        assertEquals(413, left.width)
+        assertEquals(531, left.height)
+        val retained = storage.copySource(centered)
+        storage.delete(centered)
+        assertNotNull(storage.read(storage.render(retained, PhotoCrop(zoom = 2f))))
+        assertContentEquals(original, Files.readAllBytes(source))
     }
 
     @Test

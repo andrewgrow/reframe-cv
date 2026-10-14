@@ -2,7 +2,6 @@ package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -26,13 +24,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_delete
@@ -69,15 +64,9 @@ internal fun ResumePhotoBlock(component: ResumePhotoComponent, enabled: Boolean)
 
 @Composable
 private fun PhotoPreview(state: ResumePhotoState) {
-    val image = remember(state.bytes) { state.bytes?.decodeToImageBitmap() }
     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (image != null) {
-            Image(
-                image,
-                stringResource(Res.string.resume_photo),
-                Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit,
-            )
+        if (state.bytes != null) {
+            ResumePhotoCropPreview(state)
         } else {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
@@ -121,10 +110,22 @@ internal fun ResumePhotoDialog(component: ResumePhotoComponent) {
                 Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
             ) {
-                Box(
-                    Modifier.width(ReframeTheme.tokens.dimensions.resumePhotoDialogWidth)
-                        .aspectRatio(PHOTO_ASPECT).align(Alignment.CenterHorizontally),
-                ) { PhotoPreview(state) }
+                AnimatedVisibility(confirming) {
+                    Text(
+                        stringResource(Res.string.resume_photo_delete_question),
+                        color = ReframeTheme.colorScheme.critical,
+                    )
+                }
+                if (state.bytes != null) {
+                    Box(Modifier.align(Alignment.CenterHorizontally)) {
+                        ResumePhotoCropControls(component, state, !state.loading && !confirming)
+                    }
+                } else {
+                    Box(
+                        Modifier.width(ReframeTheme.tokens.dimensions.resumePhotoDialogWidth)
+                            .aspectRatio(PHOTO_ASPECT).align(Alignment.CenterHorizontally),
+                    ) { PhotoPreview(state) }
+                }
                 Text(stringResource(Res.string.resume_photo_hint))
                 if (state.failed) {
                     Text(
@@ -134,12 +135,6 @@ internal fun ResumePhotoDialog(component: ResumePhotoComponent) {
                 } else if (state.path != null && state.bytes == null && !state.loading) {
                     Text(
                         stringResource(Res.string.resume_photo_missing),
-                        color = ReframeTheme.colorScheme.critical,
-                    )
-                }
-                AnimatedVisibility(confirming) {
-                    Text(
-                        stringResource(Res.string.resume_photo_delete_question),
                         color = ReframeTheme.colorScheme.critical,
                     )
                 }

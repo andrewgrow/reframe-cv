@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import reframecv.photos.PhotoCrop
 import reframecv.ui.context.AppComponentContext
 
 /** Supplies the current portrait preview and file availability without saving draft changes. */
@@ -17,6 +18,7 @@ data class ResumePhotoState(
     val bytes: ByteArray? = null,
     val loading: Boolean = false,
     val failed: Boolean = false,
+    val crop: PhotoCrop = PhotoCrop(),
 )
 
 /** Lets the editor select or remove a portrait using an inline confirmation. */
@@ -30,6 +32,8 @@ interface ResumePhotoComponent {
     fun onCancelDelete()
     fun onConfirmDelete()
     fun onClose()
+    fun onCropChange(crop: PhotoCrop)
+    fun prepareSave(finished: (Boolean) -> Unit)
     fun onSaved()
 }
 
@@ -43,6 +47,8 @@ class DefaultResumePhotoComponent(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private val pending = mutableSetOf<String>()
     private var disposed = false
+    private var source = path
+    private var needsRendering = false
     override val state = MutableValue(ResumePhotoState(path))
     override val visible = MutableValue(false)
     override val confirmingDelete = MutableValue(false)
@@ -79,7 +85,9 @@ class DefaultResumePhotoComponent(
             pending += path
             val bytes =
                 checkNotNull(dependencies.resumePhotos.read(path)) { "Prepared photo is missing" }
-            val previous = state.value.path
+            val previous = source
+            source = path
+            needsRendering = true
             state.value = ResumePhotoState(path, bytes, loading = true)
             changed(path)
             previous?.takeIf { it in pending && it != path }?.let {
@@ -100,6 +108,8 @@ class DefaultResumePhotoComponent(
     override fun onConfirmDelete() {
         if (!state.value.loading && confirmingDelete.value) {
             val previous = state.value.path
+            source = null
+            needsRendering = false
             state.value = ResumePhotoState()
             confirmingDelete.value = false
             changed(null)
@@ -118,12 +128,55 @@ class DefaultResumePhotoComponent(
         }
     }
 
+    override fun onCropChange(crop: PhotoCrop) {
+        if (disposed || state.value.loading || confirmingDelete.value) return
+        if (state.value.bytes == null) return
+        val constrained = crop.constrained()
+        if (constrained != state.value.crop) {
+            state.value = state.value.copy(crop = constrained)
+            needsRendering = true
+        }
+    }
+
+    override fun prepareSave(finished: (Boolean) -> Unit) {
+        val input = source
+        if (!needsRendering || input == null) {
+            finished(true)
+            return
+        }
+        runOperation("Render resume photo", failed = { finished(false) }) {
+            val retained = if (input in pending) {
+                input
+            } else {
+                dependencies.resumePhotos.copySource(input).also {
+                    pending += it
+                    source = it
+                }
+            }
+            val path = dependencies.resumePhotos.render(retained, state.value.crop)
+            pending += path
+            val previous = state.value.path
+            state.value = state.value.copy(path = path)
+            changed(path)
+            needsRendering = false
+            previous?.takeIf { it != retained && it != path && it in pending }?.let {
+                discard(it)
+                pending.remove(it)
+            }
+            finished(true)
+        }
+    }
+
     override fun onSaved() {
         state.value.path?.let { pending.remove(it) }
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private fun runOperation(operation: String, action: suspend () -> Unit) {
+    private fun runOperation(
+        operation: String,
+        failed: () -> Unit = {},
+        action: suspend () -> Unit,
+    ) {
         if (disposed || state.value.loading || confirmingDelete.value) return
         state.value = state.value.copy(loading = true, failed = false)
         scope.launch {
@@ -134,6 +187,7 @@ class DefaultResumePhotoComponent(
             } catch (error: Exception) {
                 dependencies.logger.error(operation, error, emptyMap())
                 state.value = state.value.copy(failed = true)
+                failed()
             } finally {
                 state.value = state.value.copy(loading = false)
             }

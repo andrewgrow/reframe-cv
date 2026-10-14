@@ -2,9 +2,11 @@ package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -12,6 +14,7 @@ import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.pressKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import reframecv.photos.PhotoCrop
 import reframecv.photos.photoBytes
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.resumes.editor.ResumePhotoState
@@ -19,6 +22,23 @@ import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumePhotoContentTest : GoldenScreenshotTest() {
+    @Test
+    fun cropControlsResetAndLockDuringConfirmation() = runDesktopComposeUiTest {
+        val component = reframecv.ui.components.projects.resumes.editor.TestResumePhotoComponent()
+        component.state.value = ResumePhotoState("source", photoBytes())
+        setGoldenContent(this) { ResumePhotoDialog(component) }
+        onNodeWithContentDescription("Zoom out").assertIsNotEnabled()
+        onNodeWithContentDescription("Zoom in").performClick()
+        onNodeWithContentDescription("Move photo right").performClick()
+        onNodeWithContentDescription("Move photo down").performClick()
+        assertEquals(PhotoCrop(1.1f, 0.1f, 0.1f), component.state.value.crop)
+        onNodeWithText("Reset").performClick()
+        assertEquals(PhotoCrop(), component.state.value.crop)
+        onNodeWithText("Delete").performClick()
+        onNodeWithContentDescription("Zoom in").assertIsNotEnabled()
+        onNodeWithContentDescription("Move photo right").assertIsNotEnabled()
+    }
+
     @Test
     fun photoOpensOneDialogAndRemovalRequiresInlineConfirmation() = runDesktopComposeUiTest {
         val component = TestResumeEditorComponent()
