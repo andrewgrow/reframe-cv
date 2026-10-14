@@ -22,6 +22,7 @@ class TestResumeEditorComponent(
     override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val successfulSaves = MutableValue(0L)
+    override val validationFailures = MutableValue(0L)
     override val validationRequested = MutableValue(false)
     override val exportVisible = MutableValue(false)
     override val exportComponent = TestResumeExportComponent { onCloseExport() }
@@ -36,7 +37,11 @@ class TestResumeEditorComponent(
     override fun onSave() {
         if (isBusy || deleteState.value != ResumeDeleteState.Idle) return
         validationRequested.value = true
-        if (draft.value.isValid) save(draft.value)
+        if (draft.value.isValid) {
+            save(draft.value)
+        } else {
+            validationFailures.value += 1
+        }
     }
     override fun onExport() {
         if (initialResume == null || isBusy || deleteState.value != ResumeDeleteState.Idle) return

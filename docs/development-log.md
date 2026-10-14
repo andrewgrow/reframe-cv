@@ -1092,3 +1092,20 @@ busy guards, creation-only UI, and import state goldens. Updated creation refere
 
 Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
 and macOS packaging passed.
+
+## Resume validation feedback — 2026-10-14
+
+An invalid Save emits a generic red notification: Validation failed. Please check
+the form. A separate validation-failure event counter retriggers its three-second
+timer for each unsuccessful Save. The notification neither inspects individual
+fields nor reacts to corrections; it expires even when the draft remains invalid.
+Field-level validation and its existing highlighting remain unchanged. Export
+validation does not trigger this Save-only notification. The footer keeps its
+allocated height, so controls do not move.
+
+Regression checks cover creation/editing while the name is outside the visible
+scroll area, no write on invalid Save, visibility despite correction, expiration
+with unresolved errors, and timer restart on a repeated Save using virtual time.
+Updated the light/dark validation goldens.
+
+Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.

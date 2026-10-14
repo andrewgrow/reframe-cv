@@ -27,6 +27,7 @@ interface ResumeEditorComponent {
     val draft: Value<ResumeDraft>
     val saveState: Value<ResumeSaveState>
     val successfulSaves: Value<Long>
+    val validationFailures: Value<Long>
     val deleteState: Value<ResumeDeleteState>
     val deleteConfirmation: Value<String>
     val exportVisible: Value<Boolean>
@@ -93,6 +94,7 @@ class DefaultResumeEditorComponent(
     override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val successfulSaves = MutableValue(0L)
+    override val validationFailures = MutableValue(0L)
     override val validationRequested = MutableValue(false)
     override val exportVisible = MutableValue(false)
     override val exportComponent = DefaultResumeExportComponent(
@@ -128,7 +130,10 @@ class DefaultResumeEditorComponent(
     private fun requestSave(export: Boolean) {
         if (isBusy || exportVisible.value || deleteState.value != ResumeDeleteState.Idle) return
         validationRequested.value = true
-        if (!draft.value.isValid) return
+        if (!draft.value.isValid) {
+            if (!export) validationFailures.value += 1
+            return
+        }
         importComponent.onReset()
         exportAfterSave = export
         saveState.value = ResumeSaveState.Saving

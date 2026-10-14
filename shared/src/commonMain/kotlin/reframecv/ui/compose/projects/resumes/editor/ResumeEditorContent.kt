@@ -38,6 +38,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val successfulSaves by component.successfulSaves.subscribeAsState()
+    val validationFailures by component.validationFailures.subscribeAsState()
     val validationRequested by component.validationRequested.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving ||
         deleteState == ResumeDeleteState.Deleting || exportState == ResumeExportState.Exporting ||
@@ -68,7 +69,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                 saveState,
                 successfulSaves,
                 importState = importState,
-                invalidDates = validationRequested && draft.sections.any { !it.isValid },
+                validationFailures = validationFailures,
             )
             ResumeEditorActions(component, onExport = component::onExport)
         }

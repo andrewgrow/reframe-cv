@@ -21,6 +21,7 @@ import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeSection
 import reframecv.domain.models.resume.content.ResumeSkillGroup
 import reframecv.domain.models.resume.content.ResumeSkillsSection
+import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.application.TestRootComponent
@@ -146,6 +147,18 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
         setGoldenContent(this, themeMode = ThemeMode.Light) { ResumeEditorContent(component) }
         onNodeWithText("Save").performClick()
         onNodeWithText("Cancel").performClick()
+        captureGolden(this)
+    }
+
+    @Test
+    fun missingNameWhenScrolledMatchesReference() = runDesktopComposeUiTest {
+        val component = TestResumeEditorComponent(
+            ResumeDraft().addSection(ResumeSummarySection(text = "Keep this content")),
+        )
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Save").performClick()
+        onNodeWithText("Cancel").performClick()
+        onNodeWithTag("resume.consent").performScrollTo()
         captureGolden(this)
     }
 

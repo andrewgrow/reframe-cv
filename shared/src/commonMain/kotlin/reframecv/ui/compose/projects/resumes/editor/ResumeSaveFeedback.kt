@@ -26,12 +26,12 @@ import kotlinx.coroutines.delay
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.resume_dates_error
 import reframecv.shared.generated.resources.resume_import_error
 import reframecv.shared.generated.resources.resume_import_progress
 import reframecv.shared.generated.resources.resume_import_success
 import reframecv.shared.generated.resources.resume_save_error
 import reframecv.shared.generated.resources.resume_save_success
+import reframecv.shared.generated.resources.resume_validation_feedback
 import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.theme.ReframeTheme
@@ -40,20 +40,21 @@ import reframecv.ui.theme.ReframeTheme
 internal fun ResumeSaveFeedback(
     state: ResumeSaveState,
     successfulSaves: Long,
-    invalidDates: Boolean,
+    validationFailures: Long,
     importState: ResumeImportState = ResumeImportState.Idle,
 ) {
     var showSuccess by remember { mutableStateOf(false) }
     LaunchedEffect(state, successfulSaves, importState) {
         showSuccess = state == ResumeSaveState.Saved || importState == ResumeImportState.Imported
         if (showSuccess) {
-            delay(SUCCESS_DURATION_MS.milliseconds)
+            delay(NOTIFICATION_DURATION_MS.milliseconds)
             showSuccess = false
         }
     }
-    val success = !invalidDates && showSuccess &&
+    val showValidationFailure = rememberValidationNotification(validationFailures)
+    val success = !showValidationFailure && showSuccess &&
         (state == ResumeSaveState.Saved || importState == ResumeImportState.Imported)
-    val message = FeedbackMessage(state, importState, invalidDates, success)
+    val message = FeedbackMessage(state, importState, showValidationFailure, success)
     val tokens = ReframeTheme.tokens
     val lineHeight = with(LocalDensity.current) { tokens.typography.bodyMedium.lineHeight.toDp() }
     Box(
@@ -92,14 +93,14 @@ internal fun ResumeSaveFeedback(
 private fun FeedbackMessage(
     state: ResumeSaveState,
     importState: ResumeImportState,
-    invalidDates: Boolean,
+    showValidationFailure: Boolean,
     success: Boolean,
 ): String = when {
     importState == ResumeImportState.Importing -> stringResource(Res.string.resume_import_progress)
 
-    importState == ResumeImportState.Failed -> stringResource(Res.string.resume_import_error)
+    showValidationFailure -> stringResource(Res.string.resume_validation_feedback)
 
-    invalidDates -> stringResource(Res.string.resume_dates_error)
+    importState == ResumeImportState.Failed -> stringResource(Res.string.resume_import_error)
 
     state == ResumeSaveState.Failed -> stringResource(Res.string.resume_save_error)
 
@@ -111,4 +112,17 @@ private fun FeedbackMessage(
     else -> ""
 }
 
-private const val SUCCESS_DURATION_MS = 3_000L
+@Composable
+private fun rememberValidationNotification(validationFailures: Long): Boolean {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(validationFailures) {
+        if (validationFailures > 0) {
+            visible = true
+            delay(NOTIFICATION_DURATION_MS.milliseconds)
+            visible = false
+        }
+    }
+    return visible
+}
+
+private const val NOTIFICATION_DURATION_MS = 3_000L

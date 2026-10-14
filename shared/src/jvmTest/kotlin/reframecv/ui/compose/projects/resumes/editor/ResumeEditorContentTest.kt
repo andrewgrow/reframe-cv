@@ -178,9 +178,15 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
         onNodeWithText("Save").performClick()
         assertEquals(0, writes)
         onNodeWithText("Use YYYY or YYYY-MM, with a valid year and month.").assertExists()
+        val notification = onNode(
+            hasText("Validation failed. Please check the form.") and
+                hasAnyAncestor(hasTestTag("resume.feedback")),
+        )
+        notification.assertExists()
         onNodeWithText("Start (YYYY or YYYY-MM)").performScrollTo().performTextReplacement("2020")
         onNodeWithText("End (YYYY or YYYY-MM)").performScrollTo().performTextReplacement("invalid")
         onNodeWithText("Present").performScrollTo().performClick()
+        notification.assertExists()
         onNodeWithText("Save").performClick()
         assertEquals(1, writes)
         val entry = assertIs<ResumeEducationSection>(
