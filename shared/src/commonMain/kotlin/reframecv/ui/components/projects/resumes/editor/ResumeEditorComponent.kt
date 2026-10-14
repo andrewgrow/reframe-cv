@@ -16,7 +16,7 @@ import reframecv.ui.components.common.confirmation.ConfirmationDialogTone
 import reframecv.ui.context.AppComponentContext
 
 /** Reports resume save progress without discarding a failed draft. */
-enum class ResumeSaveState { Idle, Saving, Failed }
+enum class ResumeSaveState { Idle, Saving, Saved, Failed }
 
 /** Keeps typed deletion confirmation and failed deletions on the management page. */
 enum class ResumeDeleteState { Idle, Confirming, Deleting, Failed }
@@ -26,12 +26,15 @@ interface ResumeEditorComponent {
     val initialResume: Resume?
     val draft: Value<ResumeDraft>
     val saveState: Value<ResumeSaveState>
+    val successfulSaves: Value<Long>
     val deleteState: Value<ResumeDeleteState>
     val deleteConfirmation: Value<String>
     val exportVisible: Value<Boolean>
+    val exportComponent: ResumeExportComponent
     val validationRequested: Value<Boolean>
     val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving ||
-        deleteState.value == ResumeDeleteState.Deleting
+        deleteState.value == ResumeDeleteState.Deleting ||
+        exportComponent.state.value == ResumeExportState.Exporting
     val canConfirmDelete: Boolean get() = initialResume != null && !isBusy &&
         deleteState.value != ResumeDeleteState.Idle &&
         deleteConfirmation.value.isResumeDeleteConfirmation()
@@ -81,8 +84,16 @@ class DefaultResumeEditorComponent(
     override val deleteState = MutableValue(ResumeDeleteState.Idle)
     override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
+    override val successfulSaves = MutableValue(0L)
     override val validationRequested = MutableValue(false)
     override val exportVisible = MutableValue(false)
+    override val exportComponent = DefaultResumeExportComponent(
+        componentContext,
+        resume = {
+            initialResume?.takeIf { exportVisible.value }?.let { draft.value.applyTo(it) }
+        },
+        finished = ::onCloseExport,
+    )
     internal var savedRole = initialRole
         private set
     private var exportAfterSave = false
@@ -90,6 +101,7 @@ class DefaultResumeEditorComponent(
     override fun onDraftChange(draft: ResumeDraft) {
         if (!isBusy && !exportVisible.value && deleteState.value == ResumeDeleteState.Idle) {
             this.draft.value = draft
+            if (saveState.value == ResumeSaveState.Saved) saveState.value = ResumeSaveState.Idle
         }
     }
 
@@ -113,13 +125,20 @@ class DefaultResumeEditorComponent(
         if (state == ResumeSaveState.Idle) {
             savedRole = draft.value.role
             exportVisible.value = exportAfterSave
+            if (initialResume != null) {
+                successfulSaves.value += 1
+                saveState.value = ResumeSaveState.Saved
+            }
         }
         exportAfterSave = false
         return exportVisible.value
     }
 
     override fun onCloseExport() {
-        exportVisible.value = false
+        if (!isBusy) {
+            exportVisible.value = false
+            exportComponent.onReset()
+        }
     }
 
     override fun onRequestDelete() {

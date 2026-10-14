@@ -4,11 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -18,9 +15,9 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.resume_cancel
+import reframecv.shared.generated.resources.resume_close
 import reframecv.shared.generated.resources.resume_export
 import reframecv.shared.generated.resources.resume_save
-import reframecv.shared.generated.resources.resume_update
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
@@ -41,14 +38,15 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () 
     ) {
         if (editing) {
             Box(Modifier.weight(1f)) {
-                TextButton(
-                    onClick = component::onRequestDelete,
-                    modifier = Modifier.height(tokens.dimensions.buttonHeight),
+                FillButton(
+                    stringResource(Res.string.action_delete),
+                    component::onRequestDelete,
                     enabled = !busy,
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = ReframeTheme.colorScheme.critical,
-                    ),
-                ) { Text(stringResource(Res.string.action_delete)) }
+                    outlineState = FillButton.OutlineState.Visible,
+                    fillColor = ReframeTheme.colorScheme.critical,
+                    contentColor = ReframeTheme.colorScheme.critical,
+                    filledContentColor = MaterialTheme.colorScheme.onError,
+                )
             }
         }
         if (editing) {
@@ -60,15 +58,13 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () 
             )
         }
         FillButton(
-            stringResource(
-                if (editing) Res.string.resume_update else Res.string.resume_save,
-            ),
+            stringResource(Res.string.resume_save),
             component::onSave,
             enabled = !busy,
             outlineState = FillButton.OutlineState.Visible,
         )
         FillButton(
-            stringResource(Res.string.resume_cancel),
+            stringResource(if (editing) Res.string.resume_close else Res.string.resume_cancel),
             component::onClose,
             enabled = !busy,
             outlineState = FillButton.OutlineState.Visible,

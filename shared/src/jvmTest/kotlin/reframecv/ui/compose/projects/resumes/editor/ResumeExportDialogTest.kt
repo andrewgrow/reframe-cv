@@ -2,6 +2,7 @@ package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -15,7 +16,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.resume.Resume
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.resumes.editor.ResumeExportState
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
+import reframecv.ui.components.projects.resumes.editor.TestResumeExportComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeExportDialogTest : GoldenScreenshotTest() {
@@ -54,4 +57,25 @@ class ResumeExportDialogTest : GoldenScreenshotTest() {
         assertEquals(3, saves)
         assertEquals(0, closes)
     }
+
+    @Test
+    fun spinnerDisablesActionsAndEscapeWhileExportingAndFailureAllowsRetry() =
+        runDesktopComposeUiTest {
+            var downloads = 0
+            var closes = 0
+            val component = TestResumeExportComponent { downloads++ }
+            component.state.value = ResumeExportState.Exporting
+            setGoldenContent(this) { ResumeExportDialog(component) { closes++ } }
+            onNodeWithTag("resume.export.progress").assertExists()
+            onNodeWithTag("resume.export.format").assertIsNotEnabled()
+            onNodeWithText("Download").assertIsNotEnabled()
+            onNodeWithText("Cancel").assertIsNotEnabled()
+            onNodeWithTag("resume.export.dialog").performKeyInput { pressKey(Key.Escape) }
+            assertEquals(0, closes)
+            runOnIdle { component.state.value = ResumeExportState.Failed }
+            onNodeWithTag("resume.export.progress").assertDoesNotExist()
+            onNodeWithText("Could not export the resume. Please try again.").assertExists()
+            onNodeWithText("Download").performClick()
+            assertEquals(1, downloads)
+        }
 }

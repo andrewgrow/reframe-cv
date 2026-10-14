@@ -192,7 +192,7 @@ class ResumeEditingComponentTest : ComponentTest() {
             runOnUiThread {
                 subscription.cancel()
                 assertEquals("Backend", dependencies.resumesRepository.records.value.single().name)
-                assertEquals(ResumeSaveState.Idle, editor.saveState.value)
+                assertEquals(ResumeSaveState.Saved, editor.saveState.value)
                 assertSame(editor, component.editor)
                 (component.backHandler as BackDispatcher).back()
                 assertFalse(editor.exportVisible.value)
@@ -202,7 +202,7 @@ class ResumeEditingComponentTest : ComponentTest() {
     }
 
     @Test
-    fun saveAfterExportCanClearNewMainSelectionAndReturnToList() = runBlocking<Unit> {
+    fun saveAfterExportCanClearNewMainSelectionWithoutLeavingEditor() = runBlocking<Unit> {
         val original = original()
         dependencies.resumesRepository.records.value = listOf(original)
         val component = component(dependencies.resumesRepository)
@@ -210,7 +210,9 @@ class ResumeEditingComponentTest : ComponentTest() {
         val exported = CompletableDeferred<Unit>()
         val finished = CompletableDeferred<Unit>()
         val subscription = runOnUiThread {
-            component.childStack.subscribe { if (component.editor == null) finished.complete(Unit) }
+            editor.saveState.subscribe {
+                if (it == ResumeSaveState.Saved) finished.complete(Unit)
+            }
             editor.exportVisible.subscribe { if (it) exported.complete(Unit) }.also {
                 editor.onDraftChange(editor.draft.value.copy(role = ResumeRole.Main))
                 editor.onExport()
@@ -227,8 +229,12 @@ class ResumeEditingComponentTest : ComponentTest() {
             finished.await()
             runOnUiThread {
                 subscription.cancel()
-                assertNull(component.editor)
+                assertSame(editor, component.editor)
                 assertNull(dependencies.resumesRepository.mainResumeIds.value[7])
+                editor.onDraftChange(editor.draft.value.copy(name = "Unsaved"))
+                editor.onClose()
+                assertNull(component.editor)
+                assertEquals("Mobile", dependencies.resumesRepository.records.value.single().name)
             }
         }
     }
@@ -258,10 +264,15 @@ class ResumeEditingComponentTest : ComponentTest() {
     ) {
         val finished = CompletableDeferred<Unit>()
         runOnUiThread {
-            component.childStack.subscribe { if (component.editor == null) finished.complete(Unit) }
+            checkNotNull(component.editor).saveState.subscribe {
+                if (it == ResumeSaveState.Saved) finished.complete(Unit)
+            }
         }
         release.complete(Unit)
         finished.await()
-        runOnUiThread { assertNull(component.editor) }
+        runOnUiThread {
+            assertEquals(ResumeSaveState.Saved, component.editor?.saveState?.value)
+            assertFalse(component.editor?.isBusy ?: true)
+        }
     }
 }

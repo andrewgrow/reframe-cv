@@ -826,3 +826,76 @@ during export. Component tests cover validation, delayed writes, failure/retry,
 duplicate requests, Back ordering, and main selection after an export.
 
 Verification: all tests, goldens, ktlint, Detekt, and coverage verification passed.
+
+## Resume JSON file export — 2026-10-14
+
+Download generates the saved resume content using the existing versioned JSON codec
+and schema. Desktop export creates a UTF-8 temporary file before opening the native
+save picker, suggests resume-{id}-{yyyyMMddHHss}.json using local generation time,
+and copies the document to the chosen path. The timestamp follows the requested
+format, which omits minutes. Temporary files are removed after saving, cancelling,
+file/picker errors, and coroutine cancellation, including lifecycle cancellation.
+
+The export dialog shows a spinner and disables controls/dismissal for the complete
+operation. Success and picker cancellation close only the dialog. Failures show a
+retryable error and log the operation, project ID, resume ID, and stack trace.
+Platform export is supplied through ApplicationDependencies; editor lifecycle owns
+the operation. File tests cover content round-trip, filename, ready-before-picker
+ordering, overwriting, and cleanup. Component/UI tests cover progress, duplicate
+requests, errors/retry, and blocked dismissal; goldens cover progress and failure.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed. The spinner golden freezes the animation clock after
+the dialog entrance transition and was verified again independently.
+
+## Resume management Save and Close — 2026-10-14
+
+Saved resume management uses Save and Close. Successful saves keep the same editor
+open and show green Success! in the feedback area for three seconds. Editing clears
+the message immediately; each successful save restarts its lifetime, even when
+fast saves occur within one UI frame. Success colors are theme-specific. Close
+returns to the list without writing subsequent unsaved changes. Creation retains
+Save/Cancel and returns to the list after creating a record. Export still saves
+before opening its dialog; repeated saves preserve main-resume selection behavior.
+
+Updated component tests for retained editing and main selection, added UI coverage
+for transient/repeated feedback and Close, and added a success golden.
+
+Verification: all tests, screenshot verification, ktlint, Detekt, coverage
+reports/verification, and macOS packaging passed.
+
+## Reserved resume feedback row — 2026-10-14
+
+Resume management and creation reserve a single line above the footer buttons for
+notifications. Save failures, date validation messages, and transient success
+feedback use the same row. Its height follows the typography tokens and stays
+allocated when empty; long messages scroll horizontally instead of wrapping.
+Messages no longer change the form's position or viewport height. A UI regression
+checks the form, notification row, and Save button bounds across empty, success,
+and error states. Updated the editor goldens for the reserved footer space.
+
+Verification: all tests, goldens, ktlint, Detekt, and coverage verification passed.
+
+## Resume export filename timestamp — 2026-10-14
+
+Export filenames now use resume-{id}-{yyyyddMM}-{HHmm}-{ss}.json: year, day of
+month, month, then 24-hour time with minutes and separate seconds. Lowercase dd
+represents the day of the month; uppercase DD would represent the day of the year.
+
+## Keyboard Back after hovering action buttons — 2026-10-14
+
+FillButton hover clears control focus. The page Back handler previously had no
+focused event target afterwards, so Escape stopped working until another click.
+The shared handler now restores focus to its page container only when the page
+has no focused descendant and its window is active. Focused fields/buttons keep
+keyboard input, and disabled/busy handlers do not reclaim focus. A regression
+reproduces hover over resume actions without clicks, then verifies Escape closes
+management without saves, deletes, or opening export.
+
+Verification: the regression failed before the fix and passed afterwards. All
+tests, unchanged goldens, ktlint, Detekt, and coverage verification passed.
+
+Additional hover-without-click checks verify Escape closes vacancy management and
+the Create project dialog without saving or deleting. Those actions currently use
+TextButton, whose hover does not explicitly clear focus; both screens still benefit
+from the shared Back-handler fallback. Their UI/focus/navigation tests and linters passed.

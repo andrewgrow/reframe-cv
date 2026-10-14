@@ -5,12 +5,15 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -19,6 +22,7 @@ import reframecv.shared.generated.resources.action_create
 import reframecv.shared.generated.resources.project_name
 import reframecv.testing.getTestString
 import reframecv.ui.components.projects.editor.TestEditorComponent
+import reframecv.ui.theme.ReframeTheme
 
 private const val PROJECT_NAME = "Test Project"
 
@@ -58,5 +62,21 @@ class EditorCreateTest {
         onNodeWithText(projectNameLabel).performTextReplacement("!")
         onNodeWithText(createLabel).performClick()
         assertTrue(closed)
+    }
+
+    @Test
+    fun escapeClosesCreateDialogAfterHoveringActionsWithoutClicks() = runDesktopComposeUiTest {
+        var closes = 0
+        var writes = 0
+        val component = TestEditorComponent(onCloseClick = { closes++ })
+        setContent {
+            ReframeTheme { EditorContent(component, onSave = { writes++ }) }
+        }
+        onNodeWithText(projectNameLabel).performTextReplacement("Mobile")
+        onNodeWithText(createLabel).performMouseInput { enter(center) }
+        onNodeWithText("Cancel").performMouseInput { moveTo(center) }
+        onNodeWithTag(PROJECT_EDITOR_TAG).performKeyInput { pressKey(Key.Escape) }
+        assertEquals(1, closes)
+        assertEquals(0, writes)
     }
 }

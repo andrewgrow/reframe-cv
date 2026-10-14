@@ -16,6 +16,8 @@ import androidx.compose.ui.graphics.Color
 private const val HINT_COLOR_LIGHT = 0xFF62606A
 private const val HINT_COLOR_DARK = 0xFFB9B2C3
 private const val BACKGROUND_COLOR_DARK = 0xFF211D29
+private const val SUCCESS_COLOR_LIGHT = 0xFF2E7D32
+private const val SUCCESS_COLOR_DARK = 0xFF81C784
 private const val CRITICAL_COLOR_LIGHT = 0xFFB3261E
 private const val CRITICAL_COLOR_DARK = 0xFFF2B8B5
 
@@ -30,6 +32,7 @@ data class ReframeColorScheme(
     val material: ColorScheme,
     val hint: Color,
     val critical: Color,
+    val success: Color,
     val dashboardResumes: Color,
     val dashboardVacancies: Color,
     val dashboardCoverLetters: Color,
@@ -41,6 +44,7 @@ private val lightReframeColorScheme = ReframeColorScheme(
     },
     hint = hintColorLight,
     critical = criticalColorLight,
+    success = Color(SUCCESS_COLOR_LIGHT),
     dashboardResumes = Color(0xFFE5DFF0),
     dashboardVacancies = Color(0xFFE0EBE4),
     dashboardCoverLetters = Color(0xFFF2DFE6),
@@ -49,6 +53,7 @@ private val darkReframeColorScheme = ReframeColorScheme(
     material = darkColorScheme(background = Color(BACKGROUND_COLOR_DARK)),
     hint = hintColorDark,
     critical = criticalColorDark,
+    success = Color(SUCCESS_COLOR_DARK),
     dashboardResumes = Color(0xFF332B48),
     dashboardVacancies = Color(0xFF283C3C),
     dashboardCoverLetters = Color(0xFF422E3A),

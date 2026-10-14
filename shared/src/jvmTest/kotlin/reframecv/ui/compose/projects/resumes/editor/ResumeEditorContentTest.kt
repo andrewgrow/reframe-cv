@@ -7,10 +7,12 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
@@ -27,10 +29,13 @@ import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.application.TestRootComponent
+import reframecv.ui.components.projects.resumes.TestResumesComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
+import reframecv.ui.compose.application.RootContent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeEditorContentTest : GoldenScreenshotTest() {
@@ -73,7 +78,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
             .performTextReplacement("Certificates")
         onNode(hasText("Include in resume") and customSection).performScrollTo().performClick()
         onNode(hasText("Move up") and customSection).performScrollTo().performClick()
-        onNodeWithText("Update").performClick()
+        onNodeWithText("Save").performClick()
         val result = checkNotNull(saved)
         assertEquals("Backend", result.name)
         assertEquals("Backend engineer", result.content.profile.headline)
@@ -217,5 +222,81 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
         onNodeWithTag("resume.name").performKeyInput { pressKey(Key.Escape) }
         assertEquals(2, closes)
         assertFalse(component.draft.value.isValid)
+    }
+
+    @Test
+    fun savedResumeShowsSuccessAndCloseDiscardsFurtherChanges() = runDesktopComposeUiTest {
+        var writes = 0
+        var closes = 0
+        val resume = Resume(id = 12, projectId = 1, name = "Mobile", createdAt = 0, updatedAt = 0)
+        val component = TestResumeEditorComponent(
+            initialResume = resume,
+            save = { writes++ },
+            close = { closes++ },
+        )
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Cancel").assertDoesNotExist()
+        onNodeWithText("Save").performClick()
+        runOnIdle { component.saveState.value = ResumeSaveState.Saved }
+        onNodeWithText("Resume saved successfully").assertExists()
+        waitUntil(timeoutMillis = 5_000) {
+            onAllNodesWithText("Resume saved successfully").fetchSemanticsNodes().isEmpty()
+        }
+        onNodeWithText("Save").performClick()
+        runOnIdle { component.successfulSaves.value += 1 }
+        onNodeWithText("Resume saved successfully").assertExists()
+        onNodeWithTag("resume.name").performTextReplacement("Unsaved")
+        onNodeWithText("Resume saved successfully").assertDoesNotExist()
+        onNodeWithText("Close").performClick()
+        assertEquals(2, writes)
+        assertEquals(1, closes)
+    }
+
+    @Test
+    fun feedbackDoesNotMoveFormOrControlsBetweenEmptySuccessAndError() = runDesktopComposeUiTest {
+        val resume = Resume(id = 12, projectId = 1, name = "Mobile", createdAt = 0, updatedAt = 0)
+        val component = TestResumeEditorComponent(initialResume = resume)
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        val fields = onNodeWithTag("resume.fields").fetchSemanticsNode().boundsInRoot
+        val feedback = onNodeWithTag("resume.feedback").fetchSemanticsNode().boundsInRoot
+        val save = onNodeWithText("Save").fetchSemanticsNode().boundsInRoot
+        listOf(
+            ResumeSaveState.Saved,
+            ResumeSaveState.Failed,
+            ResumeSaveState.Idle,
+        ).forEach { state ->
+            runOnIdle { component.saveState.value = state }
+            assertEquals(fields, onNodeWithTag("resume.fields").fetchSemanticsNode().boundsInRoot)
+            assertEquals(
+                feedback,
+                onNodeWithTag("resume.feedback").fetchSemanticsNode().boundsInRoot,
+            )
+            assertEquals(save, onNodeWithText("Save").fetchSemanticsNode().boundsInRoot)
+        }
+    }
+
+    @Test
+    fun escapeClosesSavedResumeAfterHoveringActionsWithoutClicking() = runDesktopComposeUiTest {
+        var closes = 0
+        var writes = 0
+        var deletes = 0
+        val resume = Resume(id = 12, projectId = 1, name = "Mobile", createdAt = 0, updatedAt = 0)
+        val component = TestResumeEditorComponent(
+            initialResume = resume,
+            close = { closes++ },
+            save = { writes++ },
+            delete = { deletes++ },
+        )
+        val resumes = TestResumesComponent(initialEditor = component, back = component::onClose)
+        setGoldenContent(this) { RootContent(TestRootComponent(resumesComponent = resumes)) }
+        onNodeWithText("Save").performMouseInput { enter(center) }
+        onNodeWithText("Export").performMouseInput { moveTo(center) }
+        onNodeWithText("Delete").performMouseInput { moveTo(center) }
+        onNodeWithText("Close").performMouseInput { moveTo(center) }
+        onNodeWithTag("resumes.editor").performKeyInput { pressKey(Key.Escape) }
+        assertEquals(1, closes)
+        assertEquals(0, writes)
+        assertEquals(0, deletes)
+        assertFalse(component.exportVisible.value)
     }
 }

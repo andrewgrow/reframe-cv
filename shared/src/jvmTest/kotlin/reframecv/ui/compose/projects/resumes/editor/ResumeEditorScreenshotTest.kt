@@ -64,7 +64,7 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
             ),
         )
         setGoldenContent(this) { RootContent(root) }
-        onNodeWithText("Cancel").performClick()
+        onNodeWithText("Close").performClick()
         captureGolden(this)
     }
 
@@ -81,7 +81,16 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
         val component = TestResumeEditorComponent(initialResume = resume)
         component.saveState.value = ResumeSaveState.Failed
         setGoldenContent(this, themeMode = ThemeMode.Light) { ResumeEditorContent(component) }
-        onNodeWithText("Cancel").performClick()
+        onNodeWithText("Close").performClick()
+        captureGolden(this)
+    }
+
+    @Test
+    fun successfulSaveMatchesReference() = runDesktopComposeUiTest {
+        val resume = Resume(id = 12, projectId = 1, name = "Mobile", createdAt = 0, updatedAt = 0)
+        val component = TestResumeEditorComponent(initialResume = resume)
+        component.saveState.value = ResumeSaveState.Saved
+        setGoldenContent(this) { ResumeEditorContent(component) }
         captureGolden(this)
     }
 

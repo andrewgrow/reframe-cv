@@ -20,10 +20,15 @@ class TestResumeEditorComponent(
     override val deleteState = MutableValue(ResumeDeleteState.Idle)
     override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
+    override val successfulSaves = MutableValue(0L)
     override val validationRequested = MutableValue(false)
     override val exportVisible = MutableValue(false)
+    override val exportComponent = TestResumeExportComponent { onCloseExport() }
     override fun onDraftChange(draft: ResumeDraft) {
-        if (!isBusy && deleteState.value == ResumeDeleteState.Idle) this.draft.value = draft
+        if (!isBusy && deleteState.value == ResumeDeleteState.Idle) {
+            this.draft.value = draft
+            if (saveState.value == ResumeSaveState.Saved) saveState.value = ResumeSaveState.Idle
+        }
     }
     override fun onSave() {
         if (isBusy || deleteState.value != ResumeDeleteState.Idle) return

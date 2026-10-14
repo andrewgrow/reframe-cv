@@ -11,9 +11,13 @@ import reframecv.domain.models.resume.content.ResumeContent
 internal object ResumeContentJson {
     private const val FORMAT_VERSION = 1
     private val json = Json { encodeDefaults = true }
+    private val exportJson = Json(json) { prettyPrint = true }
 
     fun encode(content: ResumeContent): String =
         json.encodeToString(Document.serializer(), Document(FORMAT_VERSION, content))
+
+    fun encodeForExport(content: ResumeContent): String =
+        exportJson.encodeToString(Document.serializer(), Document(FORMAT_VERSION, content)) + "\n"
 
     fun decode(value: String): ResumeContent {
         val document = json.parseToJsonElement(value).jsonObject

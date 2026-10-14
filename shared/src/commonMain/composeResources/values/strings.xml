@@ -128,7 +128,6 @@
     <string name="resume_contact_value">Value</string>
     <string name="resume_dates_error">Check the dates in Work experience and Education. Use YYYY or YYYY-MM.</string>
     <string name="resume_edit">Resume</string>
-    <string name="resume_update">Update</string>
     <string name="resume_main">Main resume</string>
     <string name="resume_main_hint">Only one resume can be the main resume for a project. Selecting this replaces the current main resume.</string>
     <string name="resume_delete_title">Delete resume?</string>
@@ -141,4 +140,8 @@
     <string name="resume_export_format">Format</string>
     <string name="resume_export_json">as JSON</string>
     <string name="resume_export_download">Download</string>
+    <string name="resume_export_error">Could not export the resume. Please try again.</string>
+    <string name="resume_close">Close</string>
+    <string name="resume_save_success">Resume saved successfully</string>
+    <string name="resume_update">Update</string>
 </resources>

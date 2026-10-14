@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
@@ -8,9 +9,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runComposeUiTest
+import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.vacancy.Vacancy
@@ -105,5 +110,27 @@ class VacancyEditorContentTest {
         onNodeWithText("Cancel").performClick()
         assertEquals(1, closes)
         assertEquals(emptyList(), saved)
+    }
+
+    @Test
+    fun escapeClosesVacancyAfterHoveringActionsWithoutClicks() = runDesktopComposeUiTest {
+        var closes = 0
+        var writes = 0
+        var deletes = 0
+        val vacancy = Vacancy(id = 1, projectId = 1, name = "Mobile", createdAt = 0, updatedAt = 0)
+        val component = TestVacancyEditorComponent(
+            initialVacancy = vacancy,
+            save = { writes++ },
+            close = { closes++ },
+            delete = { deletes++ },
+        )
+        setContent { ReframeTheme { VacancyEditorContent(component) } }
+        onNodeWithText("Save").performMouseInput { enter(center) }
+        onNodeWithText("Delete").performMouseInput { moveTo(center) }
+        onNodeWithText("Cancel").performMouseInput { moveTo(center) }
+        onNodeWithTag("vacancies.editor").performKeyInput { pressKey(Key.Escape) }
+        assertEquals(1, closes)
+        assertEquals(0, writes)
+        assertEquals(0, deletes)
     }
 }

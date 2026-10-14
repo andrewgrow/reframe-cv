@@ -24,12 +24,14 @@ Later sections are separate work, not prerequisites for the first resume editor.
   importing documents remains future work.
 - The resume list opens from its dashboard card and observes project-scoped data.
   Add opens a full-page structured creation form. Only the resume name is required.
-  Clicking a saved name or date opens the same form as Resume, with Update and
-  permanent Delete actions. Deletion requires typing DELETE in a confirmation dialog.
+  Clicking a saved name or date opens the same form as Resume, with Save and
+  permanent Delete actions. Save keeps management open and briefly shows Success;
+  Close discards unsaved changes. Deletion requires typing DELETE in a confirmation dialog.
   Date fields accept an optional year or year-month and an ongoing period.
 - Export saves the current resume draft before opening the dialog with as JSON
-  selected. Invalid drafts and failed saves keep the dialog closed. Cancel and
-  Download only dismiss it; actual file export remains unimplemented.
+  selected. Invalid drafts and failed saves keep the dialog closed. Download generates
+  schema-compatible JSON, opens the native save picker, and removes its temporary
+  file on success, cancellation, or failure. Export failures remain retryable.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO. Creation/editing can select or clear the main resume;
   document and selection changes are saved atomically. Adaptation remains planned.

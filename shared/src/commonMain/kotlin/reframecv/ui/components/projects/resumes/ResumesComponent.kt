@@ -134,7 +134,7 @@ class DefaultResumesComponent(
 
                     ResumesLabel.Saved -> {
                         val exported = editor?.onSaveCompleted(ResumeSaveState.Idle) == true
-                        if (!exported) editorNavigation.pop()
+                        if (!exported && editor?.initialResume == null) editorNavigation.pop()
                     }
 
                     ResumesLabel.Deleted -> editorNavigation.pop()
