@@ -10,7 +10,6 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_add_entry
 import reframecv.shared.generated.resources.resume_degree
 import reframecv.shared.generated.resources.resume_institution
-import reframecv.shared.generated.resources.resume_remove
 import reframecv.shared.generated.resources.resume_specialty
 import reframecv.ui.components.projects.resumes.editor.ResumePeriodDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeSectionDraft
@@ -48,16 +47,7 @@ internal fun ResumeFormScope.EducationFields(
                         ),
                     )
                 }
-                Action(Res.string.resume_remove, {
-                    onChange(
-                        draft.copy(
-                            value = section.copy(
-                                entries = section.entries.removedAt(index),
-                            ),
-                            periods = draft.periods.removedAt(index),
-                        ),
-                    )
-                })
+                EducationRemoveAction(draft, index, onChange)
             }
         }
     }

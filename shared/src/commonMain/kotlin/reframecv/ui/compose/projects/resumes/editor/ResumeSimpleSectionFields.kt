@@ -6,9 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import reframecv.domain.models.resume.content.ResumeContact
 import reframecv.domain.models.resume.content.ResumeContactsSection
-import reframecv.domain.models.resume.content.ResumeLanguage
 import reframecv.domain.models.resume.content.ResumeLanguagesSection
 import reframecv.domain.models.resume.content.ResumeSection
 import reframecv.domain.models.resume.content.ResumeSkillsSection
@@ -16,12 +14,7 @@ import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.ResumeTextSection
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.resume_contact_label
-import reframecv.shared.generated.resources.resume_contact_type
-import reframecv.shared.generated.resources.resume_contact_value
 import reframecv.shared.generated.resources.resume_items
-import reframecv.shared.generated.resources.resume_language
-import reframecv.shared.generated.resources.resume_level
 import reframecv.shared.generated.resources.resume_text
 
 @Composable
@@ -46,23 +39,12 @@ internal fun ResumeFormScope.SimpleSectionFields(
             onChange(section.copy(groups = it))
         }
 
-        is ResumeLanguagesSection -> Entries(
-            section.entries,
-            { onChange(section.copy(entries = it)) },
-            ::ResumeLanguage,
-        ) { entry, change ->
-            Field(entry.language, Res.string.resume_language, { change(entry.copy(language = it)) })
-            Field(entry.level, Res.string.resume_level, { change(entry.copy(level = it)) })
+        is ResumeLanguagesSection -> LanguageFields(section.entries) {
+            onChange(section.copy(entries = it))
         }
 
-        is ResumeContactsSection -> Entries(
-            section.entries,
-            { onChange(section.copy(entries = it)) },
-            ::ResumeContact,
-        ) { entry, change ->
-            Field(entry.type, Res.string.resume_contact_type, { change(entry.copy(type = it)) })
-            Field(entry.label, Res.string.resume_contact_label, { change(entry.copy(label = it)) })
-            Field(entry.value, Res.string.resume_contact_value, { change(entry.copy(value = it)) })
+        is ResumeContactsSection -> ContactFields(section.entries) {
+            onChange(section.copy(entries = it))
         }
 
         else -> error("Work and education sections have dedicated editors")

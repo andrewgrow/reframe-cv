@@ -2,7 +2,6 @@ package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Checkbox
@@ -18,7 +17,6 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_add_entry
-import reframecv.shared.generated.resources.resume_remove
 import reframecv.ui.theme.ReframeTheme
 
 /** Keeps repeated section controls and form fields consistent across the structured editor. */
@@ -72,9 +70,7 @@ internal class ResumeFormScope(val enabled: Boolean) {
         onChange: (List<T>) -> Unit,
         create: () -> T,
         addLabel: StringResource = Res.string.resume_add_entry,
-        removeAction: @Composable (T, () -> Unit) -> Unit = { _, remove ->
-            FlowRow { Action(Res.string.resume_remove, remove) }
-        },
+        removeAction: @Composable (T, () -> Unit) -> Unit,
         fields: @Composable ResumeFormScope.(T, (T) -> Unit) -> Unit,
     ) {
         items.forEachIndexed { index, item ->

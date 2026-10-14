@@ -3,9 +3,9 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import org.jetbrains.compose.resources.StringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_cancel
-import reframecv.shared.generated.resources.resume_remove
 import reframecv.shared.generated.resources.resume_remove_section_question
 import reframecv.shared.generated.resources.resume_remove_section_title
 import reframecv.ui.components.common.confirmation.ConfirmationDialogAction
@@ -17,6 +17,7 @@ import reframecv.ui.compose.common.ConfirmationDialog
 @Composable
 internal fun ResumeSectionRemoveConfirmation(
     sectionName: String,
+    removeLabel: StringResource,
     enabled: Boolean,
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
@@ -26,7 +27,7 @@ internal fun ResumeSectionRemoveConfirmation(
             title = Res.string.resume_remove_section_title,
             message = Res.string.resume_remove_section_question,
             subject = sectionName.takeIf { it.isNotBlank() },
-            confirmLabel = Res.string.resume_remove,
+            confirmLabel = removeLabel,
             cancelLabel = Res.string.resume_cancel,
             tone = ConfirmationDialogTone.Critical,
         ),

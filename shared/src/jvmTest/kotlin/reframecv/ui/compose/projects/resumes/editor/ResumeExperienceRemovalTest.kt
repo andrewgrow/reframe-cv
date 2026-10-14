@@ -15,6 +15,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.resume.content.ResumeDate
 import reframecv.domain.models.resume.content.ResumeDateRange
+import reframecv.domain.models.resume.content.ResumeEducation
+import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperience
 import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.ResumeProject
@@ -25,6 +27,40 @@ import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumeExperienceRemovalTest : GoldenScreenshotTest() {
+    @Test
+    fun educationRemovalRequiresConfirmationAndKeepsDatesMatched() = runDesktopComposeUiTest {
+        val first = ResumeEducation(
+            institution = "Discard university",
+            period = ResumeDateRange(start = ResumeDate(2010)),
+        )
+        val second = ResumeEducation(
+            institution = "Keep university",
+            period = ResumeDateRange(start = ResumeDate(2020)),
+        )
+        val draft = ResumeDraft("Mobile")
+            .addSection(ResumeEducationSection(entries = listOf(first, second)))
+        val component = TestResumeEditorComponent(draft)
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onAllNodesWithText("Remove Education Entry")[0].performScrollTo().performClick()
+        assertEquals(draft, component.draft.value)
+        onNodeWithTag("confirmation.input").assertDoesNotExist()
+        onNode(
+            hasText("Cancel") and hasAnyAncestor(hasTestTag("resume.item.remove.dialog")),
+        ).performClick()
+        assertEquals(draft, component.draft.value)
+        onAllNodesWithText("Remove Education Entry")[0].performScrollTo().performClick()
+        onNodeWithTag("resume.item.remove.dialog").performKeyInput { pressKey(Key.Escape) }
+        assertEquals(draft, component.draft.value)
+        onAllNodesWithText("Remove Education Entry")[0].performScrollTo().performClick()
+        onNode(
+            hasText("Remove Education Entry") and
+                hasAnyAncestor(hasTestTag("resume.item.remove.dialog")),
+        ).performClick()
+        val remaining = component.draft.value.sections.single()
+        assertEquals(listOf(second), (remaining.value as ResumeEducationSection).entries)
+        assertEquals(listOf(draft.sections.single().periods.last()), remaining.periods)
+    }
+
     @Test
     fun removingProjectsAndPositionsRequiresConfirmationAndKeepsPeriodsMatched() =
         runDesktopComposeUiTest {
@@ -95,10 +131,10 @@ class ResumeExperienceRemovalTest : GoldenScreenshotTest() {
         )
         val component = TestResumeEditorComponent(original)
         setGoldenContent(this) { ResumeEditorContent(component) }
-        onAllNodesWithText("Remove skill or tool")[0].performScrollTo().performClick()
+        onAllNodesWithText("Remove Skill or Tool")[0].performScrollTo().performClick()
         assertEquals(original, component.draft.value)
         onNode(
-            hasText("Remove skill or tool") and
+            hasText("Remove Skill or Tool") and
                 hasAnyAncestor(hasTestTag("resume.item.remove.dialog")),
         ).performClick()
         val section = component.draft.value.sections.single().value as ResumeExperienceSection

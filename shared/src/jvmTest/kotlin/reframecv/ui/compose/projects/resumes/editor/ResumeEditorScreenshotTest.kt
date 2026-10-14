@@ -184,6 +184,13 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     fun summarySectionMatchesReference() = captureSection(1)
 
     @Test
+    fun educationSectionOnNarrowScreenMatchesReference() = captureSection(
+        sampleResumeContent().sections[4],
+        ThemeMode.Dark,
+        screenSize = ScreenSize(320.dp, 600.dp),
+    )
+
+    @Test
     fun skillsSectionInLightThemeMatchesReference() = captureSection(2, ThemeMode.Light)
 
     @Test
@@ -216,7 +223,31 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     fun educationSectionMatchesReference() = captureSection(4)
 
     @Test
+    fun educationEntryRemovalMatchesReference() = captureSection(
+        sampleResumeContent().sections[4],
+        ThemeMode.Dark,
+        scrollTo = "Remove Education Entry",
+        confirmRemoval = true,
+    )
+
+    @Test
+    fun contactRemovalMatchesReference() = captureSection(
+        sampleResumeContent().sections[0],
+        ThemeMode.Dark,
+        scrollTo = "Remove Contact",
+        confirmRemoval = true,
+    )
+
+    @Test
     fun languagesSectionMatchesReference() = captureSection(5)
+
+    @Test
+    fun languageRemovalInLightThemeMatchesReference() = captureSection(
+        sampleResumeContent().sections[5],
+        ThemeMode.Light,
+        scrollTo = "Remove Language",
+        confirmRemoval = true,
+    )
 
     @Test
     fun hiddenSoftSkillsSectionMatchesReference() = captureSection(6)
@@ -252,8 +283,9 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
         theme: ThemeMode,
         scrollTo: String? = null,
         confirmRemoval: Boolean = false,
-    ) = runDesktopComposeUiTest {
-        setGoldenContent(this, themeMode = theme) {
+        screenSize: ScreenSize = defaultScreen,
+    ) = runDesktopComposeUiTest(screenSize) {
+        setGoldenContent(this, screenSize = screenSize, themeMode = theme) {
             Column(
                 Modifier.fillMaxSize().background(
                     MaterialTheme.colorScheme.background,

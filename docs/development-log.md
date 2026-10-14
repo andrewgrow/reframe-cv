@@ -1007,3 +1007,56 @@ draft editing, persistence, and JSON export.
 
 Verification: all tests and unchanged goldens, ktlint, Detekt, coverage reports/verification,
 and macOS packaging passed.
+
+## Language proficiency row — 2026-10-14
+
+Each Languages entry now places Language and Proficiency in one row with equal
+widths and a token-based gap. Updated the Languages section golden.
+
+Verification: editor UI tests and goldens, ktlint, and Detekt passed.
+
+## Confirmed language removal — 2026-10-14
+
+Languages now use a right-aligned Remove Language action directly below the
+Language/Proficiency row. The shared button-only confirmation displays the language
+name; Cancel/Escape preserves the draft, and confirmation removes only that entry.
+Language fields live in their own UI file. Added placement/removal checks and a
+light-theme confirmation golden; updated the Languages section reference.
+
+Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.
+
+## Contact type selector and compact labels — 2026-10-14
+
+Contacts now use a dropdown for Email, Phone, LinkedIn, Website, GitHub, Other,
+and Not specified. Stored values remain strings (email, phone, linkedin, website,
+github, other, or empty); existing custom types remain visible/selectable and are
+preserved until explicitly changed. Type and the optional Display label share an
+equal-width row, while Value stays below. Contact fields live in a dedicated UI
+file. The model and JSON schema remain compatible.
+
+Checks cover all options, row alignment/widths, empty labels, preservation of
+custom types and other fields, and disabled inputs during saving. Updated the
+Contacts section golden.
+
+Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.
+
+## Explicit resume removal targets — 2026-10-14
+
+Every resume section now names its removal target (for example Remove Education
+Section, Remove Skills Section, and Remove Contacts Section). A shared section-type
+mapping supplies the same label to both the control and confirmation. Custom
+section titles remain the confirmation subject. Nested actions distinguish Remove
+Education Entry, Remove Contact, Remove Language, Remove Position, Remove Project,
+Remove Skill Group, and Remove Skill or Tool. Generic Entries now requires an
+explicit removal action instead of supplying an ambiguous Remove fallback.
+
+Contacts and education entries use the shared button-only confirmation; Cancel
+and Escape preserve the draft. Education removal keeps entries and period drafts
+matched. On narrow screens, section removal occupies its own right-aligned row so
+long labels cannot squeeze the other controls. The breakpoint uses a UI token.
+
+Added contact/education confirmation tests and goldens, refreshed section references,
+and added a narrow Education golden to cover long action labels.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

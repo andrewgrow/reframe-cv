@@ -62,6 +62,7 @@ internal fun ResumeSectionEditor(
                 })
             }
             form.SectionActions(
+                removeLabel = draft.value.removeLabel(),
                 expanded = expanded,
                 visible = draft.value.visible,
                 first = first,
@@ -84,6 +85,7 @@ internal fun ResumeSectionEditor(
         }
         ResumeSectionRemoveConfirmation(
             name,
+            removeLabel = draft.value.removeLabel(),
             enabled = form.enabled,
             onCancel = { confirmingRemoval = false },
             onConfirm = {
