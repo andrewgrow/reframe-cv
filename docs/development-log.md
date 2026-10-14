@@ -990,3 +990,20 @@ Added placement and confirmation/cancellation checks and a confirmation golden;
 updated Skills and multiline Items goldens.
 
 Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.
+
+## Nested resume consent — 2026-10-14
+
+ResumeContent and ResumeDraft now group the consent statement in
+ResumeConsent(text, visible). Stored and exported version-1 JSON uses
+content.consent.text and content.consent.visible. The schema describes this
+nested object, with empty text and visible=true defaults. Editor behavior and
+appearance stay the same.
+
+The decoder accepts earlier flat consentStatement/consentStatementVisible fields
+without losing text or visibility, then writes the nested form on the next save.
+Malformed values and mixed flat/nested representations are rejected. No database
+table migration is needed. Tests cover defaults, legacy records, schema agreement,
+draft editing, persistence, and JSON export.
+
+Verification: all tests and unchanged goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

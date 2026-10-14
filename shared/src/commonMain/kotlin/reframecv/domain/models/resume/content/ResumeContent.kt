@@ -8,6 +8,5 @@ data class ResumeContent(
     val profile: ResumeProfile = ResumeProfile(),
     val sections: List<ResumeSection> = emptyList(),
     val language: String = "",
-    val consentStatement: String = "",
-    val consentStatementVisible: Boolean = true,
+    val consent: ResumeConsent = ResumeConsent(),
 )

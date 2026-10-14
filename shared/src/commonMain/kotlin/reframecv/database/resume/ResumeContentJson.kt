@@ -2,6 +2,7 @@ package reframecv.database.resume
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -23,7 +24,23 @@ internal object ResumeContentJson {
         val document = json.parseToJsonElement(value).jsonObject
         val version = document["formatVersion"]?.jsonPrimitive?.intOrNull
         require(version == FORMAT_VERSION) { "Unsupported resume content format version: $version" }
-        return json.decodeFromJsonElement(Document.serializer(), document).content
+        return json.decodeFromJsonElement(Document.serializer(), normalizeConsent(document)).content
+    }
+
+    private fun normalizeConsent(document: JsonObject): JsonObject {
+        val content = document["content"]?.jsonObject
+        val legacyFields = listOf("consentStatement", "consentStatementVisible")
+        if (content == null || legacyFields.none { it in content }) return document
+        require("consent" !in content) { "Resume content mixes legacy and nested consent fields" }
+        val consent = buildMap {
+            content["consentStatement"]?.let { put("text", it) }
+            content["consentStatementVisible"]?.let { put("visible", it) }
+        }
+        val normalized = content.toMutableMap().apply {
+            legacyFields.forEach { remove(it) }
+            put("consent", JsonObject(consent))
+        }
+        return JsonObject(document + ("content" to JsonObject(normalized)))
     }
 
     /** Wraps persisted resume content with its independent format version. */

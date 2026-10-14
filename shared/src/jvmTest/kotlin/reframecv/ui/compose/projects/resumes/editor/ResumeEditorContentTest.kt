@@ -26,6 +26,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.ResumeSkillGroup
@@ -315,8 +316,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
             updatedAt = 0,
             content = sampleResumeContent().copy(
                 language = "DE",
-                consentStatement = "Original",
-                consentStatementVisible = false,
+                consent = ResumeConsent(text = "Original", visible = false),
             ),
         )
         listOf(null, original).forEach { record ->
@@ -332,7 +332,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
                     .assertTextContains(record?.content?.language.orEmpty())
                     .performTextReplacement(" en ")
                 onNodeWithTag("resume.consent").performScrollTo()
-                    .assertTextContains(record?.content?.consentStatement.orEmpty())
+                    .assertTextContains(record?.content?.consent?.text.orEmpty())
                     .performTextReplacement("Consent\nSecond line")
                 onNodeWithTag("resume.consent.visibility").performScrollTo()
                 val toggle = onNode(
@@ -341,9 +341,9 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
                 if (record == null) toggle.assertIsOn() else toggle.assertIsOff()
                 toggle.performClick()
                 onNodeWithText("Save").performClick()
-                assertEquals(record != null, saved?.content?.consentStatementVisible)
+                assertEquals(record != null, saved?.content?.consent?.visible)
                 assertEquals("EN", saved?.content?.language)
-                assertEquals("Consent\nSecond line", saved?.content?.consentStatement)
+                assertEquals("Consent\nSecond line", saved?.content?.consent?.text)
                 runOnIdle { component.saveState.value = ResumeSaveState.Saving }
                 onNodeWithTag("resume.consent").assertIsNotEnabled()
                 onNodeWithTag("resume.language").assertIsNotEnabled()

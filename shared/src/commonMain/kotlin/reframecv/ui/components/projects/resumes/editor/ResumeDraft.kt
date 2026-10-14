@@ -1,6 +1,7 @@
 package reframecv.ui.components.projects.resumes.editor
 
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeProfile
 import reframecv.domain.models.resume.content.ResumeSection
@@ -14,8 +15,7 @@ data class ResumeDraft(
     val nextSectionId: Long = 1,
     val role: ResumeRole = ResumeRole.Regular,
     val language: String = "",
-    val consentStatement: String = "",
-    val consentStatementVisible: Boolean = true,
+    val consent: ResumeConsent = ResumeConsent(),
 ) {
     val isValid: Boolean
         get() = name.isNotBlank() && sections.all { it.isValid }
@@ -53,8 +53,7 @@ data class ResumeDraft(
                 profile = profile,
                 sections = sections.map { it.toSection() },
                 language = language.trim().uppercase(),
-                consentStatement = consentStatement,
-                consentStatementVisible = consentStatementVisible,
+                consent = consent,
             ),
         )
     }
@@ -66,8 +65,7 @@ data class ResumeDraft(
             keywords = resume.keywords.joinToString(", "),
             profile = resume.content.profile,
             language = resume.content.language,
-            consentStatement = resume.content.consentStatement,
-            consentStatementVisible = resume.content.consentStatementVisible,
+            consent = resume.content.consent,
             sections = resume.content.sections.mapIndexed { index, section ->
                 ResumeSectionDraft(index.toLong() + 1, section)
             },

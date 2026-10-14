@@ -14,11 +14,11 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 internal fun ResumeFormScope.ConsentFields(draft: ResumeDraft, onChange: (ResumeDraft) -> Unit) {
     Heading(Res.string.resume_consent_statement)
     Column(Modifier.testTag("resume.consent.visibility")) {
-        Toggle(draft.consentStatementVisible, Res.string.resume_visible) {
-            onChange(draft.copy(consentStatementVisible = it))
+        Toggle(draft.consent.visible, Res.string.resume_visible) {
+            onChange(draft.copy(consent = draft.consent.copy(visible = it)))
         }
     }
-    Field(draft.consentStatement, Res.string.resume_text, {
-        onChange(draft.copy(consentStatement = it))
+    Field(draft.consent.text, Res.string.resume_text, {
+        onChange(draft.copy(consent = draft.consent.copy(text = it)))
     }, multiline = true, tag = "resume.consent")
 }

@@ -6,6 +6,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeDate
 import reframecv.domain.models.resume.content.ResumeDateRange
@@ -52,20 +53,22 @@ class ResumeDraftTest {
         val created = ResumeDraft(
             "Mobile",
             language = " de ",
-            consentStatement = statement,
-            consentStatementVisible = false,
+            consent = ResumeConsent(text = statement, visible = false),
         )
             .toResume(7)
         assertEquals("DE", created.content.language)
-        assertEquals(statement, created.content.consentStatement)
+        assertEquals(statement, created.content.consent.text)
         val restored = ResumeDraft.fromResume(created)
         assertEquals("DE", restored.language)
-        assertEquals(statement, restored.consentStatement)
-        assertFalse(restored.consentStatementVisible)
+        assertEquals(statement, restored.consent.text)
+        assertFalse(restored.consent.visible)
         assertEquals(created, restored.applyTo(created))
-        val cleared = restored.copy(language = " ", consentStatement = "").applyTo(created)
+        val cleared = restored.copy(
+            language = " ",
+            consent = restored.consent.copy(text = ""),
+        ).applyTo(created)
         assertEquals("", cleared.content.language)
-        assertEquals("", cleared.content.consentStatement)
+        assertEquals("", cleared.content.consent.text)
         assertEquals(ResumeContent(), ResumeDraft("Draft").toResume(7).content)
     }
 

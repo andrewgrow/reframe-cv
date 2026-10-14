@@ -9,6 +9,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.sampleResumeContent
 
@@ -40,11 +41,13 @@ class ResumeContentSchemaTest {
             ResumeContentJson.encode(
                 sampleResumeContent().copy(
                     language = "EN",
-                    consentStatement = "Consent\nText",
-                    consentStatementVisible = false,
+                    consent = ResumeConsent(text = "Consent\nText", visible = false),
                 ),
             ),
             """{"formatVersion":1,"content":{"profile":{"name":"Alex"}}}""",
+            """{"formatVersion":1,"content":{"consent":{}}}""",
+            """{"formatVersion":1,"content":{"consent":{"text":"Consent"}}}""",
+            """{"formatVersion":1,"content":{"consent":{"visible":false}}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"summary"}]}}""",
         )
         values.forEach { value ->
@@ -68,8 +71,10 @@ class ResumeContentSchemaTest {
             """{"formatVersion":1,"content":{"unknown":true}}""",
             """{"formatVersion":1,"content":{"profile":null}}""",
             """{"formatVersion":1,"content":{"language":null}}""",
-            """{"formatVersion":1,"content":{"consentStatement":42}}""",
-            """{"formatVersion":1,"content":{"consentStatementVisible":"yes"}}""",
+            """{"formatVersion":1,"content":{"consent":null}}""",
+            """{"formatVersion":1,"content":{"consent":{"unknown":true}}}""",
+            """{"formatVersion":1,"content":{"consent":{"text":42}}}""",
+            """{"formatVersion":1,"content":{"consent":{"visible":"yes"}}}""",
             """{"formatVersion":1,"content":{"sections":[{}]}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"future"}]}}""",
             """{"formatVersion":1,"content":{"sections":[{"type":"summary","text":null}]}}""",

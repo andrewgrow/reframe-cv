@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 
@@ -41,8 +42,7 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
                 sourceResumeId = sourceId,
                 content = sampleResumeContent().copy(
                     language = "DE",
-                    consentStatement = "Consent\nText",
-                    consentStatementVisible = false,
+                    consent = ResumeConsent(text = "Consent\nText", visible = false),
                 ),
             ),
         )
@@ -68,15 +68,13 @@ class LocalResumesRepositoryTest : WorkspaceDatabaseTest() {
         val projectId = project()
         val content = sampleResumeContent().copy(
             language = "EN",
-            consentStatement = "Consent",
-            consentStatementVisible = false,
+            consent = ResumeConsent(text = "Consent", visible = false),
         )
         val initial = ResumeDraft(
             "  Mobile  ",
             profile = content.profile,
             language = " en ",
-            consentStatement = content.consentStatement,
-            consentStatementVisible = content.consentStatementVisible,
+            consent = content.consent,
         )
         val draft = content.sections.fold(initial) { value, section ->
             value.addSection(section)

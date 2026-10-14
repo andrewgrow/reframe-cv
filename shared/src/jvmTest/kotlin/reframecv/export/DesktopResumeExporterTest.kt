@@ -20,6 +20,7 @@ import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import reframecv.database.resume.ResumeContentJson
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.sampleResumeContent
 
 class DesktopResumeExporterTest {
@@ -31,8 +32,7 @@ class DesktopResumeExporterTest {
         name = "Mobile",
         content = sampleResumeContent().copy(
             language = "RU",
-            consentStatement = "Consent\nText",
-            consentStatementVisible = false,
+            consent = ResumeConsent(text = "Consent\nText", visible = false),
         ),
         createdAt = 0,
         updatedAt = 0,

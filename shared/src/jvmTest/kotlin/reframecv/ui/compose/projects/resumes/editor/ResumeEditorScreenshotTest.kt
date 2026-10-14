@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeSection
 import reframecv.domain.models.resume.content.ResumeSkillGroup
 import reframecv.domain.models.resume.content.ResumeSkillsSection
@@ -56,7 +57,7 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
             updatedAt = 20,
             content = sampleResumeContent().copy(
                 language = "EN",
-                consentStatement = "Recruitment consent statement.",
+                consent = ResumeConsent(text = "Recruitment consent statement."),
             ),
             keywords = listOf("Kotlin", "Compose"),
         )
@@ -111,8 +112,10 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
             updatedAt = 0,
             content = sampleResumeContent().copy(
                 language = "EN",
-                consentStatement = "Recruitment consent statement.\nAdditional user-written text.",
-                consentStatementVisible = false,
+                consent = ResumeConsent(
+                    text = "Recruitment consent statement.\nAdditional user-written text.",
+                    visible = false,
+                ),
             ),
         )
         val component = TestResumeEditorComponent(initialResume = resume)
