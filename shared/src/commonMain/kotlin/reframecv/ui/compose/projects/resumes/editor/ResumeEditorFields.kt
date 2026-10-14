@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.key
@@ -22,6 +21,7 @@ import reframecv.shared.generated.resources.resume_name_hint
 import reframecv.shared.generated.resources.resume_name_required
 import reframecv.shared.generated.resources.resume_sections
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
@@ -36,8 +36,9 @@ internal fun ResumeEditorFields(
     val form = remember(enabled) { ResumeFormScope(enabled) }
     val nameError = validationRequested && draft.name.isBlank()
     val tokens = ReframeTheme.tokens
-    Column(
-        Modifier.testTag("resume.fields").verticalScroll(scroll),
+    FastScrollColumn(
+        scrollState = scroll,
+        contentModifier = Modifier.testTag("resume.fields"),
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
         // The first field owns focus so Tab enters the form in its visual order.

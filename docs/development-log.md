@@ -1109,3 +1109,21 @@ with unresolved errors, and timer restart on a repeated Save using virtual time.
 Updated the light/dark validation goldens.
 
 Verification: all tests and goldens, ktlint, Detekt, and coverage verification passed.
+
+## Shared fast form scrolling — 2026-10-14
+
+Resume and vacancy editor forms now use FastScrollColumn: content sits beside a
+right-hand scroll rail with a draggable thumb and top/bottom jump buttons. Headers,
+notifications, and page actions stay fixed. Track clicks jump to a position, and
+mouse-wheel scrolling works over the rail as well as the form. End buttons disable
+at the corresponding boundary; short content disables both. Sizes use UI tokens
+and colors follow the active theme. Existing field scroll/focus behavior and the
+vacancy description resize viewport share the same ScrollState.
+
+The column and rail live in common UI for reuse by other forms, without additional
+platform dependencies. Tests cover both jump directions, dragging, track clicks,
+mouse-wheel scrolling, and content that does not overflow. Independent dark/light,
+start/end, and short-content goldens accompany updated resume/vacancy references.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

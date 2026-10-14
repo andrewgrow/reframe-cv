@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +34,7 @@ import reframecv.shared.generated.resources.vacancy_title
 import reframecv.shared.generated.resources.vacancy_url
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
+import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
@@ -51,10 +51,10 @@ internal fun VacancyEditorFields(
     val scroll = rememberScrollState()
     var viewport by remember { mutableStateOf(Rect.Zero) }
     val submit = { if (draft.title.isNotBlank() && enabled) onSave() }
-    Column(
-        Modifier.testTag("vacancy.fields")
-            .onGloballyPositioned { viewport = it.boundsInWindow() }
-            .verticalScroll(scroll),
+    FastScrollColumn(
+        scrollState = scroll,
+        contentModifier = Modifier.testTag("vacancy.fields")
+            .onGloballyPositioned { viewport = it.boundsInWindow() },
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         VacancyField(

@@ -189,4 +189,7 @@
     <string name="resume_import_success">Resume imported. Review the fields before saving.</string>
     <string name="resume_import_error">Could not import the resume. Choose a valid Reframe CV JSON file and try again.</string>
     <string name="resume_validation_feedback">Validation failed. Please check the form.</string>
+    <string name="scroll_to_top">Scroll to top</string>
+    <string name="scroll_to_bottom">Scroll to bottom</string>
+    <string name="scroll_position">Scroll position</string>
 </resources>

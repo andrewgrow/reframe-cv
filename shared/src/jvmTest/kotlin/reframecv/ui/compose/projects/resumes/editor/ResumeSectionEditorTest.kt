@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -137,24 +138,27 @@ class ResumeSectionEditorTest : GoldenScreenshotTest() {
         }
 
     @Test
-    fun visibilitySharesTheControlRowAndRemoveStaysAtTheRightEdge() = runDesktopComposeUiTest {
-        val component = TestResumeEditorComponent(
-            ResumeDraft("Mobile").addSection(ResumeSummarySection(text = "Summary")),
-        )
-        setGoldenContent(this) { ResumeEditorContent(component) }
-        val section = hasAnyAncestor(hasTestTag("resume.section.1"))
-        val collapse = onNode(hasText("Collapse") and section).performScrollTo()
-        val include = onNode(hasText("Include in resume") and section)
-        val remove = onNode(hasText("Remove Summary Section") and section)
-        assertEquals(
-            collapse.fetchSemanticsNode().boundsInRoot.top,
-            include.fetchSemanticsNode().boundsInRoot.top,
-        )
-        assertTrue(
-            remove.fetchSemanticsNode().boundsInRoot.right >
-                include.fetchSemanticsNode().boundsInRoot.right,
-        )
-        include.performClick()
-        assertEquals(false, component.draft.value.sections.single().value.visible)
-    }
+    fun visibilitySharesTheControlRowAndRemoveStaysAtTheRightEdge() =
+        runDesktopComposeUiTest(ScreenSize(1000.dp, 600.dp)) {
+            val component = TestResumeEditorComponent(
+                ResumeDraft("Mobile").addSection(ResumeSummarySection(text = "Summary")),
+            )
+            setGoldenContent(this, screenSize = ScreenSize(1000.dp, 600.dp)) {
+                ResumeEditorContent(component)
+            }
+            val section = hasAnyAncestor(hasTestTag("resume.section.1"))
+            val collapse = onNode(hasText("Collapse") and section).performScrollTo()
+            val include = onNode(hasText("Include in resume") and section)
+            val remove = onNode(hasText("Remove Summary Section") and section)
+            assertEquals(
+                collapse.fetchSemanticsNode().boundsInRoot.top,
+                include.fetchSemanticsNode().boundsInRoot.top,
+            )
+            assertTrue(
+                remove.fetchSemanticsNode().boundsInRoot.right >
+                    include.fetchSemanticsNode().boundsInRoot.right,
+            )
+            include.performClick()
+            assertEquals(false, component.draft.value.sections.single().value.visible)
+        }
 }
