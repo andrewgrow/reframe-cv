@@ -185,4 +185,8 @@
     <string name="resume_remove_contact">Remove Contact</string>
     <string name="resume_remove_contact_title">Remove contact?</string>
     <string name="resume_remove_contact_question">Are you sure you want to remove this contact?</string>
+    <string name="resume_import">Import</string>
+    <string name="resume_import_progress">Importing resume...</string>
+    <string name="resume_import_success">Resume imported. Review the fields before saving.</string>
+    <string name="resume_import_error">Could not import the resume. Choose a valid Reframe CV JSON file and try again.</string>
 </resources>

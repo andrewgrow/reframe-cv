@@ -31,10 +31,12 @@ interface ResumeEditorComponent {
     val deleteConfirmation: Value<String>
     val exportVisible: Value<Boolean>
     val exportComponent: ResumeExportComponent
+    val importComponent: ResumeImportComponent
     val validationRequested: Value<Boolean>
     val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving ||
         deleteState.value == ResumeDeleteState.Deleting ||
-        exportComponent.state.value == ResumeExportState.Exporting
+        exportComponent.state.value == ResumeExportState.Exporting ||
+        importComponent.state.value == ResumeImportState.Importing
     val canConfirmDelete: Boolean get() = initialResume != null && !isBusy &&
         deleteState.value != ResumeDeleteState.Idle &&
         deleteConfirmation.value.isResumeDeleteConfirmation()
@@ -61,6 +63,12 @@ interface ResumeEditorComponent {
     fun onDraftChange(draft: ResumeDraft)
     fun onSave()
     fun onExport()
+    fun onImport() {
+        if (initialResume == null && !isBusy && deleteState.value == ResumeDeleteState.Idle) {
+            importComponent.onImport()
+        }
+    }
+
     fun onCloseExport()
     fun onClose()
 }
@@ -94,12 +102,18 @@ class DefaultResumeEditorComponent(
         },
         finished = ::onCloseExport,
     )
+    override val importComponent = DefaultResumeImportComponent(componentContext) { content ->
+        draft.value = draft.value.withImportedContent(content)
+        validationRequested.value = false
+        saveState.value = ResumeSaveState.Idle
+    }
     internal var savedRole = initialRole
         private set
     private var exportAfterSave = false
 
     override fun onDraftChange(draft: ResumeDraft) {
         if (!isBusy && !exportVisible.value && deleteState.value == ResumeDeleteState.Idle) {
+            importComponent.onReset()
             this.draft.value = draft
             if (saveState.value == ResumeSaveState.Saved) saveState.value = ResumeSaveState.Idle
         }
@@ -115,6 +129,7 @@ class DefaultResumeEditorComponent(
         if (isBusy || exportVisible.value || deleteState.value != ResumeDeleteState.Idle) return
         validationRequested.value = true
         if (!draft.value.isValid) return
+        importComponent.onReset()
         exportAfterSave = export
         saveState.value = ResumeSaveState.Saving
         save(draft.value)
@@ -171,6 +186,7 @@ class DefaultResumeEditorComponent(
             } else if (deleteState.value != ResumeDeleteState.Idle) {
                 onDeleteDialogAction(ConfirmationDialogAction.Back)
             } else {
+                importComponent.onClose()
                 close()
             }
         }

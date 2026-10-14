@@ -4,6 +4,7 @@ import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.AttachmentStorage
 import reframecv.export.ResumeExporter
+import reframecv.importing.ResumeImporter
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.repository.AppSettingsRepository
@@ -20,6 +21,7 @@ interface ApplicationDependencies {
     val attachmentStorage: AttachmentStorage
     val attachmentPicker: AttachmentPicker
     val resumeExporter: ResumeExporter
+    val resumeImporter: ResumeImporter
     val appSettingsRepository: AppSettingsRepository
     val projectsRepository: ProjectsRepository
     val resumesRepository: ResumesRepository

@@ -20,6 +20,16 @@ data class ResumeDraft(
     val isValid: Boolean
         get() = name.isNotBlank() && sections.all { it.isValid }
 
+    fun withImportedContent(content: ResumeContent) = copy(
+        profile = content.profile,
+        language = content.language,
+        consent = content.consent,
+        sections = content.sections.mapIndexed { index, section ->
+            ResumeSectionDraft(nextSectionId + index, section)
+        },
+        nextSectionId = nextSectionId + content.sections.size,
+    )
+
     fun addSection(section: ResumeSection) = copy(
         sections = sections + ResumeSectionDraft(nextSectionId, section),
         nextSectionId = nextSectionId + 1,

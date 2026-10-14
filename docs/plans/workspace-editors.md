@@ -21,7 +21,7 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - Resume content is a typed document with ordered, titled, hideable sections,
   free skill categories, professional projects, and partial/ongoing dates. It is
   persisted as versioned JSON. Creation and editing support every section type;
-  importing documents remains future work. Optional document language and a free-text
+  JSON file import fills the creation draft without saving. Optional document language and a free-text
   consent statement are editable and included in JSON exports. Consent has an
   Include in resume flag that preserves its text when switched off. Summary uses
   a fixed heading, and comma-separated item fields grow to fit wrapped/multiline text.
@@ -35,6 +35,11 @@ Later sections are separate work, not prerequisites for the first resume editor.
   selected. Invalid drafts and failed saves keep the dialog closed. Download generates
   schema-compatible JSON, opens the native save picker, and removes its temporary
   file on success, cancellation, or failure. Export failures remain retryable.
+- Import on the creation page opens the native JSON picker and parses a temporary copy.
+  Recognized fields/sections replace document content; unknown fields, unsupported
+  sections, and incompatible values are skipped. Name, keywords, and main-resume
+  selection stay unchanged. Save remains explicit; close or successful creation
+  releases all temporary sources. Cancelled/failed imports preserve the draft.
 - Project.mainResumeId and Resume.sourceResumeId exist. Main-resume assignment is
   validated by the DAO. Creation/editing can select or clear the main resume;
   document and selection changes are saved atomically. Adaptation remains planned.
@@ -57,6 +62,7 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - [x] Publish the version 1 JSON Schema and test its agreement with serializers and date rules.
 - [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
 - [x] Add editing of saved resumes using the structured content model.
+- [x] Import schema-based JSON files into creation drafts with temporary-file cleanup.
 - [x] Group resume metadata responsively and separate Profile/Sections visually.
 - [x] Clarify experience position/project actions and confirm nested removal.
 - [x] Add permanent deletion with a typed DELETE dialog and existing relationship cleanup.

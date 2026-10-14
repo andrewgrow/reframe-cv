@@ -11,6 +11,7 @@ class TestResumeEditorComponent(
     private val save: (ResumeDraft) -> Unit = {},
     private val close: () -> Unit = {},
     private val delete: () -> Unit = {},
+    private val import: () -> Unit = {},
 ) : ResumeEditorComponent {
     override val draft =
         MutableValue(
@@ -24,8 +25,10 @@ class TestResumeEditorComponent(
     override val validationRequested = MutableValue(false)
     override val exportVisible = MutableValue(false)
     override val exportComponent = TestResumeExportComponent { onCloseExport() }
+    override val importComponent = TestResumeImportComponent(import)
     override fun onDraftChange(draft: ResumeDraft) {
         if (!isBusy && deleteState.value == ResumeDeleteState.Idle) {
+            importComponent.onReset()
             this.draft.value = draft
             if (saveState.value == ResumeSaveState.Saved) saveState.value = ResumeSaveState.Idle
         }

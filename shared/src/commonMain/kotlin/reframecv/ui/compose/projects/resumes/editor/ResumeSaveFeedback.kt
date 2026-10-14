@@ -1,11 +1,15 @@
 package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,8 +27,12 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_dates_error
+import reframecv.shared.generated.resources.resume_import_error
+import reframecv.shared.generated.resources.resume_import_progress
+import reframecv.shared.generated.resources.resume_import_success
 import reframecv.shared.generated.resources.resume_save_error
 import reframecv.shared.generated.resources.resume_save_success
+import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.theme.ReframeTheme
 
@@ -33,22 +41,19 @@ internal fun ResumeSaveFeedback(
     state: ResumeSaveState,
     successfulSaves: Long,
     invalidDates: Boolean,
+    importState: ResumeImportState = ResumeImportState.Idle,
 ) {
     var showSuccess by remember { mutableStateOf(false) }
-    LaunchedEffect(state, successfulSaves) {
-        showSuccess = state == ResumeSaveState.Saved
+    LaunchedEffect(state, successfulSaves, importState) {
+        showSuccess = state == ResumeSaveState.Saved || importState == ResumeImportState.Imported
         if (showSuccess) {
             delay(SUCCESS_DURATION_MS.milliseconds)
             showSuccess = false
         }
     }
-    val success = !invalidDates && showSuccess && state == ResumeSaveState.Saved
-    val message = when {
-        invalidDates -> stringResource(Res.string.resume_dates_error)
-        state == ResumeSaveState.Failed -> stringResource(Res.string.resume_save_error)
-        success -> stringResource(Res.string.resume_save_success)
-        else -> ""
-    }
+    val success = !invalidDates && showSuccess &&
+        (state == ResumeSaveState.Saved || importState == ResumeImportState.Imported)
+    val message = FeedbackMessage(state, importState, invalidDates, success)
     val tokens = ReframeTheme.tokens
     val lineHeight = with(LocalDensity.current) { tokens.typography.bodyMedium.lineHeight.toDp() }
     Box(
@@ -57,19 +62,53 @@ internal fun ResumeSaveFeedback(
         contentAlignment = Alignment.CenterStart,
     ) {
         key(message) {
-            SelectableText(
-                message,
-                modifier = Modifier.horizontalScroll(rememberScrollState()),
-                style = tokens.typography.bodyMedium,
-                maxLines = 1,
-                color = if (success) {
-                    ReframeTheme.colorScheme.success
-                } else {
-                    ReframeTheme.colorScheme.critical
-                },
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
+            ) {
+                if (importState == ResumeImportState.Importing) {
+                    CircularProgressIndicator(
+                        Modifier.size(lineHeight).testTag("resume.import.progress"),
+                        strokeWidth = tokens.outlineWidth,
+                    )
+                }
+                SelectableText(
+                    message,
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    style = tokens.typography.bodyMedium,
+                    maxLines = 1,
+                    color = when {
+                        success -> ReframeTheme.colorScheme.success
+                        importState == ResumeImportState.Importing -> ReframeTheme.colorScheme.hint
+                        else -> ReframeTheme.colorScheme.critical
+                    },
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun FeedbackMessage(
+    state: ResumeSaveState,
+    importState: ResumeImportState,
+    invalidDates: Boolean,
+    success: Boolean,
+): String = when {
+    importState == ResumeImportState.Importing -> stringResource(Res.string.resume_import_progress)
+
+    importState == ResumeImportState.Failed -> stringResource(Res.string.resume_import_error)
+
+    invalidDates -> stringResource(Res.string.resume_dates_error)
+
+    state == ResumeSaveState.Failed -> stringResource(Res.string.resume_save_error)
+
+    success && importState == ResumeImportState.Imported ->
+        stringResource(Res.string.resume_import_success)
+
+    success -> stringResource(Res.string.resume_save_success)
+
+    else -> ""
 }
 
 private const val SUCCESS_DURATION_MS = 3_000L

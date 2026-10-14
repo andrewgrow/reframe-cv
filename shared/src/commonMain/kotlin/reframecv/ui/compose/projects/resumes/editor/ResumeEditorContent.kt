@@ -23,6 +23,7 @@ import reframecv.shared.generated.resources.resume_edit
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
+import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
@@ -32,13 +33,15 @@ import reframecv.ui.theme.ReframeTheme
 fun ResumeEditorContent(component: ResumeEditorComponent) {
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
+    val importState by component.importComponent.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val successfulSaves by component.successfulSaves.subscribeAsState()
     val validationRequested by component.validationRequested.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving ||
-        deleteState == ResumeDeleteState.Deleting || exportState == ResumeExportState.Exporting
+        deleteState == ResumeDeleteState.Deleting || exportState == ResumeExportState.Exporting ||
+        importState == ResumeImportState.Importing
     val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -64,6 +67,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
             ResumeSaveFeedback(
                 saveState,
                 successfulSaves,
+                importState = importState,
                 invalidDates = validationRequested && draft.sections.any { !it.isValid },
             )
             ResumeEditorActions(component, onExport = component::onExport)

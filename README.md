@@ -27,7 +27,8 @@ The current application provides a project tree, project management, a dashboard
 a project-scoped resume list, structured resume creation/editing with confirmed deletion,
 and vacancy creation/editing
 with source-file attachments. Resume forms can select the project's main resume.
-Resume sections are stored as versioned JSON.
+Resume sections are stored as versioned JSON. Resume creation can import a JSON
+file into the form for review before saving; saved resumes can export the same format.
 The cover-letter editor, tailoring workflows, version management,
 and PDF export are planned. The [resume JSON Schema](docs/schemas/resume-content-v1.schema.json)
 describes the versioned storage document; processors can reuse its `$defs/ResumeContent`

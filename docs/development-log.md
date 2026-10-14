@@ -1060,3 +1060,35 @@ and added a narrow Education golden to cover long action labels.
 
 Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
 and macOS packaging passed.
+
+## Resume JSON file import — 2026-10-14
+
+Resume creation now has Import beside Save/Cancel. The native JSON picker selects
+an original file, which is copied into temporary storage and parsed off the UI
+thread. Import replaces profile, sections, language, and consent in the draft;
+name, keywords, and Main resume selection remain unchanged because they are absent
+from the exported content document. New section IDs avoid reusing old editor state.
+Only Save persists the result.
+
+The import parser uses serializer descriptors to keep recognized fields and
+section types, discard unknown/incompatible values, and preserve valid siblings.
+Invalid date components are omitted; ongoing periods discard an end date. Legacy
+flat consent fields and UTF-8 BOM are supported. Malformed JSON, missing content,
+and unsupported document versions fail without changing the draft. Strict database
+decoding and the schema contract remain unchanged.
+
+Platform-specific ResumeImporter returns an owned temporary source. The creation
+component retains successful imports until close/lifecycle destruction, including
+successful Save navigation. Cancelled selection makes no copy; read/parse failures
+and coroutine cancellation clean up untransferred copies. Original files remain
+untouched. Import blocks edits, Save, Back, and duplicate requests while active.
+The reserved feedback row shows progress/spinner, retryable errors, or a brief
+review-before-saving success message; errors include operation context and stacks.
+
+Tests cover export/import agreement across every section, partial/legacy documents,
+unknown/wrong data, dates, temporary-file ownership and cleanup, original-file
+independence, lifecycle cancellation, preserved drafts/metadata, explicit Save,
+busy guards, creation-only UI, and import state goldens. Updated creation references.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

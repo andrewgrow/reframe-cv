@@ -9,6 +9,8 @@ import reframecv.database.openDefaultDatabase
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.ResumeExporter
 import reframecv.filesystem.applicationDataDirectory
+import reframecv.importing.DesktopResumeImporter
+import reframecv.importing.ResumeImporter
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
@@ -33,6 +35,7 @@ class DefaultApplicationDependencies(
         FileAttachmentStorage(applicationDataDirectory()),
     override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
+    override val resumeImporter: ResumeImporter = DesktopResumeImporter(),
     databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)

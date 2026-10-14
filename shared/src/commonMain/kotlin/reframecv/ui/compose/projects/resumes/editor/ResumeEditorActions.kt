@@ -17,9 +17,11 @@ import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_close
 import reframecv.shared.generated.resources.resume_export
+import reframecv.shared.generated.resources.resume_import
 import reframecv.shared.generated.resources.resume_save
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
+import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
@@ -28,7 +30,9 @@ import reframecv.ui.theme.ReframeTheme
 internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () -> Unit) {
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
-    val busy = saveState == ResumeSaveState.Saving || deleteState != ResumeDeleteState.Idle
+    val importState by component.importComponent.state.subscribeAsState()
+    val busy = saveState == ResumeSaveState.Saving || deleteState != ResumeDeleteState.Idle ||
+        importState == ResumeImportState.Importing
     val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     FlowRow(
@@ -53,6 +57,14 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () 
             FillButton(
                 stringResource(Res.string.resume_export),
                 onExport,
+                enabled = !busy,
+                outlineState = FillButton.OutlineState.Visible,
+            )
+        }
+        if (!editing) {
+            FillButton(
+                stringResource(Res.string.resume_import),
+                component::onImport,
                 enabled = !busy,
                 outlineState = FillButton.OutlineState.Visible,
             )
