@@ -34,6 +34,8 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
     val importState by component.importComponent.state.subscribeAsState()
+    val photoState by component.photoComponent.state.subscribeAsState()
+    val photoVisible by component.photoComponent.visible.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
@@ -42,14 +44,18 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
     val validationRequested by component.validationRequested.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving ||
         deleteState == ResumeDeleteState.Deleting || exportState == ResumeExportState.Exporting ||
-        importState == ResumeImportState.Importing
+        importState == ResumeImportState.Importing || photoState.loading
     val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
             Modifier.testTag("resumes.editor").fillMaxSize()
                 .background(MaterialTheme.colorScheme.background).safeContentPadding()
-                .pageBackHandler(component::onClose, enabled = !busy && !exportVisible),
+                .pageBackHandler(
+                    component::onClose,
+                    enabled =
+                        !busy && !exportVisible && !photoVisible,
+                ),
         ) {
             Column(
                 Modifier.weight(1f).fillMaxWidth().padding(tokens.spacing.medium),
@@ -62,7 +68,13 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                     component::onClose,
                     !busy,
                 )
-                ResumeEditorFields(draft, component::onDraftChange, !busy, validationRequested)
+                ResumeEditorFields(
+                    draft,
+                    component::onDraftChange,
+                    !busy,
+                    validationRequested,
+                    component.photoComponent,
+                )
             }
             HorizontalDivider()
             ResumeSaveFeedback(
@@ -73,12 +85,23 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
             )
             ResumeEditorActions(component, onExport = component::onExport)
         }
-        if (deleteState != ResumeDeleteState.Idle) ResumeDeleteConfirmation(component)
-        if (exportVisible) {
-            ResumeExportDialog(
-                component.exportComponent,
-                onClose = component::onCloseExport,
-            )
-        }
+        ResumeEditorOverlays(component, photoVisible, deleteState, exportVisible)
+    }
+}
+
+@Composable
+private fun ResumeEditorOverlays(
+    component: ResumeEditorComponent,
+    photoVisible: Boolean,
+    deleteState: ResumeDeleteState,
+    exportVisible: Boolean,
+) {
+    if (photoVisible) ResumePhotoDialog(component.photoComponent)
+    if (deleteState != ResumeDeleteState.Idle) ResumeDeleteConfirmation(component)
+    if (exportVisible) {
+        ResumeExportDialog(
+            component.exportComponent,
+            onClose = component::onCloseExport,
+        )
     }
 }

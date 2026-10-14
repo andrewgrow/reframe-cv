@@ -31,8 +31,11 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () 
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val importState by component.importComponent.state.subscribeAsState()
-    val busy = saveState == ResumeSaveState.Saving || deleteState != ResumeDeleteState.Idle ||
-        importState == ResumeImportState.Importing
+    val photoState by component.photoComponent.state.subscribeAsState()
+    val busy =
+        photoState.loading || saveState == ResumeSaveState.Saving ||
+            deleteState != ResumeDeleteState.Idle ||
+            importState == ResumeImportState.Importing
     val editing = component.initialResume != null
     val tokens = ReframeTheme.tokens
     FlowRow(

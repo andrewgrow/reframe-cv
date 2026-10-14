@@ -27,6 +27,10 @@ class TestResumeEditorComponent(
     override val exportVisible = MutableValue(false)
     override val exportComponent = TestResumeExportComponent { onCloseExport() }
     override val importComponent = TestResumeImportComponent(import)
+    override val photoComponent =
+        TestResumePhotoComponent(initialDraft?.photoPath ?: initialResume?.photoPath) {
+            draft.value = draft.value.copy(photoPath = it)
+        }
     override fun onDraftChange(draft: ResumeDraft) {
         if (!isBusy && deleteState.value == ResumeDeleteState.Idle) {
             importComponent.onReset()
@@ -71,7 +75,9 @@ class TestResumeEditorComponent(
     }
     override fun onClose() {
         if (!isBusy) {
-            if (exportVisible.value) {
+            if (photoComponent.visible.value) {
+                photoComponent.onClose()
+            } else if (exportVisible.value) {
                 onCloseExport()
             } else if (deleteState.value != ResumeDeleteState.Idle) {
                 onDeleteDialogAction(ConfirmationDialogAction.Back)

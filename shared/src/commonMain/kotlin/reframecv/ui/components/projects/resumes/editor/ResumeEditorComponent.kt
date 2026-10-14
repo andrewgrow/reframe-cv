@@ -33,11 +33,13 @@ interface ResumeEditorComponent {
     val exportVisible: Value<Boolean>
     val exportComponent: ResumeExportComponent
     val importComponent: ResumeImportComponent
+    val photoComponent: ResumePhotoComponent
     val validationRequested: Value<Boolean>
     val isBusy: Boolean get() = saveState.value == ResumeSaveState.Saving ||
         deleteState.value == ResumeDeleteState.Deleting ||
         exportComponent.state.value == ResumeExportState.Exporting ||
-        importComponent.state.value == ResumeImportState.Importing
+        importComponent.state.value == ResumeImportState.Importing ||
+        photoComponent.state.value.loading
     val canConfirmDelete: Boolean get() = initialResume != null && !isBusy &&
         deleteState.value != ResumeDeleteState.Idle &&
         deleteConfirmation.value.isResumeDeleteConfirmation()
@@ -109,6 +111,10 @@ class DefaultResumeEditorComponent(
         validationRequested.value = false
         saveState.value = ResumeSaveState.Idle
     }
+    override val photoComponent =
+        DefaultResumePhotoComponent(componentContext, initialResume?.photoPath) {
+            draft.value = draft.value.copy(photoPath = it)
+        }
     internal var savedRole = initialRole
         private set
     private var exportAfterSave = false
@@ -143,6 +149,7 @@ class DefaultResumeEditorComponent(
     internal fun onSaveCompleted(state: ResumeSaveState): Boolean {
         saveState.value = state
         if (state == ResumeSaveState.Idle) {
+            photoComponent.onSaved()
             savedRole = draft.value.role
             exportVisible.value = exportAfterSave
             if (initialResume != null) {
@@ -186,7 +193,9 @@ class DefaultResumeEditorComponent(
 
     override fun onClose() {
         if (!isBusy) {
-            if (exportVisible.value) {
+            if (photoComponent.visible.value) {
+                photoComponent.onClose()
+            } else if (exportVisible.value) {
                 onCloseExport()
             } else if (deleteState.value != ResumeDeleteState.Idle) {
                 onDeleteDialogAction(ConfirmationDialogAction.Back)

@@ -41,6 +41,9 @@ interface ResumeQueries {
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<ResumeWithKeywords>
 
+    @Query("SELECT EXISTS(SELECT 1 FROM resumes WHERE photo_path = :path)")
+    suspend fun referencesPhoto(path: String): Boolean
+
     @Query("DELETE FROM resumes WHERE id = :id")
     suspend fun deleteEntity(id: Long): Int
 }

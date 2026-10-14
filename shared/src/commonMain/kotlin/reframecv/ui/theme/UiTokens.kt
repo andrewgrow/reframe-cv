@@ -36,6 +36,8 @@ data class UiDimensions(
     val scrollControlSize: Dp,
     val scrollbarThickness: Dp,
     val scrollThumbMinHeight: Dp,
+    val resumePhotoWidth: Dp,
+    val resumePhotoDialogWidth: Dp,
 )
 
 /** Lets the whole interface change scale without separate adjustments in each screen. */
@@ -82,6 +84,8 @@ internal fun createUiTokens(scale: UiScale): UiTokens {
             scrollControlSize = 32.dp * factor,
             scrollbarThickness = 6.dp * factor,
             scrollThumbMinHeight = 32.dp * factor,
+            resumePhotoWidth = 96.dp * factor,
+            resumePhotoDialogWidth = 140.dp * factor,
         ),
         typography = typography.copy(
             displayLarge = typography.displayLarge.scaled(factor),

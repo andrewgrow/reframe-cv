@@ -11,16 +11,11 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.testTag
-import org.jetbrains.compose.resources.stringResource
-import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.resume_name
-import reframecv.shared.generated.resources.resume_name_hint
-import reframecv.shared.generated.resources.resume_name_required
 import reframecv.shared.generated.resources.resume_sections
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.ui.components.projects.resumes.editor.ResumePhotoComponent
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.theme.ReframeTheme
 
@@ -30,6 +25,7 @@ internal fun ResumeEditorFields(
     onChange: (ResumeDraft) -> Unit,
     enabled: Boolean,
     validationRequested: Boolean,
+    photoComponent: ResumePhotoComponent,
 ) {
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
@@ -41,21 +37,7 @@ internal fun ResumeEditorFields(
         contentModifier = Modifier.testTag("resume.fields"),
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
-        // The first field owns focus so Tab enters the form in its visual order.
-        Column(Modifier.focusRequester(focus)) {
-            form.Field(
-                draft.name,
-                Res.string.resume_name,
-                { onChange(draft.copy(name = it)) },
-                tag = "resume.name",
-                error = if (nameError) stringResource(Res.string.resume_name_required) else null,
-            )
-        }
-        SelectableText(
-            stringResource(Res.string.resume_name_hint),
-            color = ReframeTheme.colorScheme.hint,
-            style = ReframeTheme.tokens.typography.bodySmall,
-        )
+        form.NameAndPhotoFields(draft, onChange, focus, nameError, photoComponent)
         form.MetadataFields(draft, onChange)
         Column(
             Modifier.padding(top = tokens.spacing.medium),

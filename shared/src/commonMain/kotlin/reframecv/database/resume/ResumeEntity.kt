@@ -44,6 +44,8 @@ data class ResumeEntity(
     val contentJson: String = ResumeContentJson.encode(ResumeContent()),
     @ColumnInfo(name = "source_resume_id")
     val sourceResumeId: Long? = null,
+    @ColumnInfo(name = "photo_path")
+    val photoPath: String? = null,
 ) : DatabaseModel<Resume> {
     override fun toDomainModel() = Resume(
         id = id,
@@ -53,6 +55,7 @@ data class ResumeEntity(
         updatedAt = updatedAt,
         content = ResumeContentJson.decode(contentJson),
         sourceResumeId = sourceResumeId,
+        photoPath = photoPath,
     )
 
     companion object : DatabaseModelFactory<Resume, ResumeEntity> {
@@ -64,6 +67,7 @@ data class ResumeEntity(
             updatedAt = domainModel.updatedAt,
             contentJson = ResumeContentJson.encode(domainModel.content),
             sourceResumeId = domainModel.sourceResumeId,
+            photoPath = domainModel.photoPath,
         )
     }
 }

@@ -63,6 +63,7 @@ Later sections are separate work, not prerequisites for the first resume editor.
 - [x] Add creation using every section type, editable titles/visibility, ordering, and repeated entries.
 - [x] Add editing of saved resumes using the structured content model.
 - [x] Import schema-based JSON files into creation drafts with temporary-file cleanup.
+- [x] Add print-ready portraits, Save-based replacement/removal, and file cleanup outside JSON.
 - [x] Group resume metadata responsively and separate Profile/Sections visually.
 - [x] Clarify experience position/project actions and confirm nested removal.
 - [x] Add permanent deletion with a typed DELETE dialog and existing relationship cleanup.

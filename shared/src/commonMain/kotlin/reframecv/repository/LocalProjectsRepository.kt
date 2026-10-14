@@ -11,9 +11,14 @@ import reframecv.shared.nowMillis
 class LocalProjectsRepository(
     private val projectDao: ProjectDao,
     private val snapshots: VacancySnapshotManager? = null,
+    private val photos: LocalResumePhotos? = null,
 ) : ProjectsRepository {
     override suspend fun deleteProject(id: Long) {
-        val deletedRows = snapshots?.deleteProject(projectDao, id) ?: projectDao.deleteSubtree(id)
+        val remove = suspend {
+            snapshots?.deleteProject(projectDao, id)
+                ?: projectDao.deleteSubtree(id)
+        }
+        val deletedRows = photos?.deleteProject(projectDao, id, remove) ?: remove()
         check(deletedRows > 0) { "Project does not exist" }
     }
 

@@ -26,7 +26,7 @@ Within a project, users will be able to keep source resumes, create and rewrite 
 The current application provides a project tree, project management, a dashboard,
 a project-scoped resume list, structured resume creation/editing with confirmed deletion,
 and vacancy creation/editing
-with source-file attachments. Resume forms can select the project's main resume.
+with source-file attachments. Resume forms can select the project's main resume and a portrait for printing.
 Resume sections are stored as versioned JSON. Resume creation can import a JSON
 file into the form for review before saving; saved resumes can export the same format.
 The cover-letter editor, tailoring workflows, version management,
@@ -237,3 +237,18 @@ and its `attachments/` directory together.
 
 The development schema remains version 1. Databases created before file attachments
 need recreation before running this version; no migration is provided.
+
+### Resume photographs
+
+Select a PNG or JPEG from the photo block in the resume editor. ReframeCV creates a
+center-cropped, proportionally scaled JPEG at 413 × 531 pixels (35 × 45 mm, 300 dpi),
+including camera orientation handling. Original files remain untouched. Copies live
+in `documents/resume-photos/` beside the database; resumes store relative paths.
+Photos are excluded from JSON import/export.
+
+Photo replacement and removal take effect with Save. Closing the editor without
+saving discards new copies and preserves the previous saved photo. The photo dialog
+confirms removal inline. Missing or unreadable files show a warning and can be
+replaced or removed without losing resume content. Permanent resume/project deletion
+removes photos after their last database reference. Back up the database and its
+managed document directories together.

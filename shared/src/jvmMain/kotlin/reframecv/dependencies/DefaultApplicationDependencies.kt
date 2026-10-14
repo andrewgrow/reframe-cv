@@ -15,11 +15,15 @@ import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
+import reframecv.photos.DesktopResumePhotoPicker
+import reframecv.photos.DesktopResumePhotoStorage
+import reframecv.photos.ResumePhotos
 import reframecv.repository.AppSettingsRepository
 import reframecv.repository.CoverLettersRepository
 import reframecv.repository.LocalAppSettingsRepository
 import reframecv.repository.LocalCoverLettersRepository
 import reframecv.repository.LocalProjectsRepository
+import reframecv.repository.LocalResumePhotos
 import reframecv.repository.LocalResumesRepository
 import reframecv.repository.LocalVacanciesRepository
 import reframecv.repository.ProjectsRepository
@@ -41,9 +45,20 @@ class DefaultApplicationDependencies(
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
     private val repository by lazy {
-        LocalProjectsRepository(database.value.projectDao(), snapshotManager)
+        LocalProjectsRepository(database.value.projectDao(), snapshotManager, photoManager)
     }
-    private val resumeRepository by lazy { LocalResumesRepository(database.value.resumeDao()) }
+    private val resumeRepository by lazy {
+        LocalResumesRepository(database.value.resumeDao(), photoManager)
+    }
+    private val photoManager by lazy {
+        LocalResumePhotos(
+            database.value.resumeDao(),
+            DesktopResumePhotoStorage(applicationDataDirectory()),
+            DesktopResumePhotoPicker(),
+            logger,
+        )
+    }
+    override val resumePhotos: ResumePhotos get() = photoManager
     private val snapshotManager by lazy {
         VacancySnapshotManager(
             database.value.vacancyDao(),

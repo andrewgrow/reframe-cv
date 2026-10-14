@@ -12,6 +12,7 @@ import reframecv.importing.ResumeImporter
 import reframecv.logging.EventHistory
 import reframecv.logging.RecordingApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
+import reframecv.photos.ResumePhotos
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
@@ -27,6 +28,11 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val attachmentPicker = AttachmentPicker { null }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val resumeImporter = ResumeImporter { null }
+    override val resumePhotos = object : ResumePhotos {
+        override suspend fun choose(): String? = null
+        override suspend fun read(path: String): ByteArray? = null
+        override suspend fun discard(path: String) = Unit
+    }
     override val appSettingsRepository = TestAppSettingsRepository()
     override val projectsRepository = object : ProjectsRepository {
         private val projects = MutableStateFlow<List<Project>>(emptyList())

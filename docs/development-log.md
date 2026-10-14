@@ -1127,3 +1127,32 @@ start/end, and short-content goldens accompany updated resume/vacancy references
 
 Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
 and macOS packaging passed.
+
+## Resume photographs — 2026-10-14
+
+Resume editors have a clickable portrait block beside Name and a dedicated resizable
+photo dialog. Users can choose PNG/JPEG files, preview their prepared copies, and
+confirm removal inline. Missing files and preparation failures remain replaceable.
+Language, main-resume selection, and keywords stay below the name/photo row.
+
+The desktop implementation handles EXIF orientation and writes a proportional,
+center-cropped JPEG at 413 × 531 pixels with 300-dpi metadata (35 × 45 mm). Source
+images remain untouched. UUID copies live in `documents/resume-photos/` beside the
+database; nullable `Resume.photoPath`/`photo_path` holds the relative reference.
+The reference is outside ResumeContent and never enters JSON exports/imports.
+
+Prepared copies belong to the draft until Save succeeds. Cancel/lifecycle destruction
+cleans uncommitted copies; replacement/removal deletes the previous saved photo only
+after a successful database write. A shared coordinator serializes database changes
+and cleanup, preserving files still referenced by another resume. Resume and recursive
+project deletion apply the same cleanup. File failures include operation context in
+the application log without turning a committed database write into a failed Save.
+
+The development database remains at version 1. The local database was explicitly
+reset rather than migrated, as requested. Tests cover print dimensions/DPI, cropping,
+orientation, invalid inputs, stored references, failed writes, draft ownership,
+missing files, inline confirmation, shared references, and subtree deletion.
+Independent photo-state/dialog goldens accompany the updated editor references.
+
+Verification: all tests and goldens, ktlint, Detekt, coverage reports/verification,
+and macOS packaging passed.

@@ -40,6 +40,14 @@ interface ProjectQueries {
     )
     fun observeChildren(parentId: Long?): Flow<List<ProjectEntity>>
 
+    @Query(
+        "WITH RECURSIVE subtree(id) AS (SELECT id FROM projects WHERE id = :id " +
+            "UNION ALL SELECT projects.id FROM projects JOIN subtree " +
+            "ON projects.parent_id = subtree.id) SELECT DISTINCT photo_path FROM resumes " +
+            "WHERE project_id IN (SELECT id FROM subtree) AND photo_path IS NOT NULL",
+    )
+    suspend fun subtreePhotoPaths(id: Long): List<String>
+
     @Query("SELECT * FROM projects ORDER BY id ASC")
     fun observeAll(): Flow<List<ProjectEntity>>
 }
