@@ -15,7 +15,6 @@ import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_document_language
 import reframecv.shared.generated.resources.resume_document_language_hint
-import reframecv.shared.generated.resources.resume_keywords
 import reframecv.shared.generated.resources.resume_main_hint
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.theme.ReframeTheme
@@ -43,7 +42,6 @@ internal fun ResumeFormScope.MetadataFields(draft: ResumeDraft, onChange: (Resum
                 style = tokens.typography.bodySmall,
             )
         }
-        KeywordsField(draft, onChange)
     }
 }
 
@@ -54,11 +52,4 @@ private fun ResumeFormScope.LanguageField(draft: ResumeDraft, onChange: (ResumeD
             onChange(draft.copy(language = it))
         }, tag = "resume.language", placeholder = Res.string.resume_document_language_hint)
     }
-}
-
-@Composable
-private fun ResumeFormScope.KeywordsField(draft: ResumeDraft, onChange: (ResumeDraft) -> Unit) {
-    Field(draft.keywords, Res.string.resume_keywords, {
-        onChange(draft.copy(keywords = it))
-    }, tag = "resume.keywords")
 }

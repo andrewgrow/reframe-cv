@@ -146,7 +146,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
             onNodeWithTag("resume.name").performTextReplacement("Mobile")
             onNodeWithText("Full name").performScrollTo().performTextReplacement("Alex")
             onNodeWithText(
-                "Keywords (comma-separated)",
+                "Keywords",
             ).performScrollTo().performTextReplacement("Kotlin, Compose")
             onNodeWithText("Add section").performScrollTo().performClick()
             onNodeWithText("Summary").performClick()
@@ -403,21 +403,25 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
     }
 
     @Test
-    fun keywordsStayBelowLanguageAndMainResume() {
+    fun nameAndKeywordsShareTwoToOneWidthAndWrapOnNarrowScreens() {
         listOf(800.dp, 320.dp).forEach { width ->
             val size = ScreenSize(width, 600.dp)
             runDesktopComposeUiTest(size) {
                 setGoldenContent(this, screenSize = size) {
                     ResumeEditorContent(TestResumeEditorComponent())
                 }
-                onNodeWithTag("resume.metadata").performScrollTo()
-                val language = onNodeWithTag("resume.language").fetchSemanticsNode().boundsInRoot
+                onNodeWithTag("resume.identity").performScrollTo()
+                val name = onNodeWithTag("resume.name").fetchSemanticsNode().boundsInRoot
                 val keywords = onNodeWithTag("resume.keywords").fetchSemanticsNode().boundsInRoot
                 if (width == 800.dp) {
-                    val main = onNodeWithText("Main resume").fetchSemanticsNode().boundsInRoot
-                    assertEquals(language.center.y, main.center.y, 1f)
+                    assertEquals(name.top, keywords.top, 1f)
+                    assertEquals(name.height, keywords.height, 1f)
+                    assertEquals(name.width, keywords.width * 2, 2f)
+                    assertTrue(keywords.left > name.right)
+                } else {
+                    assertTrue(keywords.top >= name.bottom)
+                    assertEquals(name.width, keywords.width, 1f)
                 }
-                assertTrue(keywords.top >= language.bottom)
             }
         }
     }

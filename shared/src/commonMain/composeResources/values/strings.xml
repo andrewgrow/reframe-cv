@@ -80,7 +80,8 @@
     <string name="resume_profile_name">Full name</string>
     <string name="resume_headline">Professional headline</string>
     <string name="resume_location">Location</string>
-    <string name="resume_keywords">Keywords (comma-separated)</string>
+    <string name="resume_keywords">Keywords</string>
+    <string name="resume_keywords_hint">Separate with commas.</string>
     <string name="resume_sections">Sections</string>
     <string name="resume_add_section">Add section</string>
     <string name="resume_section_title">Section title</string>
