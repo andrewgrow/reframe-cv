@@ -11,6 +11,7 @@
       <option name="taskNames">
         <list>
           <option value="cleanJvmTest" />
+          <option value="ktlintFormat" />
           <option value="ktlintCheck" />
           <option value="detekt" />
           <option value="allTests" />

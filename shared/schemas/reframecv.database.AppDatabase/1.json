@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "a3a8f73a8a44d18497d64b6c36e7ba73",
+    "identityHash": "13d9e3ac1f1df98ce9ee780f9c73451f",
     "entities": [
       {
         "tableName": "app_settings",
@@ -226,7 +226,7 @@
       },
       {
         "tableName": "resumes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `source_resume_id` INTEGER, `photo_path` TEXT, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`source_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `source_resume_id` INTEGER, `photo_path` TEXT, `photo_visible` INTEGER NOT NULL DEFAULT 1, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`source_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -273,6 +273,13 @@
             "fieldPath": "photoPath",
             "columnName": "photo_path",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "photoVisible",
+            "columnName": "photo_visible",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
           }
         ],
         "primaryKey": {
@@ -743,7 +750,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'a3a8f73a8a44d18497d64b6c36e7ba73')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '13d9e3ac1f1df98ce9ee780f9c73451f')"
     ]
   }
 }

@@ -25,6 +25,10 @@ class TestResumesRepository : ResumesRepository {
         changeMain(record.projectId, id, mainResumeChange)
         return id
     }
+    override suspend fun createSaved(record: Resume, mainResumeChange: MainResumeChange): Resume {
+        val id = create(record, mainResumeChange)
+        return records.value.single { it.id == id }
+    }
     override suspend fun update(record: Resume, mainResumeChange: MainResumeChange) {
         update(record)
         changeMain(record.projectId, record.id, mainResumeChange)

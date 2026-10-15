@@ -403,7 +403,7 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
     }
 
     @Test
-    fun metadataSharesOneRowAndWrapsOnNarrowScreens() {
+    fun keywordsStayBelowLanguageAndMainResume() {
         listOf(800.dp, 320.dp).forEach { width ->
             val size = ScreenSize(width, 600.dp)
             runDesktopComposeUiTest(size) {
@@ -415,11 +415,9 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
                 val keywords = onNodeWithTag("resume.keywords").fetchSemanticsNode().boundsInRoot
                 if (width == 800.dp) {
                     val main = onNodeWithText("Main resume").fetchSemanticsNode().boundsInRoot
-                    assertEquals(language.center.y, keywords.center.y, 1f)
                     assertEquals(language.center.y, main.center.y, 1f)
-                } else {
-                    assertTrue(keywords.top >= language.bottom)
                 }
+                assertTrue(keywords.top >= language.bottom)
             }
         }
     }

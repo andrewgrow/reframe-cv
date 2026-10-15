@@ -1,255 +1,163 @@
 # ReframeCV
 
-Look at your resume from a new angle.
+A local desktop application for managing resumes, vacancies, and cover letters within projects.
 
-ReframeCV is a local desktop application for managing your resumes within projects. Store, create, rewrite, and tailor resumes to job opportunities while keeping related versions together.
+## Developer documentation
 
-## Projects first
-
-A project is the starting point for working with resumes. It is a flexible workspace whose purpose is defined by the user:
-
-- A career direction, such as backend, full-stack, or mobile development.
-- A company, with resumes tailored specifically to its opportunities.
-- Any other grouping that fits the user's workflow.
-
-Within a project, users will be able to keep source resumes, create and rewrite content, and organize adaptations for different vacancies. Projects are not restricted to a fixed category or tied exclusively to a role, company, or vacancy. More detailed project organization will be explored as the product develops.
-
-## Planned workflow
-
-1. Create or open a project for a chosen goal.
-2. Store an existing resume or create a new one within that project.
-3. Edit, rewrite, and review resume content.
-4. Tailor resume versions to specific vacancies.
-5. Keep related resumes and their versions organized within the project.
-6. Export a resume as a PDF.
-
-The current application provides a project tree, project management, a dashboard,
-a project-scoped resume list, structured resume creation/editing with confirmed deletion,
-and vacancy creation/editing
-with source-file attachments. Resume forms can select the project's main resume and a portrait for printing.
-Resume sections are stored as versioned JSON. Resume creation can import a JSON
-file into the form for review before saving; saved resumes can export the same format.
-The cover-letter editor, tailoring workflows, version management,
-and PDF export are planned. The [resume JSON Schema](docs/schemas/resume-content-v1.schema.json)
-describes the versioned storage document; processors can reuse its `$defs/ResumeContent`
-definition independently. Missing optional fields use model defaults; explicit null is
-allowed only for date fields.
-
-The [development log](docs/development-log.md) records the completed dashboard milestone
-and subsequent decisions. The [active plan](docs/plans/workspace-editors.md) tracks
-remaining editors and source workflows.
-
-## Architecture
-
-The application is built with Kotlin/JVM and Compose Multiplatform Desktop. Kotlin owns the desktop UI, application logic, and local project storage. Projects form the foundation for resume storage, creation, rewriting, and adaptation as those features are developed.
-
-## Technologies
-
-The application is local and single-user, with no backend server or web frontend. Project data is stored locally.
-
-- Kotlin/JVM and Compose Multiplatform Desktop for the application and UI.
-- [Decompose](https://arkivanov.github.io/Decompose/) for navigation and lifecycle management.
-- [Room](https://developer.android.com/kotlin/multiplatform/room) with bundled SQLite for project data.
-- [kotlinx-datetime](https://github.com/Kotlin/kotlinx-datetime) for date and time handling.
-- Klogging for logging.
-- [MVIKotlin](https://arkivanov.github.io/MVIKotlin/) for MVI state management.
-- [Roborazzi](https://github.com/takahirom/roborazzi) for screenshot testing.
-- [Detekt](https://detekt.dev/) for static code analysis.
-- [ktlint](https://ktlint.github.io/) for Kotlin formatting checks and automatic formatting.
-
-## Initial milestone
-
-Development starts with projects: listing, creating, editing, and persisting the user's workspaces. The next milestone is to manage resumes within a project:
-
-```text
-create or open project -> add or create resume -> edit and save within project
-```
-
-From that foundation, the application can grow to support rewriting, vacancy-specific adaptations, version management, PDF export, templates, and import tools. The exact organization of projects remains open and will follow users' needs.
+- [Architecture and constraints](docs/architecture.md): current contracts and invariants.
+- [Backlog and open questions](docs/backlog.md): deferred work, without a fixed implementation order.
+- [Resume JSON Schema](docs/schemas/resume-content-v1.schema.json): the versioned document contract.
 
 ## Project structure
 
-This is a Kotlin Multiplatform project targeting Desktop (JVM).
+This is a Kotlin Multiplatform project currently targeting Desktop (JVM).
 
-- `desktopApp` contains the desktop application entry point and packaging configuration.
-- `shared/src/commonMain` contains shared UI and application code.
-- `shared/src/jvmMain` contains JVM-specific implementations.
+- `desktopApp`: desktop entry point, window lifecycle, resources, and packaging.
+- `shared/src/commonMain`: domain models, repository contracts, components, and Compose UI.
+- `shared/src/jvmMain`: desktop database, filesystem, native pickers, and image processing.
+- `shared/src/commonTest` and `shared/src/jvmTest`: fixtures, behavior tests, and screenshot tests.
+- `shared/schemas`: exported Room schemas.
+- `gradle/libs.versions.toml`: dependency and plugin versions.
+- `.run`: shared Android Studio run configurations.
 
-## Running the application
+## Run and package
 
-In Android Studio, select the shared **ReframeCV** run configuration in the toolbar and click Run. The configuration is stored in `.run/ReframeCV.run.xml` and runs `:desktopApp:run`. You can also use one of these commands:
+Use the Gradle wrapper from the project root. In Android Studio, select **ReframeCV**
+from `.run/ReframeCV.run.xml`, or run:
 
-- Hot reload: `./gradlew :desktopApp:hotRun --auto`
-- Standard run: `./gradlew :desktopApp:run`
+```shell
+./gradlew :desktopApp:run
+```
 
-To build a standalone application:
+For hot reload:
+
+```shell
+./gradlew :desktopApp:hotRun --auto
+```
+
+Build a standalone application:
 
 ```shell
 ./gradlew :desktopApp:createDistributable
 ```
 
-The generated application is placed in `desktopApp/build/compose/binaries/main/app/`.
-
-On macOS, launch it with:
+The output is in `desktopApp/build/compose/binaries/main/app/`. On macOS:
 
 ```shell
 open desktopApp/build/compose/binaries/main/app/ReframeCV.app
 ```
 
-## Local storage
+## Tests and full checks
 
-ReframeCV stores its database as `reframe-cv.db` in its own application data directory:
+Select **FullCheck** in Android Studio (`.run/FullCheck.run.xml`) for shared JVM test
+cleanup, automatic formatting, formatting checks, Detekt, all tests, coverage reports,
+and coverage verification. It disables parallel execution and the build cache and
+verifies existing goldens. `ktlintFormat` runs before the checks and modifies source
+formatting; review the diff afterward.
 
-- macOS: `~/Library/Application Support/ReframeCV/`.
-- Windows: `%APPDATA%/ReframeCV/`.
-- Linux: `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset.
+Equivalent terminal command:
 
-During development, the database stays at schema version 1. After a schema change, close the application and delete the local database to recreate it; migrations will be introduced when real data needs to be preserved. Deleting a project permanently removes its entire subtree, workspace records, and keywords. Unused source snapshots and their file copies are also removed; snapshots still referenced by another vacancy are preserved.
+```shell
+./gradlew cleanJvmTest ktlintFormat ktlintCheck detekt allTests :koverHtmlReport :koverXmlReport :koverVerify --no-parallel --no-build-cache
+```
 
-## UI tokens
-
-`ReframeTheme.tokens` provides scaled spacing, layout dimensions, button padding, and typography.
-Pass `uiScale = UiScale(90)` to `ReframeTheme` to render these at 90% of their baseline size.
-The default is 100%; `smaller()` and `larger()` change the scale in 5% steps between 75% and 150%.
-The system's display density and font scale remain in effect. Outlines stay at 1 dp and the fill animation at 300 ms.
-Scale controls and persistence will be connected through application settings later.
-
-## Running tests
-
-For a complete local run from Android Studio, select **ReframeCV - Full Check** in the toolbar. It clears JVM test outputs, applies `ktlintFormat`, checks formatting and Detekt, runs all tests including screenshot verification, generates HTML/XML coverage reports, and verifies the coverage threshold. It runs without parallel task execution or the build cache. This configuration modifies source formatting; review the diff afterward. Screenshot references are verified, not overwritten.
-
-
-Use the run button in your IDE's editor gutter, or run all test suites at once from the project root:
+Run tests independently:
 
 ```shell
 ./gradlew allTests
-```
-
-This currently runs the shared JVM unit and database integration tests together with Roborazzi screenshot verification. To run only the shared desktop tests, use:
-
-```shell
 ./gradlew :shared:jvmTest
 ```
 
-Gradle skips tests when nothing has changed since the last run. To force a full re-run (for example, to verify a clean state before pushing, or when test results look stale or flaky), clean the test outputs and disable the build cache:
+JVM tests include unit tests, database integration tests, and screenshot verification.
+Gradle skips unchanged tasks. To clear shared JVM test outputs and rerun without the build cache:
 
 ```shell
-./gradlew cleanJvmTest allTests --no-build-cache
+./gradlew cleanJvmTest allTests --no-parallel --no-build-cache
 ```
 
-Desktop screenshot tests use [Roborazzi](https://github.com/takahirom/roborazzi). Ordinary `jvmTest` and IDE test runs verify screenshots by default. To update reference images after an intentional UI change:
+The shared test report is `shared/build/reports/tests/jvmTest/index.html`.
+
+## Screenshot references
+
+Roborazzi verifies screenshots during ordinary JVM and IDE test runs. References live
+in `shared/src/jvmTest/screenshots/`. Record changes only after an intentional UI update:
 
 ```shell
-./gradlew :shared:recordRoborazziJvm
+./gradlew :shared:recordRoborazziJvm --no-parallel
 ```
 
-Review the updated images before committing them. To verify screenshots explicitly:
+Review the image diff, then verify:
 
 ```shell
-./gradlew :shared:verifyRoborazziJvm
+./gradlew :shared:verifyRoborazziJvm --no-parallel
 ```
 
-Reference images are stored in `shared/src/jvmTest/screenshots/`. Roborazzi's Compose Desktop support is experimental, and screenshots can vary across operating systems, fonts, and graphics environments. Record and verify reference images in the same environment.
+Record and verify in the same OS/font/graphics environment. Compose Desktop support
+in Roborazzi is experimental, and rendering can vary between environments.
 
-## Static analysis
-
-Run Detekt locally from the project root:
+## Formatting and static analysis
 
 ```shell
-./gradlew detekt
+./gradlew ktlintCheck detekt --no-parallel
 ```
 
-The HTML report is at `build/reports/detekt/detekt.html`. Analysis covers Kotlin application and test sources in both modules, excluding generated code. Default rules are enabled with adjustments for Compose naming, test fixtures, and design tokens. This initial setup runs without type resolution, so rules requiring type information are not evaluated.
-
-Detekt is pinned to `2.0.0-alpha.6` to match the project's Kotlin version; this is a pre-release version.
-
-## Code formatting
-
-Check Kotlin sources, tests, and Gradle Kotlin scripts in all modules:
+Apply canonical formatting separately, then review the diff:
 
 ```shell
-./gradlew ktlintCheck
+./gradlew ktlintFormat --no-parallel
 ```
 
-Apply automatic formatting, then review the diff before committing:
+`.editorconfig` defines the `android_studio` style and a 100-character Kotlin line limit.
+Generated sources are excluded. Run formatting before analysis rather than concurrently.
+
+- ktlint reports: each module's `build/reports/ktlint/`.
+- Detekt report: `build/reports/detekt/detekt.html`.
+- Detekt configuration: `config/detekt/detekt.yml`; it covers Kotlin sources in both
+  modules without type resolution, excluding generated/build output.
+
+## Coverage
 
 ```shell
-./gradlew ktlintFormat
+./gradlew allTests :koverHtmlReport :koverXmlReport :koverVerify --no-parallel
 ```
 
-Formatting uses the `android_studio` style configured in `.editorconfig`, with a 100-character line limit and support for Compose function names. Enable EditorConfig support in your IDE to share applicable formatting settings. The IDE formatter and ktlint can still differ; use `ktlintFormat` for the canonical project formatting. Generated sources are excluded. Reports are written under each project's `build/reports/ktlint/` directory. Formatting runs only when explicitly requested; checks do not modify files.
+Kover combines `shared` and `desktopApp`; the minimum is 75% line coverage.
+Generated Room implementations and Compose resources are excluded.
 
-To run formatting checks, static analysis, all tests, and the coverage check together:
+- HTML: `build/reports/kover/html/index.html`.
+- XML: `build/reports/kover/report.xml`.
 
-```shell
-./gradlew ktlintCheck detekt allTests :koverVerify
-```
+## Local data and diagnostics
 
-## Local code coverage
+The application data directory contains `reframe-cv.db`, managed document files,
+and `stacktrace.txt`:
 
-[Kover](https://github.com/Kotlin/kotlinx-kover) measures JVM code coverage across `shared` and `desktopApp`. To run tests, generate the combined HTML and XML reports, and check the minimum coverage:
+| Platform | Directory |
+| --- | --- |
+| macOS | `~/Library/Application Support/ReframeCV/` |
+| Windows | `%APPDATA%/ReframeCV/` |
+| Linux | `$XDG_DATA_HOME/ReframeCV/`, or `~/.local/share/ReframeCV/` when unset |
 
-```shell
-./gradlew allTests :koverHtmlReport :koverXmlReport :koverVerify
-```
+Managed vacancy sources live in `attachments/`; resume photographs and their draft
+sources live in `documents/resume-photos/`. Back up the database and managed files together.
+Deleting only the database does not remove these directories.
 
-Open `build/reports/kover/html/index.html` for the HTML report. The XML report is at `build/reports/kover/report.xml`. The initial minimum is 75% line coverage. Generated Room implementations and Compose resources are excluded; application code, including the desktop entry point, remains included. Add behavioral tests alongside new application logic.
+The development database stays at schema version 1, without migrations. After an
+incompatible schema change, close the application before resetting the database.
+A reset permanently removes its records; delete `reframe-cv.db` and any associated
+`reframe-cv.db-wal` / `reframe-cv.db-shm` files only when those records can be discarded.
+Migrations will be required when data must be preserved.
 
-## Help and tricks
-
-Running opencode: Open a terminal in the project root and run:
-
-```shell
-opencode
-```
-
-Open the database folder in Finder on MacOS and looking up to `reframe-cv.db`:  
+Open the data directory in Finder:
 
 ```shell
 open "$HOME/Library/Application Support/ReframeCV"
 ```
 
-Errors are appended with timestamps, operation context, and stack traces to `stacktrace.txt`
-in the same application data directory as `reframe-cv.db`. The file is preserved across launches. Each error includes the latest 200 in-memory Store and
-project-tree events before its stack trace. Event summaries contain types, IDs, and counts;
-document contents and project names are omitted. The event history starts fresh on each launch.
-Print in the terminal `open "$HOME/Library/Application Support/ReframeCV"`
+Errors append timestamps, operation context, and stack traces to `stacktrace.txt`.
+Each error includes the latest 200 in-memory Store/project-tree events. Summaries
+omit document text and project names. The file survives restarts; event history does not.
 
 ## License
 
-ReframeCV is available under the [MIT License](LICENSE.md). See [Third-Party Notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
-
-### Vacancy source files
-
-Attaching a source file selects an immutable snapshot for the vacancy. Save copies
-the original bytes into `attachments/` beside `reframe-cv.db`, under a UUID filename.
-The database stores its relative path, original name, MIME type, size, and SHA-256.
-Cancel leaves no copy. JSON, HTML, TXT, PNG, JPG/JPEG, PDF, and DOCX are supported;
-files are neither parsed nor fetched from URLs.
-
-The editor can open, replace, or remove a saved snapshot. Missing or changed copies
-show a warning; vacancy data and snapshot metadata are retained. Reattach the original
-file or remove the snapshot to resolve the warning. Deleting a vacancy removes its
-snapshot and copy after the last reference. Deleting a project applies the same
-cleanup to all vacancies in its subtree.
-Unreferenced copies are cleaned when vacancy observation starts. Back up the database
-and its `attachments/` directory together.
-
-The development schema remains version 1. Databases created before file attachments
-need recreation before running this version; no migration is provided.
-
-### Resume photographs
-
-Select a PNG or JPEG from the photo block in the resume editor. Use the arrows,
-zoom controls, and Reset to frame the portrait under the fixed 35 × 45 crop mask.
-Save produces a proportionally scaled JPEG of the chosen frame at 413 × 531 pixels
-(35 × 45 mm, 300 dpi), including camera orientation handling. Original files remain untouched. Copies live
-in `documents/resume-photos/` beside the database; resumes store relative paths.
-Photos are excluded from JSON import/export.
-
-Photo replacement, framing, and removal take effect with Save. Closing the editor without
-saving discards new copies and preserves the previous saved photo. The photo dialog
-confirms removal inline. Missing or unreadable files show a warning and can be
-replaced or removed without losing resume content. Permanent resume/project deletion
-removes photos after their last database reference. Back up the database and its
-managed document directories together.
+[MIT](LICENSE.md). Dependency and asset notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -81,11 +81,14 @@ class DefaultResumeEditorComponent(
     componentContext: AppComponentContext,
     private val save: (ResumeDraft) -> Unit,
     private val close: () -> Unit,
-    override val initialResume: Resume? = null,
+    initialResume: Resume? = null,
     initialRole: ResumeRole = ResumeRole.Regular,
     private val delete: () -> Unit = {},
 ) : ResumeEditorComponent,
     AppComponentContext by componentContext {
+    private var persistedResume: Resume? = initialResume
+    override val initialResume: Resume? get() = persistedResume
+
     override val draft =
         MutableValue(
             initialResume?.let {
@@ -102,7 +105,7 @@ class DefaultResumeEditorComponent(
     override val exportComponent = DefaultResumeExportComponent(
         componentContext,
         resume = {
-            initialResume?.takeIf { exportVisible.value }?.let { draft.value.applyTo(it) }
+            this.initialResume?.takeIf { exportVisible.value }?.let { draft.value.applyTo(it) }
         },
         finished = ::onCloseExport,
     )
@@ -148,7 +151,8 @@ class DefaultResumeEditorComponent(
         }
     }
 
-    internal fun onSaveCompleted(state: ResumeSaveState): Boolean {
+    internal fun onSaveCompleted(state: ResumeSaveState, createdResume: Resume? = null): Boolean {
+        if (createdResume != null) persistedResume = createdResume
         saveState.value = state
         if (state == ResumeSaveState.Idle) {
             photoComponent.onSaved()

@@ -14,4 +14,5 @@ data class Resume(
     val sourceResumeId: Long? = null,
     val keywords: List<String> = emptyList(),
     val photoPath: String? = null,
+    val photoVisible: Boolean = true,
 ) : DomainModel

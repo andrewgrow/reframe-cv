@@ -18,6 +18,7 @@ import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.sampleResumeContent
+import reframecv.repository.MainResumeChange
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.testing.ComponentTest
@@ -64,12 +65,15 @@ class ResumeEditorNavigationTest : ComponentTest() {
         val entered = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val repository = object : ResumesRepository by dependencies.resumesRepository {
-            override suspend fun create(record: Resume): Long {
+            override suspend fun createSaved(
+                record: Resume,
+                mainResumeChange: MainResumeChange,
+            ): Resume {
                 writes++
                 if (fail) throw failure
                 entered.complete(Unit)
                 release.await()
-                return dependencies.resumesRepository.create(record)
+                return dependencies.resumesRepository.createSaved(record, mainResumeChange)
             }
         }
         lateinit var component: DefaultResumesComponent
@@ -123,11 +127,13 @@ class ResumeEditorNavigationTest : ComponentTest() {
     ) {
         val saved = CompletableDeferred<Unit>()
         runOnUiThread {
-            component.childStack.subscribe { if (component.editor == null) saved.complete(Unit) }
+            checkNotNull(component.editor).saveState.subscribe {
+                if (it == ResumeSaveState.Saved) saved.complete(Unit)
+            }
         }
         release.complete(Unit)
         saved.await()
-        runOnUiThread { assertNull(component.editor) }
+        runOnUiThread { assertEquals(ResumeSaveState.Saved, component.editor?.saveState?.value) }
     }
 
     private fun structuredDraft(): ResumeDraft {

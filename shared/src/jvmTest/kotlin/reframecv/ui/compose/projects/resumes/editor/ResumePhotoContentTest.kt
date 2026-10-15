@@ -3,6 +3,8 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -11,17 +13,40 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.pressKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.photos.PhotoCrop
 import reframecv.photos.photoBytes
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.components.projects.resumes.editor.ResumePhotoState
+import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 
 @OptIn(ExperimentalTestApi::class)
 class ResumePhotoContentTest : GoldenScreenshotTest() {
+    @Test
+    fun photoVisibilityChangesOnlyPrintingPreferenceAndIsSavedWithDraft() =
+        runDesktopComposeUiTest {
+            var saved: ResumeDraft? = null
+            val component = TestResumeEditorComponent(
+                initialDraft = ResumeDraft("Mobile", photoPath = "saved"),
+                save = { saved = it },
+            )
+            setGoldenContent(this) { ResumeEditorContent(component) }
+            val toggle = onNodeWithTag("resume.photo.visibility")
+            toggle.performScrollTo().assertIsOn().performClick()
+            toggle.assertIsOff()
+            assertEquals("saved", component.draft.value.photoPath)
+            onNodeWithText("Save").performClick()
+            assertEquals(false, saved?.photoVisible)
+            assertEquals("saved", saved?.toResume(1)?.photoPath)
+            runOnIdle { component.saveState.value = ResumeSaveState.Saving }
+            toggle.assertIsNotEnabled()
+        }
+
     @Test
     fun cropControlsResetAndLockDuringConfirmation() = runDesktopComposeUiTest {
         val component = reframecv.ui.components.projects.resumes.editor.TestResumePhotoComponent()

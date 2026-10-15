@@ -17,6 +17,7 @@ data class ResumeDraft(
     val language: String = "",
     val consent: ResumeConsent = ResumeConsent(),
     val photoPath: String? = null,
+    val photoVisible: Boolean = true,
 ) {
     val isValid: Boolean
         get() = name.isNotBlank() && sections.all { it.isValid }
@@ -60,6 +61,7 @@ data class ResumeDraft(
         return resume.copy(
             name = name.trim(),
             photoPath = photoPath,
+            photoVisible = photoVisible,
             keywords = keywords.split(',').map { it.trim() }.filter { it.isNotEmpty() }.distinct(),
             content = ResumeContent(
                 profile = profile,
@@ -77,6 +79,7 @@ data class ResumeDraft(
             keywords = resume.keywords.joinToString(", "),
             profile = resume.content.profile,
             photoPath = resume.photoPath,
+            photoVisible = resume.photoVisible,
             language = resume.content.language,
             consent = resume.content.consent,
             sections = resume.content.sections.mapIndexed { index, section ->

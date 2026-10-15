@@ -21,13 +21,16 @@ class LocalResumesRepository(
 
     override suspend fun create(record: Resume): Long = create(record, MainResumeChange.Keep)
 
-    override suspend fun create(record: Resume, mainResumeChange: MainResumeChange): Long {
+    override suspend fun create(record: Resume, mainResumeChange: MainResumeChange): Long =
+        createSaved(record, mainResumeChange).id
+
+    override suspend fun createSaved(record: Resume, mainResumeChange: MainResumeChange): Resume {
         require(record.id == 0L) { "New records must not have an identifier" }
         val timestamp = nowMillis()
-        val save = suspend {
-            dao.create(record.copy(createdAt = timestamp, updatedAt = timestamp), mainResumeChange)
-        }
-        return photos?.save(record, save) ?: save()
+        val persisted = record.copy(createdAt = timestamp, updatedAt = timestamp)
+        val save = suspend { dao.create(persisted, mainResumeChange) }
+        val id = photos?.save(record, save) ?: save()
+        return persisted.copy(id = id)
     }
 
     override suspend fun update(record: Resume) = update(record, MainResumeChange.Keep)

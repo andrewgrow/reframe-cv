@@ -25,5 +25,12 @@ internal sealed interface ResumesIntent {
     ) : ResumesIntent
 }
 
-/** Lets the resume editor display progress and close only after a successful write. */
-internal enum class ResumesLabel { Saving, Saved, SaveFailed, Deleting, Deleted, DeleteFailed }
+/** Reports resume writes and the identity assigned by storage. */
+internal sealed interface ResumesLabel {
+    data object Saving : ResumesLabel
+    data class Saved(val createdResume: Resume? = null) : ResumesLabel
+    data object SaveFailed : ResumesLabel
+    data object Deleting : ResumesLabel
+    data object Deleted : ResumesLabel
+    data object DeleteFailed : ResumesLabel
+}

@@ -93,6 +93,7 @@ class DefaultResumesComponent(
                 DefaultResumeEditorComponent(
                     childContext,
                     save = { draft ->
+                        val current = editor?.initialResume
                         val savedRole = (editor as? DefaultResumeEditorComponent)?.savedRole
                         val change = when {
                             draft.role == ResumeRole.Main -> MainResumeChange.Select
@@ -100,14 +101,16 @@ class DefaultResumesComponent(
                             else -> MainResumeChange.Keep
                         }
                         store.accept(
-                            if (original == null) {
+                            if (current == null) {
                                 ResumesIntent.Create(draft, change)
                             } else {
-                                ResumesIntent.Update(original, draft, change)
+                                ResumesIntent.Update(current, draft, change)
                             },
                         )
                     },
-                    delete = { original?.let { store.accept(ResumesIntent.Delete(it.id)) } },
+                    delete = {
+                        editor?.initialResume?.let { store.accept(ResumesIntent.Delete(it.id)) }
+                    },
                     initialResume = original,
                     initialRole = initialRole,
                     close = { editorNavigation.pop() },
@@ -132,9 +135,8 @@ class DefaultResumesComponent(
                 when (label) {
                     ResumesLabel.Saving -> editor?.saveState?.value = ResumeSaveState.Saving
 
-                    ResumesLabel.Saved -> {
-                        val exported = editor?.onSaveCompleted(ResumeSaveState.Idle) == true
-                        if (!exported && editor?.initialResume == null) editorNavigation.pop()
+                    is ResumesLabel.Saved -> {
+                        editor?.onSaveCompleted(ResumeSaveState.Idle, label.createdResume)
                     }
 
                     ResumesLabel.Deleted -> editorNavigation.pop()

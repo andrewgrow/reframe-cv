@@ -19,6 +19,7 @@ import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotoPicker
 import reframecv.photos.photoBytes
+import reframecv.repository.MainResumeChange
 
 class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
     private val storage get() = DesktopResumePhotoStorage(temporaryFolder.root.toPath())
@@ -35,12 +36,23 @@ class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
         val repository = LocalResumesRepository(database.resumeDao(), manager)
         val first = prepare("first", Color.RED)
         val projectId = project()
-        val id = repository.create(resume(projectId).copy(photoPath = first))
+        val created = repository.createSaved(
+            resume(projectId).copy(photoPath = first, photoVisible = false),
+            MainResumeChange.Keep,
+        )
+        val id = created.id
         database.close()
         openDatabase()
         val reopened = LocalResumesRepository(database.resumeDao(), photos)
         val record = reopened.observeResumes(projectId).first().single()
+        assertEquals(created.createdAt, record.createdAt)
+        assertEquals(created.updatedAt, record.updatedAt)
         assertEquals(first, record.photoPath)
+        assertFalse(record.photoVisible)
+        reopened.update(record.copy(photoVisible = true))
+        assertNotNull(storage.read(first))
+        assertEquals(true, reopened.observeResumes(projectId).first().single().photoVisible)
+        assertFalse(ResumeContentJson.encodeForExport(record.content).contains("photoVisible"))
         assertFalse(ResumeContentJson.encodeForExport(record.content).contains("\"photoPath\""))
         val replacement = prepare("second", Color.BLUE)
         assertNotNull(storage.read(first))

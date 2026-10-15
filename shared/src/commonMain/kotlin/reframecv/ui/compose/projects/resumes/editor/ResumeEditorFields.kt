@@ -38,7 +38,6 @@ internal fun ResumeEditorFields(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
         form.NameAndPhotoFields(draft, onChange, focus, nameError, photoComponent)
-        form.MetadataFields(draft, onChange)
         Column(
             Modifier.padding(top = tokens.spacing.medium),
             verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),

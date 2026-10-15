@@ -48,13 +48,8 @@ internal class ResumesExecutor(
         publish(ResumesLabel.Saving)
         saving = scope.launch {
             try {
-                if (original == null) {
-                    val record = draft.toResume(projectId)
-                    if (mainResumeChange == MainResumeChange.Keep) {
-                        repository.create(record)
-                    } else {
-                        repository.create(record, mainResumeChange)
-                    }
+                val created = if (original == null) {
+                    repository.createSaved(draft.toResume(projectId), mainResumeChange)
                 } else {
                     val record = draft.applyTo(original)
                     if (mainResumeChange == MainResumeChange.Keep) {
@@ -62,8 +57,9 @@ internal class ResumesExecutor(
                     } else {
                         repository.update(record, mainResumeChange)
                     }
+                    null
                 }
-                publish(ResumesLabel.Saved)
+                publish(ResumesLabel.Saved(created))
             } catch (exception: CancellationException) {
                 throw exception
             } catch (error: Exception) {

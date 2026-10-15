@@ -2,10 +2,8 @@ package reframecv.ui.compose.projects.resumes.editor
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
@@ -25,27 +23,19 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun ResumeFormScope.MetadataFields(draft: ResumeDraft, onChange: (ResumeDraft) -> Unit) {
     val tokens = ReframeTheme.tokens
-    BoxWithConstraints(Modifier.fillMaxWidth().testTag("resume.metadata")) {
-        val singleRow = maxWidth >= tokens.dimensions.resumeMetadataMinWidth
+    Column(
+        Modifier.fillMaxWidth().testTag("resume.metadata"),
+        verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
+    ) {
         Column(verticalArrangement = Arrangement.spacedBy(tokens.spacing.small)) {
-            if (singleRow) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    LanguageField(draft, onChange)
-                    RoleField(draft.role) { onChange(draft.copy(role = it)) }
-                    Box(Modifier.weight(1f)) { KeywordsField(draft, onChange) }
-                }
-            } else {
-                FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
-                    verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
-                ) {
-                    LanguageField(draft, onChange)
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
+                verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
+            ) {
+                Box(Modifier.align(Alignment.CenterVertically)) { LanguageField(draft, onChange) }
+                Box(Modifier.align(Alignment.CenterVertically)) {
                     RoleField(draft.role) { onChange(draft.copy(role = it)) }
                 }
-                KeywordsField(draft, onChange)
             }
             SelectableText(
                 stringResource(Res.string.resume_main_hint),
@@ -53,6 +43,7 @@ internal fun ResumeFormScope.MetadataFields(draft: ResumeDraft, onChange: (Resum
                 style = tokens.typography.bodySmall,
             )
         }
+        KeywordsField(draft, onChange)
     }
 }
 

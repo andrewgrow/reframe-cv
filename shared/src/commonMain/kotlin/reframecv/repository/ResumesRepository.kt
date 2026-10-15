@@ -8,6 +8,7 @@ interface ResumesRepository {
     fun observeResumes(projectId: Long): Flow<List<Resume>>
     fun observeMainResumeId(projectId: Long): Flow<Long?>
     suspend fun search(projectId: Long, keyword: String): List<Resume>
+    suspend fun createSaved(record: Resume, mainResumeChange: MainResumeChange): Resume
     suspend fun create(record: Resume): Long
     suspend fun create(record: Resume, mainResumeChange: MainResumeChange): Long
     suspend fun update(record: Resume)
