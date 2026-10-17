@@ -84,7 +84,7 @@ class VacancyImportContentTest {
         try {
             setContent { ReframeTheme { VacancyEditorContent(component) } }
             onNodeWithText("Import").assertIsEnabled()
-            onNodeWithTag("vacancy.title").performTextReplacement("New vacancy")
+            onNodeWithTag("vacancy.name").performTextReplacement("New vacancy")
             onNodeWithText("Save").performClick()
             onNodeWithText("Edit vacancy").assertExists()
             onNodeWithText("Import").assertDoesNotExist()

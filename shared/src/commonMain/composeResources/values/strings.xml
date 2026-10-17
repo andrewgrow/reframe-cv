@@ -38,7 +38,7 @@
     <string name="vacancy_company_missing">Company not specified</string>
     <string name="vacancy_added">Added</string>
     <string name="vacancy_company">Company</string>
-    <string name="vacancy_title">Title</string>
+    <string name="vacancy_name">Name</string>
     <string name="vacancy_add">Add</string>
     <string name="vacancy_editor_title">Add vacancy</string>
     <string name="vacancy_description">Description</string>
@@ -63,7 +63,7 @@
     <string name="vacancy_resize_description">Resize description</string>
     <string name="resize_dialog">Resize dialog</string>
     <string name="dashboard_title">Dashboard</string>
-    <string name="vacancy_title_required">Enter a title to save the vacancy.</string>
+    <string name="vacancy_name_required">Enter a name to save the vacancy.</string>
     <string name="resumes_empty">You have no resumes yet.</string>
     <string name="resumes_load_error">Could not load resumes. Please try again.</string>
     <string name="resume_name">Name</string>
@@ -213,4 +213,17 @@
     <string name="vacancy_import_progress">Importing vacancy...</string>
     <string name="vacancy_import_success">Vacancy imported. Review the fields before saving.</string>
     <string name="vacancy_import_error">Could not import the vacancy. Choose a valid Reframe CV vacancy JSON file and try again.</string>
+    <string name="vacancy_job_title">Job title</string>
+    <string name="vacancy_parse_pdf">Parse PDF</string>
+    <string name="vacancy_parse_cancel">Cancel parsing</string>
+    <string name="vacancy_parse_progress">Parsing vacancy from PDF...</string>
+    <string name="vacancy_parse_success">Vacancy parsed. Review the fields before saving.</string>
+    <string name="vacancy_parse_not_configured">PDF parsing is not configured yet.</string>
+    <string name="vacancy_parse_unreadable">Could not read the PDF. Attach the file again and retry.</string>
+    <string name="vacancy_parse_unsupported">Only PDF files can be parsed for now.</string>
+    <string name="vacancy_parse_invalid_pdf">The selected file does not have a valid PDF header.</string>
+    <string name="vacancy_parse_changed">The saved PDF has changed. Attach the original file again.</string>
+    <string name="vacancy_parse_not_recognized">No vacancy could be recognized in this PDF.</string>
+    <string name="vacancy_parse_unavailable">Could not process the PDF. Please try again.</string>
+    <string name="vacancy_parse_invalid_response">The service returned an invalid vacancy response. Please try again.</string>
 </resources>

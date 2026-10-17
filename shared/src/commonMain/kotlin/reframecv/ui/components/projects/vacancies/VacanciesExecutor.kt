@@ -32,7 +32,7 @@ internal class VacanciesExecutor(
     // Repository implementations can fail with different exceptions; keep the screen usable.
     @Suppress("TooGenericExceptionCaught")
     private fun save(draft: VacancyDraft, original: Vacancy? = null) {
-        if (draft.title.isBlank() || saving?.isActive == true) return
+        if (draft.name.isBlank() || saving?.isActive == true) return
         require(original == null || original.projectId == projectId)
         publish(VacanciesLabel.Saving)
         saving = scope.launch {

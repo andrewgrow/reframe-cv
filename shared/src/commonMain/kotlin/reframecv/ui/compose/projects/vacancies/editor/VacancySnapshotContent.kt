@@ -22,12 +22,18 @@ import reframecv.shared.generated.resources.vacancy_snapshot_missing
 import reframecv.shared.generated.resources.vacancy_snapshot_open
 import reframecv.shared.generated.resources.vacancy_snapshot_remove
 import reframecv.shared.generated.resources.vacancy_snapshot_selected
+import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySnapshotComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySnapshotState
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun VacancySnapshotContent(component: VacancySnapshotComponent, enabled: Boolean = true) {
+internal fun VacancySnapshotContent(
+    component: VacancySnapshotComponent,
+    enabled: Boolean = true,
+    recognition: VacancyRecognitionComponent? = null,
+    onRecognize: () -> Unit = {},
+) {
     val state by component.state.subscribeAsState()
     Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small)) {
         SnapshotDescription(state)
@@ -62,6 +68,14 @@ internal fun VacancySnapshotContent(component: VacancySnapshotComponent, enabled
                     Text(stringResource(Res.string.navigation_retry))
                 }
             }
+        }
+        if (recognition != null && isPdfSource(state)) {
+            VacancyRecognitionContent(
+                recognition,
+                state.selected != null || state.status == AttachmentStatus.Available,
+                enabled && !state.loading,
+                onRecognize,
+            )
         }
         SelectableText(
             stringResource(Res.string.vacancy_snapshot_hint),
@@ -99,3 +113,7 @@ private fun snapshotMessage(state: VacancySnapshotState) = when {
     state.status == AttachmentStatus.Changed -> Res.string.vacancy_snapshot_changed
     else -> null
 }
+
+private fun isPdfSource(state: VacancySnapshotState): Boolean =
+    (state.selected?.fileName ?: state.record?.fileName)?.endsWith(".pdf", ignoreCase = true) ==
+        true

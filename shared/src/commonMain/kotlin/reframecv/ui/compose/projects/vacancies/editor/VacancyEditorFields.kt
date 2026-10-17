@@ -27,10 +27,11 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_company
+import reframecv.shared.generated.resources.vacancy_job_title
 import reframecv.shared.generated.resources.vacancy_keywords
 import reframecv.shared.generated.resources.vacancy_keywords_hint
+import reframecv.shared.generated.resources.vacancy_name
 import reframecv.shared.generated.resources.vacancy_save_error
-import reframecv.shared.generated.resources.vacancy_title
 import reframecv.shared.generated.resources.vacancy_url
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
@@ -44,13 +45,13 @@ internal fun VacancyEditorFields(
     saveState: VacancySaveState,
     onSave: () -> Unit,
     enabled: Boolean,
-    titleError: String?,
+    nameError: String?,
     attachment: @Composable () -> Unit,
 ) {
-    val titleFocus = remember { FocusRequester() }
+    val nameFocus = remember { FocusRequester() }
     val scroll = rememberScrollState()
     var viewport by remember { mutableStateOf(Rect.Zero) }
-    val submit = { if (draft.title.isNotBlank() && enabled) onSave() }
+    val submit = { if (draft.name.isNotBlank() && enabled) onSave() }
     FastScrollColumn(
         scrollState = scroll,
         contentModifier = Modifier.testTag("vacancy.fields")
@@ -58,22 +59,16 @@ internal fun VacancyEditorFields(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         VacancyField(
-            draft.title,
-            stringResource(Res.string.vacancy_title),
+            draft.name,
+            stringResource(Res.string.vacancy_name),
             enabled,
             submit,
-            Modifier.testTag("vacancy.title").focusRequester(titleFocus),
-            error = titleError,
+            Modifier.testTag("vacancy.name").focusRequester(nameFocus),
+            error = nameError,
         ) {
-            onChange(draft.copy(title = it))
+            onChange(draft.copy(name = it))
         }
-        VacancyField(
-            draft.company,
-            stringResource(Res.string.vacancy_company),
-            enabled,
-            submit,
-            Modifier.testTag("vacancy.company"),
-        ) { onChange(draft.copy(company = it)) }
+        VacancyPostingFields(draft, onChange, enabled, submit)
         VacancyDetailFields(draft, onChange, enabled, submit, scroll, viewport)
         SelectableText(
             stringResource(Res.string.vacancy_keywords_hint),
@@ -88,13 +83,36 @@ internal fun VacancyEditorFields(
             )
         }
     }
-    LaunchedEffect(Unit) { titleFocus.requestFocus() }
-    LaunchedEffect(titleError) {
-        if (titleError != null) {
+    LaunchedEffect(Unit) { nameFocus.requestFocus() }
+    LaunchedEffect(nameError) {
+        if (nameError != null) {
             scroll.animateScrollTo(0)
-            titleFocus.requestFocus()
+            nameFocus.requestFocus()
         }
     }
+}
+
+@Composable
+private fun VacancyPostingFields(
+    draft: VacancyDraft,
+    onChange: (VacancyDraft) -> Unit,
+    enabled: Boolean,
+    submit: () -> Unit,
+) {
+    VacancyField(
+        draft.jobTitle,
+        stringResource(Res.string.vacancy_job_title),
+        enabled,
+        submit,
+        Modifier.testTag("vacancy.jobTitle"),
+    ) { onChange(draft.copy(jobTitle = it)) }
+    VacancyField(
+        draft.company,
+        stringResource(Res.string.vacancy_company),
+        enabled,
+        submit,
+        Modifier.testTag("vacancy.company"),
+    ) { onChange(draft.copy(company = it)) }
 }
 
 @Composable

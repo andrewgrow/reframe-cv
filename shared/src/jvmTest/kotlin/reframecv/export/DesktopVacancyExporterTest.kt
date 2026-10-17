@@ -26,7 +26,8 @@ class DesktopVacancyExporterTest {
     @get:Rule val folder = TemporaryFolder()
     private val clock = Clock.fixed(Instant.parse("2026-10-14T12:34:56Z"), ZoneOffset.UTC)
     private val vacancy = Vacancy(
-        id = 12, projectId = 7, name = "Mobile developer", company = "Example",
+        id = 12, projectId = 7, name = "My shortlist",
+        jobTitle = "Mobile developer", company = "Example",
         description = "Build apps.\nReview code.", url = "https://example.com/job",
         keywords = listOf("Kotlin", "Compose"), responsibilities = listOf("Ship apps, APIs"),
         requirements = listOf("Kotlin"), niceToHave = listOf("CI/CD"),
@@ -56,11 +57,13 @@ class DesktopVacancyExporterTest {
         )
         val document = Json.parseToJsonElement(exported).jsonObject
         val content = document.getValue("content").jsonObject
-        assertEquals("Mobile developer", content.getValue("title").jsonPrimitive.content)
+        assertEquals("My shortlist", content.getValue("name").jsonPrimitive.content)
+        assertEquals("Mobile developer", content.getValue("jobTitle").jsonPrimitive.content)
         assertEquals(setOf("formatVersion", "content"), document.keys)
         assertEquals(
             setOf(
-                "title",
+                "name",
+                "jobTitle",
                 "company",
                 "description",
                 "url",

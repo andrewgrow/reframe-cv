@@ -74,12 +74,19 @@ Export saves the draft first and generates formatted schema-compatible JSON from
 Temporary import/export copies have explicit ownership and are cleaned on completion,
 failure, or editor disposal as appropriate. Original user files are not modified.
 
+## Vacancy naming
+
+`Vacancy.name` is the user's required label for identifying a saved opportunity; lists
+show this label. `Vacancy.jobTitle` is the position title from the posting and may be
+empty for manually entered vacancies. Drafts, persistence, and portable JSON retain both.
+Recognition replaces posting content while preserving the user's label.
+
 ## Vacancy recognition contract
 
 [Vacancy recognition schema](schemas/vacancy-recognition-v1.schema.json) adapts
 `divo-resume/src/utils/schemas/parseJob.schema.json`. It describes a processing result,
 not a saved vacancy: statusCode (200/400/500), status/statusDetails, nullable jobTitle
-and jobDescription, keywords, responsibilities, requirements, and nice_to_have.
+and jobDescription, nullable company/URL, keywords, responsibilities, requirements, and nice_to_have.
 Its version is identified by the schema ID, independently of the database schema.
 
 `VacancyRecognitionJson` reads this contract. Canonical nice_to_have is an array;
@@ -89,9 +96,11 @@ The original project used a string in its JSON schema and an array in its databa
 model; this compatibility rule resolves that inconsistency. Unknown fields and
 invalid types/status codes are rejected.
 
-`VacancyRecognitionResult.applyTo` accepts only successful, nonblank-title results.
-It maps jobTitle/jobDescription to name/description and replaces recognized lists,
-while preserving company, URL, IDs, timestamps, linked documents, and VacancyAttachment.
+`VacancyRecognitionResult.applyTo` accepts only successful results. An unknown jobTitle
+becomes empty; a blank name must still be filled before saving.
+It replaces jobTitle, company, URL, description, and every recognized list; unknown
+values clear the corresponding fields. The user-defined name is preserved, or filled from
+jobTitle when blank. IDs, timestamps, linked documents, and VacancyAttachment are preserved.
 Processing status and provider response IDs are not vacancy business fields.
 The mapping is explicit; it does not fetch, parse, call a model, or write to storage.
 
@@ -102,16 +111,45 @@ tables remain the search mechanism. Vacancy drafts preserve these lists even tho
 the current form does not expose their editing controls yet.
 Vacancy lists and keyword search results use ascending IDs; edits do not reorder them.
 
+## PDF vacancy recognition
+
+`recognition-api` contains provider-independent input/result/error types and the repository
+contract. `network` depends on that contract, owns Ktor/CIO client configuration, and exposes
+the remote implementation. Shared UI code depends only on contracts; desktop application
+dependencies compose the platform file reader and lazily created remote repository. Closing
+application dependencies releases an initialized HTTP client and its engine.
+
+The provider is deliberately unconfigured: the remote repository returns NotConfigured and
+sends no HTTP requests. The network module has no endpoint, credentials, or provider payload
+format yet. Client configuration provides 15-second connection and 120-second request/socket
+timeouts; the actual provider integration and cancellation behavior need testing when added.
+
+Parse PDF accepts selected files before Save or available saved snapshots. The desktop reader
+checks the extension and `%PDF-` header, reads on IO, and verifies stored file size/SHA-256.
+Missing, changed, unsupported, and unreadable files have explicit error states. Header checking
+is not full PDF validation or local text extraction. Original files are never modified.
+
+Recognition only updates the draft; saving and copying attachments remain explicit. It replaces
+posting fields, preserves the user's name (or fills a blank name from jobTitle), and keeps the
+pending attachment. Failures leave fields unchanged and are retryable. Unexpected failures
+include operation context and stack traces in the application log.
+
+Processing disables draft edits, attachment changes, import, save, export, and deletion.
+Cancel parsing or Back/Escape cancels the operation and keeps the editor open. Destroying the
+editor cancels it too; results arriving after cancellation/disposal are discarded. Successful
+results do not cause automatic saves or navigation. Only filenames and bytes enter the remote
+contract; local file paths and application IDs are not part of it.
+
 ## Vacancy JSON export
 
 [Vacancy content schema](schemas/vacancy-content-v1.schema.json) defines the portable
-`formatVersion: 1` document. Its content includes title, company, description, URL,
-keywords, responsibilities, requirements, and niceToHave. Local IDs, timestamps,
+`formatVersion: 1` document. Its content includes user-defined name, original jobTitle, company, description,
+URL, keywords, responsibilities, requirements, and niceToHave. Local IDs, timestamps,
 linked document IDs, file paths/bytes, and processing statuses are excluded.
 This document is separate from the recognition response contract.
 
 Export is available on saved vacancy pages and commits the current draft first,
-including pending snapshot changes. Invalid titles and failed saves prevent the dialog
+including pending snapshot changes. Invalid names and failed saves prevent the dialog
 from opening. After success, pending snapshot changes reset to Keep so later exports
 do not recopy attachments. The same editor remains open after destination selection
 or cancellation. First Save also keeps the same editor open, switching creation to
@@ -130,10 +168,11 @@ Creation offers Import for the same `formatVersion: 1` vacancy content document 
 export. Import ignores unknown fields, filters malformed known values/list entries, and
 rejects broken JSON, unsupported versions, and missing/non-object content. Local IDs,
 links, file paths, and attachment bytes are never imported. Recognition responses are a
-separate contract and are not accepted as portable vacancy documents.
+separate contract and are not accepted as portable vacancy documents. Legacy content.title
+is accepted as name when an explicit name is absent; exports use name and jobTitle.
 
 Import replaces portable draft fields, preserving any pending source-file attachment.
-It does not write to the database; Save remains explicit and title validation still applies.
+It does not write to the database; Save remains explicit and name validation still applies.
 Import blocks duplicate selection, editing, saving, and Back until selection/parsing ends.
 Picker cancellation and failures preserve the current draft; errors are logged and retryable.
 

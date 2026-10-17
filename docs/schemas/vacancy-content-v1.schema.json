@@ -13,7 +13,8 @@
     "VacancyContent": {
       "type": "object",
       "properties": {
-        "title": { "type": "string" },
+        "name": { "type": "string", "description": "User-defined label for identifying this vacancy." },
+        "jobTitle": { "type": "string", "description": "Position title from the original posting." },
         "company": { "type": "string" },
         "description": { "type": "string" },
         "url": { "type": "string" },
@@ -22,7 +23,7 @@
         "requirements": { "$ref": "#/$defs/Items" },
         "niceToHave": { "$ref": "#/$defs/Items" }
       },
-      "required": ["title", "company", "description", "url", "keywords", "responsibilities", "requirements", "niceToHave"],
+      "required": ["name", "jobTitle", "company", "description", "url", "keywords", "responsibilities", "requirements", "niceToHave"],
       "additionalProperties": false
     },
     "Items": { "type": "array", "items": { "type": "string" } }

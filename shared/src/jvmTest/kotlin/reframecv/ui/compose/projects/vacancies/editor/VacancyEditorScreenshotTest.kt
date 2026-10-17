@@ -41,7 +41,8 @@ class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
         setGoldenContent(this, themeMode = ThemeMode.Light) {
             VacancyEditorContent(TestVacancyEditorComponent())
         }
-        onNodeWithTag("vacancy.title").performTextReplacement("Senior Android Developer")
+        onNodeWithTag("vacancy.name").performTextReplacement("My Android shortlist")
+        onNodeWithTag("vacancy.jobTitle").performTextReplacement("Senior Android Developer")
         onNodeWithTag("vacancy.company").performTextReplacement("Example")
         onNodeWithTag("vacancy.description").performTextReplacement("Build a Kotlin application.")
         onNodeWithTag(
@@ -58,7 +59,7 @@ class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
     fun failedSaveMatchesReference() = runDesktopComposeUiTest {
         val component = TestVacancyEditorComponent()
         setGoldenContent(this) { VacancyEditorContent(component) }
-        onNodeWithTag("vacancy.title").performTextReplacement("Backend Developer")
+        onNodeWithTag("vacancy.name").performTextReplacement("Backend Developer")
         runOnIdle { component.saveState.value = VacancySaveState.Failed }
         onNodeWithText("Could not save the vacancy. Please try again.").performScrollTo()
         onNodeWithText("Cancel").performClick()

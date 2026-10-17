@@ -129,10 +129,10 @@ class PageBackNavigationTest {
                 vacancies.editor,
             )
             runOnIdle { editor.saveState.value = VacancySaveState.Saving }
-            onNodeWithTag("vacancy.title").performKeyInput { pressKey(Key.Escape) }
+            onNodeWithTag("vacancy.name").performKeyInput { pressKey(Key.Escape) }
             assertEquals(editor, vacancies.editor)
             runOnIdle { editor.saveState.value = VacancySaveState.Idle }
-            onNodeWithTag("vacancy.title").performKeyInput { pressKey(Key.Escape) }
+            onNodeWithTag("vacancy.name").performKeyInput { pressKey(Key.Escape) }
             onNodeWithText("Add vacancy").assertDoesNotExist()
             assertIs<RootComponent.Child.Vacancies>(root.childStack.value.active.instance)
             // Ensure Escape also works when the application shell has focus.

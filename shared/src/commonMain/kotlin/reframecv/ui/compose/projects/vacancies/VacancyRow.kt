@@ -33,7 +33,7 @@ internal fun VacancyRow(vacancy: Vacancy, timeZone: TimeZone, table: Boolean, on
             SelectableText(
                 vacancy.name,
                 modifier = vacancyTextClick(onEdit),
-                selectionModifier = Modifier.weight(VACANCY_TITLE_WEIGHT),
+                selectionModifier = Modifier.weight(VACANCY_NAME_WEIGHT),
                 style = MaterialTheme.typography.bodyLarge,
             )
             SelectableText(

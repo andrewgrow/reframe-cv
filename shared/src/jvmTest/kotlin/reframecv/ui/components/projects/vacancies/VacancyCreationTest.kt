@@ -175,9 +175,9 @@ class VacancyCreationTest : ComponentTest() {
             val editor = assertNotNull(component.editor)
             val saved = assertNotNull(editor.initialVacancy)
             assertEquals(dependencies.vacanciesRepository.records.value.single(), saved)
-            assertEquals(" Kotlin ", editor.draft.value.title)
+            assertEquals(" Kotlin ", editor.draft.value.name)
             assertEquals(SnapshotChange.Keep, editor.snapshot.change)
-            editor.onSave(editor.draft.value.copy(title = "Updated"))
+            editor.onSave(editor.draft.value.copy(name = "Updated"))
         }
         withTimeout(10_000) {
             val closed = CompletableDeferred<Unit>()

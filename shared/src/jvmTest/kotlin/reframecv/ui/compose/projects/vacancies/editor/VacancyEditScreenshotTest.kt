@@ -17,7 +17,8 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 class VacancyEditScreenshotTest : GoldenScreenshotTest() {
     private fun component() = TestVacancyEditorComponent(
         initialVacancy = Vacancy(
-            id = 1, projectId = 7, name = "Senior Android Developer", company = "Example",
+            id = 1, projectId = 7, name = "My Android shortlist", company = "Example",
+            jobTitle = "Senior Android Developer",
             description = "Build a Kotlin application.", url = "https://example.com/job",
             keywords = listOf("Kotlin", "Compose"), createdAt = 100, updatedAt = 200,
         ),
@@ -34,7 +35,7 @@ class VacancyEditScreenshotTest : GoldenScreenshotTest() {
     fun failedUpdateInLightThemeMatchesReference() = runDesktopComposeUiTest {
         val component = component()
         setGoldenContent(this, themeMode = ThemeMode.Light) { VacancyEditorContent(component) }
-        onNodeWithTag("vacancy.title").performTextReplacement("Lead Android Developer")
+        onNodeWithTag("vacancy.name").performTextReplacement("Lead Android Developer")
         runOnIdle { component.saveState.value = VacancySaveState.Failed }
         onNodeWithText("Could not save the vacancy. Please try again.").performScrollTo()
         onNodeWithText("Cancel").performClick()

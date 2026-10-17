@@ -21,6 +21,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            api(project(":recognition-api"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.animation)
@@ -47,6 +48,7 @@ kotlin {
             implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
+            implementation(project(":network"))
             implementation(libs.klogging)
             implementation(libs.kotlinx.coroutinesSwing)
         }

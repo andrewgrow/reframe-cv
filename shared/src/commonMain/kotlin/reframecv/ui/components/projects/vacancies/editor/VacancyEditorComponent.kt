@@ -3,6 +3,9 @@ package reframecv.ui.components.projects.vacancies.editor
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.recognition.RecognitionSource
+import reframecv.recognition.VacancyRecognitionResult
+import reframecv.recognition.applyTo
 import reframecv.ui.context.AppComponentContext
 
 /** Lets the vacancy editor show save progress and failures. */
@@ -16,6 +19,8 @@ interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
     val snapshot: VacancySnapshotComponent
+    val recognition: VacancyRecognitionComponent
+    fun onRecognize()
     val initialVacancy: Vacancy?
     val deleteState: Value<VacancyDeleteState>
     val saveState: Value<VacancySaveState>
@@ -29,7 +34,8 @@ interface VacancyEditorComponent {
         get() = saveState.value == VacancySaveState.Saving ||
             deleteState.value == VacancyDeleteState.Deleting ||
             exportComponent.state.value == VacancyExportState.Exporting ||
-            importComponent.state.value == VacancyImportState.Importing
+            importComponent.state.value == VacancyImportState.Importing ||
+            recognition.state.value == VacancyRecognitionState.Processing
     fun onSave(draft: VacancyDraft)
     fun onDelete()
     fun onClose()
@@ -48,11 +54,38 @@ class DefaultVacancyEditorComponent(
     override val initialVacancy: Vacancy? get() = persistedVacancy
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
-    override val snapshot = DefaultVacancySnapshotComponent(
+    override val snapshot: DefaultVacancySnapshotComponent = DefaultVacancySnapshotComponent(
         componentContext,
         initialVacancy?.id,
         initialVacancy?.vacancyAttachmentId != null,
+        canEdit = { !isBusy },
+        changed = { recognition.onReset() },
     )
+    override val recognition: DefaultVacancyRecognitionComponent =
+        DefaultVacancyRecognitionComponent(
+            componentContext,
+            source = {
+                val state = snapshot.state.value
+                state.selected?.let { RecognitionSource.Selected(it) }
+                    ?: state.record?.let { RecognitionSource.Saved(it) }
+            },
+            recognized = ::applyRecognition,
+            vacancyId = { this.initialVacancy?.id },
+        )
+    override fun onRecognize() {
+        if (isBusy || exportVisible.value || snapshot.state.value.loading) return
+        if (deleteState.value != VacancyDeleteState.Idle) return
+        importComponent.onReset()
+        recognition.onRecognize()
+    }
+    private fun applyRecognition(result: VacancyRecognitionResult) {
+        val current = draft.value
+        val original = current.applyTo(initialVacancy ?: current.toVacancy(0))
+        draft.value =
+            VacancyDraft.fromVacancy(
+                result.applyTo(original),
+            ).copy(snapshotChange = current.snapshotChange)
+    }
     override val saveState = MutableValue(VacancySaveState.Idle)
     override val exportVisible = MutableValue(false)
     override val exportComponent = DefaultVacancyExportComponent(
@@ -68,6 +101,7 @@ class DefaultVacancyEditorComponent(
     override fun onImport() {
         if (initialVacancy == null && !isBusy && !snapshot.state.value.selecting) {
             saveState.value = VacancySaveState.Idle
+            recognition.onReset()
             importComponent.onImport()
         }
     }
@@ -75,6 +109,7 @@ class DefaultVacancyEditorComponent(
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     override fun onDraftChange(draft: VacancyDraft) {
         if (!isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle) {
+            recognition.onReset()
             this.draft.value = draft
         }
     }
@@ -87,7 +122,7 @@ class DefaultVacancyEditorComponent(
 
     private fun requestSave(draft: VacancyDraft, export: Boolean) {
         if (isBusy || exportVisible.value || snapshot.state.value.selecting) return
-        if (draft.title.isNotBlank() && deleteState.value == VacancyDeleteState.Idle) {
+        if (draft.name.isNotBlank() && deleteState.value == VacancyDeleteState.Idle) {
             exportAfterSave = export
             saveState.value = VacancySaveState.Saving
             save(draft.copy(snapshotChange = snapshot.change))
@@ -127,6 +162,10 @@ class DefaultVacancyEditorComponent(
     }
 
     override fun onClose() {
+        if (recognition.state.value == VacancyRecognitionState.Processing) {
+            recognition.onCancel()
+            return
+        }
         if (!isBusy) {
             if (exportVisible.value) {
                 onCloseExport()

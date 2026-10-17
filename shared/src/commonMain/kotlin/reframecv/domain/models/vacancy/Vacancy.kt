@@ -19,4 +19,5 @@ data class Vacancy(
     val responsibilities: List<String> = emptyList(),
     val requirements: List<String> = emptyList(),
     val niceToHave: List<String> = emptyList(),
+    val jobTitle: String = "",
 ) : DomainModel

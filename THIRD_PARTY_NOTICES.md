@@ -21,6 +21,7 @@ Third-party software remains subject to its own license terms. The following tab
 | NetworkNT JSON Schema Validator (tests only) | 2.0.4 | Apache License 2.0 | [NetworkNT license](https://github.com/networknt/json-schema-validator/blob/master/LICENSE) |
 | kotlinx.coroutines | 1.11.0 | Apache License 2.0 | [kotlinx.coroutines license](https://github.com/Kotlin/kotlinx.coroutines/blob/master/LICENSE.txt) |
 | kotlinx-datetime | 0.8.0 compatibility artifact (`0.8.0-0.6.x-compat`) | Apache License 2.0 | [kotlinx-datetime license](https://github.com/Kotlin/kotlinx-datetime/blob/master/LICENSE.txt) |
+| Ktor client and CIO engine | 3.6.0 | Apache License 2.0 | [Ktor license](https://github.com/ktorio/ktor/blob/3.6.0/LICENSE) |
 | Klogging | 0.11.8 | Apache License 2.0 | [Klogging license](https://github.com/klogging/klogging/blob/main/LICENSE.txt) |
 | MVIKotlin | 4.4.0 | Apache License 2.0 | [MVIKotlin license](https://github.com/arkivanov/MVIKotlin/blob/master/LICENSE) |
 | Kotlin Symbol Processing (KSP) | 2.3.12 | Apache License 2.0 | [KSP license](https://github.com/google/ksp/blob/main/LICENSE) |

@@ -19,9 +19,14 @@ import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
+import reframecv.network.RemoteVacancyRecognitionRepository
+import reframecv.network.createDesktopNetworkClient
 import reframecv.photos.DesktopResumePhotoPicker
 import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
+import reframecv.recognition.DesktopVacancyDocumentReader
+import reframecv.recognition.VacancyDocumentReader
+import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.repository.AppSettingsRepository
 import reframecv.repository.CoverLettersRepository
 import reframecv.repository.LocalAppSettingsRepository
@@ -45,11 +50,20 @@ class DefaultApplicationDependencies(
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
     override val vacancyExporter: VacancyExporter = DesktopVacancyExporter(),
     override val vacancyImporter: VacancyImporter = DesktopVacancyImporter(),
+    override val vacancyDocumentReader: VacancyDocumentReader =
+        DesktopVacancyDocumentReader(applicationDataDirectory()),
     override val resumeImporter: ResumeImporter = DesktopResumeImporter(),
     databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
+    private val recognitionRepository =
+        lazy { RemoteVacancyRecognitionRepository(createDesktopNetworkClient()) }
+    override val vacancyRecognitionRepository: VacancyRecognitionRepository
+        get() {
+            check(!closed)
+            return recognitionRepository.value
+        }
     private val repository by lazy {
         LocalProjectsRepository(database.value.projectDao(), snapshotManager, photoManager)
     }
@@ -117,6 +131,7 @@ class DefaultApplicationDependencies(
     override fun close() {
         if (closed) return
         closed = true
+        if (recognitionRepository.isInitialized()) recognitionRepository.value.close()
         if (database.isInitialized()) database.value.close()
     }
 }

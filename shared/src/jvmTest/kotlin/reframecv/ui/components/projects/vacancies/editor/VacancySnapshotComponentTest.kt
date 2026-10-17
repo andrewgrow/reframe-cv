@@ -54,6 +54,9 @@ class VacancySnapshotComponentTest : ComponentTest() {
             assertTrueNoCopies()
             runOnUiThread {
                 editor.snapshot.onRemove()
+                assertEquals(SnapshotChange.Attach(selected), editor.snapshot.change)
+                editor.onSaveCompleted(VacancySaveState.Failed)
+                editor.snapshot.onRemove()
                 assertEquals(SnapshotChange.Keep, editor.snapshot.change)
                 assertNull(editor.snapshot.state.value.selected)
             }

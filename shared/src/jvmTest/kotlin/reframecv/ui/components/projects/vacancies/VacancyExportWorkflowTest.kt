@@ -62,7 +62,7 @@ class VacancyExportWorkflowTest : ComponentTest() {
         val visible = CompletableDeferred<Unit>()
         runOnUiThread {
             editor.exportVisible.subscribe { if (it) visible.complete(Unit) }
-            editor.onDraftChange(editor.draft.value.copy(title = "Updated", company = "Company"))
+            editor.onDraftChange(editor.draft.value.copy(name = "Updated", company = "Company"))
             editor.onExport()
         }
         withTimeout(10_000) {
@@ -86,7 +86,7 @@ class VacancyExportWorkflowTest : ComponentTest() {
             assertEquals(original.requirements, record.requirements)
             runOnUiThread {
                 assertSame(editor, component.editor)
-                assertTrue(editor.draft.value.title == "Updated")
+                assertTrue(editor.draft.value.name == "Updated")
             }
         }
     }

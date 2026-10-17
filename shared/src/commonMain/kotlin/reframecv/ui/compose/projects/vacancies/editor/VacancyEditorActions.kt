@@ -36,7 +36,7 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun VacancyEditorActions(
     component: VacancyEditorComponent,
-    validTitle: Boolean,
+    validName: Boolean,
     isBusy: Boolean,
     deleteState: VacancyDeleteState,
     onSave: () -> Unit,
@@ -60,7 +60,7 @@ internal fun VacancyEditorActions(
             if (!confirming) {
                 VacancyTransferAction(
                     component,
-                    validTitle,
+                    validName,
                     isBusy,
                     creating = !editing,
                 )
@@ -77,7 +77,7 @@ internal fun VacancyEditorActions(
             ) {
                 TextButton(
                     onClick = onSave,
-                    enabled = validTitle && !isBusy && !confirming,
+                    enabled = validName && !isBusy && !confirming,
                     contentPadding = ReframeTheme.tokens.textButtonContentPadding,
                 ) { Text(stringResource(Res.string.action_save)) }
             }
@@ -120,13 +120,13 @@ private fun VacancyDeleteAction(onDelete: () -> Unit, confirming: Boolean, isBus
 @Composable
 private fun VacancyTransferAction(
     component: VacancyEditorComponent,
-    validTitle: Boolean,
+    validName: Boolean,
     isBusy: Boolean,
     creating: Boolean,
 ) {
     TextButton(
         if (creating) component::onImport else component::onExport,
-        enabled = !isBusy && (creating || validTitle),
+        enabled = !isBusy && (creating || validName),
         contentPadding = ReframeTheme.tokens.textButtonContentPadding,
     ) {
         Text(stringResource(if (creating) Res.string.action_import else Res.string.action_export))

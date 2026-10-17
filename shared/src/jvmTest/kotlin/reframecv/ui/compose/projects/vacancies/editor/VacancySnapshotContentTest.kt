@@ -25,7 +25,7 @@ class VacancySnapshotContentTest {
     fun selectingAttachmentHighlightsMissingTitleAndTypingClearsError() = runComposeUiTest {
         val component = TestVacancyEditorComponent()
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithTag("vacancy.title").assert(
+        onNodeWithTag("vacancy.name").assert(
             SemanticsMatcher.keyNotDefined(SemanticsProperties.Error),
         )
         onNodeWithText("Attach source file").performScrollTo()
@@ -34,16 +34,16 @@ class VacancySnapshotContentTest {
                 selected = SelectedAttachment("unused", "job.pdf"),
             )
         }
-        onNodeWithTag("vacancy.title").assertIsFocused().assert(
+        onNodeWithTag("vacancy.name").assertIsFocused().assert(
             SemanticsMatcher.keyIsDefined(SemanticsProperties.Error),
         )
-        onNodeWithText("Enter a title to save the vacancy.").assertExists()
+        onNodeWithText("Enter a name to save the vacancy.").assertExists()
         onNodeWithText("Save").assertIsNotEnabled()
-        onNodeWithTag("vacancy.title").performTextReplacement("   ")
-        onNodeWithText("Enter a title to save the vacancy.").assertExists()
-        onNodeWithTag("vacancy.title").performTextReplacement("Android Developer")
-        onNodeWithText("Enter a title to save the vacancy.").assertDoesNotExist()
-        onNodeWithTag("vacancy.title").assert(
+        onNodeWithTag("vacancy.name").performTextReplacement("   ")
+        onNodeWithText("Enter a name to save the vacancy.").assertExists()
+        onNodeWithTag("vacancy.name").performTextReplacement("Android Developer")
+        onNodeWithText("Enter a name to save the vacancy.").assertDoesNotExist()
+        onNodeWithTag("vacancy.name").assert(
             SemanticsMatcher.keyNotDefined(SemanticsProperties.Error),
         )
         onNodeWithText("Save").assertIsEnabled()
@@ -53,14 +53,14 @@ class VacancySnapshotContentTest {
     fun selectingAttachmentWithValidTitleDoesNotShowError() = runComposeUiTest {
         val component = TestVacancyEditorComponent()
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithTag("vacancy.title").performTextReplacement("Backend")
+        onNodeWithTag("vacancy.name").performTextReplacement("Backend")
         runOnIdle {
             component.snapshot.state.value = VacancySnapshotState(
                 selected = SelectedAttachment("unused", "job.pdf"),
             )
         }
-        onNodeWithText("Enter a title to save the vacancy.").assertDoesNotExist()
-        onNodeWithTag("vacancy.title").assert(
+        onNodeWithText("Enter a name to save the vacancy.").assertDoesNotExist()
+        onNodeWithTag("vacancy.name").assert(
             SemanticsMatcher.keyNotDefined(SemanticsProperties.Error),
         )
         onNodeWithText("Save").assertIsEnabled()

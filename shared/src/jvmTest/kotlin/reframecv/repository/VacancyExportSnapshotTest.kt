@@ -116,7 +116,7 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
                 // Loading/opening shares the snapshot state; wait for completion before exporting.
                 loaded.receive()
                 runOnUiThread {
-                    editor.onDraftChange(editor.draft.value.copy(title = "Updated before export"))
+                    editor.onDraftChange(editor.draft.value.copy(name = "Updated before export"))
                     editor.onExport()
                 }
                 while (!visible.receive()) { /* Await the export save. */ }

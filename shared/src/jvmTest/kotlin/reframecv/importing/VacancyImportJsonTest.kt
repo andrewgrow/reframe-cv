@@ -12,7 +12,8 @@ class VacancyImportJsonTest {
     @Test
     fun exportedVacancyRoundTripsAllPortableFieldsThroughTheDraft() {
         val original = Vacancy(
-            id = 17, projectId = 3, name = "Développeur Kotlin", createdAt = 100, updatedAt = 200,
+            id = 17, projectId = 3, name = "My shortlist",
+            jobTitle = "Développeur Kotlin", createdAt = 100, updatedAt = 200,
             description = "Build apps.\nWrite tests.",
             company = "Example", url = "https://example.com/job",
             keywords = listOf(
@@ -43,7 +44,7 @@ class VacancyImportJsonTest {
     fun ignoresUnknownFieldsAndInvalidValuesWithoutImportingLocalIdentity() {
         val imported = VacancyImportJson.decode(
             """{"formatVersion":1,"unknown":true,"content":{
-            "title":"Developer","company":42,"description":null,"url":false,
+            "name":"My list","jobTitle":"Developer","company":42,"description":null,"url":false,
             "keywords":["Kotlin",42,null,"Compose"],"requirements":"invalid",
             "responsibilities":[{},"Build, ship"],"niceToHave":["German"],
             "id":17,"projectId":9,"vacancyAttachmentId":8,"filePath":"/private/file",
@@ -53,7 +54,8 @@ class VacancyImportJsonTest {
         assertEquals(
             Vacancy(
                 projectId = 0,
-                name = "Developer",
+                name = "My list",
+                jobTitle = "Developer",
                 createdAt = 0,
                 updatedAt = 0,
                 keywords = listOf("Kotlin", "Compose"),
@@ -63,6 +65,22 @@ class VacancyImportJsonTest {
             imported,
         )
         assertEquals("", VacancyImportJson.decode("""{"formatVersion":1,"content":{}}""").name)
+    }
+
+    @Test
+    fun importsLegacyTitleAsNameWithoutOverridingAnExplicitName() {
+        val legacy = VacancyImportJson.decode(
+            """{"formatVersion":1,"content":{"title":"Old name"}}""",
+        )
+        assertEquals("Old name", legacy.name)
+        assertEquals("", legacy.jobTitle)
+        val current = VacancyImportJson.decode(
+            """{"formatVersion":1,"content":{
+            "title":"Legacy","name":"My name","jobTitle":"Backend developer"
+        }}""",
+        )
+        assertEquals("My name", current.name)
+        assertEquals("Backend developer", current.jobTitle)
     }
 
     @Test

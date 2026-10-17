@@ -17,6 +17,11 @@ import reframecv.logging.RecordingApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
 import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotos
+import reframecv.recognition.RecognitionDocument
+import reframecv.recognition.RecognitionError
+import reframecv.recognition.RecognitionOutcome
+import reframecv.recognition.VacancyDocumentReader
+import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
@@ -30,6 +35,12 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val logger = RecordingApplicationLogger()
     override val attachmentStorage = TestAttachmentStorage()
     override val attachmentPicker = AttachmentPicker { null }
+    override val vacancyDocumentReader =
+        VacancyDocumentReader { RecognitionDocument("job.pdf", "%PDF-1.7".encodeToByteArray()) }
+    override val vacancyRecognitionRepository = object : VacancyRecognitionRepository {
+        override suspend fun recognize(document: RecognitionDocument) =
+            RecognitionOutcome.Failed(RecognitionError.NotConfigured)
+    }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val vacancyImporter = VacancyImporter { null }

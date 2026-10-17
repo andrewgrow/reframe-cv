@@ -41,6 +41,8 @@ class DefaultVacancySnapshotComponent(
     componentContext: AppComponentContext,
     private var vacancyId: Long?,
     private var hasSnapshot: Boolean,
+    private val canEdit: () -> Boolean = { true },
+    private val changed: () -> Unit = {},
 ) : VacancySnapshotComponent {
     private val dependencies = componentContext.dependencies
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -53,18 +55,23 @@ class DefaultVacancySnapshotComponent(
         if (hasSnapshot) onRetry()
     }
 
-    override fun onAttach() = runOperation("Select snapshot file", selecting = true) {
-        val selection = dependencies.attachmentPicker.pick()
-        if (selection != null) {
-            change = SnapshotChange.Attach(selection)
-            state.value = VacancySnapshotState(selected = selection)
+    override fun onAttach() {
+        if (!canEdit()) return
+        runOperation("Select snapshot file", selecting = true) {
+            val selection = dependencies.attachmentPicker.pick()
+            if (selection != null) {
+                change = SnapshotChange.Attach(selection)
+                state.value = VacancySnapshotState(selected = selection)
+                changed()
+            }
         }
     }
 
     override fun onRemove() {
-        if (!state.value.loading) {
+        if (!state.value.loading && canEdit()) {
             change = if (hasSnapshot) SnapshotChange.Remove else SnapshotChange.Keep
             state.value = VacancySnapshotState()
+            changed()
             dependencies.eventHistory.record("VacancySnapshot Remove(vacancyId=$vacancyId)")
         }
     }

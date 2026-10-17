@@ -27,16 +27,18 @@ import reframecv.ui.theme.ReframeTheme
 @OptIn(ExperimentalTestApi::class)
 class VacancyEditorContentTest {
     @Test
-    fun requiresTitleAndSubmitsAllFieldsWithEnter() = runComposeUiTest {
+    fun requiresNameAndSubmitsBothNamesWithEnter() = runComposeUiTest {
         val drafts = mutableListOf<VacancyDraft>()
         val component = TestVacancyEditorComponent(save = { drafts += it })
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithTag("vacancy.title").assertIsFocused()
+        onNodeWithTag("vacancy.name").assertIsFocused()
         onNodeWithText("Save").assertIsNotEnabled()
-        onNodeWithTag("vacancy.title").performTextReplacement("   ")
-        onNodeWithTag("vacancy.title").performImeAction()
+        onNodeWithTag("vacancy.name").performTextReplacement("   ")
+        onNodeWithTag("vacancy.name").performImeAction()
         assertEquals(emptyList(), drafts)
-        onNodeWithTag("vacancy.title").performTextReplacement("Android Developer")
+        onNodeWithTag("vacancy.jobTitle").performTextReplacement("Senior Android Developer")
+        onNodeWithText("Save").assertIsNotEnabled()
+        onNodeWithTag("vacancy.name").performTextReplacement("Android Developer")
         onNodeWithTag("vacancy.company").performTextReplacement("Example")
         onNodeWithTag("vacancy.description").performTextReplacement("Job description\nRequirements")
         onNodeWithTag("vacancy.url").performScrollTo().performTextReplacement("https://example.com")
@@ -52,6 +54,7 @@ class VacancyEditorContentTest {
                     "Job description\nRequirements",
                     "https://example.com",
                     "Kotlin, Android",
+                    jobTitle = "Senior Android Developer",
                 ),
             ),
             drafts,
@@ -64,18 +67,18 @@ class VacancyEditorContentTest {
         var saves = 0
         val component = TestVacancyEditorComponent(save = { saves++ }, close = { closes++ })
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithTag("vacancy.title").performTextReplacement("Backend")
+        onNodeWithTag("vacancy.name").performTextReplacement("Backend")
         onNodeWithText("Save").performClick()
         assertEquals(1, saves)
         runOnIdle { component.saveState.value = VacancySaveState.Failed }
         onNodeWithText("Could not save the vacancy. Please try again.").performScrollTo()
-        onNodeWithTag("vacancy.title").performScrollTo()
+        onNodeWithTag("vacancy.name").performScrollTo()
         onNodeWithText("Backend").assertExists()
         onNodeWithText("Save").assertIsEnabled()
         runOnIdle { component.saveState.value = VacancySaveState.Saving }
         onNodeWithText("Save").assertIsNotEnabled()
         onNodeWithText("Cancel").assertIsNotEnabled()
-        onNodeWithTag("vacancy.title").assertIsNotEnabled()
+        onNodeWithTag("vacancy.name").assertIsNotEnabled()
         runOnIdle { component.saveState.value = VacancySaveState.Idle }
         onNodeWithText("Cancel").performClick()
         assertEquals(1, closes)
@@ -84,7 +87,8 @@ class VacancyEditorContentTest {
     @Test
     fun editingPrefillsFieldsAndCancelDoesNotSubmitChanges() = runComposeUiTest {
         val original = Vacancy(
-            id = 7, projectId = 1, name = "Backend", company = "Example",
+            id = 7, projectId = 1, name = "Backend", jobTitle = "Senior Backend Developer",
+            company = "Example",
             description = "Job description", url = "https://example.com",
             keywords = listOf(
                 "Kotlin",
@@ -102,11 +106,12 @@ class VacancyEditorContentTest {
         setContent { ReframeTheme { VacancyEditorContent(component) } }
         onNodeWithText("Edit vacancy").assertExists()
         onNodeWithText("Backend").assertExists()
+        onNodeWithText("Senior Backend Developer").assertExists()
         onNodeWithText("Example").assertExists()
         onNodeWithText("Job description").assertExists()
         onNodeWithText("https://example.com").assertExists()
         onNodeWithText("Kotlin, Java").assertExists()
-        onNodeWithTag("vacancy.title").assertIsFocused().performTextReplacement("Changed")
+        onNodeWithTag("vacancy.name").assertIsFocused().performTextReplacement("Changed")
         onNodeWithText("Cancel").performClick()
         assertEquals(1, closes)
         assertEquals(emptyList(), saved)

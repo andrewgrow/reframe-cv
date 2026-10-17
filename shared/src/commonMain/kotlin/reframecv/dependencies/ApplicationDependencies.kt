@@ -10,6 +10,8 @@ import reframecv.importing.VacancyImporter
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.photos.ResumePhotos
+import reframecv.recognition.VacancyDocumentReader
+import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.repository.AppSettingsRepository
 import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ProjectsRepository
@@ -23,6 +25,8 @@ interface ApplicationDependencies {
     val logger: ApplicationLogger
     val attachmentStorage: AttachmentStorage
     val attachmentPicker: AttachmentPicker
+    val vacancyDocumentReader: VacancyDocumentReader
+    val vacancyRecognitionRepository: VacancyRecognitionRepository
     val vacancyExporter: VacancyExporter
     val resumeExporter: ResumeExporter
     val vacancyImporter: VacancyImporter

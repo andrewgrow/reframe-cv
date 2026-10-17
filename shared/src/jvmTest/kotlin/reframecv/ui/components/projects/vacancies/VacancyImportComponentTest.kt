@@ -62,7 +62,7 @@ class VacancyImportComponentTest : ComponentTest() {
             component.onSave(VacancyDraft("Blocked"))
             component.onDraftChange(VacancyDraft("Blocked"))
             component.onClose()
-            assertEquals("Keep", component.draft.value.title)
+            assertEquals("Keep", component.draft.value.name)
             assertEquals(0, saves)
             assertEquals(0, closes)
         }
@@ -108,12 +108,12 @@ class VacancyImportComponentTest : ComponentTest() {
             assertSame(error, logged.error)
             assertEquals("Import vacancy from JSON", logged.operation)
             runOnUiThread {
-                assertEquals("Keep", component.draft.value.title)
+                assertEquals("Keep", component.draft.value.name)
                 component.onImport()
             }
             while (states.receive() != VacancyImportState.Idle) { /* Await cancellation. */ }
             runOnUiThread {
-                assertEquals("Keep", component.draft.value.title)
+                assertEquals("Keep", component.draft.value.name)
                 component.onImport()
             }
             while (states.receive() != VacancyImportState.Imported) { /* Await retry. */ }

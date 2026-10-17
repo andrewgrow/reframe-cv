@@ -27,7 +27,7 @@ class VacancyDeleteContentTest {
         val component =
             TestVacancyEditorComponent(initialVacancy = vacancy(), delete = { deletions++ })
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithTag("vacancy.title").performTextReplacement("")
+        onNodeWithTag("vacancy.name").performTextReplacement("")
         val delete = onNodeWithText("Delete").fetchSemanticsNode().boundsInRoot
         val cancel = onNodeWithText("Cancel").fetchSemanticsNode().boundsInRoot
         kotlin.test.assertTrue(delete.right < cancel.left)
@@ -50,7 +50,7 @@ class VacancyDeleteContentTest {
         runOnIdle { component.deleteState.value = VacancyDeleteState.Deleting }
         onNodeWithText("Yes, delete this").assertIsNotEnabled()
         onNodeWithText("Cancel").assertIsNotEnabled()
-        onNodeWithTag("vacancy.title").assertIsNotEnabled()
+        onNodeWithTag("vacancy.name").assertIsNotEnabled()
         runOnIdle { component.deleteState.value = VacancyDeleteState.Failed }
         onNodeWithText("Could not delete the vacancy. Please try again.").assertIsDisplayed()
         onNodeWithText("Yes, delete this").assertIsEnabled()

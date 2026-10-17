@@ -29,3 +29,6 @@ dependencyResolutionManagement {
 
 include(":desktopApp")
 include(":shared")
+
+include(":recognition-api")
+include(":network")

@@ -15,6 +15,8 @@ A local desktop application for managing resumes, vacancies, and cover letters w
 This is a Kotlin Multiplatform project currently targeting Desktop (JVM).
 
 - `desktopApp`: desktop entry point, window lifecycle, resources, and packaging.
+- `recognition-api`: provider-independent recognition contracts and JSON response types.
+- `network`: Ktor client configuration, platform engines, and remote recognition integration.
 - `shared/src/commonMain`: domain models, repository contracts, components, and Compose UI.
 - `shared/src/jvmMain`: desktop database, filesystem, native pickers, and image processing.
 - `shared/src/commonTest` and `shared/src/jvmTest`: fixtures, behavior tests, and screenshot tests.
@@ -123,7 +125,7 @@ Generated sources are excluded. Run formatting before analysis rather than concu
 ./gradlew allTests :koverHtmlReport :koverXmlReport :koverVerify --no-parallel
 ```
 
-Kover combines `shared` and `desktopApp`; the minimum is 75% line coverage.
+Kover combines `shared`, `desktopApp`, `recognition-api`, and `network`; the minimum is 75% line coverage.
 Generated Room implementations and Compose resources are excluded.
 
 - HTML: `build/reports/kover/html/index.html`.

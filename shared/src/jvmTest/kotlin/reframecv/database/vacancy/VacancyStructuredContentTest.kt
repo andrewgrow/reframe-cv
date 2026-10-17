@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.recognition.VacancyRecognitionJson
+import reframecv.recognition.applyTo
 import reframecv.recognition.recognitionFixture
 import reframecv.repository.LocalVacanciesRepository
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
@@ -25,15 +26,19 @@ class VacancyStructuredContentTest : WorkspaceDatabaseTest() {
         val reopened = LocalVacanciesRepository(database.vacancyDao())
         val saved = reopened.observeVacancies(projectId).first().single()
         assertEquals(id, saved.id)
+        assertEquals(recognized.name, saved.name)
+        assertEquals(recognized.jobTitle, saved.jobTitle)
+        assertEquals(recognized.url, saved.url)
         assertEquals(recognized.responsibilities, saved.responsibilities)
         assertEquals(recognized.requirements, saved.requirements)
         assertEquals(recognized.niceToHave, saved.niceToHave)
         assertEquals(recognized.company, saved.company)
         assertEquals(listOf(saved), reopened.search(projectId, " KOTLIN "))
-        val draft = VacancyDraft.fromVacancy(saved).copy(title = "Edited")
+        val draft = VacancyDraft.fromVacancy(saved).copy(name = "Edited")
         reopened.update(draft.applyTo(saved))
         val edited = reopened.observeVacancies(projectId).first().single()
         assertEquals("Edited", edited.name)
+        assertEquals(saved.jobTitle, edited.jobTitle)
         assertEquals(saved.responsibilities, edited.responsibilities)
         assertEquals(saved.requirements, edited.requirements)
         assertEquals(saved.niceToHave, edited.niceToHave)

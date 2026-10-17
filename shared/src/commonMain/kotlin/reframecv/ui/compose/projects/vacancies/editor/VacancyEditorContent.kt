@@ -3,6 +3,7 @@ package reframecv.ui.compose.projects.vacancies.editor
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,11 +21,12 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
-import reframecv.shared.generated.resources.vacancy_title_required
+import reframecv.shared.generated.resources.vacancy_name_required
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
 import reframecv.ui.components.projects.vacancies.editor.VacancyImportState
+import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionState
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
@@ -38,74 +40,122 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     val exportState by component.exportComponent.state.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
-    val snapshot by component.snapshot.state.subscribeAsState()
-    val draft by component.draft.subscribeAsState()
+    val recognitionState by component.recognition.state.subscribeAsState()
     val importState by component.importComponent.state.subscribeAsState()
+    val parsing = recognitionState == VacancyRecognitionState.Processing
     val isBusy = saveState == VacancySaveState.Saving ||
         deleteState == VacancyDeleteState.Deleting || exportState == VacancyExportState.Exporting ||
-        importState == VacancyImportState.Importing
+        importState == VacancyImportState.Importing || parsing
     val confirming = deleteState != VacancyDeleteState.Idle
-    val titleError = vacancyTitleError(snapshot.selected != null, draft.title)
-    val save = { if (!confirming && !isBusy && !snapshot.selecting) component.onSave(draft) }
+    val save = {
+        if (!confirming && !isBusy && !component.snapshot.state.value.selecting) {
+            component.onSave(component.draft.value)
+        }
+    }
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
             Modifier.testTag(VACANCY_EDITOR_TAG).fillMaxSize()
                 .background(MaterialTheme.colorScheme.background).safeContentPadding()
-                .pageBackHandler(component::onClose, enabled = !isBusy && !exportVisible),
-        ) {
-            Column(
-                Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
-                verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
-            ) {
-                PageHeader(
-                    vacancyEditorTitle(component),
+                .pageBackHandler(
                     component::onClose,
-                    enabled = !isBusy,
-                )
-                VacancyEditorFields(
-                    draft,
-                    component::onDraftChange,
-                    saveState,
-                    save,
-                    !isBusy && !confirming,
-                    titleError,
-                ) {
-                    VacancySnapshotContent(component.snapshot, enabled = !isBusy && !confirming)
-                }
-            }
+                    enabled =
+                        (!isBusy || parsing) && !exportVisible,
+                ),
+        ) {
+            VacancyEditorBody(
+                component,
+                saveState,
+                save,
+                enabled = !isBusy && !confirming,
+                backEnabled = !isBusy || parsing,
+                editing = component.initialVacancy != null,
+            )
             HorizontalDivider()
-            Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
-                VacancyImportFeedback(importState)
-                VacancyEditorActions(
-                    component,
-                    draft.title.isNotBlank() && !snapshot.selecting,
-                    isBusy,
-                    deleteState,
-                    save,
-                    editing = component.initialVacancy != null,
-                )
-            }
+            VacancyEditorFooter(
+                component,
+                isBusy,
+                deleteState,
+                save,
+                editing =
+                    component.initialVacancy != null,
+            )
         }
         if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)
     }
 }
 
 @Composable
-private fun vacancyTitleError(hasAttachment: Boolean, title: String): String? = if (hasAttachment &&
-    title.isBlank()
+private fun vacancyNameError(hasAttachment: Boolean, name: String): String? = if (hasAttachment &&
+    name.isBlank()
 ) {
-    stringResource(Res.string.vacancy_title_required)
+    stringResource(Res.string.vacancy_name_required)
 } else {
     null
 }
 
 @Composable
-private fun vacancyEditorTitle(component: VacancyEditorComponent) = stringResource(
-    if (component.initialVacancy ==
-        null
-    ) {
+private fun vacancyEditorTitle(editing: Boolean) = stringResource(
+    if (!editing) {
         Res.string.vacancy_editor_title
     } else {
         Res.string.vacancy_editor_edit_title
     },
 )
+
+@Composable
+private fun VacancyEditorFooter(
+    component: VacancyEditorComponent,
+    isBusy: Boolean,
+    deleteState: VacancyDeleteState,
+    save: () -> Unit,
+    editing: Boolean,
+) {
+    val importState by component.importComponent.state.subscribeAsState()
+    val draft by component.draft.subscribeAsState()
+    val snapshot by component.snapshot.state.subscribeAsState()
+    Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
+        VacancyImportFeedback(importState)
+        VacancyEditorActions(
+            component,
+            draft.name.isNotBlank() && !snapshot.selecting,
+            isBusy,
+            deleteState,
+            save,
+            editing,
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.VacancyEditorBody(
+    component: VacancyEditorComponent,
+    saveState: VacancySaveState,
+    save: () -> Unit,
+    enabled: Boolean,
+    backEnabled: Boolean,
+    editing: Boolean,
+) {
+    val snapshot by component.snapshot.state.subscribeAsState()
+    val draft by component.draft.subscribeAsState()
+    Column(
+        Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
+        verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
+    ) {
+        PageHeader(vacancyEditorTitle(editing), component::onClose, enabled = backEnabled)
+        VacancyEditorFields(
+            draft,
+            component::onDraftChange,
+            saveState,
+            save,
+            enabled,
+            vacancyNameError(snapshot.selected != null, draft.name),
+        ) {
+            VacancySnapshotContent(
+                component.snapshot,
+                enabled = enabled,
+                recognition = component.recognition,
+                onRecognize = component::onRecognize,
+            )
+        }
+    }
+}

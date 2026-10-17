@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "0aed741e4cdd6e8abe914254167bcdbf",
+    "identityHash": "1da24ca5d027b39414cfd6da9f4a0b7e",
     "entities": [
       {
         "tableName": "app_settings",
@@ -501,7 +501,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -586,6 +586,13 @@
             "affinity": "TEXT",
             "notNull": true,
             "defaultValue": "'[]'"
+          },
+          {
+            "fieldPath": "jobTitle",
+            "columnName": "job_title",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
           }
         ],
         "primaryKey": {
@@ -743,7 +750,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0aed741e4cdd6e8abe914254167bcdbf')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '1da24ca5d027b39414cfd6da9f4a0b7e')"
     ]
   }
 }

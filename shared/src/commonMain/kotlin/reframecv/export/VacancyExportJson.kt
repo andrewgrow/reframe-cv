@@ -7,7 +7,8 @@ import reframecv.domain.models.vacancy.Vacancy
 /** Describes portable vacancy content independently of local IDs and source files. */
 @Serializable
 internal data class VacancyExportContent(
-    val title: String,
+    val name: String,
+    val jobTitle: String,
     val company: String,
     val description: String,
     val url: String,
@@ -27,6 +28,7 @@ internal object VacancyExportJson {
     fun encode(vacancy: Vacancy): String {
         val content = VacancyExportContent(
             vacancy.name,
+            vacancy.jobTitle,
             vacancy.company,
             vacancy.description,
             vacancy.url,

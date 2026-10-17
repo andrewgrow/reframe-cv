@@ -20,7 +20,8 @@ internal object VacancyImportJson {
         require(content != null) { "Vacancy document must contain a content object" }
         return Vacancy(
             projectId = 0, createdAt = 0, updatedAt = 0,
-            name = content.text("title"), company = content.text("company"),
+            name = if ("name" in content) content.text("name") else content.text("title"),
+            jobTitle = content.text("jobTitle"), company = content.text("company"),
             description = content.text("description"), url = content.text("url"),
             keywords = content.strings("keywords"),
             responsibilities = content.strings("responsibilities"),

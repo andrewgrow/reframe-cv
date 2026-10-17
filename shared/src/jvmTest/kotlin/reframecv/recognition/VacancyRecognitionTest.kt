@@ -22,7 +22,9 @@ class VacancyRecognitionTest {
         val result = VacancyRecognitionJson.decode(recognitionFixture())
         assertEquals(
             original.copy(
-                name = "Mobile developer",
+                jobTitle = "Mobile developer",
+                company = "Recognized company",
+                url = "https://example.com/recognized",
                 description = "Build mobile apps",
                 keywords = listOf("Kotlin", "Android"),
                 responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
@@ -48,7 +50,7 @@ class VacancyRecognitionTest {
     }
 
     @Test
-    fun failuresAndUntitledSuccessCannotBecomeSavedVacancyContent() {
+    fun failuresCannotBeAppliedAndUnknownTitlesClearThePositionOnly() {
         listOf(400, 500).forEach { status ->
             val result = VacancyRecognitionJson.decode(
                 recognitionFixture("statusCode" to JsonPrimitive(status), "jobTitle" to JsonNull),
@@ -57,7 +59,12 @@ class VacancyRecognitionTest {
         }
         listOf(JsonNull, JsonPrimitive("  ")).forEach { title ->
             val result = VacancyRecognitionJson.decode(recognitionFixture("jobTitle" to title))
-            assertFailsWith<IllegalArgumentException> { result.applyTo(emptyVacancy()) }
+            val updated = result.applyTo(
+                emptyVacancy().copy(name = "My label", jobTitle = "Old title"),
+            )
+            assertEquals("", updated.jobTitle)
+            assertEquals("My label", updated.name)
+            assertEquals("", result.applyTo(emptyVacancy()).name)
         }
     }
 
@@ -71,6 +78,8 @@ class VacancyRecognitionTest {
             recognitionFixture("requirements" to JsonArray(listOf(JsonPrimitive(42)))),
             recognitionFixture("status" to JsonPrimitive(42)),
             recognitionFixture("jobTitle" to JsonPrimitive(false)),
+            recognitionFixture("company" to JsonPrimitive(42)),
+            recognitionFixture("url" to JsonPrimitive(false)),
             recognitionFixture("nice_to_have" to JsonPrimitive(42)),
         )
         values.forEach { value ->
@@ -78,6 +87,54 @@ class VacancyRecognitionTest {
                 VacancyRecognitionJson.decode(value)
             }
         }
+    }
+
+    @Test
+    fun preservesUserNameAndUsesRecognizedTitleOnlyForAnEmptyName() {
+        val result = VacancyRecognitionJson.decode(recognitionFixture())
+        assertEquals(
+            "My shortlist",
+            result.applyTo(emptyVacancy().copy(name = "My shortlist")).name,
+        )
+        assertEquals("Mobile developer", result.applyTo(emptyVacancy()).name)
+        assertEquals("Mobile developer", result.applyTo(emptyVacancy().copy(name = "  ")).name)
+    }
+
+    @Test
+    fun absentRecognizedContentClearsPreviousFieldsWithoutTouchingUserMetadata() {
+        val result = VacancyRecognitionJson.decode(
+            recognitionFixture(
+                "company" to JsonNull,
+                "url" to JsonNull,
+                "jobDescription" to JsonNull,
+                "keywords" to JsonArray(emptyList()),
+                "responsibilities" to JsonArray(emptyList()),
+                "requirements" to JsonArray(emptyList()),
+                "nice_to_have" to JsonNull,
+            ),
+        )
+        val original = emptyVacancy().copy(
+            id = 5, name = "Keep my name", jobTitle = "Old position", company = "Old company",
+            url = "https://old.example", description = "Old description", keywords = listOf("Old"),
+            responsibilities = listOf(
+                "Old",
+            ),
+            requirements = listOf("Old"), niceToHave = listOf("Old"),
+            resumeId = 6, coverLetterId = 7, vacancyAttachmentId = 8,
+        )
+        assertEquals(
+            original.copy(
+                jobTitle = "Mobile developer",
+                company = "",
+                url = "",
+                description = "",
+                keywords = emptyList(),
+                responsibilities = emptyList(),
+                requirements = emptyList(),
+                niceToHave = emptyList(),
+            ),
+            result.applyTo(original),
+        )
     }
 
     private fun emptyVacancy() = Vacancy(projectId = 3, name = "", createdAt = 0, updatedAt = 0)
@@ -90,6 +147,7 @@ internal fun recognitionFixture(
         """{
           "statusCode":200,"status":"OK","statusDetails":"Recognized",
           "jobTitle":" Mobile developer ","jobDescription":" Build mobile apps ",
+          "company":" Recognized company ","url":" https://example.com/recognized ",
           "keywords":[" Kotlin ",null,"kotlin","", "Android"],
           "responsibilities":[" Build apps, APIs ",null,"Work with teams\nReview code"],
           "requirements":[" Kotlin ","Kotlin", ""],"nice_to_have":[" CI/CD "]

@@ -19,11 +19,15 @@ class TestVacancyEditorComponent(
     override fun onImport() {
         if (initialVacancy == null && !isBusy) importComponent.onImport()
     }
+    override val recognition = TestVacancyRecognitionComponent()
+    override fun onRecognize() {
+        if (!isBusy) recognition.onRecognize()
+    }
     override val snapshot = TestVacancySnapshotComponent()
     override val exportVisible = MutableValue(false)
     override val exportComponent = TestVacancyExportComponent { onCloseExport() }
     override fun onExport() {
-        if (initialVacancy != null && !isBusy && draft.value.title.isNotBlank()) {
+        if (initialVacancy != null && !isBusy && draft.value.name.isNotBlank()) {
             save(draft.value)
             exportVisible.value = true
         }
@@ -47,6 +51,10 @@ class TestVacancyEditorComponent(
         }
     }
     override fun onClose() {
+        if (recognition.state.value == VacancyRecognitionState.Processing) {
+            recognition.onCancel()
+            return
+        }
         if (isBusy) {
             return
         }

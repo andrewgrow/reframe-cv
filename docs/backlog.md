@@ -22,9 +22,10 @@ belong in the [README](../README.md).
 ## Vacancy sources
 
 - [ ] Add editing controls for responsibilities, requirements, and nice-to-have lists.
-- [ ] Define review/application of recognition results to a vacancy draft.
+- [ ] Decide whether recognition should offer a preview/diff before replacing draft fields.
 - [ ] Define URL-to-snapshot fetching, supported formats, and failure/cancellation behavior.
-- [ ] Define source parsing separately from fetching, including supported inputs and mapping.
+- [ ] Select a PDF recognition provider; define authentication, upload/response protocol, limits, and real request cancellation.
+- [ ] Consider parsing additional source formats after the PDF integration.
 
 ## Print and PDF export
 

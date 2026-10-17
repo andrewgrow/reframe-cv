@@ -14,6 +14,8 @@
     "statusDetails": { "type": "string", "description": "Explanation of the processing result." },
     "jobTitle": { "type": ["string", "null"] },
     "jobDescription": { "type": ["string", "null"] },
+    "company": { "type": ["string", "null"] },
+    "url": { "type": ["string", "null"] },
     "keywords": { "$ref": "#/$defs/RecognizedItems" },
     "responsibilities": { "$ref": "#/$defs/RecognizedItems" },
     "requirements": { "$ref": "#/$defs/RecognizedItems" },
@@ -25,7 +27,7 @@
       ]
     }
   },
-  "required": ["statusCode", "status", "statusDetails", "jobTitle", "jobDescription", "keywords", "responsibilities", "requirements", "nice_to_have"],
+  "required": ["statusCode", "status", "statusDetails", "jobTitle", "jobDescription", "company", "url", "keywords", "responsibilities", "requirements", "nice_to_have"],
   "additionalProperties": false,
   "$defs": {
     "RecognizedItems": {
