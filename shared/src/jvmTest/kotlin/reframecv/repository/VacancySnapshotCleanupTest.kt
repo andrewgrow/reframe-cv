@@ -21,7 +21,12 @@ class VacancySnapshotCleanupTest : WorkspaceDatabaseTest() {
     private fun manager(
         storage: AttachmentStorage,
         logger: ApplicationLogger = ApplicationLogger.None,
-    ) = VacancySnapshotManager(database.vacancyDao(), database.importRecordDao(), storage, logger)
+    ) = VacancySnapshotManager(
+        database.vacancyDao(),
+        database.vacancyAttachmentDao(),
+        storage,
+        logger,
+    )
 
     @Test
     fun cleanupCannotRemoveFileBeforeItsTransactionCommits() = runBlocking {
@@ -69,7 +74,7 @@ class VacancySnapshotCleanupTest : WorkspaceDatabaseTest() {
         )
         assertNotNull(snapshots.snapshot(id))
         snapshots.delete(id, 500)
-        assertEquals(0, database.importRecordDao().filePaths().size)
+        assertEquals(0, database.vacancyAttachmentDao().filePaths().size)
         assertEquals(1, files.files.size)
         assertEquals(listOf("Remove unused snapshot file"), failures)
         manager(files).cleanup()

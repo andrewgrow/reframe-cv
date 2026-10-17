@@ -116,7 +116,15 @@ class DefaultVacanciesComponent(
                 when (label) {
                     VacanciesLabel.Saving -> editor?.saveState?.value = VacancySaveState.Saving
 
-                    VacanciesLabel.Saved, VacanciesLabel.Deleted -> editorNavigation.pop()
+                    VacanciesLabel.Saved -> {
+                        if (editor?.onSaveCompleted(VacancySaveState.Idle) !=
+                            true
+                        ) {
+                            editorNavigation.pop()
+                        }
+                    }
+
+                    VacanciesLabel.Deleted -> editorNavigation.pop()
 
                     VacanciesLabel.Deleting ->
                         editor?.deleteState?.value =
@@ -126,7 +134,7 @@ class DefaultVacanciesComponent(
                         editor?.deleteState?.value =
                             VacancyDeleteState.Failed
 
-                    VacanciesLabel.SaveFailed -> editor?.saveState?.value = VacancySaveState.Failed
+                    VacanciesLabel.SaveFailed -> editor?.onSaveCompleted(VacancySaveState.Failed)
                 }
             },
         )

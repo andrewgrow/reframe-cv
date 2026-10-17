@@ -1,16 +1,14 @@
 package reframecv.attachments
 
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 
 /** Combines saved snapshot metadata with the current availability of its file. */
-data class SnapshotInfo(val record: ImportRecord, val status: AttachmentStatus?)
+data class SnapshotInfo(val record: VacancyAttachment, val status: AttachmentStatus)
 
-fun ImportRecord.storedAttachment(): StoredAttachment? = filePath?.let {
-    StoredAttachment(
-        it,
-        checkNotNull(fileName),
-        checkNotNull(mediaType),
-        checkNotNull(fileSize),
-        checkNotNull(sha256),
-    )
-}
+fun VacancyAttachment.storedAttachment() = StoredAttachment(
+    filePath,
+    fileName,
+    mediaType,
+    fileSize,
+    sha256,
+)

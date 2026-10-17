@@ -27,26 +27,26 @@ interface ProjectDao : ProjectQueries {
     @Query(
         "WITH RECURSIVE subtree(id) AS (SELECT id FROM projects WHERE id = :id UNION " +
             "SELECT projects.id FROM projects JOIN subtree ON projects.parent_id = subtree.id) " +
-            "SELECT DISTINCT import_record_id FROM vacancies WHERE project_id IN " +
-            "(SELECT id FROM subtree) AND import_record_id IS NOT NULL",
+            "SELECT DISTINCT vacancy_attachment_id FROM vacancies WHERE project_id IN " +
+            "(SELECT id FROM subtree) AND vacancy_attachment_id IS NOT NULL",
     )
-    suspend fun subtreeImportIds(id: Long): List<Long>
+    suspend fun subtreeAttachmentIds(id: Long): List<Long>
 
     @Query("DELETE FROM projects WHERE id = :id")
     suspend fun deleteEntity(id: Long): Int
 
     @Query(
-        "DELETE FROM import_records WHERE id = :id AND NOT EXISTS " +
-            "(SELECT 1 FROM vacancies WHERE import_record_id = :id)",
+        "DELETE FROM vacancy_attachments WHERE id = :id AND NOT EXISTS " +
+            "(SELECT 1 FROM vacancies WHERE vacancy_attachment_id = :id)",
     )
-    suspend fun deleteUnusedImportRecord(id: Long)
+    suspend fun deleteUnusedVacancyAttachment(id: Long)
 
     @Transaction
     suspend fun deleteSubtree(id: Long): Int {
         val parentId = findById(id)?.parentId
-        val sourceIds = subtreeImportIds(id)
+        val sourceIds = subtreeAttachmentIds(id)
         val changed = deleteEntity(id)
-        sourceIds.forEach { deleteUnusedImportRecord(it) }
+        sourceIds.forEach { deleteUnusedVacancyAttachment(it) }
         if (changed > 0) parentId?.let { resetEmptyContainer(it, nowMillis()) }
         return changed
     }

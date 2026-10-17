@@ -13,9 +13,10 @@ fun interface ExportDestinationPicker {
 }
 
 /** Opens the native desktop save dialog with the generated JSON filename. */
-class DesktopExportDestinationPicker : ExportDestinationPicker {
+class DesktopExportDestinationPicker(private val title: String = "Export resume") :
+    ExportDestinationPicker {
     override suspend fun pick(fileName: String): String? = withContext(Dispatchers.Swing) {
-        val dialog = FileDialog(null as Frame?, "Export resume", FileDialog.SAVE)
+        val dialog = FileDialog(null as Frame?, title, FileDialog.SAVE)
         try {
             dialog.file = fileName
             dialog.isVisible = true

@@ -13,7 +13,7 @@ import reframecv.attachments.SelectedAttachment
 import reframecv.attachments.SnapshotChange
 import reframecv.attachments.SnapshotInfo
 import reframecv.dependencies.ApplicationDependencies
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 import reframecv.repository.VacanciesRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.context.DefaultAppComponentContext
@@ -62,9 +62,12 @@ class VacancySnapshotComponentTest : ComponentTest() {
 
     @Test
     fun missingSnapshotKeepsMetadataAndRemoveIsPendingUntilSave() = runBlocking {
-        val original = ImportRecord(
+        val original = VacancyAttachment(
             id = 9,
-            provider = "file",
+            filePath = "attachments/source.pdf",
+            mediaType = "application/pdf",
+            fileSize = 100,
+            sha256 = "hash",
             createdAt = 100,
             fileName = "missing.pdf",
         )

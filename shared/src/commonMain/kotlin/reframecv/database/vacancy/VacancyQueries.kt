@@ -5,12 +5,12 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
-import reframecv.database.importrecord.ImportRecordEntity
+import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 
 /** Provides SQL queries for vacancy records, keywords, and unused snapshots. */
 interface VacancyQueries {
     @Insert
-    suspend fun insertSnapshot(entity: ImportRecordEntity): Long
+    suspend fun insertSnapshot(entity: VacancyAttachmentEntity): Long
 
     @Insert
     suspend fun insertEntity(entity: VacancyEntity): Long
@@ -58,8 +58,8 @@ interface VacancyQueries {
     suspend fun deleteEntity(id: Long): Int
 
     @Query(
-        "DELETE FROM import_records WHERE id = :id AND NOT EXISTS " +
-            "(SELECT 1 FROM vacancies WHERE import_record_id = :id)",
+        "DELETE FROM vacancy_attachments WHERE id = :id AND NOT EXISTS " +
+            "(SELECT 1 FROM vacancies WHERE vacancy_attachment_id = :id)",
     )
-    suspend fun deleteUnusedImportRecord(id: Long): Int
+    suspend fun deleteUnusedVacancyAttachment(id: Long): Int
 }

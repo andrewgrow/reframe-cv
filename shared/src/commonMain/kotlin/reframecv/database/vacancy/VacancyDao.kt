@@ -2,7 +2,7 @@ package reframecv.database.vacancy
 
 import androidx.room3.Dao
 import androidx.room3.Transaction
-import reframecv.database.importrecord.ImportRecordEntity
+import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.vacancy.Vacancy
@@ -36,25 +36,25 @@ interface VacancyDao :
     }
 
     @Transaction
-    suspend fun createWithSnapshot(record: Vacancy, snapshot: ImportRecordEntity?): Long {
-        val sourceId = snapshot?.let { insertSnapshot(it) } ?: record.importRecordId
-        return create(record.copy(importRecordId = sourceId))
+    suspend fun createWithSnapshot(record: Vacancy, snapshot: VacancyAttachmentEntity?): Long {
+        val sourceId = snapshot?.let { insertSnapshot(it) } ?: record.vacancyAttachmentId
+        return create(record.copy(vacancyAttachmentId = sourceId))
     }
 
     @Transaction
     suspend fun updateWithSnapshot(
         record: Vacancy,
-        snapshot: ImportRecordEntity?,
+        snapshot: VacancyAttachmentEntity?,
         removeSnapshot: Boolean,
     ) {
-        val previous = checkNotNull(findById(record.id)).entity.importRecordId
+        val previous = checkNotNull(findById(record.id)).entity.vacancyAttachmentId
         val sourceId = when {
             snapshot != null -> insertSnapshot(snapshot)
             removeSnapshot -> null
             else -> previous
         }
-        update(record.copy(importRecordId = sourceId))
-        if (previous != null && previous != sourceId) deleteUnusedImportRecord(previous)
+        update(record.copy(vacancyAttachmentId = sourceId))
+        if (previous != null && previous != sourceId) deleteUnusedVacancyAttachment(previous)
     }
 
     @Transaction
@@ -77,7 +77,7 @@ interface VacancyDao :
         val existing = findById(id)?.entity ?: return 0
         val changed = deleteEntity(id)
         if (changed > 0) {
-            existing.importRecordId?.let { deleteUnusedImportRecord(it) }
+            existing.vacancyAttachmentId?.let { deleteUnusedVacancyAttachment(it) }
             resetEmptyWorkspace(existing.projectId, updatedAt)
         }
         return changed

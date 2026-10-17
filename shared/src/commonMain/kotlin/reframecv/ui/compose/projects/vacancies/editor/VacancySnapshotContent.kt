@@ -17,7 +17,6 @@ import reframecv.shared.generated.resources.vacancy_attach_snapshot
 import reframecv.shared.generated.resources.vacancy_snapshot_changed
 import reframecv.shared.generated.resources.vacancy_snapshot_error
 import reframecv.shared.generated.resources.vacancy_snapshot_hint
-import reframecv.shared.generated.resources.vacancy_snapshot_imported
 import reframecv.shared.generated.resources.vacancy_snapshot_loading
 import reframecv.shared.generated.resources.vacancy_snapshot_missing
 import reframecv.shared.generated.resources.vacancy_snapshot_open
@@ -76,7 +75,7 @@ internal fun VacancySnapshotContent(component: VacancySnapshotComponent, enabled
 private fun SnapshotDescription(state: VacancySnapshotState) {
     val name = state.selected?.fileName ?: state.record?.fileName
     if (name != null) SelectableText(name, style = ReframeTheme.tokens.typography.bodyMedium)
-    val message = snapshotMessage(state, name)
+    val message = snapshotMessage(state)
     if (message != null) {
         val critical = state.failed || state.status == AttachmentStatus.Missing ||
             state.status == AttachmentStatus.Changed
@@ -92,12 +91,11 @@ private fun SnapshotDescription(state: VacancySnapshotState) {
     }
 }
 
-private fun snapshotMessage(state: VacancySnapshotState, name: String?) = when {
+private fun snapshotMessage(state: VacancySnapshotState) = when {
     state.loading -> Res.string.vacancy_snapshot_loading
     state.failed -> Res.string.vacancy_snapshot_error
     state.selected != null -> Res.string.vacancy_snapshot_selected
     state.status == AttachmentStatus.Missing -> Res.string.vacancy_snapshot_missing
     state.status == AttachmentStatus.Changed -> Res.string.vacancy_snapshot_changed
-    state.record != null && name == null -> Res.string.vacancy_snapshot_imported
     else -> null
 }

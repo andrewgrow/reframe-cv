@@ -7,6 +7,8 @@ A local desktop application for managing resumes, vacancies, and cover letters w
 - [Architecture and constraints](docs/architecture.md): current contracts and invariants.
 - [Backlog and open questions](docs/backlog.md): deferred work, without a fixed implementation order.
 - [Resume JSON Schema](docs/schemas/resume-content-v1.schema.json): the versioned document contract.
+- [Vacancy content schema](docs/schemas/vacancy-content-v1.schema.json): the portable JSON export contract.
+- [Vacancy recognition schema](docs/schemas/vacancy-recognition-v1.schema.json): the source-processing response contract.
 
 ## Project structure
 

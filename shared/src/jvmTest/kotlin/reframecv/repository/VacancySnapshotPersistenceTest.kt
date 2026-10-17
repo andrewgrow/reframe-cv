@@ -18,7 +18,7 @@ import reframecv.logging.ApplicationLogger
 class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
     private fun manager() = VacancySnapshotManager(
         database.vacancyDao(),
-        database.importRecordDao(),
+        database.vacancyAttachmentDao(),
         FileAttachmentStorage(temporaryFolder.root.toPath()),
         ApplicationLogger.None,
     )
@@ -34,8 +34,6 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
         val snapshots = manager()
         val id = snapshots.create(vacancy(project()), attachment())
         val original = assertNotNull(snapshots.snapshot(id))
-        assertEquals("file", original.record.provider)
-        assertNull(original.record.rawData)
         assertEquals("source.txt", original.record.fileName)
         val vacancy = assertNotNull(database.vacancyDao().findById(id)).toDomainModel()
         snapshots.update(vacancy.copy(name = "Edited", url = "changed"), SnapshotChange.Keep)
@@ -48,7 +46,7 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
         assertFailsWith<IllegalStateException> {
             manager().create(vacancy(999), attachment())
         }
-        assertTrue(database.importRecordDao().filePaths().isEmpty())
+        assertTrue(database.vacancyAttachmentDao().filePaths().isEmpty())
         Files.list(temporaryFolder.root.toPath().resolve("attachments")).use {
             assertEquals(0L, it.count())
         }
@@ -61,18 +59,18 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
         val id = snapshots.create(vacancy(projectId), attachment())
         val original = assertNotNull(snapshots.snapshot(id)).record
         val shared = database.vacancyDao().create(
-            vacancy(projectId).copy(importRecordId = original.id),
+            vacancy(projectId).copy(vacancyAttachmentId = original.id),
         )
         val record = assertNotNull(database.vacancyDao().findById(id)).toDomainModel()
         snapshots.update(record, attachment("replacement.pdf"))
         val replacement = assertNotNull(snapshots.snapshot(id)).record
-        assertTrue(Files.exists(temporaryFolder.root.toPath().resolve(original.filePath!!)))
+        assertTrue(Files.exists(temporaryFolder.root.toPath().resolve(original.filePath)))
         snapshots.delete(shared, 300)
         assertTrue(!Files.exists(temporaryFolder.root.toPath().resolve(original.filePath)))
         snapshots.update(record, SnapshotChange.Remove)
         assertNull(snapshots.snapshot(id))
-        assertTrue(!Files.exists(temporaryFolder.root.toPath().resolve(replacement.filePath!!)))
-        assertTrue(database.importRecordDao().filePaths().isEmpty())
+        assertTrue(!Files.exists(temporaryFolder.root.toPath().resolve(replacement.filePath)))
+        assertTrue(database.vacancyAttachmentDao().filePaths().isEmpty())
     }
 
     @Test
@@ -81,13 +79,13 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
         val projectId = project()
         val id = snapshots.create(vacancy(projectId), attachment())
         val original = assertNotNull(snapshots.snapshot(id)).record
-        Files.delete(temporaryFolder.root.toPath().resolve(original.filePath!!))
+        Files.delete(temporaryFolder.root.toPath().resolve(original.filePath))
         val missing = assertNotNull(snapshots.snapshot(id))
         assertEquals(AttachmentStatus.Missing, missing.status)
         assertEquals(original, missing.record)
         assertNotNull(database.vacancyDao().findById(id))
         assertEquals(1, snapshots.deleteProject(database.projectDao(), projectId))
         assertNull(database.vacancyDao().findById(id))
-        assertNull(database.importRecordDao().findById(original.id))
+        assertNull(database.vacancyAttachmentDao().findById(original.id))
     }
 }

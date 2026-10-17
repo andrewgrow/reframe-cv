@@ -23,6 +23,7 @@ import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
 import reframecv.shared.generated.resources.action_delete
+import reframecv.shared.generated.resources.action_export
 import reframecv.shared.generated.resources.action_save
 import reframecv.shared.generated.resources.vacancy_delete_confirm
 import reframecv.shared.generated.resources.vacancy_delete_error
@@ -54,6 +55,13 @@ internal fun VacancyEditorActions(
                 VacancyDeleteAction(component::onDelete, confirming, isBusy)
             }
             Spacer(Modifier.weight(1f))
+            if (component.initialVacancy != null && !confirming) {
+                TextButton(
+                    component::onExport,
+                    enabled = validTitle && !isBusy,
+                    contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+                ) { Text(stringResource(Res.string.action_export)) }
+            }
             TextButton(
                 onClick = component::onClose,
                 enabled = !isBusy,

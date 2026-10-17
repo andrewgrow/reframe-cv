@@ -7,7 +7,9 @@ import reframecv.attachments.FileAttachmentStorage
 import reframecv.database.AppDatabase
 import reframecv.database.openDefaultDatabase
 import reframecv.export.DesktopResumeExporter
+import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
+import reframecv.export.VacancyExporter
 import reframecv.filesystem.applicationDataDirectory
 import reframecv.importing.DesktopResumeImporter
 import reframecv.importing.ResumeImporter
@@ -39,6 +41,7 @@ class DefaultApplicationDependencies(
         FileAttachmentStorage(applicationDataDirectory()),
     override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
+    override val vacancyExporter: VacancyExporter = DesktopVacancyExporter(),
     override val resumeImporter: ResumeImporter = DesktopResumeImporter(),
     databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
 ) : ApplicationDependencies {
@@ -62,7 +65,7 @@ class DefaultApplicationDependencies(
     private val snapshotManager by lazy {
         VacancySnapshotManager(
             database.value.vacancyDao(),
-            database.value.importRecordDao(),
+            database.value.vacancyAttachmentDao(),
             attachmentStorage,
             logger,
         )

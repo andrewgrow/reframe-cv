@@ -12,12 +12,12 @@ import kotlinx.coroutines.launch
 import reframecv.attachments.AttachmentStatus
 import reframecv.attachments.SelectedAttachment
 import reframecv.attachments.SnapshotChange
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 import reframecv.ui.context.AppComponentContext
 
 /** Supplies snapshot metadata, a pending selection, and file availability to the editor. */
 data class VacancySnapshotState(
-    val record: ImportRecord? = null,
+    val record: VacancyAttachment? = null,
     val selected: SelectedAttachment? = null,
     val status: AttachmentStatus? = null,
     val loading: Boolean = false,
@@ -33,13 +33,14 @@ interface VacancySnapshotComponent {
     fun onRemove()
     fun onOpen()
     fun onRetry()
+    fun onSaved()
 }
 
 /** Holds pending attachment changes until the vacancy itself is saved. */
 class DefaultVacancySnapshotComponent(
     componentContext: AppComponentContext,
     private val vacancyId: Long?,
-    private val hasSnapshot: Boolean,
+    private var hasSnapshot: Boolean,
 ) : VacancySnapshotComponent {
     private val dependencies = componentContext.dependencies
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -78,6 +79,18 @@ class DefaultVacancySnapshotComponent(
 
     override fun onRetry() = runOperation("Load snapshot") {
         if (change == SnapshotChange.Keep) vacancyId?.let { load(it) }
+    }
+
+    override fun onSaved() {
+        if (change == SnapshotChange.Keep) return
+        hasSnapshot = when (change) {
+            is SnapshotChange.Attach -> true
+            SnapshotChange.Remove -> false
+            SnapshotChange.Keep -> hasSnapshot
+        }
+        change = SnapshotChange.Keep
+        state.value = VacancySnapshotState()
+        if (hasSnapshot) onRetry()
     }
 
     private suspend fun load(id: Long) {

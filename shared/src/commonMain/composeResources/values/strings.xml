@@ -60,7 +60,6 @@
     <string name="vacancy_snapshot_error">Could not read or open the snapshot. Please try again.</string>
     <string name="vacancy_snapshot_loading">Loading snapshot…</string>
     <string name="vacancy_snapshot_selected">This file will be copied when you save the vacancy.</string>
-    <string name="vacancy_snapshot_imported">Original import data is attached.</string>
     <string name="vacancy_resize_description">Resize description</string>
     <string name="resize_dialog">Resize dialog</string>
     <string name="dashboard_title">Dashboard</string>
@@ -134,11 +133,11 @@
     <string name="resume_delete_prompt">Type DELETE to confirm</string>
     <string name="resume_delete_confirm">Permanently delete</string>
     <string name="resume_delete_error">Could not delete the resume. Please try again.</string>
-    <string name="resume_export">Export</string>
+    <string name="action_export">Export</string>
     <string name="resume_export_title">Export resume</string>
-    <string name="resume_export_format">Format</string>
-    <string name="resume_export_json">as JSON</string>
-    <string name="resume_export_download">Download</string>
+    <string name="export_format">Format</string>
+    <string name="export_json">as JSON</string>
+    <string name="export_download">Download</string>
     <string name="resume_export_error">Could not export the resume. Please try again.</string>
     <string name="resume_close">Close</string>
     <string name="resume_save_success">Resume saved successfully</string>
@@ -208,4 +207,6 @@
     <string name="resume_photo_error">Could not load or prepare the photo. Please choose a valid JPG or PNG image.</string>
     <string name="resume_photo_missing">The photo file is missing. Choose a new photo or remove this reference.</string>
     <string name="resume_photo_unavailable">Unavailable</string>
+    <string name="vacancy_export_title">Export vacancy</string>
+    <string name="vacancy_export_error">Could not export the vacancy. Please try again.</string>
 </resources>

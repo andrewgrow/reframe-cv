@@ -11,6 +11,9 @@ data class VacancyDraft(
     val url: String = "",
     val keywords: String = "",
     val snapshotChange: SnapshotChange = SnapshotChange.Keep,
+    val responsibilities: List<String> = emptyList(),
+    val requirements: List<String> = emptyList(),
+    val niceToHave: List<String> = emptyList(),
 ) {
     fun toVacancy(projectId: Long) = applyTo(
         Vacancy(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),
@@ -21,6 +24,9 @@ data class VacancyDraft(
         company = company.trim(),
         description = description.trim(),
         url = url.trim(),
+        responsibilities = responsibilities,
+        requirements = requirements,
+        niceToHave = niceToHave,
         keywords = keywords.split(',').map { it.trim() }.filter { it.isNotEmpty() },
     )
 
@@ -31,6 +37,9 @@ data class VacancyDraft(
             description = vacancy.description,
             url = vacancy.url,
             keywords = vacancy.keywords.joinToString(", "),
+            responsibilities = vacancy.responsibilities,
+            requirements = vacancy.requirements,
+            niceToHave = vacancy.niceToHave,
         )
     }
 }

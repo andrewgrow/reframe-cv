@@ -1,4 +1,4 @@
-package reframecv.database.importrecord
+package reframecv.database.vacancyattachment
 
 import androidx.sqlite.SQLiteException
 import kotlin.test.Test
@@ -9,57 +9,74 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 
-class ImportRecordPersistenceTest : WorkspaceDatabaseTest() {
-    private fun record() = ImportRecord(
-        provider = "apify/curious_coder/linkedin-jobs-scraper",
-        externalId = "3692563200",
+class VacancyAttachmentPersistenceTest : WorkspaceDatabaseTest() {
+    private fun record() = VacancyAttachment(
+        filePath = "attachments/source.pdf",
+        fileName = "Résumé.pdf",
+        mediaType = "application/pdf",
+        fileSize = 42,
+        sha256 = "original-hash",
         sourceUrl = "https://example.com/jobs/3692563200",
-        rawData = """{"title":"Kotlin Developer","unknown":{"salary":null}}""",
-        metadataJson = """{"runId":"run-1"}""",
         createdAt = 100,
     )
 
     @Test
-    fun preservesRawSnapshotsAndAllowsRepeatedExternalIdentifiers() = runBlocking {
-        val dao = database.importRecordDao()
+    fun preservesFileMetadataAndAllowsSharedFilePaths() = runBlocking {
+        val dao = database.vacancyAttachmentDao()
         val original = record()
-        val id = dao.insert(ImportRecordEntity.fromDomainModel(original))
-        val newer = original.copy(rawData = """{"title":"Senior Developer"}""", createdAt = 200)
-        val newerId = dao.insert(ImportRecordEntity.fromDomainModel(newer))
+        val id = dao.insert(VacancyAttachmentEntity.fromDomainModel(original))
+        val newer = original.copy(createdAt = 200)
+        val newerId = dao.insert(VacancyAttachmentEntity.fromDomainModel(newer))
         assertNotEquals(id, newerId)
         assertEquals(original.copy(id = id), dao.findById(id)?.toDomainModel())
         assertEquals(newer.copy(id = newerId), dao.findById(newerId)?.toDomainModel())
         assertEquals(listOf(newerId, id), dao.observeAll().first().map { it.id })
         val stored = requireNotNull(dao.findById(id))
-        assertEquals(stored, ImportRecordEntity.fromDomainModel(stored.toDomainModel()))
+        assertEquals(stored, VacancyAttachmentEntity.fromDomainModel(stored.toDomainModel()))
         assertNull(dao.findById(-1))
+        database.close()
+        openDatabase()
+        assertEquals(
+            original.copy(id = id),
+            database.vacancyAttachmentDao().findById(id)?.toDomainModel(),
+        )
+        assertEquals(
+            newer.copy(id = newerId),
+            database.vacancyAttachmentDao().findById(newerId)?.toDomainModel(),
+        )
     }
 
     @Test
-    fun storesOptionalMetadataAndManualVacanciesWithoutSources() = runBlocking {
-        val minimal = ImportRecord(provider = "other", rawData = "{}", createdAt = 300)
-        val id = database.importRecordDao().insert(ImportRecordEntity.fromDomainModel(minimal))
+    fun storesAttachmentsWithoutSourceUrlAndManualVacanciesWithoutAttachments() = runBlocking {
+        val minimal = record().copy(sourceUrl = null, createdAt = 300)
+        val id = database.vacancyAttachmentDao().insert(
+            VacancyAttachmentEntity.fromDomainModel(minimal),
+        )
         assertEquals(
             minimal.copy(id = id),
-            database.importRecordDao().findById(id)?.toDomainModel(),
+            database.vacancyAttachmentDao().findById(id)?.toDomainModel(),
         )
         val vacancyId = database.vacancyDao().create(vacancy(project()))
-        assertNull(database.vacancyDao().findById(vacancyId)?.toDomainModel()?.importRecordId)
+        assertNull(database.vacancyDao().findById(vacancyId)?.toDomainModel()?.vacancyAttachmentId)
     }
 
     @Test
     fun vacancyEditingAndDeletionPreserveSharedSourceSnapshot() = runBlocking {
         val source = record()
-        val sourceId = database.importRecordDao().insert(ImportRecordEntity.fromDomainModel(source))
+        val sourceId = database.vacancyAttachmentDao().insert(
+            VacancyAttachmentEntity.fromDomainModel(source),
+        )
         val dao = database.vacancyDao()
         val initial = vacancy(project()).copy(
-            importRecordId = sourceId,
+            vacancyAttachmentId = sourceId,
             keywords = listOf("Kotlin", "Android", "Résumé"),
         )
         val first = dao.create(initial)
-        val second = dao.create(vacancy(project("Other project")).copy(importRecordId = sourceId))
+        val second = dao.create(
+            vacancy(project("Other project")).copy(vacancyAttachmentId = sourceId),
+        )
         val edited = initial.copy(
             id = first,
             name = "Edited",
@@ -70,27 +87,27 @@ class ImportRecordPersistenceTest : WorkspaceDatabaseTest() {
         assertEquals(edited, dao.findById(first)?.toDomainModel())
         assertEquals(1, dao.delete(first, 500))
         assertNull(dao.findById(first))
-        assertEquals(sourceId, dao.findById(second)?.entity?.importRecordId)
+        assertEquals(sourceId, dao.findById(second)?.entity?.vacancyAttachmentId)
         assertEquals(
             source.copy(id = sourceId),
-            database.importRecordDao().findById(sourceId)?.toDomainModel(),
+            database.vacancyAttachmentDao().findById(sourceId)?.toDomainModel(),
         )
     }
 
     @Test
     fun physicallyDeletesUnusedSnapshotButPreservesReferencedSnapshot() = runBlocking {
         val source = record()
-        val dao = database.importRecordDao()
-        val unusedId = dao.insert(ImportRecordEntity.fromDomainModel(source))
-        val referencedId = dao.insert(ImportRecordEntity.fromDomainModel(source))
+        val dao = database.vacancyAttachmentDao()
+        val unusedId = dao.insert(VacancyAttachmentEntity.fromDomainModel(source))
+        val referencedId = dao.insert(VacancyAttachmentEntity.fromDomainModel(source))
         val vacancyId = database.vacancyDao().create(
-            vacancy(project()).copy(importRecordId = referencedId),
+            vacancy(project()).copy(vacancyAttachmentId = referencedId),
         )
         assertEquals(0, dao.deleteUnused(referencedId))
         assertEquals(source.copy(id = referencedId), dao.findById(referencedId)?.toDomainModel())
         assertEquals(
             referencedId,
-            database.vacancyDao().findById(vacancyId)?.entity?.importRecordId,
+            database.vacancyDao().findById(vacancyId)?.entity?.vacancyAttachmentId,
         )
         assertEquals(1, dao.deleteUnused(unusedId))
         assertNull(dao.findById(unusedId))
@@ -105,13 +122,13 @@ class ImportRecordPersistenceTest : WorkspaceDatabaseTest() {
         val before = database.projectDao().findById(projectId)
         val dao = database.vacancyDao()
         assertFailsWith<SQLiteException> {
-            dao.create(vacancy(projectId).copy(importRecordId = -1))
+            dao.create(vacancy(projectId).copy(vacancyAttachmentId = -1))
         }
         assertEquals(before, database.projectDao().findById(projectId))
         assertEquals(emptyList(), dao.observeActive(projectId).first())
         val id = dao.create(vacancy(projectId))
         val stored = requireNotNull(dao.findById(id)).toDomainModel()
-        assertFailsWith<SQLiteException> { dao.update(stored.copy(importRecordId = -1)) }
+        assertFailsWith<SQLiteException> { dao.update(stored.copy(vacancyAttachmentId = -1)) }
         assertEquals(stored, dao.findById(id)?.toDomainModel())
     }
 }

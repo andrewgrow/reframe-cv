@@ -37,7 +37,7 @@ class ProjectDeletionTest : WorkspaceDatabaseTest() {
         val storage = TestAttachmentStorage()
         val snapshots = VacancySnapshotManager(
             database.vacancyDao(),
-            database.importRecordDao(),
+            database.vacancyAttachmentDao(),
             storage,
             ApplicationLogger.None,
         )
@@ -49,7 +49,9 @@ class ProjectDeletionTest : WorkspaceDatabaseTest() {
             SnapshotChange.Attach(SelectedAttachment("unused", "source.txt")),
         )
         val source = assertNotNull(snapshots.snapshot(vacancyId)).record
-        val shared = database.vacancyDao().create(vacancy(other).copy(importRecordId = source.id))
+        val shared = database.vacancyDao().create(
+            vacancy(other).copy(vacancyAttachmentId = source.id),
+        )
         val exclusive = snapshots.create(
             vacancy(leaf),
             SnapshotChange.Attach(SelectedAttachment("unused", "exclusive.txt")),
@@ -61,12 +63,12 @@ class ProjectDeletionTest : WorkspaceDatabaseTest() {
         assertNull(database.coverLetterDao().findById(letterId))
         assertNull(database.vacancyDao().findById(vacancyId))
         assertNull(database.vacancyDao().findById(exclusive))
-        assertNull(database.importRecordDao().findById(exclusiveSource.id))
-        assertNotNull(database.importRecordDao().findById(source.id))
+        assertNull(database.vacancyAttachmentDao().findById(exclusiveSource.id))
+        assertNotNull(database.vacancyAttachmentDao().findById(source.id))
         assertEquals(setOf(source.filePath), storage.files.keys)
         assertEquals(1, database.vacancyDao().observeCount(other).first())
         snapshots.delete(shared, 500)
-        assertNull(database.importRecordDao().findById(source.id))
+        assertNull(database.vacancyAttachmentDao().findById(source.id))
         assertEquals(emptySet(), storage.files.keys)
         assertEquals(ProjectMode.Unconfigured, database.projectDao().findById(other)?.mode)
     }

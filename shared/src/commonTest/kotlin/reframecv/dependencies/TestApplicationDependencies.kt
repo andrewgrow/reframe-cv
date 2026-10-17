@@ -6,8 +6,10 @@ import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
+import reframecv.export.DocumentExportResult
 import reframecv.export.ResumeExportResult
 import reframecv.export.ResumeExporter
+import reframecv.export.VacancyExporter
 import reframecv.importing.ResumeImporter
 import reframecv.logging.EventHistory
 import reframecv.logging.RecordingApplicationLogger
@@ -27,6 +29,7 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val logger = RecordingApplicationLogger()
     override val attachmentStorage = TestAttachmentStorage()
     override val attachmentPicker = AttachmentPicker { null }
+    override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val resumeImporter = ResumeImporter { null }
     override val resumePhotos = object : ResumePhotos {

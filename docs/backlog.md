@@ -21,9 +21,10 @@ belong in the [README](../README.md).
 
 ## Vacancy sources
 
+- [ ] Add editing controls for responsibilities, requirements, and nice-to-have lists.
+- [ ] Define review/application of recognition results to a vacancy draft.
 - [ ] Define URL-to-snapshot fetching, supported formats, and failure/cancellation behavior.
 - [ ] Define source parsing separately from fetching, including supported inputs and mapping.
-- [ ] Preserve immutable snapshots independently of editable vacancy fields.
 
 ## Print and PDF export
 

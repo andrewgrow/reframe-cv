@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:vacancy-content:1",
+  "title": "Vacancy content document",
+  "type": "object",
+  "properties": {
+    "formatVersion": { "const": 1, "type": "integer" },
+    "content": { "$ref": "#/$defs/VacancyContent" }
+  },
+  "required": ["formatVersion", "content"],
+  "additionalProperties": false,
+  "$defs": {
+    "VacancyContent": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "company": { "type": "string" },
+        "description": { "type": "string" },
+        "url": { "type": "string" },
+        "keywords": { "$ref": "#/$defs/Items" },
+        "responsibilities": { "$ref": "#/$defs/Items" },
+        "requirements": { "$ref": "#/$defs/Items" },
+        "niceToHave": { "$ref": "#/$defs/Items" }
+      },
+      "required": ["title", "company", "description", "url", "keywords", "responsibilities", "requirements", "niceToHave"],
+      "additionalProperties": false
+    },
+    "Items": { "type": "array", "items": { "type": "string" } }
+  }
+}

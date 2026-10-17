@@ -14,9 +14,9 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_delete
+import reframecv.shared.generated.resources.action_export
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_close
-import reframecv.shared.generated.resources.resume_export
 import reframecv.shared.generated.resources.resume_import
 import reframecv.shared.generated.resources.resume_save
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
@@ -58,7 +58,7 @@ internal fun ResumeEditorActions(component: ResumeEditorComponent, onExport: () 
         }
         if (editing) {
             FillButton(
-                stringResource(Res.string.resume_export),
+                stringResource(Res.string.action_export),
                 onExport,
                 enabled = !busy,
                 outlineState = FillButton.OutlineState.Visible,

@@ -9,8 +9,6 @@ import kotlinx.coroutines.Dispatchers
 import reframecv.database.coverletter.CoverLetterDao
 import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.coverletter.CoverLetterKeywordEntity
-import reframecv.database.importrecord.ImportRecordDao
-import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.project.ProjectDao
 import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeDao
@@ -21,13 +19,15 @@ import reframecv.database.settings.AppSettingsEntity
 import reframecv.database.vacancy.VacancyDao
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.database.vacancy.VacancyKeywordEntity
+import reframecv.database.vacancyattachment.VacancyAttachmentDao
+import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 
 /** Keeps projects, workspace documents, and device preferences in one local database. */
 @Database(
     entities = [
         AppSettingsEntity::class,
         ProjectEntity::class,
-        ImportRecordEntity::class,
+        VacancyAttachmentEntity::class,
         ResumeEntity::class, ResumeKeywordEntity::class,
         CoverLetterEntity::class, CoverLetterKeywordEntity::class,
         VacancyEntity::class, VacancyKeywordEntity::class,
@@ -38,7 +38,7 @@ import reframecv.database.vacancy.VacancyKeywordEntity
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appSettingsDao(): AppSettingsDao
-    abstract fun importRecordDao(): ImportRecordDao
+    abstract fun vacancyAttachmentDao(): VacancyAttachmentDao
     abstract fun projectDao(): ProjectDao
     abstract fun resumeDao(): ResumeDao
     abstract fun coverLetterDao(): CoverLetterDao

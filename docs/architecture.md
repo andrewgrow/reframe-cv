@@ -46,7 +46,7 @@ operation. See the README for reset and backup instructions.
   a vacancy or letter does not require a resume.
 - `Project.mainResumeId` selects at most one resume from that workspace.
   `Resume.sourceResumeId` records provenance; adaptations are independent documents.
-- A vacancy can reference one resume, one cover letter, and one immutable ImportRecord.
+- A vacancy can reference one resume, one cover letter, and one immutable VacancyAttachment.
   Multiple vacancies can share those records; reverse relationships are queried.
 - DAO operations validate existence and same-project document relationships.
   Main-resume assignment and document writes are atomic.
@@ -74,6 +74,53 @@ Export saves the draft first and generates formatted schema-compatible JSON from
 Temporary import/export copies have explicit ownership and are cleaned on completion,
 failure, or editor disposal as appropriate. Original user files are not modified.
 
+## Vacancy recognition contract
+
+[Vacancy recognition schema](schemas/vacancy-recognition-v1.schema.json) adapts
+`divo-resume/src/utils/schemas/parseJob.schema.json`. It describes a processing result,
+not a saved vacancy: statusCode (200/400/500), status/statusDetails, nullable jobTitle
+and jobDescription, keywords, responsibilities, requirements, and nice_to_have.
+Its version is identified by the schema ID, independently of the database schema.
+
+`VacancyRecognitionJson` reads this contract. Canonical nice_to_have is an array;
+legacy text becomes one item and null becomes an empty list. Nullable list entries
+remain representable in the response but are removed when applying it to a vacancy.
+The original project used a string in its JSON schema and an array in its database
+model; this compatibility rule resolves that inconsistency. Unknown fields and
+invalid types/status codes are rejected.
+
+`VacancyRecognitionResult.applyTo` accepts only successful, nonblank-title results.
+It maps jobTitle/jobDescription to name/description and replaces recognized lists,
+while preserving company, URL, IDs, timestamps, linked documents, and VacancyAttachment.
+Processing status and provider response IDs are not vacancy business fields.
+The mapping is explicit; it does not fetch, parse, call a model, or write to storage.
+
+Vacancy now stores responsibilities, requirements, and niceToHave as ordered string
+lists, defaulting to empty. Room persists them as non-null JSON array columns through
+`VacancyListConverter`; prose is not split on commas. The existing indexed keyword
+tables remain the search mechanism. Vacancy drafts preserve these lists even though
+the current form does not expose their editing controls yet.
+
+## Vacancy JSON export
+
+[Vacancy content schema](schemas/vacancy-content-v1.schema.json) defines the portable
+`formatVersion: 1` document. Its content includes title, company, description, URL,
+keywords, responsibilities, requirements, and niceToHave. Local IDs, timestamps,
+linked document IDs, file paths/bytes, and processing statuses are excluded.
+This document is separate from the recognition response contract.
+
+Export is available on saved vacancy pages and commits the current draft first,
+including pending snapshot changes. Invalid titles and failed saves prevent the dialog
+from opening. After success, pending snapshot changes reset to Keep so later exports
+do not recopy attachments. The same editor remains open after destination selection
+or cancellation; ordinary vacancy Save retains its existing return-to-list behavior.
+
+Resume and vacancy export share the JSON options dialog and desktop file lifecycle.
+Download shows progress, generates formatted UTF-8 JSON before the native picker, and
+suggests `vacancy-<id>-<yyyyddMM>-<HHmm>-<ss>.json`. Temporary files are deleted on
+success, picker cancellation, write failures, and coroutine cancellation. Generation
+and copying run on IO; errors keep the dialog retryable and include operation context.
+
 ## Managed file ownership
 
 Database records store relative paths to managed copies beside the database. File writes
@@ -83,10 +130,13 @@ Files still referenced by another record must survive cleanup. Cleanup failures 
 
 ### Vacancy snapshots
 
-ImportRecord preserves original source data and metadata independently of editable vacancy
-fields. Refetching/replacing a source creates another immutable record. File-backed records
-store UUID copies in `attachments/`, original names, MIME types, byte sizes, and SHA-256;
-`rawData` can be null. Missing/changed files retain metadata and expose an unavailable state.
+VacancyAttachment represents an immutable attached file independently of editable vacancy
+fields. Replacing a file creates another record. Attachments store UUID copies in
+`attachments/`, original names, MIME types, byte sizes, SHA-256, creation timestamps, and an
+optional original source URL. File metadata is required; missing/changed physical files
+retain their metadata and expose an unavailable state. Provider identifiers, raw parser
+responses, and arbitrary import metadata are not persisted. Incoming recognition results
+map directly to Vacancy without an intermediate database record.
 
 Vacancy/project deletion removes affected sources after their last reference. Snapshot
 orphan cleanup runs when vacancy observation starts and is serialized with writes.

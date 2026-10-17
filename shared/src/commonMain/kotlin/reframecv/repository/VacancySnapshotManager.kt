@@ -10,18 +10,18 @@ import reframecv.attachments.SnapshotChange
 import reframecv.attachments.SnapshotInfo
 import reframecv.attachments.StoredAttachment
 import reframecv.attachments.storedAttachment
-import reframecv.database.importrecord.ImportRecordDao
-import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.project.ProjectDao
 import reframecv.database.vacancy.VacancyDao
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.database.vacancyattachment.VacancyAttachmentDao
+import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 import reframecv.logging.ApplicationLogger
 
 /** Serializes snapshot writes and cleanup so saved records keep their file copies. */
 class VacancySnapshotManager(
     private val vacancies: VacancyDao,
-    private val imports: ImportRecordDao,
+    private val attachments: VacancyAttachmentDao,
     private val storage: AttachmentStorage,
     private val logger: ApplicationLogger,
 ) {
@@ -31,7 +31,7 @@ class VacancySnapshotManager(
     suspend fun cleanup() = mutex.withLock {
         if (!cleaned) {
             reportCleanupFailure("Clean orphaned snapshots") {
-                storage.cleanup(imports.filePaths().toSet())
+                storage.cleanup(attachments.filePaths().toSet())
                 cleaned = true
             }
         }
@@ -39,7 +39,7 @@ class VacancySnapshotManager(
 
     suspend fun snapshot(vacancyId: Long): SnapshotInfo? = mutex.withLock {
         val record = source(vacancyId) ?: return@withLock null
-        SnapshotInfo(record, record.storedAttachment()?.let { storage.status(it) })
+        SnapshotInfo(record, storage.status(record.storedAttachment()))
     }
 
     suspend fun open(vacancyId: Long) = mutex.withLock {
@@ -54,7 +54,7 @@ class VacancySnapshotManager(
                     if (change ==
                         SnapshotChange.Remove
                     ) {
-                        record.copy(importRecordId = null)
+                        record.copy(vacancyAttachmentId = null)
                     } else {
                         record
                     },
@@ -84,27 +84,29 @@ class VacancySnapshotManager(
 
     suspend fun deleteProject(projects: ProjectDao, id: Long): Int = mutex.withLock {
         withContext(NonCancellable) {
-            val paths = projects.subtreeImportIds(id).mapNotNull { imports.findById(it)?.filePath }
+            val paths = projects.subtreeAttachmentIds(id).mapNotNull {
+                attachments.findById(it)?.filePath
+            }
             val changed = projects.deleteSubtree(id)
             paths.forEach { deleteIfUnreferenced(it) }
             changed
         }
     }
 
-    private suspend fun source(vacancyId: Long): ImportRecord? {
-        val id = vacancies.findById(vacancyId)?.entity?.importRecordId ?: return null
-        return imports.findById(id)?.toDomainModel()
+    private suspend fun source(vacancyId: Long): VacancyAttachment? {
+        val id = vacancies.findById(vacancyId)?.entity?.vacancyAttachmentId ?: return null
+        return attachments.findById(id)?.toDomainModel()
     }
 
     private suspend fun <T> withNewFile(
         record: Vacancy,
         change: SnapshotChange,
-        save: suspend (ImportRecordEntity?) -> T,
+        save: suspend (VacancyAttachmentEntity?) -> T,
     ): T {
         val attachment = (change as? SnapshotChange.Attach)?.let { storage.store(it.selection) }
         var committed = false
         try {
-            val result = save(attachment?.toImportRecord(record))
+            val result = save(attachment?.toVacancyAttachment(record))
             committed = true
             return result
         } finally {
@@ -118,7 +120,7 @@ class VacancySnapshotManager(
 
     private suspend fun deleteIfUnreferenced(path: String) {
         reportCleanupFailure("Remove unused snapshot file") {
-            if (!imports.referencesFile(path)) storage.delete(path)
+            if (!attachments.referencesFile(path)) storage.delete(path)
         }
     }
 
@@ -135,15 +137,15 @@ class VacancySnapshotManager(
     }
 }
 
-private fun StoredAttachment.toImportRecord(vacancy: Vacancy) = ImportRecordEntity.fromDomainModel(
-    ImportRecord(
-        provider = "file",
-        createdAt = vacancy.updatedAt,
-        sourceUrl = vacancy.url.takeIf { it.isNotBlank() },
-        filePath = filePath,
-        fileName = fileName,
-        mediaType = mediaType,
-        fileSize = fileSize,
-        sha256 = sha256,
-    ),
-)
+private fun StoredAttachment.toVacancyAttachment(vacancy: Vacancy) =
+    VacancyAttachmentEntity.fromDomainModel(
+        VacancyAttachment(
+            createdAt = vacancy.updatedAt,
+            sourceUrl = vacancy.url.takeIf { it.isNotBlank() },
+            filePath = filePath,
+            fileName = fileName,
+            mediaType = mediaType,
+            fileSize = fileSize,
+            sha256 = sha256,
+        ),
+    )

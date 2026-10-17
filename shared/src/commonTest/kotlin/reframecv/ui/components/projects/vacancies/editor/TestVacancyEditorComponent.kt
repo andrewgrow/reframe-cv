@@ -15,6 +15,20 @@ class TestVacancyEditorComponent(
         this.draft.value = draft
     }
     override val snapshot = TestVacancySnapshotComponent()
+    override val exportVisible = MutableValue(false)
+    override val exportComponent = TestVacancyExportComponent { onCloseExport() }
+    override fun onExport() {
+        if (initialVacancy != null && !isBusy && draft.value.title.isNotBlank()) {
+            save(draft.value)
+            exportVisible.value = true
+        }
+    }
+    override fun onCloseExport() {
+        if (!isBusy) {
+            exportVisible.value = false
+            exportComponent.onReset()
+        }
+    }
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     override val saveState = MutableValue(VacancySaveState.Idle)
     override fun onSave(draft: VacancyDraft) = save(draft)
@@ -28,12 +42,12 @@ class TestVacancyEditorComponent(
         }
     }
     override fun onClose() {
-        if (saveState.value == VacancySaveState.Saving ||
-            deleteState.value == VacancyDeleteState.Deleting
-        ) {
+        if (isBusy) {
             return
         }
-        if (deleteState.value !=
+        if (exportVisible.value) {
+            onCloseExport()
+        } else if (deleteState.value !=
             VacancyDeleteState.Idle
         ) {
             deleteState.value = VacancyDeleteState.Idle

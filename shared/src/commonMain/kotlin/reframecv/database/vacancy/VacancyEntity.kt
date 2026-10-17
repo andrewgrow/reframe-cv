@@ -1,6 +1,7 @@
 package reframecv.database.vacancy
 
 import androidx.room3.ColumnInfo
+import androidx.room3.ColumnTypeConverters
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
@@ -8,9 +9,9 @@ import androidx.room3.PrimaryKey
 import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.database.coverletter.CoverLetterEntity
-import reframecv.database.importrecord.ImportRecordEntity
 import reframecv.database.project.ProjectEntity
 import reframecv.database.resume.ResumeEntity
+import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.domain.models.vacancy.Vacancy
 
 /** Represents a vacancy record in the local database. */
@@ -18,9 +19,9 @@ import reframecv.domain.models.vacancy.Vacancy
     tableName = "vacancies",
     foreignKeys = [
         ForeignKey(
-            entity = ImportRecordEntity::class,
+            entity = VacancyAttachmentEntity::class,
             parentColumns = ["id"],
-            childColumns = ["import_record_id"],
+            childColumns = ["vacancy_attachment_id"],
             onDelete = ForeignKey.RESTRICT,
         ),
         ForeignKey(
@@ -43,12 +44,13 @@ import reframecv.domain.models.vacancy.Vacancy
         ),
     ],
     indices = [
-        Index(value = ["import_record_id"]),
+        Index(value = ["vacancy_attachment_id"]),
         Index(
             value = ["project_id"],
         ), Index(value = ["resume_id"]), Index(value = ["cover_letter_id"]),
     ],
 )
+@ColumnTypeConverters(VacancyListConverter::class)
 data class VacancyEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
@@ -66,8 +68,14 @@ data class VacancyEntity(
     val resumeId: Long? = null,
     @ColumnInfo(name = "cover_letter_id")
     val coverLetterId: Long? = null,
-    @ColumnInfo(name = "import_record_id")
-    val importRecordId: Long? = null,
+    @ColumnInfo(name = "vacancy_attachment_id")
+    val vacancyAttachmentId: Long? = null,
+    @ColumnInfo(name = "responsibilities", defaultValue = "'[]'")
+    val responsibilities: List<String> = emptyList(),
+    @ColumnInfo(name = "requirements", defaultValue = "'[]'")
+    val requirements: List<String> = emptyList(),
+    @ColumnInfo(name = "nice_to_have", defaultValue = "'[]'")
+    val niceToHave: List<String> = emptyList(),
 ) : DatabaseModel<Vacancy> {
     override fun toDomainModel() = Vacancy(
         id = id,
@@ -80,7 +88,10 @@ data class VacancyEntity(
         url = url,
         resumeId = resumeId,
         coverLetterId = coverLetterId,
-        importRecordId = importRecordId,
+        vacancyAttachmentId = vacancyAttachmentId,
+        responsibilities = responsibilities,
+        requirements = requirements,
+        niceToHave = niceToHave,
     )
 
     companion object : DatabaseModelFactory<Vacancy, VacancyEntity> {
@@ -95,7 +106,10 @@ data class VacancyEntity(
             url = domainModel.url,
             resumeId = domainModel.resumeId,
             coverLetterId = domainModel.coverLetterId,
-            importRecordId = domainModel.importRecordId,
+            vacancyAttachmentId = domainModel.vacancyAttachmentId,
+            responsibilities = domainModel.responsibilities,
+            requirements = domainModel.requirements,
+            niceToHave = domainModel.niceToHave,
         )
     }
 }

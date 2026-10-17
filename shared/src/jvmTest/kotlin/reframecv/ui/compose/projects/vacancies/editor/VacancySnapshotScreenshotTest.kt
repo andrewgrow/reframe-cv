@@ -11,7 +11,7 @@ import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import reframecv.attachments.AttachmentStatus
 import reframecv.attachments.SelectedAttachment
-import reframecv.domain.models.importrecord.ImportRecord
+import reframecv.domain.models.vacancyattachment.VacancyAttachment
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.vacancies.editor.TestVacancySnapshotComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySnapshotState
@@ -49,8 +49,11 @@ class VacancySnapshotScreenshotTest : GoldenScreenshotTest() {
 
     @Test fun failedOperation() = capture(VacancySnapshotState(failed = true))
 
-    private fun record() = ImportRecord(
-        provider = "file",
+    private fun record() = VacancyAttachment(
+        filePath = "attachments/source.pdf",
+        mediaType = "application/pdf",
+        fileSize = 100,
+        sha256 = "hash",
         createdAt = 100,
         fileName = "Mobile App Senior Developer.pdf",
     )
