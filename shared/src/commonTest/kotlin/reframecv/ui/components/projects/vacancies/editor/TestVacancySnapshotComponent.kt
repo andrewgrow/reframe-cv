@@ -11,7 +11,7 @@ class TestVacancySnapshotComponent : VacancySnapshotComponent {
         state.value = VacancySnapshotState()
     }
     override fun onOpen() = Unit
-    override fun onSaved() {
+    override fun onSaved(vacancyId: Long?) {
         change = SnapshotChange.Keep
         state.value = state.value.copy(selected = null)
     }

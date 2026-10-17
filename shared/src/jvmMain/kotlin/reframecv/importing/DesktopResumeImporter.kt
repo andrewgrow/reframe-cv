@@ -12,7 +12,7 @@ import reframecv.domain.models.resume.content.ResumeContent
 
 /** Parses a temporary copy and transfers its cleanup to the editor only after successful import. */
 class DesktopResumeImporter(
-    private val picker: ResumeImportPicker = DesktopResumeImportPicker(),
+    private val picker: JsonImportPicker = DesktopJsonImportPicker("Import resume"),
     private val temporaryDirectory: Path? = null,
 ) : ResumeImporter {
     override suspend fun pickAndImport(): ImportedResumeFile? {

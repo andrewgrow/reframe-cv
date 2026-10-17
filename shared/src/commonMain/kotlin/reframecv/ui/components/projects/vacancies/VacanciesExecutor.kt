@@ -37,13 +37,8 @@ internal class VacanciesExecutor(
         publish(VacanciesLabel.Saving)
         saving = scope.launch {
             try {
-                if (original == null) {
-                    val record = draft.toVacancy(projectId)
-                    if (draft.snapshotChange == SnapshotChange.Keep) {
-                        repository.create(record)
-                    } else {
-                        repository.create(record, draft.snapshotChange)
-                    }
+                val created = if (original == null) {
+                    repository.createSaved(draft.toVacancy(projectId), draft.snapshotChange)
                 } else {
                     val record = draft.applyTo(original)
                     if (draft.snapshotChange == SnapshotChange.Keep) {
@@ -51,8 +46,9 @@ internal class VacanciesExecutor(
                     } else {
                         repository.update(record, draft.snapshotChange)
                     }
+                    null
                 }
-                publish(VacanciesLabel.Saved)
+                publish(VacanciesLabel.Saved(created))
             } catch (exception: CancellationException) {
                 throw exception
             } catch (error: Exception) {

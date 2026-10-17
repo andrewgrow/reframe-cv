@@ -84,16 +84,19 @@ class DefaultVacanciesComponent(
                 DefaultVacancyEditorComponent(
                     childContext,
                     save = { draft ->
+                        val current = editor?.initialVacancy
                         store.accept(
-                            if (original == null) {
+                            if (current == null) {
                                 VacanciesIntent.Create(draft)
                             } else {
-                                VacanciesIntent.Update(original, draft)
+                                VacanciesIntent.Update(current, draft)
                             },
                         )
                     },
                     initialVacancy = original,
-                    delete = { original?.let { store.accept(VacanciesIntent.Delete(it.id)) } },
+                    delete = {
+                        editor?.initialVacancy?.let { store.accept(VacanciesIntent.Delete(it.id)) }
+                    },
                     close = { editorNavigation.pop() },
                 ),
             )
@@ -116,8 +119,8 @@ class DefaultVacanciesComponent(
                 when (label) {
                     VacanciesLabel.Saving -> editor?.saveState?.value = VacancySaveState.Saving
 
-                    VacanciesLabel.Saved -> {
-                        if (editor?.onSaveCompleted(VacancySaveState.Idle) !=
+                    is VacanciesLabel.Saved -> {
+                        if (editor?.onSaveCompleted(VacancySaveState.Idle, label.createdVacancy) !=
                             true
                         ) {
                             editorNavigation.pop()

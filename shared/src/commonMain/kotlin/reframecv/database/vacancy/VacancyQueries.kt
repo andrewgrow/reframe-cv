@@ -33,7 +33,7 @@ interface VacancyQueries {
         "SELECT * FROM vacancies WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM projects " +
             "WHERE projects.id = vacancies.project_id) " +
-            "ORDER BY updated_at DESC, name ASC, id ASC",
+            "ORDER BY id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<VacancyWithKeywords>>
 
@@ -50,7 +50,7 @@ interface VacancyQueries {
             "EXISTS (SELECT 1 FROM projects " +
             "WHERE projects.id = vacancies.project_id) AND " +
             "EXISTS (SELECT 1 FROM vacancies_keywords WHERE record_id = vacancies.id " +
-            "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
+            "AND normalized_keyword = :keyword) ORDER BY id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<VacancyWithKeywords>
 

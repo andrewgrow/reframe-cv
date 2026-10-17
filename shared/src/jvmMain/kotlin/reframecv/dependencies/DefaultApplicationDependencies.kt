@@ -12,7 +12,9 @@ import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
 import reframecv.filesystem.applicationDataDirectory
 import reframecv.importing.DesktopResumeImporter
+import reframecv.importing.DesktopVacancyImporter
 import reframecv.importing.ResumeImporter
+import reframecv.importing.VacancyImporter
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
@@ -42,6 +44,7 @@ class DefaultApplicationDependencies(
     override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
     override val vacancyExporter: VacancyExporter = DesktopVacancyExporter(),
+    override val vacancyImporter: VacancyImporter = DesktopVacancyImporter(),
     override val resumeImporter: ResumeImporter = DesktopResumeImporter(),
     databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
 ) : ApplicationDependencies {

@@ -30,7 +30,7 @@ class VacancySnapshotManager(
 
     suspend fun cleanup() = mutex.withLock {
         if (!cleaned) {
-            reportCleanupFailure("Clean orphaned snapshots") {
+            logger.reportCleanupFailure("Clean orphaned snapshots") {
                 storage.cleanup(attachments.filePaths().toSet())
                 cleaned = true
             }
@@ -47,10 +47,13 @@ class VacancySnapshotManager(
         storage.open(path)
     }
 
-    suspend fun create(record: Vacancy, change: SnapshotChange): Long = mutex.withLock {
+    suspend fun create(record: Vacancy, change: SnapshotChange): Long =
+        createSaved(record, change).id
+
+    suspend fun createSaved(record: Vacancy, change: SnapshotChange): Vacancy = mutex.withLock {
         withContext(NonCancellable) {
             withNewFile(record, change) { snapshot ->
-                vacancies.createWithSnapshot(
+                vacancies.createSavedWithSnapshot(
                     if (change ==
                         SnapshotChange.Remove
                     ) {
@@ -111,7 +114,7 @@ class VacancySnapshotManager(
             return result
         } finally {
             if (!committed && attachment != null) {
-                reportCleanupFailure("Remove failed snapshot copy") {
+                logger.reportCleanupFailure("Remove failed snapshot copy") {
                     storage.delete(attachment.filePath)
                 }
             }
@@ -119,21 +122,24 @@ class VacancySnapshotManager(
     }
 
     private suspend fun deleteIfUnreferenced(path: String) {
-        reportCleanupFailure("Remove unused snapshot file") {
+        logger.reportCleanupFailure("Remove unused snapshot file") {
             if (!attachments.referencesFile(path)) storage.delete(path)
         }
     }
+}
 
-    // Cleanup failures must preserve the outcome of the database transaction.
-    @Suppress("TooGenericExceptionCaught")
-    private suspend fun reportCleanupFailure(operation: String, action: suspend () -> Unit) {
-        try {
-            action()
-        } catch (error: CancellationException) {
-            throw error
-        } catch (error: Exception) {
-            logger.error(operation, error, emptyMap())
-        }
+// Cleanup failures must preserve the outcome of the database transaction.
+@Suppress("TooGenericExceptionCaught")
+private suspend fun ApplicationLogger.reportCleanupFailure(
+    operation: String,
+    action: suspend () -> Unit,
+) {
+    try {
+        action()
+    } catch (error: CancellationException) {
+        throw error
+    } catch (error: Exception) {
+        this.error(operation, error, emptyMap())
     }
 }
 

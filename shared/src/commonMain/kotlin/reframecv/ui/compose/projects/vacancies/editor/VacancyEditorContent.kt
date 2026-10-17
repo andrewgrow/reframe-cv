@@ -24,6 +24,7 @@ import reframecv.shared.generated.resources.vacancy_title_required
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
+import reframecv.ui.components.projects.vacancies.editor.VacancyImportState
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
@@ -39,8 +40,10 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     val deleteState by component.deleteState.subscribeAsState()
     val snapshot by component.snapshot.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
+    val importState by component.importComponent.state.subscribeAsState()
     val isBusy = saveState == VacancySaveState.Saving ||
-        deleteState == VacancyDeleteState.Deleting || exportState == VacancyExportState.Exporting
+        deleteState == VacancyDeleteState.Deleting || exportState == VacancyExportState.Exporting ||
+        importState == VacancyImportState.Importing
     val confirming = deleteState != VacancyDeleteState.Idle
     val titleError = vacancyTitleError(snapshot.selected != null, draft.title)
     val save = { if (!confirming && !isBusy && !snapshot.selecting) component.onSave(draft) }
@@ -55,13 +58,7 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
             ) {
                 PageHeader(
-                    stringResource(
-                        if (component.initialVacancy == null) {
-                            Res.string.vacancy_editor_title
-                        } else {
-                            Res.string.vacancy_editor_edit_title
-                        },
-                    ),
+                    vacancyEditorTitle(component),
                     component::onClose,
                     enabled = !isBusy,
                 )
@@ -78,12 +75,14 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
             }
             HorizontalDivider()
             Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
+                VacancyImportFeedback(importState)
                 VacancyEditorActions(
                     component,
                     draft.title.isNotBlank() && !snapshot.selecting,
                     isBusy,
                     deleteState,
                     save,
+                    editing = component.initialVacancy != null,
                 )
             }
         }
@@ -99,3 +98,14 @@ private fun vacancyTitleError(hasAttachment: Boolean, title: String): String? = 
 } else {
     null
 }
+
+@Composable
+private fun vacancyEditorTitle(component: VacancyEditorComponent) = stringResource(
+    if (component.initialVacancy ==
+        null
+    ) {
+        Res.string.vacancy_editor_title
+    } else {
+        Res.string.vacancy_editor_edit_title
+    },
+)

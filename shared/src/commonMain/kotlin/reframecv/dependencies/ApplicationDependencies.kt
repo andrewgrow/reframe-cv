@@ -6,6 +6,7 @@ import reframecv.attachments.AttachmentStorage
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
 import reframecv.importing.ResumeImporter
+import reframecv.importing.VacancyImporter
 import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.photos.ResumePhotos
@@ -24,6 +25,7 @@ interface ApplicationDependencies {
     val attachmentPicker: AttachmentPicker
     val vacancyExporter: VacancyExporter
     val resumeExporter: ResumeExporter
+    val vacancyImporter: VacancyImporter
     val resumeImporter: ResumeImporter
     val resumePhotos: ResumePhotos
     val appSettingsRepository: AppSettingsRepository

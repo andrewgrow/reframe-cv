@@ -209,4 +209,8 @@
     <string name="resume_photo_unavailable">Unavailable</string>
     <string name="vacancy_export_title">Export vacancy</string>
     <string name="vacancy_export_error">Could not export the vacancy. Please try again.</string>
+    <string name="action_import">Import</string>
+    <string name="vacancy_import_progress">Importing vacancy...</string>
+    <string name="vacancy_import_success">Vacancy imported. Review the fields before saving.</string>
+    <string name="vacancy_import_error">Could not import the vacancy. Choose a valid Reframe CV vacancy JSON file and try again.</string>
 </resources>

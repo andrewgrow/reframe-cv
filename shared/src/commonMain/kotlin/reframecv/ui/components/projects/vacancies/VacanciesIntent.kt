@@ -17,5 +17,12 @@ internal sealed interface VacanciesIntent {
     data class Update(val vacancy: Vacancy, val draft: VacancyDraft) : VacanciesIntent
 }
 
-/** Lets the vacancy editor show progress, report failures, and close after success. */
-internal enum class VacanciesLabel { Saving, Saved, SaveFailed, Deleting, Deleted, DeleteFailed }
+/** Reports vacancy operations and supplies the saved identity after creation. */
+internal sealed interface VacanciesLabel {
+    data object Saving : VacanciesLabel
+    data class Saved(val createdVacancy: Vacancy? = null) : VacanciesLabel
+    data object SaveFailed : VacanciesLabel
+    data object Deleting : VacanciesLabel
+    data object Deleted : VacanciesLabel
+    data object DeleteFailed : VacanciesLabel
+}

@@ -20,13 +20,16 @@ interface VacancyEditorComponent {
     val deleteState: Value<VacancyDeleteState>
     val saveState: Value<VacancySaveState>
     val exportVisible: Value<Boolean>
+    val importComponent: VacancyImportComponent
+    fun onImport()
     val exportComponent: VacancyExportComponent
     fun onExport()
     fun onCloseExport()
     val isBusy: Boolean
         get() = saveState.value == VacancySaveState.Saving ||
             deleteState.value == VacancyDeleteState.Deleting ||
-            exportComponent.state.value == VacancyExportState.Exporting
+            exportComponent.state.value == VacancyExportState.Exporting ||
+            importComponent.state.value == VacancyImportState.Importing
     fun onSave(draft: VacancyDraft)
     fun onDelete()
     fun onClose()
@@ -37,10 +40,12 @@ class DefaultVacancyEditorComponent(
     componentContext: AppComponentContext,
     private val save: (VacancyDraft) -> Unit,
     private val close: () -> Unit,
-    override val initialVacancy: Vacancy? = null,
+    initialVacancy: Vacancy? = null,
     private val delete: () -> Unit = {},
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
+    private var persistedVacancy = initialVacancy
+    override val initialVacancy: Vacancy? get() = persistedVacancy
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     override val snapshot = DefaultVacancySnapshotComponent(
@@ -53,10 +58,19 @@ class DefaultVacancyEditorComponent(
     override val exportComponent = DefaultVacancyExportComponent(
         componentContext,
         vacancy = {
-            initialVacancy?.takeIf { exportVisible.value }?.let { draft.value.applyTo(it) }
+            this.initialVacancy?.takeIf { exportVisible.value }?.let { draft.value.applyTo(it) }
         },
         finished = ::onCloseExport,
     )
+    override val importComponent = DefaultVacancyImportComponent(componentContext) {
+        draft.value = VacancyDraft.fromVacancy(it).copy(snapshotChange = draft.value.snapshotChange)
+    }
+    override fun onImport() {
+        if (initialVacancy == null && !isBusy && !snapshot.state.value.selecting) {
+            saveState.value = VacancySaveState.Idle
+            importComponent.onImport()
+        }
+    }
     private var exportAfterSave = false
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     override fun onDraftChange(draft: VacancyDraft) {
@@ -80,14 +94,19 @@ class DefaultVacancyEditorComponent(
         }
     }
 
-    internal fun onSaveCompleted(state: VacancySaveState): Boolean {
+    internal fun onSaveCompleted(
+        state: VacancySaveState,
+        createdVacancy: Vacancy? = null,
+    ): Boolean {
+        if (createdVacancy != null) persistedVacancy = createdVacancy
         saveState.value = state
         if (state == VacancySaveState.Idle) {
-            snapshot.onSaved()
+            snapshot.onSaved(createdVacancy?.id)
+            importComponent.onReset()
             exportVisible.value = exportAfterSave
         }
         exportAfterSave = false
-        return exportVisible.value
+        return exportVisible.value || createdVacancy != null
     }
 
     override fun onCloseExport() {
@@ -114,6 +133,7 @@ class DefaultVacancyEditorComponent(
             } else if (deleteState.value != VacancyDeleteState.Idle) {
                 deleteState.value = VacancyDeleteState.Idle
             } else {
+                importComponent.onClose()
                 close()
             }
         }

@@ -11,6 +11,7 @@ import reframecv.export.ResumeExportResult
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
 import reframecv.importing.ResumeImporter
+import reframecv.importing.VacancyImporter
 import reframecv.logging.EventHistory
 import reframecv.logging.RecordingApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
@@ -31,6 +32,7 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val attachmentPicker = AttachmentPicker { null }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
+    override val vacancyImporter = VacancyImporter { null }
     override val resumeImporter = ResumeImporter { null }
     override val resumePhotos = object : ResumePhotos {
         override suspend fun choose(): String? = null

@@ -24,6 +24,7 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
 import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.action_export
+import reframecv.shared.generated.resources.action_import
 import reframecv.shared.generated.resources.action_save
 import reframecv.shared.generated.resources.vacancy_delete_confirm
 import reframecv.shared.generated.resources.vacancy_delete_error
@@ -39,6 +40,7 @@ internal fun VacancyEditorActions(
     isBusy: Boolean,
     deleteState: VacancyDeleteState,
     onSave: () -> Unit,
+    editing: Boolean,
 ) {
     val confirming = deleteState != VacancyDeleteState.Idle
     Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small)) {
@@ -51,16 +53,17 @@ internal fun VacancyEditorActions(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
         ) {
-            if (component.initialVacancy != null) {
+            if (editing) {
                 VacancyDeleteAction(component::onDelete, confirming, isBusy)
             }
             Spacer(Modifier.weight(1f))
-            if (component.initialVacancy != null && !confirming) {
-                TextButton(
-                    component::onExport,
-                    enabled = validTitle && !isBusy,
-                    contentPadding = ReframeTheme.tokens.textButtonContentPadding,
-                ) { Text(stringResource(Res.string.action_export)) }
+            if (!confirming) {
+                VacancyTransferAction(
+                    component,
+                    validTitle,
+                    isBusy,
+                    creating = !editing,
+                )
             }
             TextButton(
                 onClick = component::onClose,
@@ -111,5 +114,21 @@ private fun VacancyDeleteAction(onDelete: () -> Unit, confirming: Boolean, isBus
                 if (confirming) Res.string.vacancy_delete_confirm else Res.string.action_delete,
             ),
         )
+    }
+}
+
+@Composable
+private fun VacancyTransferAction(
+    component: VacancyEditorComponent,
+    validTitle: Boolean,
+    isBusy: Boolean,
+    creating: Boolean,
+) {
+    TextButton(
+        if (creating) component::onImport else component::onExport,
+        enabled = !isBusy && (creating || validTitle),
+        contentPadding = ReframeTheme.tokens.textButtonContentPadding,
+    ) {
+        Text(stringResource(if (creating) Res.string.action_import else Res.string.action_export))
     }
 }

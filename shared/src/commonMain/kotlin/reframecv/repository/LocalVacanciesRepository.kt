@@ -28,15 +28,18 @@ class LocalVacanciesRepository(
 
     override suspend fun create(record: Vacancy): Long = create(record, SnapshotChange.Keep)
 
-    override suspend fun create(record: Vacancy, snapshot: SnapshotChange): Long {
+    override suspend fun create(record: Vacancy, snapshot: SnapshotChange): Long =
+        createSaved(record, snapshot).id
+
+    override suspend fun createSaved(record: Vacancy, snapshot: SnapshotChange): Vacancy {
         require(record.id == 0L) { "New records must not have an identifier" }
         val timestamp = nowMillis()
         val updated = record.copy(createdAt = timestamp, updatedAt = timestamp)
         return if (snapshots != null) {
-            snapshots.create(updated, snapshot)
+            snapshots.createSaved(updated, snapshot)
         } else {
             require(snapshot == SnapshotChange.Keep)
-            dao.create(updated)
+            updated.copy(id = dao.create(updated))
         }
     }
 

@@ -10,6 +10,10 @@ interface VacanciesRepository {
     fun observeVacancies(projectId: Long): Flow<List<Vacancy>>
     suspend fun search(projectId: Long, keyword: String): List<Vacancy>
     suspend fun create(record: Vacancy): Long
+    suspend fun createSaved(record: Vacancy, snapshot: SnapshotChange): Vacancy {
+        val id = if (snapshot == SnapshotChange.Keep) create(record) else create(record, snapshot)
+        return record.copy(id = id)
+    }
     suspend fun update(record: Vacancy)
     suspend fun create(record: Vacancy, snapshot: SnapshotChange): Long {
         require(snapshot == SnapshotChange.Keep) { "Snapshot storage is not available" }

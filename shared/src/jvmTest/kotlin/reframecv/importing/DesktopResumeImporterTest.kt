@@ -27,7 +27,7 @@ class DesktopResumeImporterTest {
         val content = sampleResumeContent()
         val original = ResumeContentJson.encodeForExport(content)
         Files.writeString(source, original)
-        val importer = DesktopResumeImporter(ResumeImportPicker { source.toString() }, temporary)
+        val importer = DesktopResumeImporter(JsonImportPicker { source.toString() }, temporary)
         val imported = checkNotNull(importer.pickAndImport())
         assertEquals(content, imported.content)
         val copy = Files.list(temporary).use { it.toList().single() }
@@ -47,7 +47,7 @@ class DesktopResumeImporterTest {
         assertEquals(
             null,
             DesktopResumeImporter(
-                ResumeImportPicker {
+                JsonImportPicker {
                     null
                 },
                 temporary,
@@ -58,7 +58,7 @@ class DesktopResumeImporterTest {
         Files.writeString(source, "invalid JSON")
         assertFailsWith<SerializationException> {
             DesktopResumeImporter(
-                ResumeImportPicker {
+                JsonImportPicker {
                     source.toString()
                 },
                 temporary,
@@ -68,7 +68,7 @@ class DesktopResumeImporterTest {
         assertEquals("invalid JSON", Files.readString(source))
         assertFailsWith<java.nio.file.NoSuchFileException> {
             DesktopResumeImporter(
-                ResumeImportPicker { source.resolveSibling("missing.json").toString() },
+                JsonImportPicker { source.resolveSibling("missing.json").toString() },
                 temporary,
             ).pickAndImport()
         }
@@ -80,7 +80,7 @@ class DesktopResumeImporterTest {
         val temporary = folder.newFolder("temp").toPath()
         val entered = CompletableDeferred<Unit>()
         val importer = DesktopResumeImporter(
-            ResumeImportPicker {
+            JsonImportPicker {
                 entered.complete(Unit)
                 awaitCancellation()
             },

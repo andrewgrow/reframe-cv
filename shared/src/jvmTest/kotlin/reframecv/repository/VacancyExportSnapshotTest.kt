@@ -6,6 +6,8 @@ import com.arkivanov.essenty.lifecycle.destroy
 import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -21,6 +23,9 @@ import reframecv.dependencies.TestApplicationDependencies
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.logging.ApplicationLogger
 import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
+import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
+import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
+import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
 
@@ -79,6 +84,89 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
             runOnUiThread { lifecycle.destroy() }
         }
     }
+
+    @Test
+    fun newlyCreatedVacancyKeepsIdentityAndAttachmentThroughExportAndDeletion() = runBlocking {
+        val storage = TestAttachmentStorage()
+        val repository = repository(storage)
+        val projectId = project()
+        val lifecycle = LifecycleRegistry()
+        val component = component(lifecycle, repository, vacancy(projectId), create = true)
+        try {
+            val editor = checkNotNull(component.editor)
+            val loaded = Channel<Unit>(Channel.CONFLATED)
+            val selected = Channel<Unit>(Channel.CONFLATED)
+            val visible = Channel<Boolean>(Channel.UNLIMITED)
+            runOnUiThread {
+                editor.snapshot.state.subscribe {
+                    if (it.selected != null && !it.loading) selected.trySend(Unit)
+                    if (it.record != null && !it.loading) loaded.trySend(Unit)
+                }
+                editor.exportVisible.subscribe(visible::trySend)
+                editor.onDraftChange(VacancyDraft("New vacancy"))
+                editor.snapshot.onAttach()
+            }
+            withTimeout(10_000) {
+                selected.receive()
+                runOnUiThread { editor.onSave(editor.draft.value) }
+                loaded.receive()
+                val saved = repository.observeVacancies(projectId).first().single()
+                runOnUiThread { assertSame(editor, component.editor) }
+                verifyCreatedVacancy(editor, saved)
+                // Loading/opening shares the snapshot state; wait for completion before exporting.
+                loaded.receive()
+                runOnUiThread {
+                    editor.onDraftChange(editor.draft.value.copy(title = "Updated before export"))
+                    editor.onExport()
+                }
+                while (!visible.receive()) { /* Await the export save. */ }
+                val updated = repository.observeVacancies(projectId).first().single()
+                assertEquals(saved.id, updated.id)
+                assertEquals(saved.createdAt, updated.createdAt)
+                assertEquals(saved.vacancyAttachmentId, updated.vacancyAttachmentId)
+                assertEquals("Updated before export", updated.name)
+                assertEquals(1, storage.files.size)
+                runOnUiThread {
+                    assertNotNull(editor.initialVacancy)
+                    editor.exportComponent.onDownload()
+                }
+                while (visible.receive()) { /* Await download cancellation. */ }
+                deleteCreatedVacancy(component)
+                assertEquals(emptyList(), repository.observeVacancies(projectId).first())
+                assertEquals(0, storage.files.size)
+                assertNull(
+                    database.vacancyAttachmentDao().findById(
+                        checkNotNull(saved.vacancyAttachmentId),
+                    ),
+                )
+            }
+        } finally {
+            runOnUiThread { lifecycle.destroy() }
+        }
+    }
+
+    private fun verifyCreatedVacancy(editor: VacancyEditorComponent, saved: Vacancy) =
+        runOnUiThread {
+            assertEquals(saved, editor.initialVacancy)
+            assertEquals(VacancySaveState.Idle, editor.saveState.value)
+            assertEquals(SnapshotChange.Keep, editor.snapshot.change)
+            assertEquals(saved.vacancyAttachmentId, editor.snapshot.state.value.record?.id)
+            editor.snapshot.onOpen()
+        }
+
+    private suspend fun deleteCreatedVacancy(component: DefaultVacanciesComponent) {
+        val closed = kotlinx.coroutines.CompletableDeferred<Unit>()
+        runOnUiThread {
+            val editor = checkNotNull(component.editor)
+            component.childStack.subscribe {
+                if (component.editor == null) closed.complete(Unit)
+            }
+            editor.onDelete()
+            editor.onDelete()
+        }
+        closed.await()
+    }
+
     private fun repository(storage: TestAttachmentStorage) = LocalVacanciesRepository(
         database.vacancyDao(),
         VacancySnapshotManager(
@@ -93,6 +181,7 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
         lifecycle: LifecycleRegistry,
         repository: VacanciesRepository,
         original: Vacancy,
+        create: Boolean = false,
     ): DefaultVacanciesComponent {
         val services = object : ApplicationDependencies by TestApplicationDependencies() {
             override val vacanciesRepository = repository
@@ -106,7 +195,7 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
                 original.projectId,
                 back = {
                 },
-            ).also { it.onEdit(original) }
+            ).also { if (create) it.onAdd() else it.onEdit(original) }
         }
     }
 }

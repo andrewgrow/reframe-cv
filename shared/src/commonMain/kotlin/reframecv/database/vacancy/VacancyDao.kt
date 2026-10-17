@@ -36,9 +36,17 @@ interface VacancyDao :
     }
 
     @Transaction
-    suspend fun createWithSnapshot(record: Vacancy, snapshot: VacancyAttachmentEntity?): Long {
+    suspend fun createWithSnapshot(record: Vacancy, snapshot: VacancyAttachmentEntity?): Long =
+        createSavedWithSnapshot(record, snapshot).id
+
+    @Transaction
+    suspend fun createSavedWithSnapshot(
+        record: Vacancy,
+        snapshot: VacancyAttachmentEntity?,
+    ): Vacancy {
         val sourceId = snapshot?.let { insertSnapshot(it) } ?: record.vacancyAttachmentId
-        return create(record.copy(vacancyAttachmentId = sourceId))
+        val saved = record.copy(vacancyAttachmentId = sourceId)
+        return saved.copy(id = create(saved))
     }
 
     @Transaction

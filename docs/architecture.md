@@ -100,6 +100,7 @@ lists, defaulting to empty. Room persists them as non-null JSON array columns th
 `VacancyListConverter`; prose is not split on commas. The existing indexed keyword
 tables remain the search mechanism. Vacancy drafts preserve these lists even though
 the current form does not expose their editing controls yet.
+Vacancy lists and keyword search results use ascending IDs; edits do not reorder them.
 
 ## Vacancy JSON export
 
@@ -113,13 +114,33 @@ Export is available on saved vacancy pages and commits the current draft first,
 including pending snapshot changes. Invalid titles and failed saves prevent the dialog
 from opening. After success, pending snapshot changes reset to Keep so later exports
 do not recopy attachments. The same editor remains open after destination selection
-or cancellation; ordinary vacancy Save retains its existing return-to-list behavior.
+or cancellation. First Save also keeps the same editor open, switching creation to
+management with the persisted ID and timestamps. Later ordinary Save returns to the list.
+Pending attachments bind to the new vacancy ID and reset to Keep after creation.
 
 Resume and vacancy export share the JSON options dialog and desktop file lifecycle.
 Download shows progress, generates formatted UTF-8 JSON before the native picker, and
 suggests `vacancy-<id>-<yyyyddMM>-<HHmm>-<ss>.json`. Temporary files are deleted on
 success, picker cancellation, write failures, and coroutine cancellation. Generation
 and copying run on IO; errors keep the dialog retryable and include operation context.
+
+## Vacancy JSON import
+
+Creation offers Import for the same `formatVersion: 1` vacancy content document used by
+export. Import ignores unknown fields, filters malformed known values/list entries, and
+rejects broken JSON, unsupported versions, and missing/non-object content. Local IDs,
+links, file paths, and attachment bytes are never imported. Recognition responses are a
+separate contract and are not accepted as portable vacancy documents.
+
+Import replaces portable draft fields, preserving any pending source-file attachment.
+It does not write to the database; Save remains explicit and title validation still applies.
+Import blocks duplicate selection, editing, saving, and Back until selection/parsing ends.
+Picker cancellation and failures preserve the current draft; errors are logged and retryable.
+
+The desktop importer reads a temporary copy without modifying the original file. Failed or
+cancelled imports remove their copies immediately. Successfully imported copies belong to
+the editor and are deleted on Close or lifecycle destruction, including after first Save
+switches the same page into management mode. Import is unavailable in management mode.
 
 ## Managed file ownership
 

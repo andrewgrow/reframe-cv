@@ -8,11 +8,16 @@ class TestVacancyEditorComponent(
     private val save: (VacancyDraft) -> Unit = {},
     private val close: () -> Unit = {},
     private val delete: () -> Unit = {},
+    imported: () -> Unit = {},
 ) : VacancyEditorComponent {
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     override fun onDraftChange(draft: VacancyDraft) {
         this.draft.value = draft
+    }
+    override val importComponent = TestVacancyImportComponent(imported)
+    override fun onImport() {
+        if (initialVacancy == null && !isBusy) importComponent.onImport()
     }
     override val snapshot = TestVacancySnapshotComponent()
     override val exportVisible = MutableValue(false)

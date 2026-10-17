@@ -33,13 +33,13 @@ interface VacancySnapshotComponent {
     fun onRemove()
     fun onOpen()
     fun onRetry()
-    fun onSaved()
+    fun onSaved(vacancyId: Long? = null)
 }
 
 /** Holds pending attachment changes until the vacancy itself is saved. */
 class DefaultVacancySnapshotComponent(
     componentContext: AppComponentContext,
-    private val vacancyId: Long?,
+    private var vacancyId: Long?,
     private var hasSnapshot: Boolean,
 ) : VacancySnapshotComponent {
     private val dependencies = componentContext.dependencies
@@ -81,7 +81,8 @@ class DefaultVacancySnapshotComponent(
         if (change == SnapshotChange.Keep) vacancyId?.let { load(it) }
     }
 
-    override fun onSaved() {
+    override fun onSaved(vacancyId: Long?) {
+        if (vacancyId != null) this.vacancyId = vacancyId
         if (change == SnapshotChange.Keep) return
         hasSnapshot = when (change) {
             is SnapshotChange.Attach -> true
