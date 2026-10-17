@@ -31,7 +31,14 @@ allprojects {
 }
 
 detekt {
-    source.setFrom("shared/src", "desktopApp/src", "domain/src", "database/src", "network/src")
+    source.setFrom(
+        "shared/src",
+        "desktopApp/src",
+        "domain/src",
+        "database/src",
+        "network/src",
+        "providers/src",
+    )
     config.setFrom("config/detekt/detekt.yml")
     buildUponDefaultConfig = true
     basePath.set(projectDir)
@@ -46,6 +53,7 @@ dependencies {
     kover(project(":domain"))
     kover(project(":database"))
     kover(project(":network"))
+    kover(project(":providers"))
     kover(project(":shared"))
     kover(project(":desktopApp"))
 }

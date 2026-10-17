@@ -22,6 +22,7 @@ import reframecv.ui.components.projects.DefaultProjectsComponent
 import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 class ErrorHistoryIntegrationTest : ComponentTest() {
     @get:Rule
@@ -43,6 +44,7 @@ class ErrorHistoryIntegrationTest : ComponentTest() {
         val context = DefaultAppComponentContext(
             DefaultComponentContext(lifecycle),
             object : ApplicationDependencies by services {
+                override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
                 override val projectsRepository = repository
             },
         )

@@ -15,9 +15,10 @@ A local desktop application for managing resumes, vacancies, and cover letters w
 This is a Kotlin Multiplatform project currently targeting Desktop (JVM).
 
 - `desktopApp`: desktop entry point, window lifecycle, resources, and packaging.
-- `domain`: application models, repository/service contracts, and shared document serialization.
+- `domain`: application models, use cases, repository/provider contracts, and document serialization.
 - `database`: Room entities, DAOs, local repositories, and database construction.
-- `network`: Ktor clients, remote repositories, response DTOs, and domain mapping.
+- `network`: Ktor transport, platform HTTP engines, and common timeout configuration.
+- `providers`: external repositories, provider clients, response DTOs, and domain mapping.
 - `shared/src/commonMain`: components, navigation, feature services, and Compose UI.
 - `shared/src/jvmMain`: desktop dependency composition, filesystem, native pickers, and image processing.
 - `shared/src/commonTest` and `shared/src/jvmTest`: fixtures, behavior tests, and screenshot tests.
@@ -126,7 +127,7 @@ Generated sources are excluded. Run formatting before analysis rather than concu
 ./gradlew allTests :koverHtmlReport :koverXmlReport :koverVerify --no-parallel
 ```
 
-Kover combines `domain`, `database`, `network`, `shared`, and `desktopApp`; the minimum is 75% line coverage.
+Kover combines `domain`, `database`, `network`, `providers`, `shared`, and `desktopApp`; the minimum is 75% line coverage.
 Generated Room implementations and Compose resources are excluded.
 
 - HTML: `build/reports/kover/html/index.html`.

@@ -6,14 +6,14 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import reframecv.logging.ApplicationLogger
-import reframecv.repository.ProjectsRepository
+import reframecv.usecase.ProjectsUseCases
 
 /** Lets the project store use an interchangeable handler for loading and editing. */
 interface ProjectsExecutor : Executor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>
 
 /** Keeps project lists current and gives the editor feedback when changes succeed or fail. */
 class RealProjectsExecutor(
-    private val projectsRepository: ProjectsRepository,
+    private val useCases: ProjectsUseCases,
     private val parentId: Long? = null,
     private val logger: ApplicationLogger = ApplicationLogger.None,
 ) : CoroutineExecutor<ProjectsIntent, Nothing, UiState, UiState, ProjectsLabel>(),
@@ -30,7 +30,7 @@ class RealProjectsExecutor(
                 "Create project",
                 mapOf("parentId" to parentId),
             ) {
-                ProjectsLabel.Created(projectsRepository.createProject(it, parentId))
+                ProjectsLabel.Created(useCases.create(it, parentId))
             }
 
             is ProjectsIntent.UpdateProject -> saveProject(
@@ -38,7 +38,7 @@ class RealProjectsExecutor(
                 "Update project",
                 mapOf("projectId" to intent.id),
             ) {
-                projectsRepository.updateProject(intent.id, it)
+                useCases.rename(intent.id, it)
                 ProjectsLabel.Saved
             }
 
@@ -53,7 +53,7 @@ class RealProjectsExecutor(
         dispatch(UiState.Loading)
         observation = scope.launch {
             try {
-                projectsRepository.observeProjects(parentId).collect { projects ->
+                useCases.observeChildren(parentId).collect { projects ->
                     val newState = if (projects.isEmpty()) {
                         UiState.NoProjects
                     } else {
@@ -102,7 +102,7 @@ class RealProjectsExecutor(
         publish(ProjectsLabel.Deleting)
         saving = scope.launch {
             try {
-                projectsRepository.deleteProject(id)
+                useCases.delete(id)
                 publish(ProjectsLabel.Deleted)
             } catch (exception: CancellationException) {
                 throw exception

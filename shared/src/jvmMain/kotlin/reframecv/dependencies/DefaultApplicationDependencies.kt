@@ -20,11 +20,13 @@ import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
-import reframecv.network.RemoteVacancyRecognitionRepository
 import reframecv.network.createDesktopNetworkClient
 import reframecv.photos.DesktopResumePhotoPicker
 import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
+import reframecv.providers.openrouter.OpenRouterClient
+import reframecv.providers.recognition.RemoteVacancyRecognitionRepository
+import reframecv.providers.recognition.vacancyRecognitionSchema
 import reframecv.recognition.DesktopVacancyDocumentReader
 import reframecv.recognition.VacancyDocumentReader
 import reframecv.recognition.VacancyRecognitionRepository
@@ -40,6 +42,13 @@ import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.RecognizeVacancyUseCase
+import reframecv.usecase.ResumeFilesUseCases
+import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 /** Gives all screens access to the same local data without reopening the database. */
 class DefaultApplicationDependencies(
@@ -60,8 +69,10 @@ class DefaultApplicationDependencies(
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
-    private val recognitionRepository =
-        lazy { RemoteVacancyRecognitionRepository(createDesktopNetworkClient()) }
+    private val provider = lazy { OpenRouterClient(createDesktopNetworkClient()) }
+    private val recognitionRepository = lazy {
+        RemoteVacancyRecognitionRepository(provider.value, vacancyRecognitionSchema())
+    }
     override val vacancyRecognitionRepository: VacancyRecognitionRepository
         get() {
             check(!closed)
@@ -131,10 +142,67 @@ class DefaultApplicationDependencies(
             return coverLetterRepository
         }
 
+    private val projectsUseCasesInstance by lazy { ProjectsUseCases(projectsRepository) }
+    override val projectsUseCases: ProjectsUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return projectsUseCasesInstance
+        }
+
+    private val resumesUseCasesInstance by lazy { ResumesUseCases(resumesRepository) }
+    override val resumesUseCases: ResumesUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return resumesUseCasesInstance
+        }
+
+    private val vacanciesUseCasesInstance by lazy { VacanciesUseCases(vacanciesRepository) }
+    override val vacanciesUseCases: VacanciesUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return vacanciesUseCasesInstance
+        }
+
+    private val observeDashboardInstance by lazy {
+        ObserveDashboardUseCase(resumesRepository, vacanciesRepository, coverLettersRepository)
+    }
+    override val observeDashboard: ObserveDashboardUseCase
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return observeDashboardInstance
+        }
+
+    private val recognizeVacancyInstance by lazy {
+        RecognizeVacancyUseCase(vacancyDocumentReader, vacancyRecognitionRepository)
+    }
+    override val recognizeVacancy: RecognizeVacancyUseCase
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return recognizeVacancyInstance
+        }
+
+    private val resumeFilesUseCasesInstance by lazy {
+        ResumeFilesUseCases(resumeImporter, resumeExporter, resumePhotos)
+    }
+    override val resumeFilesUseCases: ResumeFilesUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return resumeFilesUseCasesInstance
+        }
+
+    private val vacancyFilesUseCasesInstance by lazy {
+        VacancyFilesUseCases(vacancyImporter, vacancyExporter, attachmentPicker)
+    }
+    override val vacancyFilesUseCases: VacancyFilesUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return vacancyFilesUseCasesInstance
+        }
+
     override fun close() {
         if (closed) return
         closed = true
-        if (recognitionRepository.isInitialized()) recognitionRepository.value.close()
+        if (provider.isInitialized()) provider.value.close()
         if (database.isInitialized()) database.value.close()
     }
 }

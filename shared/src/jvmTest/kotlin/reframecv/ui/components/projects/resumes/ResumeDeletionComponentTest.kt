@@ -20,6 +20,8 @@ import reframecv.ui.components.projects.resumes.editor.DefaultResumeEditorCompon
 import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ResumesUseCases
 
 class ResumeDeletionComponentTest : ComponentTest() {
     private fun original() =
@@ -107,6 +109,12 @@ class ResumeDeletionComponentTest : ComponentTest() {
             DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val resumesUseCases get() = ResumesUseCases(resumesRepository)
+                    override val observeDashboard get() = ObserveDashboardUseCase(
+                        resumesRepository,
+                        vacanciesRepository,
+                        coverLettersRepository,
+                    )
                     override val resumesRepository = repository
                 },
             ),

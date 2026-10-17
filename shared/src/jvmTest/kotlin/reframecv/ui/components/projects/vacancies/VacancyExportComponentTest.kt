@@ -18,6 +18,7 @@ import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyExportCom
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancyExportComponentTest : ComponentTest() {
     private val record =
@@ -89,6 +90,11 @@ class VacancyExportComponentTest : ComponentTest() {
             DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                        vacancyImporter,
+                        vacancyExporter,
+                        attachmentPicker,
+                    )
                     override val vacancyExporter = exporter
                 },
             ),

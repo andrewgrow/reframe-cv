@@ -22,6 +22,8 @@ import reframecv.repository.ResumesRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ResumesUseCases
 
 class ResumesComponentTest : ComponentTest() {
     @Test
@@ -114,6 +116,12 @@ class ResumesComponentTest : ComponentTest() {
     private fun context(repository: ResumesRepository) = DefaultAppComponentContext(
         DefaultComponentContext(lifecycle),
         object : ApplicationDependencies by dependencies {
+            override val resumesUseCases get() = ResumesUseCases(resumesRepository)
+            override val observeDashboard get() = ObserveDashboardUseCase(
+                resumesRepository,
+                vacanciesRepository,
+                coverLettersRepository,
+            )
             override val resumesRepository = repository
         },
     )

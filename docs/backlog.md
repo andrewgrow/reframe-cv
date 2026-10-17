@@ -24,7 +24,8 @@ belong in the [README](../README.md).
 - [ ] Add editing controls for responsibilities, requirements, and nice-to-have lists.
 - [ ] Decide whether recognition should offer a preview/diff before replacing draft fields.
 - [ ] Define URL-to-snapshot fetching, supported formats, and failure/cancellation behavior.
-- [ ] Select a PDF recognition provider; define authentication, upload/response protocol, limits, and real request cancellation.
+- [ ] Implement OpenRouter PDF requests: authentication, upload/response protocol, limits,
+  compatible structured-output schema, and real request cancellation.
 - [ ] Consider parsing additional source formats after the PDF integration.
 
 ## Print and PDF export
@@ -37,3 +38,11 @@ belong in the [README](../README.md).
 - [ ] Expose UI scale controls and persist the selected scale in application settings.
 - [ ] Define multi-keyword search semantics: match all or any.
 - [ ] Revisit left-pane sizing and deep nesting if current scrolling is insufficient.
+
+## API provider settings
+
+- [ ] Add Settings navigation and a user-managed list of provider connections; start empty.
+- [ ] Add connection creation/editing: supported provider type, name, credentials, key validation,
+  model loading/selection, and explicit Save. Choose an active connection for AI operations.
+- [ ] Extend provider contracts with credential checks and model discovery when implementing
+  the settings flow; preserve drafts on failure and keep credentials out of logs.

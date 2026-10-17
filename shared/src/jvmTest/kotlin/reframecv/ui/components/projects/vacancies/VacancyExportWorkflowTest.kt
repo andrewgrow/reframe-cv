@@ -20,6 +20,9 @@ import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancyExportWorkflowTest : ComponentTest() {
     private val original = Vacancy(
@@ -51,6 +54,17 @@ class VacancyExportWorkflowTest : ComponentTest() {
             }
         }
         val services = object : ApplicationDependencies by dependencies {
+            override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+            override val observeDashboard get() = ObserveDashboardUseCase(
+                resumesRepository,
+                vacanciesRepository,
+                coverLettersRepository,
+            )
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+            )
             override val vacanciesRepository = repository
             override val vacancyExporter = VacancyExporter {
                 exported.send(it)

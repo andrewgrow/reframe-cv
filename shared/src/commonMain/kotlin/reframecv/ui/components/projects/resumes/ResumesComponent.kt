@@ -53,7 +53,7 @@ class DefaultResumesComponent(
     private val store = createResumesStore(
         storeFactory,
         projectId,
-        dependencies.resumesRepository,
+        dependencies.resumesUseCases,
         dependencies.logger,
     )
         .also { it.accept(ResumesIntent.Load) }

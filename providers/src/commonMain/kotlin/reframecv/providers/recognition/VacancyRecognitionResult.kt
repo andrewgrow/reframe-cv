@@ -1,4 +1,4 @@
-package reframecv.network.recognition
+package reframecv.providers.recognition
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

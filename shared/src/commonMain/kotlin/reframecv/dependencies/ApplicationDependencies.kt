@@ -17,6 +17,13 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.RecognizeVacancyUseCase
+import reframecv.usecase.ResumeFilesUseCases
+import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 /** Defines the contract each platform implements to provide application dependencies. */
 interface ApplicationDependencies {
@@ -37,5 +44,12 @@ interface ApplicationDependencies {
     val resumesRepository: ResumesRepository
     val vacanciesRepository: VacanciesRepository
     val coverLettersRepository: CoverLettersRepository
+    val projectsUseCases: ProjectsUseCases
+    val resumesUseCases: ResumesUseCases
+    val vacanciesUseCases: VacanciesUseCases
+    val observeDashboard: ObserveDashboardUseCase
+    val recognizeVacancy: RecognizeVacancyUseCase
+    val resumeFilesUseCases: ResumeFilesUseCases
+    val vacancyFilesUseCases: VacancyFilesUseCases
     fun close()
 }

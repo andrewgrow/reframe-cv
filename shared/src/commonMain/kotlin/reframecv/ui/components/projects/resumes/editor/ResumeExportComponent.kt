@@ -45,7 +45,7 @@ class DefaultResumeExportComponent(
         dependencies.eventHistory.record("Resume Export(resumeId=${record.id})")
         scope.launch {
             try {
-                dependencies.resumeExporter.export(record)
+                dependencies.resumeFilesUseCases.export(record)
                 state.value = ResumeExportState.Idle
                 finished()
             } catch (error: CancellationException) {

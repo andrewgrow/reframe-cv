@@ -22,6 +22,7 @@ import reframecv.logging.EventHistory
 import reframecv.repository.ProjectsRepository
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 class ProjectTreeComponentTest {
     @Test
@@ -47,6 +48,7 @@ class ProjectTreeComponentTest {
             }
         }
         val customDependencies = object : ApplicationDependencies by dependencies {
+            override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
             override val projectsRepository = repository
         }
         val states = Channel<ProjectTreeState>(Channel.UNLIMITED)

@@ -30,9 +30,7 @@ class DefaultDashboardComponent(
     private val store = createDashboardStore(
         storeFactory,
         projectId,
-        dependencies.resumesRepository,
-        dependencies.vacanciesRepository,
-        dependencies.coverLettersRepository,
+        dependencies.observeDashboard,
         dependencies.logger,
     ).also { it.accept(DashboardIntent.Load) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)

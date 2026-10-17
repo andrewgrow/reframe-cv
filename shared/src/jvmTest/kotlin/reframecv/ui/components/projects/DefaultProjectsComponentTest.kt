@@ -21,6 +21,7 @@ import reframecv.repository.ProjectsRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.editor.EditorSaveState
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 class DefaultProjectsComponentTest : ComponentTest() {
     @Test
@@ -37,7 +38,7 @@ class DefaultProjectsComponentTest : ComponentTest() {
             component = DefaultProjectsComponent(
                 appComponentContext(),
                 onProjectOpened = opened::add,
-                executorFactory = { RealProjectsExecutor(repository) },
+                executorFactory = { RealProjectsExecutor(ProjectsUseCases(repository)) },
             )
             component.onAddProject()
             val editor = assertNotNull(component.editorSlot.value.child).instance

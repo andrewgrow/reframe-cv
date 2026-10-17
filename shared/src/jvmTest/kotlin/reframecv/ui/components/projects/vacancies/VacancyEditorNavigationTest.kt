@@ -25,6 +25,7 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 class VacancyEditorNavigationTest : ComponentTest() {
     @Test
@@ -66,6 +67,7 @@ class VacancyEditorNavigationTest : ComponentTest() {
             )
         }
         val services = object : ApplicationDependencies by dependencies {
+            override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
             override val projectsRepository =
                 object : ProjectsRepository by dependencies.projectsRepository {
                     override fun observeAllProjects() = flowOf(projects)

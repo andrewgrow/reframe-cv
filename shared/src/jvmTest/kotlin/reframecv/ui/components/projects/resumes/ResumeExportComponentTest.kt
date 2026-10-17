@@ -18,6 +18,7 @@ import reframecv.ui.components.projects.resumes.editor.DefaultResumeExportCompon
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ResumeFilesUseCases
 
 class ResumeExportComponentTest : ComponentTest() {
     private val record =
@@ -89,6 +90,11 @@ class ResumeExportComponentTest : ComponentTest() {
             DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val resumeFilesUseCases get() = ResumeFilesUseCases(
+                        resumeImporter,
+                        resumeExporter,
+                        resumePhotos,
+                    )
                     override val resumeExporter = exporter
                 },
             ),

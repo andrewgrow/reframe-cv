@@ -70,7 +70,8 @@ class DefaultResumePhotoComponent(
         }
         if (path != null) {
             runOperation("Load resume photo") {
-                state.value = state.value.copy(bytes = dependencies.resumePhotos.read(path))
+                state.value =
+                    state.value.copy(bytes = dependencies.resumeFilesUseCases.readPhoto(path))
             }
         }
     }
@@ -80,11 +81,13 @@ class DefaultResumePhotoComponent(
     }
 
     override fun onChoose() = runOperation("Prepare resume photo") {
-        val path = dependencies.resumePhotos.choose()
+        val path = dependencies.resumeFilesUseCases.choosePhoto()
         if (path != null) {
             pending += path
             val bytes =
-                checkNotNull(dependencies.resumePhotos.read(path)) { "Prepared photo is missing" }
+                checkNotNull(dependencies.resumeFilesUseCases.readPhoto(path)) {
+                    "Prepared photo is missing"
+                }
             val previous = source
             source = path
             needsRendering = true
@@ -148,12 +151,12 @@ class DefaultResumePhotoComponent(
             val retained = if (input in pending) {
                 input
             } else {
-                dependencies.resumePhotos.copySource(input).also {
+                dependencies.resumeFilesUseCases.copyPhotoSource(input).also {
                     pending += it
                     source = it
                 }
             }
-            val path = dependencies.resumePhotos.render(retained, state.value.crop)
+            val path = dependencies.resumeFilesUseCases.renderPhoto(retained, state.value.crop)
             pending += path
             val previous = state.value.path
             state.value = state.value.copy(path = path)
@@ -197,7 +200,7 @@ class DefaultResumePhotoComponent(
     @Suppress("TooGenericExceptionCaught")
     private suspend fun discard(path: String) {
         try {
-            dependencies.resumePhotos.discard(path)
+            dependencies.resumeFilesUseCases.discardPhoto(path)
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {

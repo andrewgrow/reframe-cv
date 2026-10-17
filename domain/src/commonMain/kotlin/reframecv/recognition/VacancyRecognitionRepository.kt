@@ -24,5 +24,4 @@ sealed interface RecognitionOutcome {
 /** Defines remote vacancy recognition without coupling application features to networking. */
 interface VacancyRecognitionRepository {
     suspend fun recognize(document: RecognitionDocument): RecognitionOutcome
-    fun close() = Unit
 }

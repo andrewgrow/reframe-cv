@@ -11,20 +11,29 @@ build and verification commands belong in the [README](../README.md).
 - Compose Multiplatform renders the UI. Decompose components own navigation and
   lifecycle; MVIKotlin stores/executors coordinate observable state and repository work.
 - `ApplicationDependencies` is the platform dependency contract. The desktop implementation
-  lazily supplies the shared database, repositories, file services, logger, and Store factory.
+  lazily supplies the shared database, repositories, feature use cases, file services, logger,
+  and Store factory.
   `AppComponentContext` carries these dependencies through the component tree.
-- Components use repository/service contracts rather than constructing databases or native
-  dialogs. Desktop implementations own filesystem access, image processing, and file pickers.
-- `domain` owns application models, repository/service contracts, and shared resume document
+- Components and MVIKotlin executors use feature use cases for data operations. Components
+  retain UI state, lifecycle-bound jobs, navigation, feedback, and draft-file ownership.
+  Use cases coordinate repositories and platform file services without presentation types.
+  Desktop implementations own filesystem access, image processing, and file pickers.
+- `domain` owns application models, use cases, repository/provider contracts, and resume document
   serialization. It depends on neither Room, Ktor, Compose, nor the application module.
 - `database` depends on `domain` and owns Room entities, DAOs, converters, local repositories,
   and the exported schemas in `database/schemas`. Database construction accepts a path;
   desktop application dependencies select the application data directory.
-- `network` depends on `domain` and owns Ktor clients, transport DTOs, remote repositories,
-  and conversion to domain results. There is no separate API module.
-- `shared` common code uses domain contracts; desktop composition wires database and network
-  implementations. Storage-only tests live in `database`, response/schema tests in `network`,
-  and editor/storage integration and UI tests in `shared`.
+- `network` owns Ktor transport, platform engines, and common timeouts; it has no knowledge
+  of concrete AI providers or vacancy recognition DTOs.
+- `providers` depends on `domain` and `network`. External repositories call an injected
+  `AiProviderClient`, whose contract is in `domain`. Provider implementations own service-specific
+  requests/responses and use the injected HTTP transport. There is no separate API module.
+- `shared` common code depends on domain use cases; desktop composition wires database,
+  provider, and transport implementations. Feature groups expose only their relevant actions:
+  projects, resumes, vacancies, document/photo operations, dashboard, and recognition.
+- Storage-only tests live in `database`, response/schema tests in `providers`, and editor/storage
+  integration and UI tests in `shared`. Desktop window persistence remains infrastructure
+  and uses `AppSettingsRepository` directly.
 - Domain models are separate from database entities. `DatabaseModel` provides domain mapping;
   `DatabaseModelFactory` constructs database representations. Local IDs and timestamps are
   `Long`; timestamps are Unix milliseconds, obtained through `nowMillis()`.
@@ -126,18 +135,24 @@ Vacancy lists and keyword search results use ascending IDs; edits do not reorder
 
 `domain` defines the document input, typed outcomes/errors, and the recognition repository
 contract. Successful recognition returns `RecognizedVacancy`, which has no provider status
-codes or JSON annotations. `network` owns `VacancyRecognitionResult`/`VacancyRecognitionJson`
-in `reframecv.network.recognition`; response mapping normalizes posting fields and converts
+codes or JSON annotations. `providers` owns `VacancyRecognitionResult`/`VacancyRecognitionJson`
+in `reframecv.providers.recognition`; response mapping normalizes posting fields and converts
 provider failures to domain errors before components receive them.
 
-Shared UI code depends only on contracts; desktop application dependencies compose the
-platform file reader and lazily created remote repository. Closing application dependencies
-releases an initialized HTTP client and its engine.
+`RecognizeVacancyUseCase` prepares the PDF through `VacancyDocumentReader`, checks cancellation,
+then calls `VacancyRecognitionRepository`. The external repository constructs a generic
+`AiRequest` with document bytes, instructions, and the packaged recognition schema. Its injected
+`AiProviderClient` returns JSON or a typed provider error; the repository validates/decodes JSON
+and maps it to recognition outcomes. It neither saves drafts nor selects a concrete provider.
 
-The provider is deliberately unconfigured: the remote repository returns NotConfigured and
-sends no HTTP requests. The network module has no endpoint, credentials, or provider payload
-format yet. Client configuration provides 15-second connection and 120-second request/socket
-timeouts; the actual provider integration and cancellation behavior need testing when added.
+Desktop application dependencies compose the reader, repository, and lazy `OpenRouterClient`
+with Ktor transport from `network`. Closing application dependencies releases the initialized
+provider client, HTTP client, and engine; repositories do not own the shared transport.
+
+OpenRouter remains an unconfigured implementation: it returns NotConfigured and sends no HTTP
+requests. No credentials, model selection, or API connection rows are added by this refactoring.
+Client configuration provides 15-second connection and 120-second request/socket timeouts;
+real provider requests and cancellation behavior need testing when integration is added.
 
 Parse PDF accepts selected files before Save or available saved snapshots. The desktop reader
 checks the extension and `%PDF-` header, reads on IO, and verifies stored file size/SHA-256.

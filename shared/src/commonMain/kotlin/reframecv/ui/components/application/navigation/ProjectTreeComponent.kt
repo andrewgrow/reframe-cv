@@ -32,7 +32,7 @@ class DefaultProjectTreeComponent(
     override val state = MutableValue(ProjectTreeState())
     private val history = componentContext.dependencies.eventHistory
     private val logger = componentContext.dependencies.logger
-    private val repository = componentContext.dependencies.projectsRepository
+    private val useCases = componentContext.dependencies.projectsUseCases
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observation: Job? = null
 
@@ -52,7 +52,7 @@ class DefaultProjectTreeComponent(
         state.value = state.value.copy(loading = true, failed = false)
         observation = scope.launch {
             try {
-                repository.observeAllProjects().collect { projects ->
+                useCases.observeAll().collect { projects ->
                     val activeIds = projects.map { it.id }.toSet()
                     val ancestors = state.value.selectedId?.let {
                         projects.pathTo(it).dropLast(1).map { project -> project.id }

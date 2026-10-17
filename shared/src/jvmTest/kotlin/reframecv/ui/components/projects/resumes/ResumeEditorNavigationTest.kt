@@ -29,6 +29,9 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.ResumesUseCases
 
 class ResumeEditorNavigationTest : ComponentTest() {
     @Test
@@ -149,6 +152,12 @@ class ResumeEditorNavigationTest : ComponentTest() {
     private fun resumeContext(repository: ResumesRepository) = DefaultAppComponentContext(
         DefaultComponentContext(lifecycle),
         object : ApplicationDependencies by dependencies {
+            override val resumesUseCases get() = ResumesUseCases(resumesRepository)
+            override val observeDashboard get() = ObserveDashboardUseCase(
+                resumesRepository,
+                vacanciesRepository,
+                coverLettersRepository,
+            )
             override val resumesRepository = repository
         },
     )
@@ -159,6 +168,7 @@ class ResumeEditorNavigationTest : ComponentTest() {
             Project(it, "Project $it", createdAt = 0, updatedAt = 0, mode = ProjectMode.Workspace)
         }
         val services = object : ApplicationDependencies by dependencies {
+            override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
             override val projectsRepository =
                 object : ProjectsRepository by dependencies.projectsRepository {
                     override fun observeAllProjects() = flowOf(projects)

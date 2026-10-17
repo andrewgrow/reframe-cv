@@ -45,6 +45,7 @@ kotlin {
         }
         jvmMain.dependencies {
             implementation(project(":network"))
+            implementation(project(":providers"))
             implementation(project(":database"))
             implementation(libs.klogging)
             implementation(libs.kotlinx.coroutinesSwing)
@@ -53,6 +54,7 @@ kotlin {
         jvmTest.dependencies {
             implementation(project(":database"))
             implementation(project(":network"))
+            implementation(project(":providers"))
             implementation(libs.jsonSchemaValidator)
             implementation(libs.compose.uiTestJunit4)
             implementation(libs.roborazzi.composeDesktop)

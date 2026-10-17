@@ -3,18 +3,17 @@ package reframecv.ui.components.projects.resumes
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import reframecv.domain.models.resume.Resume
 import reframecv.logging.ApplicationLogger
 import reframecv.repository.MainResumeChange
-import reframecv.repository.ResumesRepository
 import reframecv.ui.components.projects.resumes.editor.ResumeDraft
+import reframecv.usecase.ResumesUseCases
 
 /** Observes project resumes and keeps failed reads retryable. */
 internal class ResumesExecutor(
     private val projectId: Long,
-    private val repository: ResumesRepository,
+    private val useCases: ResumesUseCases,
     private val logger: ApplicationLogger,
 ) : CoroutineExecutor<ResumesIntent, Nothing, ResumesState, ResumesState, ResumesLabel>() {
     private var observation: Job? = null
@@ -48,17 +47,8 @@ internal class ResumesExecutor(
         publish(ResumesLabel.Saving)
         saving = scope.launch {
             try {
-                val created = if (original == null) {
-                    repository.createSaved(draft.toResume(projectId), mainResumeChange)
-                } else {
-                    val record = draft.applyTo(original)
-                    if (mainResumeChange == MainResumeChange.Keep) {
-                        repository.update(record)
-                    } else {
-                        repository.update(record, mainResumeChange)
-                    }
-                    null
-                }
+                val record = original?.let(draft::applyTo) ?: draft.toResume(projectId)
+                val created = useCases.save(record, mainResumeChange)
                 publish(ResumesLabel.Saved(created))
             } catch (exception: CancellationException) {
                 throw exception
@@ -82,7 +72,7 @@ internal class ResumesExecutor(
         publish(ResumesLabel.Deleting)
         saving = scope.launch {
             try {
-                repository.delete(id)
+                useCases.delete(id)
                 publish(ResumesLabel.Deleted)
             } catch (exception: CancellationException) {
                 throw exception
@@ -107,15 +97,9 @@ internal class ResumesExecutor(
         dispatch(ResumesState.Loading)
         observation = scope.launch {
             try {
-                combine(
-                    repository.observeResumes(projectId),
-                    repository.observeMainResumeId(projectId),
-                ) {
-                        records,
-                        mainId,
-                    ->
-                    ResumesState.Ready(records, mainId)
-                }.collect { dispatch(it) }
+                useCases.observe(projectId).collect {
+                    dispatch(ResumesState.Ready(it.resumes, it.mainResumeId))
+                }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (error: Exception) {

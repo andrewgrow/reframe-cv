@@ -28,6 +28,9 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
     @Test
@@ -184,6 +187,17 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
         create: Boolean = false,
     ): DefaultVacanciesComponent {
         val services = object : ApplicationDependencies by TestApplicationDependencies() {
+            override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+            override val observeDashboard get() = ObserveDashboardUseCase(
+                resumesRepository,
+                vacanciesRepository,
+                coverLettersRepository,
+            )
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+            )
             override val vacanciesRepository = repository
             override val attachmentPicker =
                 AttachmentPicker { SelectedAttachment("source", "job.txt") }

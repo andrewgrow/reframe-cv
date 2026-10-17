@@ -19,6 +19,8 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.VacanciesUseCases
 
 class VacancyRemovalTest : ComponentTest() {
     private fun vacancy() =
@@ -140,6 +142,12 @@ class VacancyRemovalTest : ComponentTest() {
     private fun context(repository: VacanciesRepository) = DefaultAppComponentContext(
         DefaultComponentContext(lifecycle),
         object : ApplicationDependencies by dependencies {
+            override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+            override val observeDashboard get() = ObserveDashboardUseCase(
+                resumesRepository,
+                vacanciesRepository,
+                coverLettersRepository,
+            )
             override val vacanciesRepository = repository
         },
     )

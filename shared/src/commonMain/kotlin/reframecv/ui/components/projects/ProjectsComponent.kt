@@ -41,7 +41,7 @@ class DefaultProjectsComponent(
     private val back: () -> Unit = {},
     executorFactory: () -> ProjectsExecutor = {
         RealProjectsExecutor(
-            componentContext.dependencies.projectsRepository,
+            componentContext.dependencies.projectsUseCases,
             projectPath.lastOrNull()?.id,
             componentContext.dependencies.logger,
         )

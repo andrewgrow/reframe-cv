@@ -19,6 +19,8 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.VacanciesUseCases
 
 class VacancyEditingTest : ComponentTest() {
     private fun original() = Vacancy(
@@ -87,6 +89,12 @@ class VacancyEditingTest : ComponentTest() {
             val context = DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+                    override val observeDashboard get() = ObserveDashboardUseCase(
+                        resumesRepository,
+                        vacanciesRepository,
+                        coverLettersRepository,
+                    )
                     override val vacanciesRepository = repository
                 },
             )

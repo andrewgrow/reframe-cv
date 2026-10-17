@@ -31,6 +31,8 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.RecognizeVacancyUseCase
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancyRecognitionComponentTest : ComponentTest() {
     private val result = RecognizedVacancy(
@@ -303,6 +305,15 @@ class VacancyRecognitionComponentTest : ComponentTest() {
     ) = runOnUiThread {
         lifecycle.resume()
         val services = object : ApplicationDependencies by dependencies {
+            override val recognizeVacancy get() = RecognizeVacancyUseCase(
+                vacancyDocumentReader,
+                vacancyRecognitionRepository,
+            )
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+            )
             override val vacancyRecognitionRepository = repository
             override val vacancyDocumentReader = reader
             override val attachmentPicker = AttachmentPicker { selection }

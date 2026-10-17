@@ -25,6 +25,7 @@ import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ResumeFilesUseCases
 
 class ResumeImportComponentTest : ComponentTest() {
     @Test
@@ -225,6 +226,11 @@ class ResumeImportComponentTest : ComponentTest() {
             DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val resumeFilesUseCases get() = ResumeFilesUseCases(
+                        resumeImporter,
+                        resumeExporter,
+                        resumePhotos,
+                    )
                     override val resumeImporter = importer
                 },
             ),

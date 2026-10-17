@@ -1,4 +1,4 @@
-package reframecv.network.recognition
+package reframecv.providers.recognition
 
 import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionOutcome

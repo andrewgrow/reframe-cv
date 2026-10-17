@@ -16,6 +16,7 @@ import reframecv.domain.models.project.Project
 import reframecv.logging.RecordingApplicationLogger
 import reframecv.repository.ProjectsRepository
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 class ProjectsErrorLoggingTest {
     @Test
@@ -32,7 +33,8 @@ class ProjectsErrorLoggingTest {
         val logger = RecordingApplicationLogger()
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
         val states = Channel<UiState>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository, parentId = 8L, logger = logger)
+        val executor =
+            RealProjectsExecutor(ProjectsUseCases(repository), parentId = 8L, logger = logger)
         try {
             runOnUiThread { executor.init(callbacks(states, labels)) }
             withTimeout(10.seconds) {
@@ -87,7 +89,7 @@ class ProjectsErrorLoggingTest {
         }
         val logger = RecordingApplicationLogger()
         val states = Channel<UiState>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository, logger = logger)
+        val executor = RealProjectsExecutor(ProjectsUseCases(repository), logger = logger)
         try {
             runOnUiThread {
                 executor.init(callbacks(states, Channel(Channel.UNLIMITED)))

@@ -27,6 +27,8 @@ import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ResumesUseCases
 
 class ResumeEditingComponentTest : ComponentTest() {
     private fun original() = Resume(
@@ -245,6 +247,12 @@ class ResumeEditingComponentTest : ComponentTest() {
             DefaultAppComponentContext(
                 DefaultComponentContext(lifecycle),
                 object : ApplicationDependencies by dependencies {
+                    override val resumesUseCases get() = ResumesUseCases(resumesRepository)
+                    override val observeDashboard get() = ObserveDashboardUseCase(
+                        resumesRepository,
+                        vacanciesRepository,
+                        coverLettersRepository,
+                    )
                     override val resumesRepository = repository
                 },
             ),

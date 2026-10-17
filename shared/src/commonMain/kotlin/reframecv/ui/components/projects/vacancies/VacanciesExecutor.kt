@@ -4,16 +4,15 @@ import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import reframecv.attachments.SnapshotChange
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.logging.ApplicationLogger
-import reframecv.repository.VacanciesRepository
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
+import reframecv.usecase.VacanciesUseCases
 
 /** Keeps vacancies current and gives the editor feedback when changes succeed or fail. */
 internal class VacanciesExecutor(
     private val projectId: Long,
-    private val repository: VacanciesRepository,
+    private val useCases: VacanciesUseCases,
     private val logger: ApplicationLogger,
 ) : CoroutineExecutor<VacanciesIntent, Nothing, VacanciesState, VacanciesState, VacanciesLabel>() {
     private var observation: Job? = null
@@ -37,17 +36,8 @@ internal class VacanciesExecutor(
         publish(VacanciesLabel.Saving)
         saving = scope.launch {
             try {
-                val created = if (original == null) {
-                    repository.createSaved(draft.toVacancy(projectId), draft.snapshotChange)
-                } else {
-                    val record = draft.applyTo(original)
-                    if (draft.snapshotChange == SnapshotChange.Keep) {
-                        repository.update(record)
-                    } else {
-                        repository.update(record, draft.snapshotChange)
-                    }
-                    null
-                }
+                val record = original?.let(draft::applyTo) ?: draft.toVacancy(projectId)
+                val created = useCases.save(record, draft.snapshotChange)
                 publish(VacanciesLabel.Saved(created))
             } catch (exception: CancellationException) {
                 throw exception
@@ -70,7 +60,7 @@ internal class VacanciesExecutor(
         publish(VacanciesLabel.Deleting)
         saving = scope.launch {
             try {
-                repository.delete(id)
+                useCases.delete(id)
                 publish(VacanciesLabel.Deleted)
             } catch (exception: CancellationException) {
                 throw exception
@@ -95,7 +85,7 @@ internal class VacanciesExecutor(
         dispatch(VacanciesState.Loading)
         observation = scope.launch {
             try {
-                repository.observeVacancies(projectId).collect {
+                useCases.observe(projectId).collect {
                     dispatch(VacanciesState.Ready(it))
                 }
             } catch (exception: CancellationException) {

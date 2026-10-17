@@ -1,4 +1,4 @@
-package reframecv.network.recognition
+package reframecv.providers.recognition
 
 import com.networknt.schema.InputFormat
 import com.networknt.schema.SchemaLocation

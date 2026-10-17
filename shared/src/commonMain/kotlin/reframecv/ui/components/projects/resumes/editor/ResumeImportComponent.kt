@@ -47,7 +47,7 @@ class DefaultResumeImportComponent(
         dependencies.eventHistory.record("Resume Import(create)")
         scope.launch {
             try {
-                val file = dependencies.resumeImporter.pickAndImport()
+                val file = dependencies.resumeFilesUseCases.importDocument()
                 if (file == null) {
                     state.value = ResumeImportState.Idle
                 } else {

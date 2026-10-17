@@ -23,6 +23,7 @@ import reframecv.domain.models.project.ProjectMode
 import reframecv.repository.LocalProjectsRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ProjectsUseCases
 
 private typealias ProjectsCallbacks = Executor.Callbacks<UiState, UiState, Nothing, ProjectsLabel>
 
@@ -43,7 +44,7 @@ class RealProjectsExecutorTest {
         }
         val messages = Channel<UiState>(Channel.UNLIMITED)
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository)
+        val executor = RealProjectsExecutor(ProjectsUseCases(repository))
         try {
             runOnUiThread {
                 executor.init(callbacks(messages, labels))
@@ -75,7 +76,7 @@ class RealProjectsExecutorTest {
         val sibling = repository.createProject("Sibling", other.id)
         val messages = Channel<UiState>(Channel.UNLIMITED)
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository, parent.id)
+        val executor = RealProjectsExecutor(ProjectsUseCases(repository), parent.id)
         try {
             runOnUiThread {
                 executor.init(callbacks(messages, labels))
@@ -121,7 +122,7 @@ class RealProjectsExecutorTest {
         val project = repository.createProject("Android Developer")
         val messages = Channel<UiState>(Channel.UNLIMITED)
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository)
+        val executor = RealProjectsExecutor(ProjectsUseCases(repository))
         try {
             runOnUiThread {
                 executor.init(callbacks(messages, labels))
@@ -158,7 +159,7 @@ class RealProjectsExecutorTest {
         }
         val messages = Channel<UiState>(Channel.UNLIMITED)
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(repository)
+        val executor = RealProjectsExecutor(ProjectsUseCases(repository))
         try {
             runOnUiThread {
                 executor.init(callbacks(messages, labels))
@@ -179,7 +180,8 @@ class RealProjectsExecutorTest {
         val database = buildDatabase(createDatabaseBuilder(file))
         val messages = Channel<UiState>(Channel.UNLIMITED)
         val labels = Channel<ProjectsLabel>(Channel.UNLIMITED)
-        val executor = RealProjectsExecutor(LocalProjectsRepository(database.projectDao()))
+        val executor =
+            RealProjectsExecutor(ProjectsUseCases(LocalProjectsRepository(database.projectDao())))
         try {
             runOnUiThread {
                 executor.init(callbacks(messages, labels))

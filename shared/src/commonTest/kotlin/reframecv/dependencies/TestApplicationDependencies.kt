@@ -28,6 +28,13 @@ import reframecv.repository.TestCoverLettersRepository
 import reframecv.repository.TestResumesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.RecognizeVacancyUseCase
+import reframecv.usecase.ResumeFilesUseCases
+import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 class TestApplicationDependencies : ApplicationDependencies {
     override val eventHistory = EventHistory()
@@ -124,6 +131,29 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val vacanciesRepository = TestVacanciesRepository()
 
     override val coverLettersRepository = TestCoverLettersRepository()
+
+    override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
+    override val resumesUseCases get() = ResumesUseCases(resumesRepository)
+    override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+    override val observeDashboard get() = ObserveDashboardUseCase(
+        resumesRepository,
+        vacanciesRepository,
+        coverLettersRepository,
+    )
+    override val recognizeVacancy get() = RecognizeVacancyUseCase(
+        vacancyDocumentReader,
+        vacancyRecognitionRepository,
+    )
+    override val resumeFilesUseCases get() = ResumeFilesUseCases(
+        resumeImporter,
+        resumeExporter,
+        resumePhotos,
+    )
+    override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+        vacancyImporter,
+        vacancyExporter,
+        attachmentPicker,
+    )
 
     override fun close() = Unit
 }

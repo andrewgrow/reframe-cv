@@ -22,6 +22,7 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ResumeFilesUseCases
 
 class ResumePhotoComponentTest : ComponentTest() {
     @Test
@@ -136,6 +137,11 @@ class ResumePhotoComponentTest : ComponentTest() {
                 DefaultAppComponentContext(
                     DefaultComponentContext(lifecycle),
                     object : ApplicationDependencies by dependencies {
+                        override val resumeFilesUseCases get() = ResumeFilesUseCases(
+                            resumeImporter,
+                            resumeExporter,
+                            resumePhotos,
+                        )
                         override val resumePhotos = photos
                     },
                 ),
@@ -223,6 +229,11 @@ class ResumePhotoComponentTest : ComponentTest() {
                 DefaultAppComponentContext(
                     DefaultComponentContext(lifecycle),
                     object : ApplicationDependencies by dependencies {
+                        override val resumeFilesUseCases get() = ResumeFilesUseCases(
+                            resumeImporter,
+                            resumeExporter,
+                            resumePhotos,
+                        )
                         override val resumePhotos = photos
                     },
                 ),

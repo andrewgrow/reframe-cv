@@ -24,6 +24,7 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancyImportState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancyImportComponentTest : ComponentTest() {
     private val imported = Vacancy(
@@ -184,6 +185,11 @@ class VacancyImportComponentTest : ComponentTest() {
     ) = runOnUiThread {
         lifecycle.resume()
         val services = object : ApplicationDependencies by dependencies {
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+            )
             override val vacancyImporter = importer
         }
         DefaultVacancyEditorComponent(

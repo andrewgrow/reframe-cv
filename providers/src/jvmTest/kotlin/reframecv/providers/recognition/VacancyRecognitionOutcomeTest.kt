@@ -1,4 +1,4 @@
-package reframecv.network.recognition
+package reframecv.providers.recognition
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

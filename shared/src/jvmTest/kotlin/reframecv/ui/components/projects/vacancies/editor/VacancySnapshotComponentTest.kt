@@ -18,6 +18,9 @@ import reframecv.repository.VacanciesRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
+import reframecv.usecase.ObserveDashboardUseCase
+import reframecv.usecase.VacanciesUseCases
+import reframecv.usecase.VacancyFilesUseCases
 
 class VacancySnapshotComponentTest : ComponentTest() {
     @Test
@@ -25,6 +28,11 @@ class VacancySnapshotComponentTest : ComponentTest() {
         val selected = SelectedAttachment("original", "job.pdf")
         var pick: SelectedAttachment? = selected
         val services = object : ApplicationDependencies by dependencies {
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+            )
             override val attachmentPicker = AttachmentPicker { pick }
         }
         val states = Channel<VacancySnapshotState>(Channel.UNLIMITED)
@@ -82,6 +90,12 @@ class VacancySnapshotComponentTest : ComponentTest() {
         lateinit var component: DefaultVacancySnapshotComponent
         runOnUiThread {
             val services = object : ApplicationDependencies by dependencies {
+                override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
+                override val observeDashboard get() = ObserveDashboardUseCase(
+                    resumesRepository,
+                    vacanciesRepository,
+                    coverLettersRepository,
+                )
                 override val vacanciesRepository = repository
             }
             component = DefaultVacancySnapshotComponent(

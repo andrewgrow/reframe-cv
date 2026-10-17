@@ -1,4 +1,4 @@
-package reframecv.network.recognition
+package reframecv.providers.recognition
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray

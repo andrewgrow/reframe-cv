@@ -45,7 +45,7 @@ class DefaultVacancyExportComponent(
         dependencies.eventHistory.record("Vacancy Export(vacancyId=${record.id})")
         scope.launch {
             try {
-                dependencies.vacancyExporter.export(record)
+                dependencies.vacancyFilesUseCases.export(record)
                 state.value = VacancyExportState.Idle
                 finished()
             } catch (error: CancellationException) {

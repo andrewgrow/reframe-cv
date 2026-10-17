@@ -3,19 +3,14 @@ package reframecv.ui.components.projects.dashboard
 import com.arkivanov.mvikotlin.extensions.coroutines.CoroutineExecutor
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import reframecv.logging.ApplicationLogger
-import reframecv.repository.CoverLettersRepository
-import reframecv.repository.ResumesRepository
-import reframecv.repository.VacanciesRepository
+import reframecv.usecase.ObserveDashboardUseCase
 
 /** Keeps dashboard previews current as workspace documents change. */
 internal class DashboardExecutor(
     private val projectId: Long,
-    private val resumes: ResumesRepository,
-    private val vacancies: VacanciesRepository,
-    private val letters: CoverLettersRepository,
+    private val observeDashboard: ObserveDashboardUseCase,
     private val logger: ApplicationLogger,
 ) : CoroutineExecutor<DashboardIntent, Nothing, DashboardState, DashboardState, Nothing>() {
     private var observation: Job? = null
@@ -27,13 +22,9 @@ internal class DashboardExecutor(
         dispatch(DashboardState.Loading)
         observation = scope.launch {
             try {
-                combine(
-                    resumes.observeResumes(projectId),
-                    vacancies.observeVacancies(projectId),
-                    letters.observeCoverLetters(projectId),
-                ) { resumes, vacancies, letters ->
-                    DashboardState.Ready(resumes, vacancies, letters)
-                }.collect { dispatch(it) }
+                observeDashboard(projectId).collect {
+                    dispatch(DashboardState.Ready(it.resumes, it.vacancies, it.coverLetters))
+                }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (error: Exception) {

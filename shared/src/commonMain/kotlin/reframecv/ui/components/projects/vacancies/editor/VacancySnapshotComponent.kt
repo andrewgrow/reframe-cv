@@ -58,7 +58,7 @@ class DefaultVacancySnapshotComponent(
     override fun onAttach() {
         if (!canEdit()) return
         runOperation("Select snapshot file", selecting = true) {
-            val selection = dependencies.attachmentPicker.pick()
+            val selection = dependencies.vacancyFilesUseCases.chooseAttachment()
             if (selection != null) {
                 change = SnapshotChange.Attach(selection)
                 state.value = VacancySnapshotState(selected = selection)
@@ -80,7 +80,7 @@ class DefaultVacancySnapshotComponent(
         val id = checkNotNull(vacancyId)
         load(id)
         if (state.value.status == AttachmentStatus.Available) {
-            dependencies.vacanciesRepository.openSnapshot(id)
+            dependencies.vacanciesUseCases.openSnapshot(id)
         }
     }
 
@@ -102,7 +102,7 @@ class DefaultVacancySnapshotComponent(
     }
 
     private suspend fun load(id: Long) {
-        val snapshot = dependencies.vacanciesRepository.snapshot(id)
+        val snapshot = dependencies.vacanciesUseCases.loadSnapshot(id)
         state.value = VacancySnapshotState(
             record = snapshot?.record,
             status = snapshot?.status,

@@ -67,8 +67,7 @@ class DefaultVacancyRecognitionComponent(
         dependencies.eventHistory.record("Vacancy Recognize PDF(vacancyId=${vacancyId()})")
         job = scope.launch {
             try {
-                val document = dependencies.vacancyDocumentReader.read(selected)
-                val outcome = dependencies.vacancyRecognitionRepository.recognize(document)
+                val outcome = dependencies.recognizeVacancy(selected)
                 currentCoroutineContext().ensureActive()
                 if (request == generation && !closed) apply(outcome)
             } catch (error: CancellationException) {

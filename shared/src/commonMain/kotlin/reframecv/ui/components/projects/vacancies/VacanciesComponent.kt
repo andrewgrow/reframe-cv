@@ -51,7 +51,7 @@ class DefaultVacanciesComponent(
     private val store = createVacanciesStore(
         storeFactory,
         projectId,
-        dependencies.vacanciesRepository,
+        dependencies.vacanciesUseCases,
         dependencies.logger,
     )
         .also { it.accept(VacanciesIntent.Load) }

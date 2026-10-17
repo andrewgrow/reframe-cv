@@ -47,7 +47,7 @@ class DefaultVacancyImportComponent(
         dependencies.eventHistory.record("Vacancy Import(create)")
         scope.launch {
             try {
-                val file = dependencies.vacancyImporter.pickAndImport()
+                val file = dependencies.vacancyFilesUseCases.importDocument()
                 if (file == null) {
                     state.value = VacancyImportState.Idle
                 } else {
