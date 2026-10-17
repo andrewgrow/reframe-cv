@@ -12,7 +12,6 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.attachments.SelectedAttachment
-import reframecv.database.resume.ResumeContentJson
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.logging.ApplicationLogger
 import reframecv.photos.DesktopResumePhotoStorage
@@ -20,6 +19,7 @@ import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotoPicker
 import reframecv.photos.photoBytes
 import reframecv.repository.MainResumeChange
+import reframecv.serialization.ResumeContentJson
 
 class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
     private val storage get() = DesktopResumePhotoStorage(temporaryFolder.root.toPath())

@@ -6,9 +6,8 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
-import reframecv.recognition.VacancyRecognitionJson
+import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.applyTo
-import reframecv.recognition.recognitionFixture
 import reframecv.repository.LocalVacanciesRepository
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 
@@ -17,8 +16,15 @@ class VacancyStructuredContentTest : WorkspaceDatabaseTest() {
     fun recognizedContentSurvivesDatabaseReopenDraftEditingAndKeywordSearch() = runBlocking {
         val projectId = project()
         val repository = LocalVacanciesRepository(database.vacancyDao())
-        val recognized = VacancyRecognitionJson.decode(
-            recognitionFixture(),
+        val recognized = RecognizedVacancy(
+            jobTitle = "Mobile developer",
+            description = "Build mobile apps",
+            company = "Recognized company",
+            url = "https://example.com/recognized",
+            keywords = listOf("Kotlin", "Android"),
+            responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
+            requirements = listOf("Kotlin"),
+            niceToHave = listOf("CI/CD"),
         ).applyTo(vacancy(projectId))
         val id = repository.create(recognized)
         database.close()

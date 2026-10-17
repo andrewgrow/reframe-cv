@@ -15,6 +15,16 @@ build and verification commands belong in the [README](../README.md).
   `AppComponentContext` carries these dependencies through the component tree.
 - Components use repository/service contracts rather than constructing databases or native
   dialogs. Desktop implementations own filesystem access, image processing, and file pickers.
+- `domain` owns application models, repository/service contracts, and shared resume document
+  serialization. It depends on neither Room, Ktor, Compose, nor the application module.
+- `database` depends on `domain` and owns Room entities, DAOs, converters, local repositories,
+  and the exported schemas in `database/schemas`. Database construction accepts a path;
+  desktop application dependencies select the application data directory.
+- `network` depends on `domain` and owns Ktor clients, transport DTOs, remote repositories,
+  and conversion to domain results. There is no separate API module.
+- `shared` common code uses domain contracts; desktop composition wires database and network
+  implementations. Storage-only tests live in `database`, response/schema tests in `network`,
+  and editor/storage integration and UI tests in `shared`.
 - Domain models are separate from database entities. `DatabaseModel` provides domain mapping;
   `DatabaseModelFactory` constructs database representations. Local IDs and timestamps are
   `Long`; timestamps are Unix milliseconds, obtained through `nowMillis()`.
@@ -91,13 +101,14 @@ Its version is identified by the schema ID, independently of the database schema
 
 `VacancyRecognitionJson` reads this contract. Canonical nice_to_have is an array;
 legacy text becomes one item and null becomes an empty list. Nullable list entries
-remain representable in the response but are removed when applying it to a vacancy.
+remain representable in the response but are removed during mapping to the domain result.
 The original project used a string in its JSON schema and an array in its database
 model; this compatibility rule resolves that inconsistency. Unknown fields and
 invalid types/status codes are rejected.
 
-`VacancyRecognitionResult.applyTo` accepts only successful results. An unknown jobTitle
-becomes empty; a blank name must still be filled before saving.
+`VacancyRecognitionResult.toOutcome` converts successful responses to `RecognizedVacancy`
+and failed responses to typed errors. An unknown jobTitle becomes empty; a blank name must
+still be filled before saving. `RecognizedVacancy.applyTo` updates the vacancy draft.
 It replaces jobTitle, company, URL, description, and every recognized list; unknown
 values clear the corresponding fields. The user-defined name is preserved, or filled from
 jobTitle when blank. IDs, timestamps, linked documents, and VacancyAttachment are preserved.
@@ -113,11 +124,15 @@ Vacancy lists and keyword search results use ascending IDs; edits do not reorder
 
 ## PDF vacancy recognition
 
-`recognition-api` contains provider-independent input/result/error types and the repository
-contract. `network` depends on that contract, owns Ktor/CIO client configuration, and exposes
-the remote implementation. Shared UI code depends only on contracts; desktop application
-dependencies compose the platform file reader and lazily created remote repository. Closing
-application dependencies releases an initialized HTTP client and its engine.
+`domain` defines the document input, typed outcomes/errors, and the recognition repository
+contract. Successful recognition returns `RecognizedVacancy`, which has no provider status
+codes or JSON annotations. `network` owns `VacancyRecognitionResult`/`VacancyRecognitionJson`
+in `reframecv.network.recognition`; response mapping normalizes posting fields and converts
+provider failures to domain errors before components receive them.
+
+Shared UI code depends only on contracts; desktop application dependencies compose the
+platform file reader and lazily created remote repository. Closing application dependencies
+releases an initialized HTTP client and its engine.
 
 The provider is deliberately unconfigured: the remote repository returns NotConfigured and
 sends no HTTP requests. The network module has no endpoint, credentials, or provider payload

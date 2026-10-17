@@ -5,7 +5,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlinx.serialization.SerializationException
-import reframecv.database.resume.ResumeContentJson
 import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeDate
@@ -13,6 +12,7 @@ import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.ResumeSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
+import reframecv.serialization.ResumeContentJson
 
 class ResumeImportJsonTest {
     @Test

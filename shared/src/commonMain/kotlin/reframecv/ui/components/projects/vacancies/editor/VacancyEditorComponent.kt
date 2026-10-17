@@ -4,7 +4,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.recognition.RecognitionSource
-import reframecv.recognition.VacancyRecognitionResult
+import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.applyTo
 import reframecv.ui.context.AppComponentContext
 
@@ -78,7 +78,7 @@ class DefaultVacancyEditorComponent(
         importComponent.onReset()
         recognition.onRecognize()
     }
-    private fun applyRecognition(result: VacancyRecognitionResult) {
+    private fun applyRecognition(result: RecognizedVacancy) {
         val current = draft.value
         val original = current.applyTo(initialVacancy ?: current.toVacancy(0))
         draft.value =

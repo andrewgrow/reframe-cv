@@ -16,7 +16,7 @@ import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionFileException
 import reframecv.recognition.RecognitionOutcome
 import reframecv.recognition.RecognitionSource
-import reframecv.recognition.VacancyRecognitionResult
+import reframecv.recognition.RecognizedVacancy
 import reframecv.ui.context.AppComponentContext
 
 /** Reports PDF processing without saving changes to the vacancy. */
@@ -40,7 +40,7 @@ interface VacancyRecognitionComponent {
 class DefaultVacancyRecognitionComponent(
     context: AppComponentContext,
     private val source: () -> RecognitionSource?,
-    private val recognized: (VacancyRecognitionResult) -> Unit,
+    private val recognized: (RecognizedVacancy) -> Unit,
     private val vacancyId: () -> Long?,
 ) : VacancyRecognitionComponent {
     private val dependencies = context.dependencies
@@ -96,22 +96,9 @@ class DefaultVacancyRecognitionComponent(
                 outcome.details,
             )
 
-            is RecognitionOutcome.Recognized -> when (outcome.result.statusCode) {
-                VacancyRecognitionResult.SUCCESS -> {
-                    recognized(outcome.result)
-                    VacancyRecognitionState.Applied
-                }
-
-                VacancyRecognitionResult.NOT_RECOGNIZED ->
-                    VacancyRecognitionState.Failed(
-                        RecognitionError.NotRecognized,
-                        outcome.result.statusDetails,
-                    )
-
-                else -> VacancyRecognitionState.Failed(
-                    RecognitionError.ServiceUnavailable,
-                    outcome.result.statusDetails,
-                )
+            is RecognitionOutcome.Recognized -> {
+                recognized(outcome.result)
+                VacancyRecognitionState.Applied
             }
         }
     }

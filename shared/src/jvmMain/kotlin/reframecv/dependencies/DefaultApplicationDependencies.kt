@@ -5,7 +5,8 @@ import reframecv.attachments.AttachmentStorage
 import reframecv.attachments.DesktopAttachmentPicker
 import reframecv.attachments.FileAttachmentStorage
 import reframecv.database.AppDatabase
-import reframecv.database.openDefaultDatabase
+import reframecv.database.buildDatabase
+import reframecv.database.createDatabaseBuilder
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
@@ -53,7 +54,9 @@ class DefaultApplicationDependencies(
     override val vacancyDocumentReader: VacancyDocumentReader =
         DesktopVacancyDocumentReader(applicationDataDirectory()),
     override val resumeImporter: ResumeImporter = DesktopResumeImporter(),
-    databaseFactory: () -> AppDatabase = ::openDefaultDatabase,
+    databaseFactory: () -> AppDatabase = {
+        buildDatabase(createDatabaseBuilder(applicationDataDirectory().resolve("reframe-cv.db")))
+    },
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)

@@ -22,10 +22,9 @@ import reframecv.recognition.RecognitionDocument
 import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionFileException
 import reframecv.recognition.RecognitionOutcome
+import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.VacancyDocumentReader
-import reframecv.recognition.VacancyRecognitionJson
 import reframecv.recognition.VacancyRecognitionRepository
-import reframecv.recognition.recognitionFixture
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
@@ -34,7 +33,16 @@ import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
 
 class VacancyRecognitionComponentTest : ComponentTest() {
-    private val result = VacancyRecognitionJson.decode(recognitionFixture())
+    private val result = RecognizedVacancy(
+        jobTitle = "Mobile developer",
+        description = "Build mobile apps",
+        company = "Recognized company",
+        url = "https://example.com/recognized",
+        keywords = listOf("Kotlin", "Android"),
+        responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
+        requirements = listOf("Kotlin"),
+        niceToHave = listOf("CI/CD"),
+    )
     private val selection = SelectedAttachment("original-file", "job.pdf")
 
     @Test
@@ -231,9 +239,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
                 if (++calls ==
                     1
                 ) {
-                    RecognitionOutcome.Recognized(
-                        result.copy(statusCode = 400, statusDetails = "Not a job"),
-                    )
+                    RecognitionOutcome.Failed(RecognitionError.NotRecognized, "Not a job")
                 } else {
                     throw failure
                 }

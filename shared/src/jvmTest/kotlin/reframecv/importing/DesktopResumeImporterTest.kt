@@ -14,8 +14,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
-import reframecv.database.resume.ResumeContentJson
 import reframecv.domain.models.resume.content.sampleResumeContent
+import reframecv.serialization.ResumeContentJson
 
 class DesktopResumeImporterTest {
     @get:Rule val folder = TemporaryFolder()

@@ -31,7 +31,7 @@ allprojects {
 }
 
 detekt {
-    source.setFrom("shared/src", "desktopApp/src", "recognition-api/src", "network/src")
+    source.setFrom("shared/src", "desktopApp/src", "domain/src", "database/src", "network/src")
     config.setFrom("config/detekt/detekt.yml")
     buildUponDefaultConfig = true
     basePath.set(projectDir)
@@ -43,7 +43,8 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 }
 
 dependencies {
-    kover(project(":recognition-api"))
+    kover(project(":domain"))
+    kover(project(":database"))
     kover(project(":network"))
     kover(project(":shared"))
     kover(project(":desktopApp"))

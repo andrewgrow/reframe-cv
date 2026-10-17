@@ -2,8 +2,8 @@ package reframecv.export
 
 import java.nio.file.Path
 import java.time.Clock
-import reframecv.database.resume.ResumeContentJson
 import reframecv.domain.models.resume.Resume
+import reframecv.serialization.ResumeContentJson
 
 /** Exports resume content through the desktop JSON file lifecycle. */
 class DesktopResumeExporter(

@@ -7,9 +7,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.ksp)
     alias(libs.plugins.roborazzi)
-    alias(libs.plugins.room)
 }
 
 compose.resources {
@@ -21,7 +19,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            api(project(":recognition-api"))
+            api(project(":domain"))
             implementation(libs.compose.runtime)
             implementation(libs.compose.foundation)
             implementation(libs.compose.animation)
@@ -41,32 +39,25 @@ kotlin {
             implementation(libs.kotlinx.coroutinesCore)
             api(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serializationJson)
-            api(libs.room.runtime)
-            implementation(libs.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
             implementation(project(":network"))
+            implementation(project(":database"))
             implementation(libs.klogging)
             implementation(libs.kotlinx.coroutinesSwing)
         }
         getByName("jvmTest").resources.srcDir(rootProject.file("docs/schemas"))
         jvmTest.dependencies {
+            implementation(project(":database"))
+            implementation(project(":network"))
             implementation(libs.jsonSchemaValidator)
             implementation(libs.compose.uiTestJunit4)
             implementation(libs.roborazzi.composeDesktop)
         }
     }
-}
-
-dependencies {
-    add("kspJvm", libs.room.compiler)
-}
-
-room3 {
-    schemaDirectory("$projectDir/schemas")
 }
 
 roborazzi {

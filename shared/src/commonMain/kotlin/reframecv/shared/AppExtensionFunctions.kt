@@ -16,9 +16,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
-import kotlin.time.Clock
-
-fun nowMillis(): Long = Clock.System.now().toEpochMilliseconds()
 
 @Composable
 @Suppress("LongParameterList") // Mirrors Material Text parameters.

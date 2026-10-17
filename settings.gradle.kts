@@ -30,5 +30,6 @@ dependencyResolutionManagement {
 include(":desktopApp")
 include(":shared")
 
-include(":recognition-api")
+include(":domain")
+include(":database")
 include(":network")
