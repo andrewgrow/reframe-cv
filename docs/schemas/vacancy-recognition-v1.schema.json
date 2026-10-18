@@ -5,34 +5,63 @@
   "description": "Source recognition result adapted from divo-resume/parseJob.schema.json. This is not a persisted Vacancy or VacancyAttachment. The contract version is identified by the schema ID.",
   "type": "object",
   "properties": {
-    "statusCode": {
-      "type": "integer",
-      "enum": [200, 400, 500],
-      "description": "200: recognized job posting; 400: not recognized as a job posting; 500: processing failure. These codes describe recognition, not an HTTP response."
-    },
-    "status": { "type": "string", "description": "Short processing status." },
-    "statusDetails": { "type": "string", "description": "Explanation of the processing result." },
-    "jobTitle": { "type": ["string", "null"] },
-    "jobDescription": { "type": ["string", "null"] },
-    "company": { "type": ["string", "null"] },
-    "url": { "type": ["string", "null"] },
-    "keywords": { "$ref": "#/$defs/RecognizedItems" },
-    "responsibilities": { "$ref": "#/$defs/RecognizedItems" },
-    "requirements": { "$ref": "#/$defs/RecognizedItems" },
-    "nice_to_have": {
-      "description": "Canonical output is an array. Legacy text is kept as one item; null becomes an empty list.",
-      "oneOf": [
-        { "$ref": "#/$defs/RecognizedItems" },
-        { "type": ["string", "null"] }
+    "jobTitle": {
+      "type": [
+        "string",
+        "null"
       ]
+    },
+    "jobDescription": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "company": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "url": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "keywords": {
+      "$ref": "#/$defs/RecognizedItems"
+    },
+    "responsibilities": {
+      "$ref": "#/$defs/RecognizedItems"
+    },
+    "requirements": {
+      "$ref": "#/$defs/RecognizedItems"
+    },
+    "nice_to_have": {
+      "$ref": "#/$defs/RecognizedItems"
     }
   },
-  "required": ["statusCode", "status", "statusDetails", "jobTitle", "jobDescription", "company", "url", "keywords", "responsibilities", "requirements", "nice_to_have"],
+  "required": [
+    "jobTitle",
+    "jobDescription",
+    "company",
+    "url",
+    "keywords",
+    "responsibilities",
+    "requirements",
+    "nice_to_have"
+  ],
   "additionalProperties": false,
   "$defs": {
     "RecognizedItems": {
       "type": "array",
-      "items": { "type": ["string", "null"] }
+      "items": {
+        "type": [
+          "string",
+          "null"
+        ]
+      }
     }
   }
 }

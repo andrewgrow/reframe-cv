@@ -39,13 +39,11 @@ class VacancyRecognitionSchemaTest {
     }
 
     @Test
-    fun fullLegacyAndFailureResultsPassSchemaAndDecode() {
+    fun fullAndMissingScalarResultsPassSchemaAndDecode() {
         val values = listOf(
             recognitionFixture(),
-            recognitionFixture("nice_to_have" to JsonPrimitive("Docker")),
-            recognitionFixture("nice_to_have" to JsonNull),
-            recognitionFixture("statusCode" to JsonPrimitive(400), "jobTitle" to JsonNull),
-            recognitionFixture("statusCode" to JsonPrimitive(500), "jobDescription" to JsonNull),
+            recognitionFixture("jobTitle" to JsonNull),
+            recognitionFixture("jobDescription" to JsonNull),
         )
         values.forEach { value ->
             assertTrue(schema.validate(value, InputFormat.JSON).isEmpty(), value)

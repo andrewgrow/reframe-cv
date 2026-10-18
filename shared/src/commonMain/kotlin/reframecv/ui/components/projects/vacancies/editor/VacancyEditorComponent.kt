@@ -35,6 +35,7 @@ interface VacancyEditorComponent {
             deleteState.value == VacancyDeleteState.Deleting ||
             exportComponent.state.value == VacancyExportState.Exporting ||
             importComponent.state.value == VacancyImportState.Importing ||
+            recognition.dialog.value.component != null ||
             recognition.state.value == VacancyRecognitionState.Processing
     fun onSave(draft: VacancyDraft)
     fun onDelete()
@@ -162,7 +163,7 @@ class DefaultVacancyEditorComponent(
     }
 
     override fun onClose() {
-        if (recognition.state.value == VacancyRecognitionState.Processing) {
+        if (recognition.dialog.value.component != null) {
             recognition.onCancel()
             return
         }

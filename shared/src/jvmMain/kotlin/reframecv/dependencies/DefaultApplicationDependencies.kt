@@ -79,7 +79,12 @@ class DefaultApplicationDependencies(
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
     private val transport = lazy { createDesktopNetworkClient() }
-    private val provider = lazy { OpenRouterClient(transport.value) }
+    private val provider = lazy {
+        OpenRouterClient(
+            transport.value,
+            FileHttpTrafficLogger(applicationDataDirectory().resolve("openrouter-http.log")),
+        )
+    }
     private val recognitionRepository = lazy {
         RemoteVacancyRecognitionRepository(provider.value, vacancyRecognitionSchema())
     }
@@ -183,7 +188,11 @@ class DefaultApplicationDependencies(
         }
 
     private val recognizeVacancyInstance by lazy {
-        RecognizeVacancyUseCase(vacancyDocumentReader, vacancyRecognitionRepository)
+        RecognizeVacancyUseCase(
+            vacancyDocumentReader,
+            vacancyRecognitionRepository,
+            providerSettingsUseCases,
+        )
     }
     override val recognizeVacancy: RecognizeVacancyUseCase
         get() {

@@ -25,38 +25,33 @@ import reframecv.ui.theme.ReframeTheme
 @OptIn(ExperimentalTestApi::class)
 class VacancyRecognitionContentTest {
     @Test
-    fun parsesSelectedPdfWithoutANameOrSavedVacancyAndShowsUnconfiguredFailure() =
-        runComposeUiTest {
-            val component = TestVacancyEditorComponent()
-            setContent { ReframeTheme { VacancyEditorContent(component) } }
-            onNodeWithText("Parse PDF").assertDoesNotExist()
-            runOnIdle { component.snapshot.state.value = selected("source.txt") }
-            onNodeWithText("Parse PDF").assertDoesNotExist()
-            runOnIdle { component.snapshot.state.value = selected("job.PDF") }
-            onNodeWithText("Save").assertIsNotEnabled()
-            onNodeWithText("Parse PDF").performScrollTo().assertIsEnabled().performClick()
-            onNodeWithText("PDF parsing is not configured yet.").performScrollTo().assertExists()
-        }
+    fun opensAiDialogForSelectedPdfWithoutANameOrSavedVacancy() = runComposeUiTest {
+        val component = TestVacancyEditorComponent()
+        setContent { ReframeTheme { VacancyEditorContent(component) } }
+        onNodeWithText("Parse PDF").assertDoesNotExist()
+        runOnIdle { component.snapshot.state.value = selected("source.txt") }
+        onNodeWithText("Parse PDF").assertDoesNotExist()
+        runOnIdle { component.snapshot.state.value = selected("job.PDF") }
+        onNodeWithText("Save").assertIsNotEnabled()
+        onNodeWithText("Parse PDF").performScrollTo().assertIsEnabled().performClick()
+        onNodeWithTag("ai.request.dialog").assertExists()
+        onNodeWithText("File to send: job.pdf").assertExists()
+        onNodeWithTag("ai.request.run").assertIsNotEnabled()
+    }
 
     @Test
-    fun processingLocksTheFormAndEscapeCancelsWithoutClosingTheEditor() = runComposeUiTest {
+    fun escapeClosesOnlyAiDialogWithoutClosingTheVacancyPage() = runComposeUiTest {
         var closes = 0
         val component = TestVacancyEditorComponent(close = { closes++ })
         component.snapshot.state.value = selected("job.pdf")
-        component.recognition.state.value = VacancyRecognitionState.Processing
+        component.onRecognize()
         setContent { ReframeTheme { VacancyEditorContent(component) } }
-        onNodeWithText("Cancel parsing").performScrollTo().assertIsEnabled()
-        onNodeWithTag("vacancy.parse.progress").assertExists()
-        onNodeWithText("Attach source file").assertIsNotEnabled()
-        onNodeWithText("Remove").assertIsNotEnabled()
-        onNodeWithTag("vacancy.name").assertIsNotEnabled()
-        onNodeWithText("Import").assertIsNotEnabled()
-        onNodeWithText("Cancel").assertIsNotEnabled()
-        onRoot().performKeyInput { pressKey(Key.Escape) }
+        onNodeWithTag("ai.request.dialog").performKeyInput { pressKey(Key.Escape) }
         runOnIdle {
             assertEquals(0, closes)
-            assertEquals(VacancyRecognitionState.Idle, component.recognition.state.value)
+            assertEquals(null, component.recognition.dialog.value.component)
         }
+        onNodeWithTag("ai.request.dialog").assertDoesNotExist()
         onNodeWithText("Parse PDF").performScrollTo().assertIsEnabled()
     }
 

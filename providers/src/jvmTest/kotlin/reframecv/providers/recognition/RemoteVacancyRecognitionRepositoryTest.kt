@@ -18,6 +18,13 @@ import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionOutcome
 
 class RemoteVacancyRecognitionRepositoryTest {
+    private val connection = reframecv.domain.models.providers.ProviderConnection(
+        id = 1,
+        type = reframecv.domain.models.providers.ApiProviderType.OpenRouter,
+        name = "Test",
+        apiKey = "test-key",
+        modelId = "test-model",
+    )
     private val document = RecognitionDocument("job.pdf", "%PDF-1.7".encodeToByteArray())
 
     @Test
@@ -36,7 +43,9 @@ class RemoteVacancyRecognitionRepositoryTest {
             },
             schema,
         )
-        val result = assertIs<RecognitionOutcome.Recognized>(repository.recognize(document)).result
+        val result = assertIs<RecognitionOutcome.Recognized>(
+            repository.recognize(document, connection, "Do not invent missing facts"),
+        ).result
         assertEquals("Mobile developer", result.jobTitle)
         assertEquals(listOf("Kotlin", "Android"), result.keywords)
         assertEquals("Recognized company", result.company)
@@ -56,7 +65,7 @@ class RemoteVacancyRecognitionRepositoryTest {
             )
             assertEquals(
                 RecognitionOutcome.Failed(expected, "Provider details"),
-                repository.recognize(document),
+                repository.recognize(document, connection, "Do not invent missing facts"),
             )
         }
     }
@@ -70,7 +79,7 @@ class RemoteVacancyRecognitionRepositoryTest {
             )
             assertEquals(
                 RecognitionOutcome.Failed(RecognitionError.InvalidResponse),
-                repository.recognize(document),
+                repository.recognize(document, connection, "Do not invent missing facts"),
             )
         }
     }
@@ -82,7 +91,7 @@ class RemoteVacancyRecognitionRepositoryTest {
         assertSame(
             failure,
             assertFailsWith<CancellationException> {
-                repository.recognize(document)
+                repository.recognize(document, connection, "Do not invent missing facts")
             },
         )
     }

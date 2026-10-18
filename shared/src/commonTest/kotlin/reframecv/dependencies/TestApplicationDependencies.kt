@@ -54,8 +54,11 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val vacancyDocumentReader =
         VacancyDocumentReader { RecognitionDocument("job.pdf", "%PDF-1.7".encodeToByteArray()) }
     override val vacancyRecognitionRepository = object : VacancyRecognitionRepository {
-        override suspend fun recognize(document: RecognitionDocument) =
-            RecognitionOutcome.Failed(RecognitionError.NotConfigured)
+        override suspend fun recognize(
+            document: RecognitionDocument,
+            connection: reframecv.domain.models.providers.ProviderConnection,
+            instruction: String,
+        ) = RecognitionOutcome.Failed(RecognitionError.NotConfigured)
     }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
@@ -152,6 +155,7 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val recognizeVacancy get() = RecognizeVacancyUseCase(
         vacancyDocumentReader,
         vacancyRecognitionRepository,
+        providerSettingsUseCases,
     )
     override val resumeFilesUseCases get() = ResumeFilesUseCases(
         resumeImporter,

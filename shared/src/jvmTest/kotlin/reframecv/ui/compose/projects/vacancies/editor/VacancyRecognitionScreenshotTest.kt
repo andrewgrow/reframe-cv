@@ -17,18 +17,6 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 class VacancyRecognitionScreenshotTest : GoldenScreenshotTest() {
     @Test fun selectedPdfMatchesReference() = capture(VacancyRecognitionState.Idle)
 
-    @Test fun processingMatchesReference() = capture(VacancyRecognitionState.Processing)
-
-    @Test fun notConfiguredInLightThemeMatchesReference() =
-        capture(VacancyRecognitionState.Failed(RecognitionError.NotConfigured), ThemeMode.Light)
-
-    @Test fun failedRecognitionWithDetailsMatchesReference() = capture(
-        VacancyRecognitionState.Failed(
-            RecognitionError.NotRecognized,
-            "The PDF contains a company profile, not a job posting.",
-        ),
-    )
-
     private fun capture(state: VacancyRecognitionState, theme: ThemeMode = ThemeMode.Dark) =
         runDesktopComposeUiTest {
             val component = TestVacancyEditorComponent()

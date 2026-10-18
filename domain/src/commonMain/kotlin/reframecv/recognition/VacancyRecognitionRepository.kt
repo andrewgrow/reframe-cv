@@ -1,5 +1,7 @@
 package reframecv.recognition
 
+import reframecv.domain.models.providers.ProviderConnection
+
 /** Carries PDF bytes to a recognizer without exposing local file paths. */
 class RecognitionDocument(val fileName: String, val bytes: ByteArray)
 
@@ -23,5 +25,9 @@ sealed interface RecognitionOutcome {
 
 /** Defines remote vacancy recognition without coupling application features to networking. */
 interface VacancyRecognitionRepository {
-    suspend fun recognize(document: RecognitionDocument): RecognitionOutcome
+    suspend fun recognize(
+        document: RecognitionDocument,
+        connection: ProviderConnection,
+        instruction: String,
+    ): RecognitionOutcome
 }

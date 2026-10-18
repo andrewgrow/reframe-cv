@@ -11,12 +11,24 @@ import reframecv.recognition.VacancyRecognitionRepository
 class RecognizeVacancyUseCase(
     private val reader: VacancyDocumentReader,
     private val repository: VacancyRecognitionRepository,
+    private val providers: ProviderSettingsUseCases,
 ) {
-    suspend operator fun invoke(source: RecognitionSource): RecognitionOutcome {
+    suspend operator fun invoke(
+        source: RecognitionSource,
+        connectionId: Long,
+        instruction: String,
+    ): RecognitionOutcome {
+        require(instruction.isNotBlank())
+        providers.requireUsableConnection(connectionId)
         val document = reader.read(source)
         currentCoroutineContext().ensureActive()
-        val outcome = repository.recognize(document)
+        val outcome = repository.recognize(
+            document,
+            providers.requireUsableConnection(connectionId),
+            instruction,
+        )
         currentCoroutineContext().ensureActive()
+        providers.requireUsableConnection(connectionId)
         return outcome
     }
 }

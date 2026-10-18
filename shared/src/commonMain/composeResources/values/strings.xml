@@ -313,4 +313,16 @@
     <string name="prompts_error_save">Could not save the prompt. Please try again.</string>
     <string name="prompts_error_load">Could not load prompts. Please try again.</string>
     <string name="prompts_saved">Prompt successfully saved.</string>
+    <string name="ai_request_title">AI request</string>
+    <string name="ai_request_source">File to send: %1$s</string>
+    <string name="ai_request_provider">Provider connection</string>
+    <string name="ai_request_prompt">Prompt</string>
+    <string name="ai_request_model">Model: %1$s</string>
+    <string name="ai_request_save_prompt">Save prompt</string>
+    <string name="ai_request_prompt_saved">Prompt successfully saved.</string>
+    <string name="ai_request_cancel">Cancel</string>
+    <string name="ai_request_no_providers">Add an active API connection in Settings → API Providers.</string>
+    <string name="ai_request_no_prompts">Add an active prompt for this component or a general prompt in Settings → Prompts.</string>
+    <string name="ai_request_incomplete_provider">Set an API key and model for this connection in Settings.</string>
+    <string name="vacancy_parse_replace_warning">The selected file will be sent to the provider. The result will replace vacancy fields except Internal name and the attachment. Changes are saved only when you press Save on the vacancy page.</string>
 </resources>

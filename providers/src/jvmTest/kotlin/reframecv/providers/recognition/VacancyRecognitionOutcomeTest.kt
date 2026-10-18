@@ -28,15 +28,18 @@ class VacancyRecognitionOutcomeTest {
     }
 
     @Test
-    fun failedResponsesExposeTypedErrorsAndDetailsInsteadOfPostingContent() {
-        val response = VacancyRecognitionJson.decode(recognitionFixture())
-        assertEquals(
-            RecognitionOutcome.Failed(RecognitionError.NotRecognized, "No job found"),
-            response.copy(statusCode = 400, statusDetails = "No job found").toOutcome(),
+    fun emptyContentIsNotRecognizedEvenWhenCompanyOrUrlWasExtracted() {
+        val response = VacancyRecognitionJson.decode(recognitionFixture()).copy(
+            jobTitle = null,
+            jobDescription = null,
+            responsibilities = emptyList(),
+            requirements = emptyList(),
+            niceToHave = emptyList(),
+            keywords = emptyList(),
         )
         assertEquals(
-            RecognitionOutcome.Failed(RecognitionError.ServiceUnavailable, "Provider failure"),
-            response.copy(statusCode = 500, statusDetails = "Provider failure").toOutcome(),
+            RecognitionOutcome.Failed(RecognitionError.NotRecognized),
+            response.toOutcome(),
         )
     }
 }

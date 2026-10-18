@@ -22,12 +22,15 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
 import reframecv.shared.generated.resources.vacancy_name_required
+import reframecv.shared.generated.resources.vacancy_parse_pdf
+import reframecv.shared.generated.resources.vacancy_parse_replace_warning
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
 import reframecv.ui.components.projects.vacancies.editor.VacancyImportState
 import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionState
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
+import reframecv.ui.compose.common.AiRequestDialogContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.theme.ReframeTheme
@@ -36,6 +39,7 @@ internal const val VACANCY_EDITOR_TAG = "vacancies.editor"
 
 @Composable
 fun VacancyEditorContent(component: VacancyEditorComponent) {
+    val aiDialog by component.recognition.dialog.subscribeAsState()
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
@@ -45,13 +49,9 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     val parsing = recognitionState == VacancyRecognitionState.Processing
     val isBusy = saveState == VacancySaveState.Saving ||
         deleteState == VacancyDeleteState.Deleting || exportState == VacancyExportState.Exporting ||
-        importState == VacancyImportState.Importing || parsing
+        importState == VacancyImportState.Importing || parsing || aiDialog.component != null
     val confirming = deleteState != VacancyDeleteState.Idle
-    val save = {
-        if (!confirming && !isBusy && !component.snapshot.state.value.selecting) {
-            component.onSave(component.draft.value)
-        }
-    }
+    val save = { component.onSave(component.draft.value) }
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
             Modifier.testTag(VACANCY_EDITOR_TAG).fillMaxSize()
@@ -59,7 +59,7 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 .pageBackHandler(
                     component::onClose,
                     enabled =
-                        (!isBusy || parsing) && !exportVisible,
+                        (!isBusy || parsing) && !exportVisible && aiDialog.component == null,
                 ),
         ) {
             VacancyEditorBody(
@@ -78,6 +78,13 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 save,
                 editing =
                     component.initialVacancy != null,
+            )
+        }
+        aiDialog.component?.let {
+            AiRequestDialogContent(
+                it,
+                stringResource(Res.string.vacancy_parse_pdf),
+                stringResource(Res.string.vacancy_parse_replace_warning),
             )
         }
         if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)

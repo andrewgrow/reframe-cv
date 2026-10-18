@@ -1,5 +1,7 @@
 package reframecv.providers
 
+import reframecv.domain.models.providers.ProviderConnection
+
 /** Supplies an original document without exposing device paths to an AI provider. */
 class AiDocument(val fileName: String, val mediaType: String, val bytes: ByteArray)
 
@@ -8,6 +10,7 @@ data class AiRequest(
     val instruction: String,
     val responseSchema: String,
     val documents: List<AiDocument>,
+    val connection: ProviderConnection,
 )
 
 /** Classifies provider failures without exposing HTTP or SDK types to application code. */

@@ -24,7 +24,6 @@ in English, translating it faithfully when necessary.
 
 Translate jobTitle, jobDescription, responsibilities, requirements,
 nice_to_have, and descriptive keywords into English.
-Write status and statusDetails in English.
 
 Preserve company names, personal names, product names, technology
 names, acronyms, and URLs as written in the source.
@@ -53,12 +52,9 @@ Use null for missing or unreadable scalar fields.
 Use empty arrays for lists with no identifiable items.
 Always return nice_to_have as an array.
 
-Set statusCode to 200 when a job posting can be identified.
-Set statusCode to 400 when the source is unreadable or does not
-contain an identifiable job posting.
-Provide a short status in status and an explanation in statusDetails.
-
-Always include every required field, including when statusCode is 400.
+If the source is unreadable or contains no identifiable job posting,
+return null for all scalar fields and empty arrays for all lists.
+Always include every required field.
 Do not add a language field.
 
 Return only a JSON object matching the supplied schema.

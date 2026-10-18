@@ -51,7 +51,9 @@ class TestVacancyEditorComponent(
         }
     }
     override fun onClose() {
-        if (recognition.state.value == VacancyRecognitionState.Processing) {
+        if (recognition.dialog.value.component != null ||
+            recognition.state.value == VacancyRecognitionState.Processing
+        ) {
             recognition.onCancel()
             return
         }

@@ -25,7 +25,8 @@ class HttpTrafficLog(private val logger: HttpTrafficLogger) {
         url: String,
         headers: Map<String, String>,
         secrets: List<String>,
-    ) = write("REQUEST $method $url", headers, null, secrets)
+        body: String? = null,
+    ) = write("REQUEST $method $url", headers, body, secrets)
 
     suspend fun response(
         method: String,
@@ -83,7 +84,7 @@ class HttpTrafficLog(private val logger: HttpTrafficLogger) {
 
     private fun sensitive(name: String) = name.lowercase().filter(Char::isLetterOrDigit) in setOf(
         "authorization", "proxyauthorization", "cookie", "setcookie", "xapikey",
-        "apikey", "key", "token", "accesstoken", "refreshtoken", "password", "secret",
+        "filedata", "apikey", "key", "token", "accesstoken", "refreshtoken", "password", "secret",
     )
 
     @Suppress("TooGenericExceptionCaught")

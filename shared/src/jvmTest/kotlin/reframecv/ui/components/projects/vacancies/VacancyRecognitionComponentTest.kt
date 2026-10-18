@@ -3,9 +3,12 @@ package reframecv.ui.components.projects.vacancies
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.essenty.lifecycle.destroy
 import com.arkivanov.essenty.lifecycle.resume
-import java.io.IOException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
@@ -18,6 +21,10 @@ import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.SelectedAttachment
 import reframecv.attachments.SnapshotChange
 import reframecv.dependencies.ApplicationDependencies
+import reframecv.domain.models.prompts.Prompt
+import reframecv.domain.models.prompts.PromptComponent
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.recognition.RecognitionDocument
 import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionFileException
@@ -26,6 +33,7 @@ import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.VacancyDocumentReader
 import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.testing.ComponentTest
+import reframecv.ui.components.common.ai.AiRequestDialogComponent
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionState
@@ -38,76 +46,76 @@ class VacancyRecognitionComponentTest : ComponentTest() {
     private val result = RecognizedVacancy(
         jobTitle = "Mobile developer",
         description = "Build mobile apps",
-        company = "Recognized company",
-        url = "https://example.com/recognized",
-        keywords = listOf("Kotlin", "Android"),
-        responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
+        company = "Company",
+        url = "https://example.com/job",
+        keywords = listOf("Kotlin"),
+        responsibilities = listOf("Build apps"),
         requirements = listOf("Kotlin"),
         niceToHave = listOf("CI/CD"),
     )
     private val selection = SelectedAttachment("original-file", "job.pdf")
 
     @Test
-    fun appliesPostingFieldsOnlyAfterSuccessAndKeepsNameAndAttachmentUntilExplicitSave() =
-        runBlocking {
-            val entered = CompletableDeferred<Unit>()
-            val release = CompletableDeferred<Unit>()
-            var calls = 0
-            var saves = 0
-            val editor = editor(
-                repository {
-                    calls++
-                    entered.complete(Unit)
-                    release.await()
-                    RecognitionOutcome.Recognized(result)
-                },
-                save = { saves++ },
-            )
-            attach(editor)
-            runOnUiThread {
-                editor.onDraftChange(
-                    VacancyDraft("My shortlist", company = "Old", jobTitle = "Old title"),
-                )
-                editor.onRecognize()
-            }
-            withTimeout(10_000) { entered.await() }
-            runOnUiThread {
-                assertTrue(editor.isBusy)
-                editor.onRecognize()
-                editor.onImport()
-                editor.onDraftChange(VacancyDraft("Blocked"))
-                editor.onSave(VacancyDraft("Blocked"))
-                editor.snapshot.onRemove()
-                assertEquals("My shortlist", editor.draft.value.name)
-                assertEquals(selection, editor.snapshot.state.value.selected)
-            }
-            release.complete(Unit)
-            awaitState(editor) { it == VacancyRecognitionState.Applied }
-            runOnUiThread {
-                assertEquals("My shortlist", editor.draft.value.name)
-                assertEquals("Mobile developer", editor.draft.value.jobTitle)
-                assertEquals("Recognized company", editor.draft.value.company)
-                assertEquals("https://example.com/recognized", editor.draft.value.url)
-                assertEquals(
-                    listOf("Kotlin", "Android"),
-                    editor.draft.value.applyTo(editor.draft.value.toVacancy(0)).keywords,
-                )
-                assertEquals(SnapshotChange.Attach(selection), editor.snapshot.change)
-                assertEquals(0, saves)
-                editor.onSave(editor.draft.value)
-                assertEquals(1, saves)
-                assertEquals(1, calls)
-            }
+    fun opensDialogWithoutRequestAndAppliesOnlySuccessfulResultWithoutSaving() = runBlocking {
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        var calls = 0
+        var saves = 0
+        val editor = editor(
+            repository { connection, instruction ->
+                assertEquals("model", connection.modelId)
+                assertEquals("Edited request", instruction)
+                calls++
+                entered.complete(Unit)
+                release.await()
+                RecognitionOutcome.Recognized(result)
+            },
+            save = { saves++ },
+        )
+        attach(editor)
+        runOnUiThread {
+            editor.onDraftChange(VacancyDraft("My shortlist", jobTitle = "Old"))
+            editor.onRecognize()
         }
+        val dialog = readyDialog(editor)
+        assertEquals(0, calls)
+        runOnUiThread {
+            assertEquals("job.pdf", dialog.state.value.sourceName)
+            dialog.onText("Edited request")
+            dialog.onRun()
+        }
+        withTimeout(10_000) { entered.await() }
+        runOnUiThread {
+            dialog.onRun()
+            editor.onSave(VacancyDraft("Blocked"))
+            editor.onDraftChange(VacancyDraft("Blocked"))
+            editor.snapshot.onRemove()
+            assertEquals("My shortlist", editor.draft.value.name)
+            assertEquals(selection, editor.snapshot.state.value.selected)
+        }
+        release.complete(Unit)
+        awaitState(editor) { it == VacancyRecognitionState.Applied }
+        runOnUiThread {
+            assertNull(editor.recognition.dialog.value.component)
+            assertEquals("My shortlist", editor.draft.value.name)
+            assertEquals("Mobile developer", editor.draft.value.jobTitle)
+            assertEquals("Company", editor.draft.value.company)
+            assertEquals(SnapshotChange.Attach(selection), editor.snapshot.change)
+            assertEquals(0, saves)
+            editor.onSave(editor.draft.value)
+            assertEquals(1, saves)
+            assertEquals(1, calls)
+        }
+        assertEquals("Extract", dependencies.promptsRepository.records.value.single().text)
+    }
 
     @Test
-    fun failureKeepsDraftAndCanBeRetriedWithoutCreatingRecords() = runBlocking {
+    fun rejectionStaysInDialogWithDraftAndEditedPromptAndCanBeRetried() = runBlocking {
         var calls = 0
-        val original = VacancyDraft("Keep me", description = "Original")
         val editor = editor(
-            repository {
+            repository { _, _ ->
                 if (++calls == 1) {
-                    RecognitionOutcome.Failed(RecognitionError.NotConfigured)
+                    RecognitionOutcome.Failed(RecognitionError.NotRecognized, "Not a job")
                 } else {
                     RecognitionOutcome.Recognized(result)
                 }
@@ -115,27 +123,31 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         )
         attach(editor)
         runOnUiThread {
-            editor.onDraftChange(original)
+            editor.onDraftChange(VacancyDraft("Keep", description = "Original"))
             editor.onRecognize()
         }
-        awaitState(editor) { it is VacancyRecognitionState.Failed }
+        val dialog = readyDialog(editor)
         runOnUiThread {
-            assertEquals(original, editor.draft.value)
-            assertEquals(
-                VacancyRecognitionState.Failed(RecognitionError.NotConfigured),
-                editor.recognition.state.value,
-            )
-            editor.onRecognize()
+            dialog.onText("My prompt")
+            dialog.onRun()
+        }
+        awaitDialog(dialog) { !it.running && it.error != null }
+        runOnUiThread {
+            assertSame(dialog, editor.recognition.dialog.value.component)
+            assertEquals("Not a job", dialog.state.value.error)
+            assertEquals("My prompt", dialog.state.value.text)
+            assertEquals("Original", editor.draft.value.description)
+            dialog.onRun()
         }
         awaitState(editor) { it == VacancyRecognitionState.Applied }
-        assertEquals(emptyList(), dependencies.vacanciesRepository.records.value)
+        assertTrue(dependencies.vacanciesRepository.records.value.isEmpty())
     }
 
     @Test
-    fun fileFailureDoesNotCallTheRemoteRepository() = runBlocking {
+    fun fileFailureIsShownInDialogWithoutCallingTheProvider() = runBlocking {
         var requests = 0
         val editor = editor(
-            repository {
+            repository { _, _ ->
                 requests++
                 RecognitionOutcome.Recognized(result)
             },
@@ -145,34 +157,27 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         )
         attach(editor)
         runOnUiThread { editor.onRecognize() }
-        awaitState(editor) { it is VacancyRecognitionState.Failed }
-        runOnUiThread {
-            assertEquals(
-                VacancyRecognitionState.Failed(RecognitionError.InvalidPdf),
-                editor.recognition.state.value,
-            )
-            assertEquals("", editor.draft.value.name)
-        }
+        val dialog = readyDialog(editor)
+        runOnUiThread { dialog.onRun() }
+        awaitDialog(dialog) { !it.running && it.error != null }
         assertEquals(0, requests)
-        val logged = withTimeout(10_000) { dependencies.logger.failures.receive() }
-        assertEquals("Recognize vacancy from PDF", logged.operation)
+        assertEquals("The source is not a valid PDF.", dialog.state.value.error)
+        assertNotNull(editor.recognition.dialog.value.component)
+        Unit
     }
 
     @Test
-    fun cancellingViaBackDiscardsLateSuccessAndAllowsAnotherAttempt() = runBlocking {
+    fun backCancelsDialogAndDiscardsLateResultsWithoutClosingVacancy() = runBlocking {
         val entered = CompletableDeferred<Unit>()
         val release = CompletableDeferred<Unit>()
         val returned = CompletableDeferred<Unit>()
-        var calls = 0
         var closes = 0
         val editor = editor(
-            repository {
-                if (++calls == 1) {
-                    withContext(NonCancellable) {
-                        entered.complete(Unit)
-                        release.await()
-                        returned.complete(Unit)
-                    }
+            repository { _, _ ->
+                withContext(NonCancellable) {
+                    entered.complete(Unit)
+                    release.await()
+                    returned.complete(Unit)
                 }
                 RecognitionOutcome.Recognized(result)
             },
@@ -183,10 +188,12 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             editor.onDraftChange(VacancyDraft("Before"))
             editor.onRecognize()
         }
+        val dialog = readyDialog(editor)
+        runOnUiThread { dialog.onRun() }
         withTimeout(10_000) { entered.await() }
         runOnUiThread {
             editor.onClose()
-            assertEquals(VacancyRecognitionState.Idle, editor.recognition.state.value)
+            assertNull(editor.recognition.dialog.value.component)
             assertEquals(0, closes)
             editor.onDraftChange(VacancyDraft("After cancellation"))
         }
@@ -195,81 +202,92 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         runOnUiThread {
             assertEquals("After cancellation", editor.draft.value.name)
             assertEquals("", editor.draft.value.jobTitle)
-            editor.onRecognize()
         }
-        awaitState(editor) { it == VacancyRecognitionState.Applied }
-        runOnUiThread { assertEquals("After cancellation", editor.draft.value.name) }
     }
 
     @Test
-    fun disposalCancelsFilePreparationBeforeAnyRemoteRequest() = runBlocking {
+    fun disposalCancelsPreparationAndDisablingDuringPreparationPreventsSending() = runBlocking {
         val entered = CompletableDeferred<Unit>()
-        val cancelled = CompletableDeferred<Unit>()
-        val reader = VacancyDocumentReader {
-            entered.complete(Unit)
-            try {
-                awaitCancellation()
-            } finally {
-                cancelled.complete(Unit)
-            }
-        }
+        val release = CompletableDeferred<Unit>()
         var requests = 0
         val editor =
             editor(
-                repository {
+                repository { _, _ ->
                     requests++
                     RecognitionOutcome.Recognized(result)
                 },
-                reader,
+                reader = VacancyDocumentReader {
+                    entered.complete(Unit)
+                    release.await()
+                    RecognitionDocument("job.pdf", byteArrayOf())
+                },
             )
         attach(editor)
         runOnUiThread { editor.onRecognize() }
-        withTimeout(10_000) {
-            entered.await()
-            runOnUiThread { lifecycle.destroy() }
-            cancelled.await()
-        }
+        val dialog = readyDialog(editor)
+        runOnUiThread { dialog.onRun() }
+        withTimeout(10_000) { entered.await() }
+        dependencies.providerSettingsUseCases.setActive(1, false)
+        release.complete(Unit)
+        awaitDialog(dialog) { !it.running && it.error != null }
         assertEquals(0, requests)
+        runOnUiThread { lifecycle.destroy() }
     }
 
     @Test
-    fun providerRejectionAndUnexpectedFailuresKeepTheOriginalDraft() = runBlocking {
-        val failure = IOException("Connection failed")
-        var calls = 0
+    fun destroyingTheEditorCancelsFilePreparationBeforeAnyRemoteRequest() = runBlocking {
+        val entered = CompletableDeferred<Unit>()
+        val cancelled = CompletableDeferred<Unit>()
+        var requests = 0
         val editor = editor(
-            repository {
-                if (++calls ==
-                    1
-                ) {
-                    RecognitionOutcome.Failed(RecognitionError.NotRecognized, "Not a job")
-                } else {
-                    throw failure
+            repository { _, _ ->
+                requests++
+                RecognitionOutcome.Recognized(result)
+            },
+            reader = VacancyDocumentReader {
+                entered.complete(Unit)
+                try {
+                    awaitCancellation()
+                } finally {
+                    cancelled.complete(Unit)
                 }
             },
         )
         attach(editor)
-        runOnUiThread {
-            editor.onDraftChange(VacancyDraft("Keep"))
-            editor.onRecognize()
-        }
-        awaitState(editor) { it is VacancyRecognitionState.Failed }
-        runOnUiThread {
-            assertEquals(
-                VacancyRecognitionState.Failed(RecognitionError.NotRecognized, "Not a job"),
-                editor.recognition.state.value,
-            )
-            assertEquals("Keep", editor.draft.value.name)
-            editor.onRecognize()
-        }
-        awaitState(editor) { it is VacancyRecognitionState.Failed }
-        assertSame(failure, withTimeout(10_000) { dependencies.logger.failures.receive() }.error)
-        runOnUiThread { assertEquals("Keep", editor.draft.value.name) }
+        runOnUiThread { editor.onRecognize() }
+        val dialog = readyDialog(editor)
+        runOnUiThread { dialog.onRun() }
+        withTimeout(10_000) { entered.await() }
+        runOnUiThread { lifecycle.destroy() }
+        withTimeout(10_000) { cancelled.await() }
+        assertEquals(0, requests)
     }
 
-    private fun repository(action: suspend (RecognitionDocument) -> RecognitionOutcome) =
+    private fun repository(action: suspend (ProviderConnection, String) -> RecognitionOutcome) =
         object : VacancyRecognitionRepository {
-            override suspend fun recognize(document: RecognitionDocument) = action(document)
+            override suspend fun recognize(
+                document: RecognitionDocument,
+                connection: ProviderConnection,
+                instruction: String,
+            ) = action(connection, instruction)
         }
+
+    private suspend fun readyDialog(
+        editor: DefaultVacancyEditorComponent,
+    ): AiRequestDialogComponent {
+        val dialog = runOnUiThread { checkNotNull(editor.recognition.dialog.value.component) }
+        awaitDialog(dialog) { !it.loading }
+        return dialog
+    }
+
+    private suspend fun awaitDialog(
+        dialog: AiRequestDialogComponent,
+        predicate: (reframecv.ui.components.common.ai.AiRequestDialogState) -> Boolean,
+    ) {
+        val reached = CompletableDeferred<Unit>()
+        runOnUiThread { dialog.state.subscribe { if (predicate(it)) reached.complete(Unit) } }
+        withTimeout(10_000) { reached.await() }
+    }
 
     private suspend fun awaitState(
         editor: DefaultVacancyEditorComponent,
@@ -297,31 +315,45 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         withTimeout(10_000) { ready.await() }
     }
 
-    private fun editor(
+    private suspend fun editor(
         repository: VacancyRecognitionRepository,
         reader: VacancyDocumentReader = dependencies.vacancyDocumentReader,
         save: (VacancyDraft) -> Unit = {},
         close: () -> Unit = {},
-    ) = runOnUiThread {
-        lifecycle.resume()
-        val services = object : ApplicationDependencies by dependencies {
-            override val recognizeVacancy get() = RecognizeVacancyUseCase(
-                vacancyDocumentReader,
-                vacancyRecognitionRepository,
-            )
-            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
-                vacancyImporter,
-                vacancyExporter,
-                attachmentPicker,
-            )
-            override val vacancyRecognitionRepository = repository
-            override val vacancyDocumentReader = reader
-            override val attachmentPicker = AttachmentPicker { selection }
-        }
-        DefaultVacancyEditorComponent(
-            DefaultAppComponentContext(DefaultComponentContext(lifecycle), services),
-            save,
-            close,
+    ): DefaultVacancyEditorComponent {
+        dependencies.providerSettingsUseCases.save(
+            ProviderConnection(
+                type = ApiProviderType.OpenRouter,
+                name = "Test",
+                apiKey = "test",
+                modelId = "model",
+            ),
         )
+        dependencies.promptsUseCases.save(
+            Prompt(text = "Extract", component = PromptComponent.Vacancies),
+        )
+        return runOnUiThread {
+            lifecycle.resume()
+            val services = object : ApplicationDependencies by dependencies {
+                override val vacancyRecognitionRepository = repository
+                override val vacancyDocumentReader = reader
+                override val attachmentPicker = AttachmentPicker { selection }
+                override val recognizeVacancy get() = RecognizeVacancyUseCase(
+                    vacancyDocumentReader,
+                    vacancyRecognitionRepository,
+                    providerSettingsUseCases,
+                )
+                override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                    vacancyImporter,
+                    vacancyExporter,
+                    attachmentPicker,
+                )
+            }
+            DefaultVacancyEditorComponent(
+                DefaultAppComponentContext(DefaultComponentContext(lifecycle), services),
+                save,
+                close,
+            )
+        }
     }
 }

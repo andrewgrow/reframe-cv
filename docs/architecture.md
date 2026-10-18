@@ -104,26 +104,20 @@ Recognition replaces posting content while preserving the user's label.
 ## Vacancy recognition contract
 
 [Vacancy recognition schema](schemas/vacancy-recognition-v1.schema.json) adapts
-`divo-resume/src/utils/schemas/parseJob.schema.json`. It describes a processing result,
-not a saved vacancy: statusCode (200/400/500), status/statusDetails, nullable jobTitle
-and jobDescription, nullable company/URL, keywords, responsibilities, requirements, and nice_to_have.
-Its version is identified by the schema ID, independently of the database schema.
+`divo-resume/src/utils/schemas/parseJob.schema.json`. It describes extracted content,
+not a saved vacancy: nullable jobTitle, jobDescription, company/URL, keywords,
+responsibilities, requirements, and nice_to_have. All fields are required; missing
+scalars are null and missing lists are empty arrays. Status codes and diagnostic
+fields are not part of the model response. The schema ID identifies its version.
 
-`VacancyRecognitionJson` reads this contract. Canonical nice_to_have is an array;
-legacy text becomes one item and null becomes an empty list. Nullable list entries
-remain representable in the response but are removed during mapping to the domain result.
-The original project used a string in its JSON schema and an array in its database
-model; this compatibility rule resolves that inconsistency. Unknown fields and
-invalid types/status codes are rejected.
+`VacancyRecognitionJson` rejects unknown fields and invalid types. Canonical
+nice_to_have is an array; legacy text/null remains readable for compatibility.
+Mapping trims fields and removes null, blank, and duplicate list items. Results
+without a title, description, responsibilities, or requirements are NotRecognized.
 
-`VacancyRecognitionResult.toOutcome` converts successful responses to `RecognizedVacancy`
-and failed responses to typed errors. An unknown jobTitle becomes empty; a blank name must
-still be filled before saving. `RecognizedVacancy.applyTo` updates the vacancy draft.
-It replaces jobTitle, company, URL, description, and every recognized list; unknown
-values clear the corresponding fields. The user-defined name is preserved, or filled from
-jobTitle when blank. IDs, timestamps, linked documents, and VacancyAttachment are preserved.
-Processing status and provider response IDs are not vacancy business fields.
-The mapping is explicit; it does not fetch, parse, call a model, or write to storage.
+`RecognizedVacancy.applyTo` replaces posting fields in the draft, including clearing
+missing values. Internal name is preserved even when blank. IDs, timestamps, linked
+documents, and the pending attachment are preserved. Save remains explicit.
 
 Vacancy now stores responsibilities, requirements, and niceToHave as ordered string
 lists, defaulting to empty. Room persists them as non-null JSON array columns through
@@ -150,10 +144,15 @@ Desktop application dependencies compose the reader, repository, and lazy `OpenR
 with Ktor transport from `network`. Closing application dependencies releases the initialized
 provider client, HTTP client, and engine; repositories do not own the shared transport.
 
-OpenRouter PDF generation remains unconfigured: recognition returns NotConfigured and sends
-no generation requests. PDF generation requests are still deferred; connection setup is implemented separately below.
-Client configuration provides 15-second connection and 120-second request/socket timeouts;
-real provider requests and cancellation behavior need testing when integration is added.
+OpenRouter generation uses POST `/api/v1/chat/completions` with the selected
+connection's ordinary API key and saved model. PDF bytes are Base64 file input;
+response_format supplies a strict JSON schema and routing requires parameter support.
+Management keys are never used for generation. HTTP/provider failures, malformed JSON,
+truncation, refusal, and empty posting content remain errors in the AI dialog.
+The network client has 15-second connection and 120-second request/socket timeouts.
+HTTP diagnostics use the existing redacted, rotating log; PDF Base64 data is redacted.
+Protocol references: [PDF inputs](https://openrouter.ai/docs/guides/overview/multimodal/pdfs)
+and [structured outputs](https://openrouter.ai/docs/guides/features/structured-outputs).
 
 Parse PDF accepts selected files before Save or available saved snapshots. The desktop reader
 checks the extension and `%PDF-` header, reads on IO, and verifies stored file size/SHA-256.
@@ -161,7 +160,7 @@ Missing, changed, unsupported, and unreadable files have explicit error states. 
 is not full PDF validation or local text extraction. Original files are never modified.
 
 Recognition only updates the draft; saving and copying attachments remain explicit. It replaces
-posting fields, preserves the user's name (or fills a blank name from jobTitle), and keeps the
+posting fields, preserves the user's Internal name, and keeps the
 pending attachment. Failures leave fields unchanged and are retryable. Unexpected failures
 include operation context and stack traces in the application log.
 
@@ -332,8 +331,7 @@ HTTP error handling. Unknown JSON fields remain visible;
 authorization, cookies, secret JSON fields, and the current API key are redacted. Logging
 failures must not change API results, and coroutine cancellation remains cancellable.
 
-Saved connections do not enable PDF recognition yet. OpenRouter generation remains the existing
-NotConfigured stub until request handling and active-connection routing are implemented.
+Saved active connections can be selected for PDF recognition; generation uses their saved model.
 
 `ProviderAccountClient` exposes account details separately from model discovery. The external
 `RemoteProviderAccountRepository` routes to the selected implementation; OpenRouter reuses
@@ -362,7 +360,7 @@ including a fresh lookup of saved connections. A stale caller cannot bypass a pe
 The account controller skips disabled connections on timer ticks; manual network actions are
 also disabled. Account-cache writes require `active = 1`, so a response racing with disabling
 cannot update a disabled row. Cached values remain readable while disabled. Recognition is
-still a stub; future provider operations must enforce the same access rule.
+subject to the same access rule, checked before preparation, before sending, and before applying results.
 
 OpenRouter connections may also store an optional management API key. It is used exclusively
 for GET `/api/v1/credits`, never for model discovery, ordinary-key budgets, or document requests.
@@ -398,9 +396,17 @@ a temporary success notification. Repeated saves update the same record; Close/E
 Status changes are draft fields until Save. Errors retain the draft and are logged with operation
 context. JSON schemas remain application contracts, separate from editable prompt instructions.
 
-The prompt manager does not execute AI requests. Processing screens will select from active
-prompts when their request controls are connected; recognition currently retains its existing
-provider stub and request wiring.
+The prompt manager does not execute AI requests. `AiRequestDialogComponent` supplies
+active connections and component-scoped/general prompts to processing screens. The
+vacancy page opens it through Parse PDF, displaying the source filename, provider,
+saved model, and a replacement warning. The dialog executes a caller-supplied operation
+and returns only a successful typed result; the caller applies it to its draft.
+
+Prompt text edits are request-local unless Save prompt is pressed. Errors remain in
+the dialog without discarding selections or text. Cancel/Escape cancels the operation
+and closes only the dialog; late results are discarded. A single available choice is
+selected automatically; multiple choices require selection. No selection is persisted.
+The database schema is unchanged by AI request handling.
 
 The Settings overview exposes matching text navigation entries for API Providers and Prompts.
 Provider connections and Add provider live on the API Providers page. Back/Esc returns from

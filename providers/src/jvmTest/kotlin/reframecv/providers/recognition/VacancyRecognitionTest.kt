@@ -52,13 +52,7 @@ class VacancyRecognitionTest {
     }
 
     @Test
-    fun failuresCannotBeAppliedAndUnknownTitlesClearThePositionOnly() {
-        listOf(400, 500).forEach { status ->
-            val result = VacancyRecognitionJson.decode(
-                recognitionFixture("statusCode" to JsonPrimitive(status), "jobTitle" to JsonNull),
-            )
-            assertFailsWith<IllegalArgumentException> { result.applyTo(emptyVacancy()) }
-        }
+    fun unknownTitlesClearThePositionOnly() {
         listOf(JsonNull, JsonPrimitive("  ")).forEach { title ->
             val result = VacancyRecognitionJson.decode(recognitionFixture("jobTitle" to title))
             val updated = result.applyTo(
@@ -78,7 +72,6 @@ class VacancyRecognitionTest {
             recognitionFixture("extra" to JsonPrimitive("ignored?")),
             recognitionFixture("requirements" to JsonPrimitive("Kotlin")),
             recognitionFixture("requirements" to JsonArray(listOf(JsonPrimitive(42)))),
-            recognitionFixture("status" to JsonPrimitive(42)),
             recognitionFixture("jobTitle" to JsonPrimitive(false)),
             recognitionFixture("company" to JsonPrimitive(42)),
             recognitionFixture("url" to JsonPrimitive(false)),
@@ -92,14 +85,14 @@ class VacancyRecognitionTest {
     }
 
     @Test
-    fun preservesUserNameAndUsesRecognizedTitleOnlyForAnEmptyName() {
+    fun preservesUserNameEvenWhenEmpty() {
         val result = VacancyRecognitionJson.decode(recognitionFixture())
         assertEquals(
             "My shortlist",
             result.applyTo(emptyVacancy().copy(name = "My shortlist")).name,
         )
-        assertEquals("Mobile developer", result.applyTo(emptyVacancy()).name)
-        assertEquals("Mobile developer", result.applyTo(emptyVacancy().copy(name = "  ")).name)
+        assertEquals("", result.applyTo(emptyVacancy()).name)
+        assertEquals("  ", result.applyTo(emptyVacancy().copy(name = "  ")).name)
     }
 
     @Test
@@ -147,7 +140,6 @@ internal fun recognitionFixture(
 ): String {
     val original = Json.parseToJsonElement(
         """{
-          "statusCode":200,"status":"OK","statusDetails":"Recognized",
           "jobTitle":" Mobile developer ","jobDescription":" Build mobile apps ",
           "company":" Recognized company ","url":" https://example.com/recognized ",
           "keywords":[" Kotlin ",null,"kotlin","", "Android"],

@@ -165,11 +165,12 @@ Errors append timestamps, operation context, and stack traces to `stacktrace.txt
 Each error includes the latest 200 in-memory Store/project-tree events. Summaries
 omit document text and project names. The file survives restarts; event history does not.
 
-OpenRouter connection checks and model discovery append HTTP requests and complete text
+OpenRouter connection checks, model discovery, and PDF recognition append HTTP requests and complete text
 responses to `openrouter-http.log` and the console through Klogging (`OpenRouterHttp`, INFO),
 including status, headers, and unknown JSON fields.
 JSON is formatted for inspection. Authorization, cookies, secret JSON fields, and the
-current API key are redacted. The file is created on the first request and survives restarts.
+current API key are redacted. Generation requests include prompt text; attached file bytes
+are redacted. The file is created on the first request and survives restarts.
 
 Both logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
 `.5` the oldest). The oldest archive is removed on rotation; restarting does not clear logs.

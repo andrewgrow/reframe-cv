@@ -73,6 +73,14 @@ class ProviderSettingsUseCases(
         )
     }
 
+    suspend fun requireUsableConnection(id: Long): ProviderConnection {
+        val connection = connections.get(id)
+            ?: throw ProviderSetupException(ProviderSetupError.Disabled)
+        ensureEnabled(connection)
+        require(connection.apiKey.isNotBlank() && connection.modelId.isNotBlank())
+        return connection
+    }
+
     private suspend fun ensureEnabled(connection: ProviderConnection) {
         currentCoroutineContext().ensureActive()
         val storedActive = connection.id == 0L || connections.get(connection.id)?.active == true

@@ -24,8 +24,6 @@ belong in the [README](../README.md).
 - [ ] Add editing controls for responsibilities, requirements, and nice-to-have lists.
 - [ ] Decide whether recognition should offer a preview/diff before replacing draft fields.
 - [ ] Define URL-to-snapshot fetching, supported formats, and failure/cancellation behavior.
-- [ ] Implement OpenRouter PDF requests: authentication, upload/response protocol, limits,
-  compatible structured-output schema, and real request cancellation.
 - [ ] Consider parsing additional source formats after the PDF integration.
 
 ## Print and PDF export
@@ -41,11 +39,9 @@ belong in the [README](../README.md).
 
 ## API providers
 
-- [ ] Route AI operations through an enabled saved connection and chosen model.
-- [ ] Implement OpenRouter generation requests and verify structured-output/PDF compatibility.
 - [ ] Add provider connection deletion and decide how to handle deleting a connection in use.
 - [ ] Add API-key rotation controls to the provider Management section.
 
-## Prompt usage
+## AI requests
 
-- [ ] Add active-prompt selection to AI processing controls and pass the chosen instructions with the application JSON schema.
+- [ ] Consider request history and reuse of parsed file annotations.
