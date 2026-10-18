@@ -10,6 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.recognition.RecognitionOutcome
 import reframecv.recognition.applyTo
 
@@ -18,7 +19,10 @@ class VacancyRecognitionTest {
     fun successfulResultMapsContentWithoutOverwritingIdentityLinksOrSourceMetadata() {
         val original = Vacancy(
             id = 7, projectId = 3, name = "Old", createdAt = 10, updatedAt = 20,
-            company = "Company", url = "https://example.com/job", resumeId = 11,
+            company = "Company", url = "https://example.com/job",
+            resumes = listOf(
+                VacancyResume(11, 83),
+            ),
             coverLetterId = 12, vacancyAttachmentId = 13, keywords = listOf("Manual", "Remote"),
         )
         val result = VacancyRecognitionJson.decode(recognitionFixture())
@@ -114,7 +118,7 @@ class VacancyRecognitionTest {
                 "Old",
             ),
             requirements = listOf("Old"), niceToHave = listOf("Old"),
-            resumeId = 6, coverLetterId = 7, vacancyAttachmentId = 8,
+            resumes = listOf(VacancyResume(6)), coverLetterId = 7, vacancyAttachmentId = 8,
         )
         assertEquals(
             original.copy(

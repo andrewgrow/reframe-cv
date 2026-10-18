@@ -4,8 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.HorizontalDivider
@@ -39,6 +41,7 @@ internal const val VACANCY_EDITOR_TAG = "vacancies.editor"
 
 @Composable
 fun VacancyEditorContent(component: VacancyEditorComponent) {
+    val resumes by component.resumes.state.subscribeAsState()
     val aiDialog by component.recognition.dialog.subscribeAsState()
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
@@ -47,9 +50,14 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
     val recognitionState by component.recognition.state.subscribeAsState()
     val importState by component.importComponent.state.subscribeAsState()
     val parsing = recognitionState == VacancyRecognitionState.Processing
-    val isBusy = saveState == VacancySaveState.Saving ||
-        deleteState == VacancyDeleteState.Deleting || exportState == VacancyExportState.Exporting ||
-        importState == VacancyImportState.Importing || parsing || aiDialog.component != null
+    val isBusy = vacancyEditorBusy(
+        saveState,
+        deleteState,
+        exportState,
+        importState,
+        recognitionState,
+        aiDialog.component != null,
+    )
     val confirming = deleteState != VacancyDeleteState.Idle
     val save = { component.onSave(component.draft.value) }
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -59,21 +67,22 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 .pageBackHandler(
                     component::onClose,
                     enabled =
-                        (!isBusy || parsing) && !exportVisible && aiDialog.component == null,
+                        (!isBusy || parsing) && !exportVisible && aiDialog.component == null &&
+                            resumes.unlinkId == null,
                 ),
         ) {
             VacancyEditorBody(
                 component,
                 saveState,
                 save,
-                enabled = !isBusy && !confirming,
-                backEnabled = !isBusy || parsing,
+                enabled = !isBusy && !confirming && resumes.unlinkId == null,
+                backEnabled = (!isBusy || parsing) && resumes.unlinkId == null,
                 editing = component.initialVacancy != null,
             )
             HorizontalDivider()
             VacancyEditorFooter(
                 component,
-                isBusy,
+                isBusy || resumes.unlinkId != null,
                 deleteState,
                 save,
                 editing =
@@ -87,6 +96,7 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 stringResource(Res.string.vacancy_parse_replace_warning),
             )
         }
+        VacancyResumeUnlinkConfirmation(resumes, component.resumes)
         if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)
     }
 }
@@ -142,6 +152,7 @@ private fun ColumnScope.VacancyEditorBody(
     backEnabled: Boolean,
     editing: Boolean,
 ) {
+    val resumes by component.resumes.state.subscribeAsState()
     val snapshot by component.snapshot.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     Column(
@@ -163,6 +174,19 @@ private fun ColumnScope.VacancyEditorBody(
                 recognition = component.recognition,
                 onRecognize = component::onRecognize,
             )
+            Spacer(Modifier.height(ReframeTheme.tokens.spacing.large))
+            VacancyResumesContent(draft.resumes, resumes, component.resumes, enabled)
         }
     }
 }
+
+private fun vacancyEditorBusy(
+    save: VacancySaveState,
+    delete: VacancyDeleteState,
+    export: VacancyExportState,
+    importing: VacancyImportState,
+    recognition: VacancyRecognitionState,
+    aiDialogOpen: Boolean,
+) = save == VacancySaveState.Saving || delete == VacancyDeleteState.Deleting ||
+    export == VacancyExportState.Exporting || importing == VacancyImportState.Importing ||
+    recognition == VacancyRecognitionState.Processing || aiDialogOpen

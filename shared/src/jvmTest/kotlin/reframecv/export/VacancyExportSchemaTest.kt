@@ -10,6 +10,7 @@ import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 
 class VacancyExportSchemaTest {
     private val text = checkNotNull(
@@ -36,7 +37,7 @@ class VacancyExportSchemaTest {
                 company = "Company", description = "One\nTwo", url = "https://example.com/role",
                 keywords = listOf("Kotlin"), responsibilities = listOf("A, B"),
                 requirements = listOf("C"), niceToHave = listOf("D"),
-                resumeId = 2, coverLetterId = 3, vacancyAttachmentId = 4,
+                resumes = listOf(VacancyResume(2, 83)), coverLetterId = 3, vacancyAttachmentId = 4,
             ),
         ).forEach { record ->
             val exported = VacancyExportJson.encode(record)
@@ -50,7 +51,15 @@ class VacancyExportSchemaTest {
                 .getValue("VacancyContent").jsonObject.getValue("properties").jsonObject.keys
             assertEquals(expectedKeys, content.keys)
             assertTrue(
-                listOf("id", "projectId", "filePath", "statusCode", "vacancyAttachmentId").none {
+                listOf(
+                    "id",
+                    "projectId",
+                    "filePath",
+                    "statusCode",
+                    "vacancyAttachmentId",
+                    "resumes",
+                    "atsScore",
+                ).none {
                     it in
                         content
                 },

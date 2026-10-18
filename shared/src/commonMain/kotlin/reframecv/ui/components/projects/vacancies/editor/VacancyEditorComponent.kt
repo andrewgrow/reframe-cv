@@ -18,6 +18,7 @@ enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
+    val resumes: VacancyResumesComponent
     val snapshot: VacancySnapshotComponent
     val recognition: VacancyRecognitionComponent
     fun onRecognize()
@@ -49,12 +50,23 @@ class DefaultVacancyEditorComponent(
     private val close: () -> Unit,
     initialVacancy: Vacancy? = null,
     private val delete: () -> Unit = {},
+    projectId: Long = initialVacancy?.projectId ?: 0,
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
     private var persistedVacancy = initialVacancy
     override val initialVacancy: Vacancy? get() = persistedVacancy
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
+    private val modalOpen get() = exportVisible.value || resumes.state.value.unlinkId != null
+    override val resumes: DefaultVacancyResumesComponent = DefaultVacancyResumesComponent(
+        componentContext,
+        projectId,
+        current = { draft.value.resumes },
+        changed = { draft.value = draft.value.copy(resumes = it) },
+        canEdit = {
+            !isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle
+        },
+    )
     override val snapshot: DefaultVacancySnapshotComponent = DefaultVacancySnapshotComponent(
         componentContext,
         initialVacancy?.id,
@@ -74,7 +86,11 @@ class DefaultVacancyEditorComponent(
             vacancyId = { this.initialVacancy?.id },
         )
     override fun onRecognize() {
-        if (isBusy || exportVisible.value || snapshot.state.value.loading) return
+        if (isBusy || modalOpen ||
+            snapshot.state.value.loading
+        ) {
+            return
+        }
         if (deleteState.value != VacancyDeleteState.Idle) return
         importComponent.onReset()
         recognition.onRecognize()
@@ -98,10 +114,14 @@ class DefaultVacancyEditorComponent(
         finished = ::onCloseExport,
     )
     override val importComponent = DefaultVacancyImportComponent(componentContext) {
-        draft.value = VacancyDraft.fromVacancy(it).copy(snapshotChange = draft.value.snapshotChange)
+        draft.value = VacancyDraft.fromVacancy(it).copy(
+            snapshotChange = draft.value.snapshotChange,
+            resumes = draft.value.resumes,
+        )
     }
     override fun onImport() {
-        if (initialVacancy == null && !isBusy && !snapshot.state.value.selecting) {
+        if (initialVacancy != null) return
+        if (!isBusy && !modalOpen && !snapshot.state.value.selecting) {
             saveState.value = VacancySaveState.Idle
             recognition.onReset()
             importComponent.onImport()
@@ -110,7 +130,9 @@ class DefaultVacancyEditorComponent(
     private var exportAfterSave = false
     override val deleteState = MutableValue(VacancyDeleteState.Idle)
     override fun onDraftChange(draft: VacancyDraft) {
-        if (!isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle) {
+        if (!isBusy && !modalOpen &&
+            deleteState.value == VacancyDeleteState.Idle
+        ) {
             recognition.onReset()
             this.draft.value = draft
         }
@@ -123,7 +145,11 @@ class DefaultVacancyEditorComponent(
     }
 
     private fun requestSave(draft: VacancyDraft, export: Boolean) {
-        if (isBusy || exportVisible.value || snapshot.state.value.selecting) return
+        if (isBusy || modalOpen ||
+            snapshot.state.value.selecting
+        ) {
+            return
+        }
         if (draft.name.isNotBlank() && deleteState.value == VacancyDeleteState.Idle) {
             exportAfterSave = export
             saveState.value = VacancySaveState.Saving
@@ -150,7 +176,7 @@ class DefaultVacancyEditorComponent(
     }
 
     override fun onDelete() {
-        if (initialVacancy != null && !isBusy && !exportVisible.value) {
+        if (initialVacancy != null && !isBusy && !modalOpen) {
             if (deleteState.value == VacancyDeleteState.Idle) {
                 deleteState.value = VacancyDeleteState.Confirming
             } else {
@@ -160,6 +186,10 @@ class DefaultVacancyEditorComponent(
     }
 
     override fun onClose() {
+        if (resumes.state.value.unlinkId != null) {
+            resumes.onCancelUnlink()
+            return
+        }
         if (recognition.dialog.value.component != null) {
             recognition.onCancel()
             return

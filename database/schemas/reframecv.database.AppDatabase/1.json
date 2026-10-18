@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9c57a4025d56ca490bef2c101566be01",
+    "identityHash": "594d2578b01274802a695b1b5b427e66",
     "entities": [
       {
         "tableName": "app_settings",
@@ -635,7 +635,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `resume_id` INTEGER, `cover_letter_id` INTEGER, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `cover_letter_id` INTEGER, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -684,11 +684,6 @@
             "columnName": "url",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "resumeId",
-            "columnName": "resume_id",
-            "affinity": "INTEGER"
           },
           {
             "fieldPath": "coverLetterId",
@@ -755,15 +750,6 @@
             "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_project_id` ON `${TABLE_NAME}` (`project_id`)"
           },
           {
-            "name": "index_vacancies_resume_id",
-            "unique": false,
-            "columnNames": [
-              "resume_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_resume_id` ON `${TABLE_NAME}` (`resume_id`)"
-          },
-          {
             "name": "index_vacancies_cover_letter_id",
             "unique": false,
             "columnNames": [
@@ -791,17 +777,6 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "resumes",
-            "onDelete": "SET NULL",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "resume_id"
             ],
             "referencedColumns": [
               "id"
@@ -880,11 +855,83 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "vacancies_resumes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vacancy_id` INTEGER NOT NULL, `resume_id` INTEGER NOT NULL, `ats_score` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`vacancy_id`, `resume_id`), FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "vacancyId",
+            "columnName": "vacancy_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "resumeId",
+            "columnName": "resume_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "atsScore",
+            "columnName": "ats_score",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vacancy_id",
+            "resume_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vacancies_resumes_resume_id",
+            "unique": false,
+            "columnNames": [
+              "resume_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_resumes_resume_id` ON `${TABLE_NAME}` (`resume_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vacancies",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vacancy_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "resumes",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "resume_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c57a4025d56ca490bef2c101566be01')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '594d2578b01274802a695b1b5b427e66')"
     ]
   }
 }

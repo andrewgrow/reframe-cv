@@ -13,6 +13,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.repository.VacanciesRepository
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
@@ -26,7 +27,11 @@ class VacancyEditingTest : ComponentTest() {
     private fun original() = Vacancy(
         id = 12, projectId = 7, name = "Old title", company = "Old company",
         description = "Old description", url = "old url", keywords = listOf("Old"),
-        createdAt = 100, updatedAt = 200, resumeId = 3, coverLetterId = 4, vacancyAttachmentId = 5,
+        createdAt = 100, updatedAt = 200,
+        resumes = listOf(
+            VacancyResume(3),
+        ),
+        coverLetterId = 4, vacancyAttachmentId = 5,
     )
 
     @Test

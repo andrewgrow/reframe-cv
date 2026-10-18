@@ -20,9 +20,9 @@ interface VacancyDao :
     @Transaction
     suspend fun create(record: Vacancy): Long {
         requireWorkspace(record.projectId, record.createdAt)
-        record.resumeId?.let { requireActiveResume(it, record.projectId) }
         record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
         val id = insertEntity(VacancyEntity.fromDomainModel(record))
+        replaceResumes(id, record)
         replaceKeywords(id, record.keywords)
         return id
     }
@@ -34,9 +34,9 @@ interface VacancyDao :
             "Cannot move a record to another project"
         }
         requireWorkspace(record.projectId, record.updatedAt)
-        record.resumeId?.let { requireActiveResume(it, record.projectId) }
         record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
         check(updateEntity(VacancyEntity.fromDomainModel(record)) == 1)
+        replaceResumes(record.id, record)
         replaceKeywords(record.id, record.keywords)
     }
 
@@ -75,6 +75,20 @@ interface VacancyDao :
         }
         update(record.copy(vacancyAttachmentId = sourceId))
         if (previous != null && previous != sourceId) deleteUnusedVacancyAttachment(previous)
+    }
+
+    @Transaction
+    suspend fun replaceResumes(id: Long, record: Vacancy) {
+        require(record.resumes.map { it.resumeId }.distinct().size == record.resumes.size) {
+            "A resume can only be linked once"
+        }
+        record.resumes.forEach { requireActiveResume(it.resumeId, record.projectId) }
+        clearResumes(id)
+        insertResumes(
+            record.resumes.mapIndexed { position, link ->
+                VacancyResumeEntity(id, link.resumeId, link.atsScore, position)
+            },
+        )
     }
 
     @Transaction

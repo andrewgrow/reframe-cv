@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.vacancy.VacancyResume
 
 class VacancyDeletionTest : WorkspaceDatabaseTest() {
     private suspend fun source(): Long = database.vacancyAttachmentDao().insert(
@@ -31,7 +32,7 @@ class VacancyDeletionTest : WorkspaceDatabaseTest() {
         val originalLetter = database.coverLetterDao().findById(letterId)?.toDomainModel()
         val record = vacancy(projectId).copy(
             vacancyAttachmentId = sourceId,
-            resumeId = resumeId,
+            resumes = listOf(VacancyResume(resumeId)),
             coverLetterId = letterId,
         )
         val dao = database.vacancyDao()

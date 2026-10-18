@@ -15,6 +15,10 @@ class TestVacancyEditorComponent(
     override fun onDraftChange(draft: VacancyDraft) {
         this.draft.value = draft
     }
+    override val resumes = TestVacancyResumesComponent(
+        current = { draft.value.resumes },
+        changed = { draft.value = draft.value.copy(resumes = it) },
+    )
     override val importComponent = TestVacancyImportComponent(imported)
     override fun onImport() {
         if (initialVacancy == null && !isBusy) importComponent.onImport()

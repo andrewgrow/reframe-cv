@@ -21,6 +21,7 @@ import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Rule
 import org.junit.rules.TemporaryFolder
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 
 class DesktopVacancyExporterTest {
     @get:Rule val folder = TemporaryFolder()
@@ -31,7 +32,11 @@ class DesktopVacancyExporterTest {
         description = "Build apps.\nReview code.", url = "https://example.com/job",
         keywords = listOf("Kotlin", "Compose"), responsibilities = listOf("Ship apps, APIs"),
         requirements = listOf("Kotlin"), niceToHave = listOf("CI/CD"),
-        createdAt = 10, updatedAt = 20, resumeId = 3, coverLetterId = 4, vacancyAttachmentId = 5,
+        createdAt = 10, updatedAt = 20,
+        resumes = listOf(
+            VacancyResume(3),
+        ),
+        coverLetterId = 4, vacancyAttachmentId = 5,
     )
 
     @Test

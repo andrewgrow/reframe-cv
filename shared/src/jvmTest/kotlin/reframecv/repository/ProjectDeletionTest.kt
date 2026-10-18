@@ -12,6 +12,7 @@ import reframecv.attachments.TestAttachmentStorage
 import reframecv.database.project.ProjectEntity
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.logging.ApplicationLogger
 
 class ProjectDeletionTest : WorkspaceDatabaseTest() {
@@ -43,7 +44,7 @@ class ProjectDeletionTest : WorkspaceDatabaseTest() {
         )
         val vacancyId = snapshots.create(
             vacancy(leaf).copy(
-                resumeId = resumeId,
+                resumes = listOf(VacancyResume(resumeId)),
                 coverLetterId = letterId,
             ),
             SnapshotChange.Attach(SelectedAttachment("unused", "source.txt")),

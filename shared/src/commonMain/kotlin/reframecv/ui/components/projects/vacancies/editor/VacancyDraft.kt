@@ -2,6 +2,7 @@ package reframecv.ui.components.projects.vacancies.editor
 
 import reframecv.attachments.SnapshotChange
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 
 /** Keeps unfinished vacancy edits separate from the saved record. */
 data class VacancyDraft(
@@ -15,12 +16,14 @@ data class VacancyDraft(
     val requirements: List<String> = emptyList(),
     val niceToHave: List<String> = emptyList(),
     val jobTitle: String = "",
+    val resumes: List<VacancyResume> = emptyList(),
 ) {
     fun toVacancy(projectId: Long) = applyTo(
         Vacancy(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),
     )
 
     fun applyTo(vacancy: Vacancy) = vacancy.copy(
+        resumes = resumes,
         name = name.trim(),
         jobTitle = jobTitle.trim(),
         company = company.trim(),
@@ -34,6 +37,7 @@ data class VacancyDraft(
 
     companion object {
         fun fromVacancy(vacancy: Vacancy) = VacancyDraft(
+            resumes = vacancy.resumes,
             name = vacancy.name,
             jobTitle = vacancy.jobTitle,
             company = vacancy.company,

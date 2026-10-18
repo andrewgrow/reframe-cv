@@ -64,8 +64,11 @@ interface WorkspaceDao {
     )
     suspend fun clearSourceResume(id: Long, updatedAt: Long)
 
-    @Query("UPDATE vacancies SET resume_id = NULL, updated_at = :updatedAt WHERE resume_id = :id")
-    suspend fun clearVacancyResumes(id: Long, updatedAt: Long)
+    @Query(
+        "UPDATE vacancies SET updated_at = :updatedAt WHERE id IN " +
+            "(SELECT vacancy_id FROM vacancies_resumes WHERE resume_id = :id)",
+    )
+    suspend fun updateLinkedVacancyTimestamps(id: Long, updatedAt: Long)
 
     @Query(
         "UPDATE vacancies SET cover_letter_id = NULL, updated_at = :updatedAt " +

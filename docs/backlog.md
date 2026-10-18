@@ -7,10 +7,12 @@ belong in the [README](../README.md).
 
 ## Resume adaptations
 
+- [ ] Connect vacancy-specific ATS assessment to the shared AI request dialog.
+
 - [ ] Decide where adaptation starts: a vacancy, the resume list, or both.
 - [ ] Default to the main resume, with an explicit alternative source.
 - [ ] Create an independent document linked by `sourceResumeId`; decide what is copied
-  and when to assign the vacancy's `resumeId`.
+  and when to link the new resume to the vacancy.
 - [ ] Clarify whether explicit version history is needed beyond independent adaptations.
 
 ## Cover letters
@@ -21,7 +23,6 @@ belong in the [README](../README.md).
 
 ## Vacancy sources
 
-- [ ] Add editing controls for responsibilities, requirements, and nice-to-have lists.
 - [ ] Decide whether recognition should offer a preview/diff before replacing draft fields.
 - [ ] Define URL-to-snapshot fetching, supported formats, and failure/cancellation behavior.
 - [ ] Consider parsing additional source formats after the PDF integration.

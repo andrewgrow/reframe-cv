@@ -94,6 +94,7 @@ class DefaultVacanciesComponent(
                         )
                     },
                     initialVacancy = original,
+                    projectId = projectId,
                     delete = {
                         editor?.initialVacancy?.let { store.accept(VacanciesIntent.Delete(it.id)) }
                     },

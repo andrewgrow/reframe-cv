@@ -10,7 +10,6 @@ import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
 import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.project.ProjectEntity
-import reframecv.database.resume.ResumeEntity
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.domain.models.vacancy.Vacancy
 
@@ -31,12 +30,6 @@ import reframecv.domain.models.vacancy.Vacancy
             onDelete = ForeignKey.CASCADE,
         ),
         ForeignKey(
-            entity = ResumeEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["resume_id"],
-            onDelete = ForeignKey.SET_NULL,
-        ),
-        ForeignKey(
             entity = CoverLetterEntity::class,
             parentColumns = ["id"],
             childColumns = ["cover_letter_id"],
@@ -47,7 +40,7 @@ import reframecv.domain.models.vacancy.Vacancy
         Index(value = ["vacancy_attachment_id"]),
         Index(
             value = ["project_id"],
-        ), Index(value = ["resume_id"]), Index(value = ["cover_letter_id"]),
+        ), Index(value = ["cover_letter_id"]),
     ],
 )
 @ColumnTypeConverters(VacancyListConverter::class)
@@ -64,8 +57,6 @@ data class VacancyEntity(
     val description: String = "",
     val company: String = "",
     val url: String = "",
-    @ColumnInfo(name = "resume_id")
-    val resumeId: Long? = null,
     @ColumnInfo(name = "cover_letter_id")
     val coverLetterId: Long? = null,
     @ColumnInfo(name = "vacancy_attachment_id")
@@ -89,7 +80,6 @@ data class VacancyEntity(
         description = description,
         company = company,
         url = url,
-        resumeId = resumeId,
         coverLetterId = coverLetterId,
         vacancyAttachmentId = vacancyAttachmentId,
         responsibilities = responsibilities,
@@ -108,7 +98,6 @@ data class VacancyEntity(
             description = domainModel.description,
             company = domainModel.company,
             url = domainModel.url,
-            resumeId = domainModel.resumeId,
             coverLetterId = domainModel.coverLetterId,
             vacancyAttachmentId = domainModel.vacancyAttachmentId,
             responsibilities = domainModel.responsibilities,

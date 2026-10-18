@@ -8,6 +8,7 @@ import kotlinx.coroutines.runBlocking
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
+import reframecv.domain.models.vacancy.VacancyResume
 
 class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
     @Test
@@ -91,7 +92,9 @@ class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
         )
         val letterId = database.coverLetterDao().create(letter(projectId))
         val vacancyId = database.vacancyDao().create(
-            vacancy(projectId).copy(resumeId = resumeId, coverLetterId = letterId),
+            vacancy(
+                projectId,
+            ).copy(resumes = listOf(VacancyResume(resumeId)), coverLetterId = letterId),
         )
         assertEquals(1, database.projectDao().setMainResume(projectId, resumeId, 300))
         val beforeResume = database.resumeDao().findById(resumeId)?.toDomainModel()

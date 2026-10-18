@@ -5,6 +5,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.SerializationException
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.export.VacancyExportJson
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 
@@ -22,7 +23,7 @@ class VacancyImportJsonTest {
             ),
             responsibilities = listOf("Build, ship", "Mentor"),
             requirements = listOf("Experience\nwith Android"), niceToHave = listOf("Deutsch"),
-            resumeId = 4, coverLetterId = 5, vacancyAttachmentId = 6,
+            resumes = listOf(VacancyResume(4)), coverLetterId = 5, vacancyAttachmentId = 6,
         )
         val imported = VacancyImportJson.decode(VacancyExportJson.encode(original))
         val expected = original.copy(
@@ -30,7 +31,7 @@ class VacancyImportJsonTest {
             projectId = 0,
             createdAt = 0,
             updatedAt = 0,
-            resumeId = null,
+            resumes = emptyList(),
             coverLetterId = null,
             vacancyAttachmentId = null,
         )
@@ -47,7 +48,7 @@ class VacancyImportJsonTest {
             "name":"My list","jobTitle":"Developer","company":42,"description":null,"url":false,
             "keywords":["Kotlin",42,null,"Compose"],"requirements":"invalid",
             "responsibilities":[{},"Build, ship"],"niceToHave":["German"],
-            "id":17,"projectId":9,"vacancyAttachmentId":8,"filePath":"/private/file",
+            "resumes":[{"resumeId":1,"atsScore":100}],"id":17,"projectId":9,"vacancyAttachmentId":8,"filePath":"/private/file",
             "future":{"field":"unknown"}
         }}""",
         )

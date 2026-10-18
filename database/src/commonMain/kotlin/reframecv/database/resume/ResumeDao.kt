@@ -96,7 +96,7 @@ interface ResumeDao :
         val projectId = findById(id)?.entity?.projectId ?: return 0
         clearMainResume(id, updatedAt)
         clearSourceResume(id, updatedAt)
-        clearVacancyResumes(id, updatedAt)
+        updateLinkedVacancyTimestamps(id, updatedAt)
         val changed = deleteEntity(id)
         if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
         return changed

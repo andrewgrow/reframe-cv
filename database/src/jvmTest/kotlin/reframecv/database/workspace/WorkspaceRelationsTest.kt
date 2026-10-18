@@ -12,6 +12,7 @@ import reframecv.database.resume.ResumeKeywordEntity
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeSummarySection
+import reframecv.domain.models.vacancy.VacancyResume
 
 class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
     @Test
@@ -32,8 +33,8 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
             )
         }
         assertFailsWith<SQLiteException> {
-            database.vacancyDao().insertEntity(
-                VacancyEntity.fromDomainModel(vacancy(projectId).copy(resumeId = -1)),
+            database.vacancyDao().insertResumes(
+                listOf(reframecv.database.vacancy.VacancyResumeEntity(-1, -1)),
             )
         }
         assertFailsWith<SQLiteException> {
@@ -87,10 +88,14 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
         )
         val letterId = database.coverLetterDao().create(letter(projectId))
         val first = database.vacancyDao().create(
-            vacancy(projectId).copy(resumeId = resumeId, coverLetterId = letterId),
+            vacancy(
+                projectId,
+            ).copy(resumes = listOf(VacancyResume(resumeId)), coverLetterId = letterId),
         )
         val second = database.vacancyDao().create(
-            vacancy(projectId).copy(resumeId = resumeId, coverLetterId = letterId),
+            vacancy(
+                projectId,
+            ).copy(resumes = listOf(VacancyResume(resumeId)), coverLetterId = letterId),
         )
         database.projectDao().setMainResume(projectId, resumeId, 300)
         assertEquals(1, database.resumeDao().delete(resumeId, 400))
@@ -101,7 +106,7 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
             database.resumeDao().findById(adaptedId)?.toDomainModel()?.content,
         )
         for (id in listOf(first, second)) {
-            assertNull(database.vacancyDao().findById(id)?.entity?.resumeId)
+            assertEquals(emptyList(), database.vacancyDao().findById(id)?.toDomainModel()?.resumes)
             assertEquals(letterId, database.vacancyDao().findById(id)?.entity?.coverLetterId)
         }
         assertEquals(1, database.coverLetterDao().delete(letterId, 500))
@@ -126,18 +131,24 @@ class WorkspaceRelationsTest : WorkspaceDatabaseTest() {
             database.resumeDao().create(resume(projectId).copy(sourceResumeId = resumeId))
         }
         assertFailsWith<IllegalArgumentException> {
-            database.vacancyDao().create(vacancy(projectId).copy(resumeId = resumeId))
+            database.vacancyDao().create(
+                vacancy(projectId).copy(resumes = listOf(VacancyResume(resumeId))),
+            )
         }
         assertFailsWith<IllegalArgumentException> {
             database.vacancyDao().create(vacancy(projectId).copy(coverLetterId = letterId))
         }
         assertFailsWith<IllegalArgumentException> {
-            database.vacancyDao().create(vacancy(projectId).copy(resumeId = -1))
+            database.vacancyDao().create(
+                vacancy(projectId).copy(resumes = listOf(VacancyResume(-1))),
+            )
         }
         database.resumeDao().delete(resumeId, 300)
         database.coverLetterDao().delete(letterId, 300)
         assertFailsWith<IllegalArgumentException> {
-            database.vacancyDao().create(vacancy(otherId).copy(resumeId = resumeId))
+            database.vacancyDao().create(
+                vacancy(otherId).copy(resumes = listOf(VacancyResume(resumeId))),
+            )
         }
         assertFailsWith<IllegalArgumentException> {
             database.vacancyDao().create(vacancy(otherId).copy(coverLetterId = letterId))

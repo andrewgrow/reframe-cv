@@ -66,8 +66,10 @@ operation. See the README for reset and backup instructions.
   a vacancy or letter does not require a resume.
 - `Project.mainResumeId` selects at most one resume from that workspace.
   `Resume.sourceResumeId` records provenance; adaptations are independent documents.
-- A vacancy can reference one resume, one cover letter, and one immutable VacancyAttachment.
-  Multiple vacancies can share those records; reverse relationships are queried.
+- A vacancy can link multiple resumes, one cover letter, and one immutable VacancyAttachment.
+  `vacancies_resumes` stores ordered, unique vacancy–resume pairs and an integer ATS score
+  from 0 to 100 per pair (default 0). Resume and vacancy deletion cascade their links;
+  unlinking keeps the resume itself. Document and link changes share a save transaction.
 - DAO operations validate existence and same-project document relationships.
   Main-resume assignment and document writes are atomic.
 - Keywords use per-document indexed tables, with trimmed, nonempty, case-insensitively
@@ -178,6 +180,17 @@ Cancel parsing or Back/Escape cancels the operation and keeps the editor open. D
 editor cancels it too; results arriving after cancellation/disposal are discarded. Successful
 results do not cause automatic saves or navigation. Only filenames and bytes enter the remote
 contract; local file paths and application IDs are not part of it.
+
+## Vacancy resume links
+
+Below source recognition, the vacancy editor lists linked resumes and one empty picker.
+The picker searches current-project resumes by partial, case-insensitive matches in
+names and keywords, excluding already linked resumes. Choices are observed live and
+load failures expose Retry. Each linked row has Unlink, its ATS percentage, and Assess.
+Unlink uses the shared confirmation dialog without typed confirmation. Changes remain
+in the vacancy draft until Save; closing the page discards them. Assess is a UI placeholder
+and does not send an AI request or change the score. Recognition and file import preserve
+these local links; portable JSON does not include links or ATS scores.
 
 ## Vacancy JSON export
 

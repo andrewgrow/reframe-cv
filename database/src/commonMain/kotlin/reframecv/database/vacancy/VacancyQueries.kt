@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 
 /** Provides SQL queries for vacancy records, keywords, and unused snapshots. */
-interface VacancyQueries {
+interface VacancyQueries : VacancyResumeQueries {
     @Insert
     suspend fun insertSnapshot(entity: VacancyAttachmentEntity): Long
 

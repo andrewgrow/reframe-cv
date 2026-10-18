@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
+import reframecv.domain.models.vacancy.VacancyResume
 
 class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
     @Test
@@ -36,7 +37,7 @@ class WorkspaceUpdatesTest : WorkspaceDatabaseTest() {
         }
         assertFailsWith<IllegalArgumentException> {
             database.vacancyDao().update(
-                storedVacancy.copy(resumeId = -1, keywords = listOf("Java")),
+                storedVacancy.copy(resumes = listOf(VacancyResume(-1)), keywords = listOf("Java")),
             )
         }
         assertEquals(storedResume, database.resumeDao().findById(resumeId)?.toDomainModel())
