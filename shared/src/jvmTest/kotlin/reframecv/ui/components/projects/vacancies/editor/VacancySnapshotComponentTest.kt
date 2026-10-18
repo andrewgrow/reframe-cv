@@ -3,6 +3,8 @@ package reframecv.ui.components.projects.vacancies.editor
 import com.arkivanov.decompose.DefaultComponentContext
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -56,17 +58,22 @@ class VacancySnapshotComponentTest : ComponentTest() {
             } while (state.loading)
             runOnUiThread {
                 assertEquals(selected, editor.snapshot.state.value.selected)
+                editor.snapshot.onParsed()
+                assertNotNull(editor.snapshot.state.value.parsedAt)
                 editor.onSave(VacancyDraft("Title"))
             }
-            assertEquals(SnapshotChange.Attach(selected), saved.receive().snapshotChange)
+            val attached = assertIs<SnapshotChange.Attach>(saved.receive().snapshotChange)
+            assertEquals(selected, attached.selection)
+            assertNotNull(attached.parsedAt)
             assertTrueNoCopies()
             runOnUiThread {
                 editor.snapshot.onRemove()
-                assertEquals(SnapshotChange.Attach(selected), editor.snapshot.change)
+                assertEquals(attached, editor.snapshot.change)
                 editor.onSaveCompleted(VacancySaveState.Failed)
                 editor.snapshot.onRemove()
                 assertEquals(SnapshotChange.Keep, editor.snapshot.change)
                 assertNull(editor.snapshot.state.value.selected)
+                assertNull(editor.snapshot.state.value.parsedAt)
             }
         }
     }
@@ -81,6 +88,7 @@ class VacancySnapshotComponentTest : ComponentTest() {
             sha256 = "hash",
             createdAt = 100,
             fileName = "missing.pdf",
+            parsedAt = 200,
         )
         val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
             override suspend fun snapshot(vacancyId: Long) =
@@ -110,6 +118,7 @@ class VacancySnapshotComponentTest : ComponentTest() {
             while (state.loading) state = states.receive()
             assertEquals(original, state.record)
             assertEquals(AttachmentStatus.Missing, state.status)
+            assertEquals(200L, state.parsedAt)
             runOnUiThread {
                 assertEquals(SnapshotChange.Keep, component.change)
                 component.onRemove()

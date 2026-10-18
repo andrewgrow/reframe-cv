@@ -33,5 +33,7 @@ fun interface AttachmentPicker {
 sealed interface SnapshotChange {
     data object Keep : SnapshotChange
     data object Remove : SnapshotChange
-    data class Attach(val selection: SelectedAttachment) : SnapshotChange
+    data class Attach(val selection: SelectedAttachment, val parsedAt: Long? = null) :
+        SnapshotChange
+    data class Parsed(val attachmentId: Long, val parsedAt: Long) : SnapshotChange
 }

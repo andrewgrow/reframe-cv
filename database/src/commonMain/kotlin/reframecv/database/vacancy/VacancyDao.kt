@@ -1,7 +1,9 @@
 package reframecv.database.vacancy
 
 import androidx.room3.Dao
+import androidx.room3.Query
 import androidx.room3.Transaction
+import reframecv.attachments.SnapshotChange
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
@@ -12,6 +14,9 @@ import reframecv.domain.models.vacancy.Vacancy
 interface VacancyDao :
     VacancyQueries,
     WorkspaceDao {
+    @Query("UPDATE vacancy_attachments SET parsed_at = :parsedAt WHERE id = :id")
+    suspend fun markSnapshotParsed(id: Long, parsedAt: Long): Int
+
     @Transaction
     suspend fun create(record: Vacancy): Long {
         requireWorkspace(record.projectId, record.createdAt)
@@ -54,12 +59,19 @@ interface VacancyDao :
         record: Vacancy,
         snapshot: VacancyAttachmentEntity?,
         removeSnapshot: Boolean,
+        parsed: SnapshotChange.Parsed? = null,
     ) {
         val previous = checkNotNull(findById(record.id)).entity.vacancyAttachmentId
         val sourceId = when {
             snapshot != null -> insertSnapshot(snapshot)
             removeSnapshot -> null
             else -> previous
+        }
+        if (parsed != null) {
+            check(previous == parsed.attachmentId && sourceId == previous) {
+                "Parsed source no longer matches the vacancy attachment"
+            }
+            check(markSnapshotParsed(parsed.attachmentId, parsed.parsedAt) == 1)
         }
         update(record.copy(vacancyAttachmentId = sourceId))
         if (previous != null && previous != sourceId) deleteUnusedVacancyAttachment(previous)

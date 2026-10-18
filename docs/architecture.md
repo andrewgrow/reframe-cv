@@ -161,7 +161,13 @@ is not full PDF validation or local text extraction. Original files are never mo
 
 Recognition only updates the draft; saving and copying attachments remain explicit. It replaces
 posting fields, preserves the user's Internal name, and keeps the
-pending attachment. Failures leave fields unchanged and are retryable. Unexpected failures
+pending attachment. The attachment's nullable `parsedAt` stores successful recognition time.
+The green indicator beside Parse PDF appears immediately after success and persists only
+with the vacancy's Save. Reopening restores it; editing posting fields leaves it intact.
+Replacement/detachment clears it, while failures/cancellation do not create a marker.
+Existing-source parsing updates metadata in the same transaction as the vacancy save;
+a stale attachment ID rejects the write. This metadata is excluded from portable JSON.
+Failures leave fields unchanged and are retryable. Unexpected failures
 include operation context and stack traces in the application log.
 
 Processing disables draft edits, attachment changes, import, save, export, and deletion.
@@ -183,7 +189,8 @@ including pending snapshot changes. Invalid names and failed saves prevent the d
 from opening. After success, pending snapshot changes reset to Keep so later exports
 do not recopy attachments. The same editor remains open after destination selection
 or cancellation. First Save also keeps the same editor open, switching creation to
-management with the persisted ID and timestamps. Later ordinary Save returns to the list.
+management with the persisted ID and timestamps. Later saves also keep the editor open;
+returning to the list requires an explicit navigation action.
 Pending attachments bind to the new vacancy ID and reset to Keep after creation.
 
 Resume and vacancy export share the JSON options dialog and desktop file lifecycle.

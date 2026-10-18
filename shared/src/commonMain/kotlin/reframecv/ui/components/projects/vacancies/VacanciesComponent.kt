@@ -119,13 +119,8 @@ class DefaultVacanciesComponent(
                 when (label) {
                     VacanciesLabel.Saving -> editor?.saveState?.value = VacancySaveState.Saving
 
-                    is VacanciesLabel.Saved -> {
-                        if (editor?.onSaveCompleted(VacancySaveState.Idle, label.createdVacancy) !=
-                            true
-                        ) {
-                            editorNavigation.pop()
-                        }
-                    }
+                    is VacanciesLabel.Saved ->
+                        editor?.onSaveCompleted(VacancySaveState.Idle, label.createdVacancy)
 
                     VacanciesLabel.Deleted -> editorNavigation.pop()
 

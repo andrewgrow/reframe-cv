@@ -34,7 +34,7 @@ class VacancyEditingTest : ComponentTest() {
         val original = original()
         val another = original.copy(id = 13, name = "Another")
         dependencies.vacanciesRepository.records.value = listOf(original, another)
-        val closed = CompletableDeferred<Unit>()
+        val saved = CompletableDeferred<Unit>()
         lateinit var component: DefaultVacanciesComponent
         val draft =
             VacancyDraft(
@@ -50,18 +50,14 @@ class VacancyEditingTest : ComponentTest() {
             component.onEdit(original)
             val editor = requireNotNull(component.editor)
             assertEquals(original, editor.initialVacancy)
-            component.childStack.subscribe {
-                if (it.active.instance ==
-                    VacanciesComponent.Child.List
-                ) {
-                    closed.complete(Unit)
-                }
-            }
             editor.onSave(draft)
+            editor.saveState.subscribe {
+                if (it == VacancySaveState.Idle) saved.complete(Unit)
+            }
         }
-        withTimeout(10_000.milliseconds) { closed.await() }
+        withTimeout(10_000.milliseconds) { saved.await() }
         runOnUiThread {
-            assertNull(component.editor)
+            assertSame(original, requireNotNull(component.editor).initialVacancy)
             assertEquals(
                 listOf(draft.applyTo(original), another),
                 dependencies.vacanciesRepository.records.value,
@@ -107,23 +103,21 @@ class VacancyEditingTest : ComponentTest() {
         withTimeout(10_000.milliseconds) {
             while (states.receive() != VacancySaveState.Failed) { /* Wait for update failure. */ }
             assertEquals(listOf(original), dependencies.vacanciesRepository.records.value)
-            val closed = CompletableDeferred<Unit>()
+            val saved = CompletableDeferred<Unit>()
             val logged = dependencies.logger.failures.receive()
             assertSame(failure, logged.error)
             assertEquals("Update vacancy", logged.operation)
             assertEquals(mapOf("projectId" to 7L, "vacancyId" to 12L), logged.context)
             runOnUiThread {
                 fail = false
-                component.childStack.subscribe {
-                    if (it.active.instance ==
-                        VacanciesComponent.Child.List
-                    ) {
-                        closed.complete(Unit)
-                    }
+                val editor = requireNotNull(component.editor)
+                editor.onSave(draft)
+                editor.saveState.subscribe {
+                    if (it == VacancySaveState.Idle) saved.complete(Unit)
                 }
-                requireNotNull(component.editor).onSave(draft)
             }
-            closed.await()
+            saved.await()
+            runOnUiThread { assertSame(original, requireNotNull(component.editor).initialVacancy) }
         }
         assertEquals(
             listOf(draft.applyTo(original)),

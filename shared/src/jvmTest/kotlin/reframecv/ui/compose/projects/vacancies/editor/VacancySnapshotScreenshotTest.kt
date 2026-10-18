@@ -13,6 +13,7 @@ import reframecv.attachments.AttachmentStatus
 import reframecv.attachments.SelectedAttachment
 import reframecv.domain.models.vacancyattachment.VacancyAttachment
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.vacancies.editor.TestVacancyRecognitionComponent
 import reframecv.ui.components.projects.vacancies.editor.TestVacancySnapshotComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySnapshotState
 import reframecv.ui.theme.ReframeTheme.ThemeMode
@@ -30,6 +31,23 @@ class VacancySnapshotScreenshotTest : GoldenScreenshotTest() {
             record = record(),
             status = AttachmentStatus.Available,
         ),
+    )
+
+    @Test fun parsedFile() = capture(
+        VacancySnapshotState(
+            record = record().copy(parsedAt = 200),
+            status = AttachmentStatus.Available,
+        ),
+        showRecognition = true,
+    )
+
+    @Test fun parsedFileInLightTheme() = capture(
+        VacancySnapshotState(
+            record = record().copy(parsedAt = 200),
+            status = AttachmentStatus.Available,
+        ),
+        ThemeMode.Light,
+        showRecognition = true,
     )
 
     @Test fun missingFileInLightTheme() = capture(
@@ -58,7 +76,11 @@ class VacancySnapshotScreenshotTest : GoldenScreenshotTest() {
         fileName = "Mobile App Senior Developer.pdf",
     )
 
-    private fun capture(state: VacancySnapshotState, theme: ThemeMode = ThemeMode.Dark) {
+    private fun capture(
+        state: VacancySnapshotState,
+        theme: ThemeMode = ThemeMode.Dark,
+        showRecognition: Boolean = false,
+    ) {
         val size = ScreenSize(500.dp, 240.dp)
         runDesktopComposeUiTest(size) {
             val component = TestVacancySnapshotComponent()
@@ -66,7 +88,14 @@ class VacancySnapshotScreenshotTest : GoldenScreenshotTest() {
             setAndCaptureGolden(this, size, themeMode = theme) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     Box(Modifier.fillMaxSize().padding(16.dp)) {
-                        VacancySnapshotContent(component)
+                        VacancySnapshotContent(
+                            component,
+                            recognition = if (showRecognition) {
+                                TestVacancyRecognitionComponent()
+                            } else {
+                                null
+                            },
+                        )
                     }
                 }
             }

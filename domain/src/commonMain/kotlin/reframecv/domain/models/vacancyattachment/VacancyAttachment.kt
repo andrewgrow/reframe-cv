@@ -12,4 +12,5 @@ data class VacancyAttachment(
     val fileSize: Long,
     val sha256: String,
     val sourceUrl: String? = null,
+    val parsedAt: Long? = null,
 ) : DomainModel

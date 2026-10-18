@@ -27,7 +27,7 @@ class VacancyAttachmentPersistenceTest : WorkspaceDatabaseTest() {
         val dao = database.vacancyAttachmentDao()
         val original = record()
         val id = dao.insert(VacancyAttachmentEntity.fromDomainModel(original))
-        val newer = original.copy(createdAt = 200)
+        val newer = original.copy(createdAt = 200, parsedAt = 250)
         val newerId = dao.insert(VacancyAttachmentEntity.fromDomainModel(newer))
         assertNotEquals(id, newerId)
         assertEquals(original.copy(id = id), dao.findById(id)?.toDomainModel())

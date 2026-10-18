@@ -80,6 +80,7 @@ class DefaultVacancyEditorComponent(
         recognition.onRecognize()
     }
     private fun applyRecognition(result: RecognizedVacancy) {
+        snapshot.onParsed()
         val current = draft.value
         val original = current.applyTo(initialVacancy ?: current.toVacancy(0))
         draft.value =
@@ -130,10 +131,7 @@ class DefaultVacancyEditorComponent(
         }
     }
 
-    internal fun onSaveCompleted(
-        state: VacancySaveState,
-        createdVacancy: Vacancy? = null,
-    ): Boolean {
+    internal fun onSaveCompleted(state: VacancySaveState, createdVacancy: Vacancy? = null) {
         if (createdVacancy != null) persistedVacancy = createdVacancy
         saveState.value = state
         if (state == VacancySaveState.Idle) {
@@ -142,7 +140,6 @@ class DefaultVacancyEditorComponent(
             exportVisible.value = exportAfterSave
         }
         exportAfterSave = false
-        return exportVisible.value || createdVacancy != null
     }
 
     override fun onCloseExport() {

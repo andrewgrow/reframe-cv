@@ -7,6 +7,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertSame
@@ -100,7 +101,12 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             assertEquals("My shortlist", editor.draft.value.name)
             assertEquals("Mobile developer", editor.draft.value.jobTitle)
             assertEquals("Company", editor.draft.value.company)
-            assertEquals(SnapshotChange.Attach(selection), editor.snapshot.change)
+            val attachment = assertIs<SnapshotChange.Attach>(editor.snapshot.change)
+            assertEquals(selection, attachment.selection)
+            assertNotNull(attachment.parsedAt)
+            assertEquals(attachment.parsedAt, editor.snapshot.state.value.parsedAt)
+            editor.onDraftChange(editor.draft.value.copy(company = "Manual correction"))
+            assertNotNull(editor.snapshot.state.value.parsedAt)
             assertEquals(0, saves)
             editor.onSave(editor.draft.value)
             assertEquals(1, saves)
@@ -137,6 +143,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             assertEquals("Not a job", dialog.state.value.error)
             assertEquals("My prompt", dialog.state.value.text)
             assertEquals("Original", editor.draft.value.description)
+            assertNull(editor.snapshot.state.value.parsedAt)
             dialog.onRun()
         }
         awaitState(editor) { it == VacancyRecognitionState.Applied }

@@ -25,11 +25,14 @@ data class VacancyAttachmentEntity(
     val sha256: String,
     @ColumnInfo(name = "source_url")
     val sourceUrl: String? = null,
+    @ColumnInfo(name = "parsed_at")
+    val parsedAt: Long? = null,
 ) : DatabaseModel<VacancyAttachment> {
     override fun toDomainModel() = VacancyAttachment(
         id = id,
         createdAt = createdAt,
         sourceUrl = sourceUrl,
+        parsedAt = parsedAt,
         filePath = filePath,
         fileName = fileName,
         mediaType = mediaType,
@@ -42,6 +45,7 @@ data class VacancyAttachmentEntity(
             id = domainModel.id,
             createdAt = domainModel.createdAt,
             sourceUrl = domainModel.sourceUrl,
+            parsedAt = domainModel.parsedAt,
             filePath = domainModel.filePath,
             fileName = domainModel.fileName,
             mediaType = domainModel.mediaType,

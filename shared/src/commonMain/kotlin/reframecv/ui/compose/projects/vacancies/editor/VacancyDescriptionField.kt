@@ -35,8 +35,9 @@ internal fun VacancyDescriptionField(
     viewport: Rect,
 ) {
     val minimum = ReframeTheme.tokens.dimensions.vacancyDescriptionMinHeight
+    val initial = ReframeTheme.tokens.dimensions.vacancyDescriptionDefaultHeight
     val state = rememberSaveable(saver = DescriptionResizeState.saver) {
-        DescriptionResizeState(minimum.value)
+        DescriptionResizeState(initial.value)
     }
     Box(Modifier.fillMaxWidth()) {
         OutlinedTextField(

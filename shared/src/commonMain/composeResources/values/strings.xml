@@ -325,4 +325,5 @@
     <string name="ai_request_no_prompts">Add an active prompt for this component or a general prompt in Settings → Prompts.</string>
     <string name="ai_request_incomplete_provider">Set an API key and model for this connection in Settings.</string>
     <string name="vacancy_parse_replace_warning">The selected file will be sent to the provider. The result will replace vacancy fields except Internal name and the attachment. Changes are saved only when you press Save on the vacancy page.</string>
+    <string name="vacancy_source_parsed">Successfully parsed from this document.</string>
 </resources>

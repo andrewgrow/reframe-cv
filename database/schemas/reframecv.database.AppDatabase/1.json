@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "6ecd32524492051e4583a85db61a8882",
+    "identityHash": "9c57a4025d56ca490bef2c101566be01",
     "entities": [
       {
         "tableName": "app_settings",
@@ -268,7 +268,7 @@
       },
       {
         "tableName": "vacancy_attachments",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` INTEGER NOT NULL, `file_path` TEXT NOT NULL, `file_name` TEXT NOT NULL, `media_type` TEXT NOT NULL, `file_size` INTEGER NOT NULL, `sha256` TEXT NOT NULL, `source_url` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `created_at` INTEGER NOT NULL, `file_path` TEXT NOT NULL, `file_name` TEXT NOT NULL, `media_type` TEXT NOT NULL, `file_size` INTEGER NOT NULL, `sha256` TEXT NOT NULL, `source_url` TEXT, `parsed_at` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -316,6 +316,11 @@
             "fieldPath": "sourceUrl",
             "columnName": "source_url",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "parsedAt",
+            "columnName": "parsed_at",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -879,7 +884,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6ecd32524492051e4583a85db61a8882')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9c57a4025d56ca490bef2c101566be01')"
     ]
   }
 }

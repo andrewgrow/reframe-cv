@@ -71,10 +71,10 @@ internal fun VacancySnapshotContent(
         }
         if (recognition != null && isPdfSource(state)) {
             VacancyRecognitionContent(
-                recognition,
                 state.selected != null || state.status == AttachmentStatus.Available,
                 enabled && !state.loading,
                 onRecognize,
+                parsed = state.parsedAt != null,
             )
         }
         SelectableText(

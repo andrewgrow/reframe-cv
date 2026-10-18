@@ -51,6 +51,7 @@ class VacancySnapshotManager(
         createSaved(record, change).id
 
     suspend fun createSaved(record: Vacancy, change: SnapshotChange): Vacancy = mutex.withLock {
+        require(change !is SnapshotChange.Parsed) { "A saved attachment is required" }
         withContext(NonCancellable) {
             withNewFile(record, change) { snapshot ->
                 vacancies.createSavedWithSnapshot(
@@ -71,7 +72,12 @@ class VacancySnapshotManager(
         withContext(NonCancellable) {
             val previousPath = source(record.id)?.filePath
             withNewFile(record, change) { snapshot ->
-                vacancies.updateWithSnapshot(record, snapshot, change == SnapshotChange.Remove)
+                vacancies.updateWithSnapshot(
+                    record,
+                    snapshot,
+                    change == SnapshotChange.Remove,
+                    change as? SnapshotChange.Parsed,
+                )
             }
             previousPath?.let { deleteIfUnreferenced(it) }
         }
@@ -106,10 +112,15 @@ class VacancySnapshotManager(
         change: SnapshotChange,
         save: suspend (VacancyAttachmentEntity?) -> T,
     ): T {
-        val attachment = (change as? SnapshotChange.Attach)?.let { storage.store(it.selection) }
+        val selection = change as? SnapshotChange.Attach
+        val attachment = selection?.let { storage.store(it.selection) }
         var committed = false
         try {
-            val result = save(attachment?.toVacancyAttachment(record))
+            val result = save(
+                attachment?.toVacancyAttachment(record)?.copy(
+                    parsedAt = selection?.parsedAt,
+                ),
+            )
             committed = true
             return result
         } finally {

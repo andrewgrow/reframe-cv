@@ -87,7 +87,7 @@ class VacancyCreationTest : ComponentTest() {
         }
         updateCreatedVacancy(component)
         runOnUiThread {
-            assertNull(component.editor)
+            assertNotNull(component.editor)
             assertEquals("Updated", dependencies.vacanciesRepository.records.value.single().name)
             assertEquals(true, writes.tryReceive().isFailure)
         }
@@ -173,23 +173,22 @@ class VacancyCreationTest : ComponentTest() {
     }
 
     private suspend fun updateCreatedVacancy(component: DefaultVacanciesComponent) {
+        val completed = CompletableDeferred<Unit>()
+        lateinit var editor:
+            reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
         runOnUiThread {
-            val editor = assertNotNull(component.editor)
+            editor = assertNotNull(component.editor)
             val saved = assertNotNull(editor.initialVacancy)
             assertEquals(dependencies.vacanciesRepository.records.value.single(), saved)
             assertEquals(" Kotlin ", editor.draft.value.name)
             assertEquals(SnapshotChange.Keep, editor.snapshot.change)
             editor.onSave(editor.draft.value.copy(name = "Updated"))
-        }
-        withTimeout(10_000) {
-            val closed = CompletableDeferred<Unit>()
-            runOnUiThread {
-                component.childStack.subscribe {
-                    if (it.active.instance == VacanciesComponent.Child.List) closed.complete(Unit)
-                }
+            editor.saveState.subscribe {
+                if (it == VacancySaveState.Idle) completed.complete(Unit)
             }
-            closed.await()
         }
+        withTimeout(10_000) { completed.await() }
+        runOnUiThread { assertSame(editor, component.editor) }
     }
 
     private fun context(repository: VacanciesRepository) = DefaultAppComponentContext(

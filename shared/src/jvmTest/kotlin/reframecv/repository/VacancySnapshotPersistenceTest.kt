@@ -30,7 +30,7 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun persistsOriginalSnapshotAndKeepsItWhenVacancyChanges() = runBlocking {
+    fun persistsOriginalSnapshotAndKeepsItWhenVacancyChanges() = runBlocking<Unit> {
         val snapshots = manager()
         val id = snapshots.create(vacancy(project()), attachment())
         val original = assertNotNull(snapshots.snapshot(id))
@@ -42,7 +42,51 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun rollbackRemovesCopiedFileAndSnapshotRecord() = runBlocking {
+    fun persistsParsingWithNewAndExistingSourcesAndResetsItOnReplacement() = runBlocking<Unit> {
+        val snapshots = manager()
+        val id = snapshots.create(vacancy(project()), attachment().copy(parsedAt = 500))
+        val source = assertNotNull(snapshots.snapshot(id)).record
+        assertEquals(500L, source.parsedAt)
+        val record = assertNotNull(database.vacancyDao().findById(id)).toDomainModel()
+        snapshots.update(record.copy(name = "Edited"), SnapshotChange.Keep)
+        assertEquals(500L, assertNotNull(snapshots.snapshot(id)).record.parsedAt)
+        snapshots.update(record, SnapshotChange.Parsed(source.id, 600))
+        database.close()
+        openDatabase()
+        val reopened = assertNotNull(manager().snapshot(id)).record
+        assertEquals(source.copy(parsedAt = 600), reopened)
+        manager().update(record, attachment("new.pdf"))
+        assertNull(assertNotNull(manager().snapshot(id)).record.parsedAt)
+        manager().update(record, SnapshotChange.Remove)
+        assertNull(manager().snapshot(id))
+    }
+
+    @Test
+    fun failedSaveAndMismatchedSourceCannotPersistParsingStatus() = runBlocking<Unit> {
+        val snapshots = manager()
+        val projectId = project()
+        val id = snapshots.create(vacancy(projectId), attachment().copy(parsedAt = 500))
+        val source = assertNotNull(snapshots.snapshot(id)).record
+        val record = assertNotNull(database.vacancyDao().findById(id)).toDomainModel()
+        assertFailsWith<IllegalArgumentException> {
+            snapshots.update(
+                record.copy(projectId = projectId + 1),
+                SnapshotChange.Parsed(source.id, 600),
+            )
+        }
+        assertEquals(500L, assertNotNull(snapshots.snapshot(id)).record.parsedAt)
+        assertEquals(record, database.vacancyDao().findById(id)?.toDomainModel())
+        assertFailsWith<IllegalStateException> {
+            snapshots.update(record, SnapshotChange.Parsed(source.id + 1, 700))
+        }
+        assertEquals(500L, assertNotNull(snapshots.snapshot(id)).record.parsedAt)
+        assertFailsWith<IllegalArgumentException> {
+            snapshots.create(vacancy(projectId), SnapshotChange.Parsed(source.id, 800))
+        }
+    }
+
+    @Test
+    fun rollbackRemovesCopiedFileAndSnapshotRecord() = runBlocking<Unit> {
         assertFailsWith<IllegalStateException> {
             manager().create(vacancy(999), attachment())
         }
@@ -53,7 +97,7 @@ class VacancySnapshotPersistenceTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun replacementAndDetachRemoveOnlyUnusedCopies() = runBlocking {
+    fun replacementAndDetachRemoveOnlyUnusedCopies() = runBlocking<Unit> {
         val snapshots = manager()
         val projectId = project()
         val id = snapshots.create(vacancy(projectId), attachment())

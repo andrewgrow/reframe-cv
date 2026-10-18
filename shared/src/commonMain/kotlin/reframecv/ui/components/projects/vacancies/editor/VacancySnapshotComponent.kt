@@ -13,6 +13,7 @@ import reframecv.attachments.AttachmentStatus
 import reframecv.attachments.SelectedAttachment
 import reframecv.attachments.SnapshotChange
 import reframecv.domain.models.vacancyattachment.VacancyAttachment
+import reframecv.shared.nowMillis
 import reframecv.ui.context.AppComponentContext
 
 /** Supplies snapshot metadata, a pending selection, and file availability to the editor. */
@@ -23,6 +24,7 @@ data class VacancySnapshotState(
     val loading: Boolean = false,
     val failed: Boolean = false,
     val selecting: Boolean = false,
+    val parsedAt: Long? = record?.parsedAt,
 )
 
 /** Lets the vacancy editor select, inspect, or detach an original snapshot. */
@@ -33,6 +35,7 @@ interface VacancySnapshotComponent {
     fun onRemove()
     fun onOpen()
     fun onRetry()
+    fun onParsed()
     fun onSaved(vacancyId: Long? = null)
 }
 
@@ -85,19 +88,39 @@ class DefaultVacancySnapshotComponent(
     }
 
     override fun onRetry() = runOperation("Load snapshot") {
-        if (change == SnapshotChange.Keep) vacancyId?.let { load(it) }
+        if (change == SnapshotChange.Keep || change is SnapshotChange.Parsed) {
+            vacancyId?.let { load(it) }
+        }
+    }
+
+    override fun onParsed() {
+        val timestamp = nowMillis()
+        val current = change
+        change = when (current) {
+            is SnapshotChange.Attach -> current.copy(parsedAt = timestamp)
+
+            is SnapshotChange.Parsed -> current.copy(parsedAt = timestamp)
+
+            SnapshotChange.Keep -> state.value.record?.let {
+                SnapshotChange.Parsed(it.id, timestamp)
+            }
+                ?: return
+
+            SnapshotChange.Remove -> return
+        }
+        state.value = state.value.copy(parsedAt = timestamp)
     }
 
     override fun onSaved(vacancyId: Long?) {
         if (vacancyId != null) this.vacancyId = vacancyId
         if (change == SnapshotChange.Keep) return
         hasSnapshot = when (change) {
-            is SnapshotChange.Attach -> true
+            is SnapshotChange.Attach, is SnapshotChange.Parsed -> true
             SnapshotChange.Remove -> false
             SnapshotChange.Keep -> hasSnapshot
         }
         change = SnapshotChange.Keep
-        state.value = VacancySnapshotState()
+        state.value = VacancySnapshotState(parsedAt = state.value.parsedAt)
         if (hasSnapshot) onRetry()
     }
 
@@ -107,6 +130,9 @@ class DefaultVacancySnapshotComponent(
             record = snapshot?.record,
             status = snapshot?.status,
             loading = true,
+            parsedAt = (change as? SnapshotChange.Parsed)?.takeIf {
+                it.attachmentId == snapshot?.record?.id
+            }?.parsedAt ?: snapshot?.record?.parsedAt,
         )
     }
 
