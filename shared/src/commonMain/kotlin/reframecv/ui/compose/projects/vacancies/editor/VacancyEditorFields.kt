@@ -134,6 +134,7 @@ private fun VacancyDetailFields(
         scroll = scroll,
         viewport = viewport,
     )
+    VacancyListFields(draft, onChange, enabled, scroll, viewport)
     VacancyField(
         draft.url,
         stringResource(Res.string.vacancy_url),

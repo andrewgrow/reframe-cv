@@ -47,7 +47,6 @@ class RemoteVacancyRecognitionRepositoryTest {
             repository.recognize(document, connection, "Do not invent missing facts"),
         ).result
         assertEquals("Mobile developer", result.jobTitle)
-        assertEquals(listOf("Kotlin", "Android"), result.keywords)
         assertEquals("Recognized company", result.company)
     }
 

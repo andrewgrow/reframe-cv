@@ -7,7 +7,6 @@ fun RecognizedVacancy.applyTo(vacancy: Vacancy): Vacancy = vacancy.copy(
     company = company,
     url = url,
     description = description,
-    keywords = keywords,
     responsibilities = responsibilities,
     requirements = requirements,
     niceToHave = niceToHave,

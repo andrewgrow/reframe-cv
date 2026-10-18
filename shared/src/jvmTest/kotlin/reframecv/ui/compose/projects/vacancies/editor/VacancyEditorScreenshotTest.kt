@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import kotlin.test.Test
 import reframecv.attachments.SelectedAttachment
+import reframecv.domain.models.vacancy.Vacancy
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.projects.vacancies.editor.TestVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
@@ -51,6 +52,32 @@ class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
         onNodeWithTag(
             "vacancy.keywords",
         ).performScrollTo().performTextReplacement("Kotlin, Compose")
+        onNodeWithText("Cancel").performClick()
+        captureGolden(this, VACANCY_EDITOR_TAG)
+    }
+
+    @Test
+    fun structuredListsInLightThemeMatchReference() = runDesktopComposeUiTest {
+        val vacancy = Vacancy(
+            id = 1,
+            projectId = 1,
+            name = "Android",
+            createdAt = 0,
+            updatedAt = 0,
+            responsibilities = listOf(
+                "Design, build, and maintain Android applications",
+                "Review code",
+            ),
+            requirements = listOf(
+                "Kotlin and Jetpack Compose",
+                "Experience with real-time communication",
+            ),
+            niceToHave = listOf("German language skills", "Experience with ruggedized devices"),
+        )
+        setGoldenContent(this, themeMode = ThemeMode.Light) {
+            VacancyEditorContent(TestVacancyEditorComponent(initialVacancy = vacancy))
+        }
+        onNodeWithTag("vacancy.niceToHave.resize").performScrollTo()
         onNodeWithText("Cancel").performClick()
         captureGolden(this, VACANCY_EDITOR_TAG)
     }

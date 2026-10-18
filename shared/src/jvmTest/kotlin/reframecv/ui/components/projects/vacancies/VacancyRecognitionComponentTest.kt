@@ -49,10 +49,14 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         description = "Build mobile apps",
         company = "Company",
         url = "https://example.com/job",
-        keywords = listOf("Kotlin"),
         responsibilities = listOf("Build apps"),
         requirements = listOf("Kotlin"),
         niceToHave = listOf("CI/CD"),
+    )
+    private val draftWithManualKeywords = VacancyDraft(
+        "My shortlist",
+        jobTitle = "Old",
+        keywords = " Personal , Remote, English ",
     )
     private val selection = SelectedAttachment("original-file", "job.pdf")
 
@@ -75,7 +79,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         )
         attach(editor)
         runOnUiThread {
-            editor.onDraftChange(VacancyDraft("My shortlist", jobTitle = "Old"))
+            editor.onDraftChange(draftWithManualKeywords)
             editor.onRecognize()
         }
         val dialog = readyDialog(editor)
@@ -101,6 +105,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             assertEquals("My shortlist", editor.draft.value.name)
             assertEquals("Mobile developer", editor.draft.value.jobTitle)
             assertEquals("Company", editor.draft.value.company)
+            assertEquals(" Personal , Remote, English ", editor.draft.value.keywords)
             val attachment = assertIs<SnapshotChange.Attach>(editor.snapshot.change)
             assertEquals(selection, attachment.selection)
             assertNotNull(attachment.parsedAt)

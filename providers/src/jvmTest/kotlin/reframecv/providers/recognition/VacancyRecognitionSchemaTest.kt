@@ -58,7 +58,7 @@ class VacancyRecognitionSchemaTest {
             "{}",
             recognitionFixture("statusCode" to JsonPrimitive(201)),
             recognitionFixture("requirements" to JsonNull),
-            recognitionFixture("keywords" to JsonArray(listOf(JsonPrimitive(42)))),
+            recognitionFixture("keywords" to JsonArray(listOf(JsonPrimitive("Manual")))),
             recognitionFixture("nice_to_have" to JsonPrimitive(42)),
             recognitionFixture("jobTitle" to JsonPrimitive(false)),
             recognitionFixture("extra" to JsonPrimitive("unexpected")),

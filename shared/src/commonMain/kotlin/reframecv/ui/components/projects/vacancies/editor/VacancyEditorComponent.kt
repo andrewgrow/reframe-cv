@@ -86,7 +86,7 @@ class DefaultVacancyEditorComponent(
         draft.value =
             VacancyDraft.fromVacancy(
                 result.applyTo(original),
-            ).copy(snapshotChange = current.snapshotChange)
+            ).copy(keywords = current.keywords, snapshotChange = current.snapshotChange)
     }
     override val saveState = MutableValue(VacancySaveState.Idle)
     override val exportVisible = MutableValue(false)

@@ -42,6 +42,11 @@
     <string name="vacancy_add">Add</string>
     <string name="vacancy_editor_title">Add vacancy</string>
     <string name="vacancy_description">Description</string>
+    <string name="vacancy_responsibilities">Responsibilities</string>
+    <string name="vacancy_requirements">Requirements</string>
+    <string name="vacancy_nice_to_have">Nice to have</string>
+    <string name="vacancy_list_hint">One item per line</string>
+    <string name="vacancy_resize_list">Resize %1$s</string>
     <string name="vacancy_url">URL</string>
     <string name="vacancy_keywords">Keywords</string>
     <string name="vacancy_keywords_hint">Separate keywords with commas</string>
@@ -324,6 +329,7 @@
     <string name="ai_request_no_providers">Add an active API connection in Settings → API Providers.</string>
     <string name="ai_request_no_prompts">Add an active prompt for this component or a general prompt in Settings → Prompts.</string>
     <string name="ai_request_incomplete_provider">Set an API key and model for this connection in Settings.</string>
-    <string name="vacancy_parse_replace_warning">The selected file will be sent to the provider. The result will replace vacancy fields except Internal name and the attachment. Changes are saved only when you press Save on the vacancy page.</string>
+    <string name="vacancy_parse_replace_warning">The selected file will be sent to the provider. The result will replace vacancy fields except Internal name, Keywords, and the attachment. Changes are saved only when you press Save on the vacancy page.</string>
     <string name="vacancy_source_parsed">Successfully parsed from this document.</string>
+    <string name="prompts_resize_text">Resize prompt text</string>
 </resources>

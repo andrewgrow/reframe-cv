@@ -11,7 +11,6 @@ fun VacancyRecognitionResult.toOutcome(): RecognitionOutcome {
         description = jobDescription?.trim().orEmpty(),
         company = company?.trim().orEmpty(),
         url = url?.trim().orEmpty(),
-        keywords = keywords.cleaned().distinctBy { it.lowercase() },
         responsibilities = responsibilities.cleaned(),
         requirements = requirements.cleaned(),
         niceToHave = niceToHave.cleaned(),

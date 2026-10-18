@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
-/** Reads the recognition contract, including divo-resume's legacy nice-to-have text. */
+/** Reads vacancy recognition results, including legacy nice-to-have text. */
 object VacancyRecognitionJson {
     private val json = Json { encodeDefaults = true }
 

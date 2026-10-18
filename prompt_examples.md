@@ -23,7 +23,7 @@ Detect the source language internally. Return all extracted content
 in English, translating it faithfully when necessary.
 
 Translate jobTitle, jobDescription, responsibilities, requirements,
-nice_to_have, and descriptive keywords into English.
+and nice_to_have into English.
 
 Preserve company names, personal names, product names, technology
 names, acronyms, and URLs as written in the source.
@@ -41,8 +41,6 @@ Extract:
 - responsibilities: the duties associated with the position.
 - requirements: mandatory qualifications and requirements.
 - nice_to_have: explicitly optional or preferred qualifications.
-- keywords: relevant technologies, tools, skills, and professional
-  terms explicitly mentioned in the posting, without duplicates.
 - url: the job posting URL, only if explicitly available in the source.
 
 Keep responsibilities, requirements, and optional qualifications

@@ -19,7 +19,7 @@ class VacancyRecognitionTest {
         val original = Vacancy(
             id = 7, projectId = 3, name = "Old", createdAt = 10, updatedAt = 20,
             company = "Company", url = "https://example.com/job", resumeId = 11,
-            coverLetterId = 12, vacancyAttachmentId = 13,
+            coverLetterId = 12, vacancyAttachmentId = 13, keywords = listOf("Manual", "Remote"),
         )
         val result = VacancyRecognitionJson.decode(recognitionFixture())
         assertEquals(
@@ -28,7 +28,6 @@ class VacancyRecognitionTest {
                 company = "Recognized company",
                 url = "https://example.com/recognized",
                 description = "Build mobile apps",
-                keywords = listOf("Kotlin", "Android"),
                 responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
                 requirements = listOf("Kotlin"),
                 niceToHave = listOf("CI/CD"),
@@ -70,6 +69,7 @@ class VacancyRecognitionTest {
             "{}", "[]", "broken json",
             recognitionFixture("statusCode" to JsonPrimitive(201)),
             recognitionFixture("extra" to JsonPrimitive("ignored?")),
+            recognitionFixture("keywords" to JsonArray(listOf(JsonPrimitive("Kotlin")))),
             recognitionFixture("requirements" to JsonPrimitive("Kotlin")),
             recognitionFixture("requirements" to JsonArray(listOf(JsonPrimitive(42)))),
             recognitionFixture("jobTitle" to JsonPrimitive(false)),
@@ -102,7 +102,6 @@ class VacancyRecognitionTest {
                 "company" to JsonNull,
                 "url" to JsonNull,
                 "jobDescription" to JsonNull,
-                "keywords" to JsonArray(emptyList()),
                 "responsibilities" to JsonArray(emptyList()),
                 "requirements" to JsonArray(emptyList()),
                 "nice_to_have" to JsonNull,
@@ -123,7 +122,6 @@ class VacancyRecognitionTest {
                 company = "",
                 url = "",
                 description = "",
-                keywords = emptyList(),
                 responsibilities = emptyList(),
                 requirements = emptyList(),
                 niceToHave = emptyList(),
@@ -142,7 +140,6 @@ internal fun recognitionFixture(
         """{
           "jobTitle":" Mobile developer ","jobDescription":" Build mobile apps ",
           "company":" Recognized company ","url":" https://example.com/recognized ",
-          "keywords":[" Kotlin ",null,"kotlin","", "Android"],
           "responsibilities":[" Build apps, APIs ",null,"Work with teams\nReview code"],
           "requirements":[" Kotlin ","Kotlin", ""],"nice_to_have":[" CI/CD "]
         }""",

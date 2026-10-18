@@ -26,9 +26,9 @@ data class VacancyDraft(
         company = company.trim(),
         description = description.trim(),
         url = url.trim(),
-        responsibilities = responsibilities,
-        requirements = requirements,
-        niceToHave = niceToHave,
+        responsibilities = responsibilities.map { it.trim() }.filter { it.isNotEmpty() },
+        requirements = requirements.map { it.trim() }.filter { it.isNotEmpty() },
+        niceToHave = niceToHave.map { it.trim() }.filter { it.isNotEmpty() },
         keywords = keywords.split(',').map { it.trim() }.filter { it.isNotEmpty() },
     )
 

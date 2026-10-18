@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:reframecv:vacancy-recognition:1",
   "title": "VacancyRecognitionResult",
-  "description": "Source recognition result adapted from divo-resume/parseJob.schema.json. This is not a persisted Vacancy or VacancyAttachment. The contract version is identified by the schema ID.",
+  "description": "Extracted job posting content returned by AI recognition in Reframe CV. Internal names, keywords, attachments, and persistence metadata are managed separately. The schema ID identifies the contract version.",
   "type": "object",
   "properties": {
     "jobTitle": {
@@ -29,9 +29,6 @@
         "null"
       ]
     },
-    "keywords": {
-      "$ref": "#/$defs/RecognizedItems"
-    },
     "responsibilities": {
       "$ref": "#/$defs/RecognizedItems"
     },
@@ -47,7 +44,6 @@
     "jobDescription",
     "company",
     "url",
-    "keywords",
     "responsibilities",
     "requirements",
     "nice_to_have"

@@ -17,7 +17,6 @@ class VacancyRecognitionOutcomeTest {
                     description = "Build mobile apps",
                     company = "Recognized company",
                     url = "https://example.com/recognized",
-                    keywords = listOf("Kotlin", "Android"),
                     responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
                     requirements = listOf("Kotlin"),
                     niceToHave = listOf("CI/CD"),
@@ -35,7 +34,6 @@ class VacancyRecognitionOutcomeTest {
             responsibilities = emptyList(),
             requirements = emptyList(),
             niceToHave = emptyList(),
-            keywords = emptyList(),
         )
         assertEquals(
             RecognitionOutcome.Failed(RecognitionError.NotRecognized),

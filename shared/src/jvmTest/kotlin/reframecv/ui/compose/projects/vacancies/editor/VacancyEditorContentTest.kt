@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
@@ -18,6 +19,7 @@ import androidx.compose.ui.test.v2.runComposeUiTest
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.components.projects.vacancies.editor.TestVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
@@ -116,6 +118,67 @@ class VacancyEditorContentTest {
         assertEquals(1, closes)
         assertEquals(emptyList(), saved)
     }
+
+    @Test
+    fun listFieldsPreserveTypingResizeIndependentlyAndSaveTrimmedItems() =
+        runDesktopComposeUiTest(width = 800, height = 600) {
+            val original = Vacancy(
+                id = 7,
+                projectId = 1,
+                name = "Backend",
+                createdAt = 0,
+                updatedAt = 0,
+                responsibilities = listOf("Build, test, ship", "Review code"),
+                requirements = listOf("Kotlin"),
+                niceToHave = listOf("German"),
+            )
+            val saved = mutableListOf<VacancyDraft>()
+            val component = TestVacancyEditorComponent(
+                initialVacancy = original,
+                save = { saved += it },
+            )
+            setContent { ReframeTheme { VacancyEditorContent(component) } }
+            val tags = listOf("responsibilities", "requirements", "niceToHave")
+            val values = listOf("Build, test, ship\nReview code", "Kotlin", "German")
+            tags.zip(values).forEach { (tag, value) ->
+                val field = onNodeWithTag("vacancy.$tag").performScrollTo()
+                onNodeWithText(value).assertExists()
+                val initialHeight = field.fetchSemanticsNode().size.height
+                onNodeWithTag("vacancy.$tag.resize").performScrollTo().performMouseInput {
+                    moveTo(center)
+                    press()
+                    moveBy(Offset(0f, 15f))
+                    moveBy(Offset(0f, 45f))
+                    release()
+                }
+                val expanded = field.fetchSemanticsNode().size.height
+                assertTrue(expanded > initialHeight + 20)
+                field.performScrollTo().performTextReplacement("  $value  \n\n  Extra, item  \n")
+                assertEquals(expanded, field.fetchSemanticsNode().size.height)
+                onNodeWithText("  $value  \n\n  Extra, item  \n").assertExists()
+                onNodeWithTag("vacancy.$tag.resize").performScrollTo().performMouseInput {
+                    moveTo(center)
+                    press()
+                    moveBy(Offset(0f, -15f))
+                    moveBy(Offset(0f, -60f))
+                    release()
+                }
+                assertTrue(field.fetchSemanticsNode().size.height < expanded)
+            }
+            onNodeWithText("Save").performClick()
+            val vacancy = saved.single().applyTo(original)
+            assertEquals(
+                listOf("Build, test, ship", "Review code", "Extra, item"),
+                vacancy.responsibilities,
+            )
+            assertEquals(listOf("Kotlin", "Extra, item"), vacancy.requirements)
+            assertEquals(listOf("German", "Extra, item"), vacancy.niceToHave)
+            runOnIdle { component.saveState.value = VacancySaveState.Saving }
+            tags.forEach {
+                onNodeWithTag("vacancy.$it").assertIsNotEnabled()
+                onNodeWithTag("vacancy.$it.resize").assertIsNotEnabled()
+            }
+        }
 
     @Test
     fun escapeClosesVacancyAfterHoveringActionsWithoutClicks() = runDesktopComposeUiTest {

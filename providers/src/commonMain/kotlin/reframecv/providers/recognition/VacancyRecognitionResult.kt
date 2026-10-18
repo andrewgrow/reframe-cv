@@ -10,7 +10,6 @@ data class VacancyRecognitionResult(
     val jobDescription: String?,
     val company: String?,
     val url: String?,
-    val keywords: List<String?>,
     val responsibilities: List<String?>,
     val requirements: List<String?>,
     @SerialName("nice_to_have")

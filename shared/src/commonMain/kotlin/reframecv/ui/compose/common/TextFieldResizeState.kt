@@ -1,12 +1,12 @@
-package reframecv.ui.compose.projects.vacancies.editor
+package reframecv.ui.compose.common
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.setValue
 
-/** Lets users expand long descriptions without losing the chosen field height. */
-internal class DescriptionResizeState(initialHeight: Float) {
+/** Keeps the chosen text-field height while editing or restoring UI state. */
+internal class TextFieldResizeState(initialHeight: Float) {
     var height by mutableFloatStateOf(initialHeight)
         private set
     var pointerY by mutableFloatStateOf(Float.NaN)
@@ -18,9 +18,9 @@ internal class DescriptionResizeState(initialHeight: Float) {
     }
 
     companion object {
-        val saver = Saver<DescriptionResizeState, Float>(
+        val saver = Saver<TextFieldResizeState, Float>(
             save = { it.height },
-            restore = { DescriptionResizeState(it) },
+            restore = { TextFieldResizeState(it) },
         )
     }
 }

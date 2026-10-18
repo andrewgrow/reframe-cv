@@ -21,11 +21,10 @@ class VacancyStructuredContentTest : WorkspaceDatabaseTest() {
             description = "Build mobile apps",
             company = "Recognized company",
             url = "https://example.com/recognized",
-            keywords = listOf("Kotlin", "Android"),
             responsibilities = listOf("Build apps, APIs", "Work with teams\nReview code"),
             requirements = listOf("Kotlin"),
             niceToHave = listOf("CI/CD"),
-        ).applyTo(vacancy(projectId))
+        ).applyTo(vacancy(projectId).copy(keywords = listOf("Kotlin", "Android")))
         val id = repository.create(recognized)
         database.close()
         openDatabase()
@@ -33,6 +32,7 @@ class VacancyStructuredContentTest : WorkspaceDatabaseTest() {
         val saved = reopened.observeVacancies(projectId).first().single()
         assertEquals(id, saved.id)
         assertEquals(recognized.name, saved.name)
+        assertEquals(listOf("Kotlin", "Android"), saved.keywords)
         assertEquals(recognized.jobTitle, saved.jobTitle)
         assertEquals(recognized.url, saved.url)
         assertEquals(recognized.responsibilities, saved.responsibilities)

@@ -53,8 +53,8 @@ class AiRequestDialogScreenshotTest : GoldenScreenshotTest() {
                 AiRequestDialogContent(
                     TestAiRequestDialogComponent(state),
                     "Parse PDF",
-                    "The result will replace vacancy fields except Internal name " +
-                        "and the attachment. " +
+                    "The result will replace vacancy fields except Internal name, " +
+                        "Keywords, and the attachment. " +
                         "Save changes on the vacancy page.",
                 )
             }

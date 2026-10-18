@@ -103,9 +103,9 @@ Recognition replaces posting content while preserving the user's label.
 
 ## Vacancy recognition contract
 
-[Vacancy recognition schema](schemas/vacancy-recognition-v1.schema.json) adapts
-`divo-resume/src/utils/schemas/parseJob.schema.json`. It describes extracted content,
-not a saved vacancy: nullable jobTitle, jobDescription, company/URL, keywords,
+[Vacancy recognition schema](schemas/vacancy-recognition-v1.schema.json) defines
+the Reframe CV contract for extracted job posting content,
+not a saved vacancy: nullable jobTitle, jobDescription, company/URL,
 responsibilities, requirements, and nice_to_have. All fields are required; missing
 scalars are null and missing lists are empty arrays. Status codes and diagnostic
 fields are not part of the model response. The schema ID identifies its version.
@@ -116,14 +116,17 @@ Mapping trims fields and removes null, blank, and duplicate list items. Results
 without a title, description, responsibilities, or requirements are NotRecognized.
 
 `RecognizedVacancy.applyTo` replaces posting fields in the draft, including clearing
-missing values. Internal name is preserved even when blank. IDs, timestamps, linked
+missing values. Internal name and manually entered keywords are preserved, including an empty name or keyword list.
+Keywords are not part of the recognition contract. IDs, timestamps, linked
 documents, and the pending attachment are preserved. Save remains explicit.
 
 Vacancy now stores responsibilities, requirements, and niceToHave as ordered string
 lists, defaulting to empty. Room persists them as non-null JSON array columns through
 `VacancyListConverter`; prose is not split on commas. The existing indexed keyword
-tables remain the search mechanism. Vacancy drafts preserve these lists even though
-the current form does not expose their editing controls yet.
+tables remain the search mechanism. The vacancy form exposes each list as a vertically
+resizable multiline field, with one item per line. Drafts retain empty lines and
+whitespace while typing; saving trims items and skips empty lines. Import and
+recognition populate the same editable fields.
 Vacancy lists and keyword search results use ascending IDs; edits do not reorder them.
 
 ## PDF vacancy recognition
@@ -160,7 +163,7 @@ Missing, changed, unsupported, and unreadable files have explicit error states. 
 is not full PDF validation or local text extraction. Original files are never modified.
 
 Recognition only updates the draft; saving and copying attachments remain explicit. It replaces
-posting fields, preserves the user's Internal name, and keeps the
+posting fields, preserves the user's Internal name and keywords, and keeps the
 pending attachment. The attachment's nullable `parsedAt` stores successful recognition time.
 The green indicator beside Parse PDF appears immediately after success and persists only
 with the vacancy's Save. Reopening restores it; editing posting fields leaves it intact.
@@ -276,7 +279,7 @@ Missing saved files remain replaceable/removable without discarding resume conte
 `ReframeTheme` supplies explicit Light/Dark modes, custom semantic colors, and scaled UI
 spacing, dimensions, and typography. `UiScale` ranges from 75% to 150% in 5% steps. Outlines
 and animation duration remain fixed. User-facing scale controls are not connected yet.
-Shared UI includes FillButton, SelectableText, resizable dialogs, confirmation dialogs,
+Shared UI includes FillButton, SelectableText, resizable text fields/dialogs, confirmation dialogs,
 and fast form scrolling. Components keep state; UI files are split by responsibility.
 
 Window size/maximized state is persisted through the application settings repository;
@@ -409,6 +412,9 @@ vacancy page opens it through Parse PDF, displaying the source filename, provide
 saved model, and a replacement warning. The dialog executes a caller-supplied operation
 and returns only a successful typed result; the caller applies it to its draft.
 
+Prompt text in Settings and the AI dialog has a vertical resize handle shared with the vacancy Description field.
+Dragging at the viewport edge grows the field and scrolls its surrounding content.
+The selected height survives text edits; resizing is disabled during a request or prompt save.
 Prompt text edits are request-local unless Save prompt is pressed. Errors remain in
 the dialog without discarding selections or text. Cancel/Escape cancels the operation
 and closes only the dialog; late results are discarded. A single available choice is
