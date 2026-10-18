@@ -31,12 +31,30 @@ abstract class ProviderConnectionsDao {
     @Query("UPDATE provider_connections SET active = 1 WHERE id = :id")
     abstract suspend fun setActive(id: Long)
 
+    @Query(
+        "UPDATE provider_connections SET account_info = :info " +
+            "WHERE id = :id AND type = :type AND api_key = :apiKey",
+    )
+    abstract suspend fun updateAccountInfo(id: Long, type: String, apiKey: String, info: String)
+
     @Transaction
     open suspend fun save(connection: ProviderConnectionEntity): Long {
         if (connection.id == 0L) return insert(connection.copy(active = count() == 0))
         val previous = checkNotNull(get(connection.id)) { "Connection does not exist" }
         check(
-            update(connection.copy(active = previous.active, createdAt = previous.createdAt)) == 1,
+            update(
+                connection.copy(
+                    active = previous.active,
+                    createdAt = previous.createdAt,
+                    accountInfo = if (connection.apiKey == previous.apiKey &&
+                        connection.type == previous.type
+                    ) {
+                        previous.accountInfo ?: connection.accountInfo
+                    } else {
+                        null
+                    },
+                ),
+            ) == 1,
         )
         return connection.id
     }

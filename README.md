@@ -170,6 +170,11 @@ including status, headers, and unknown JSON fields.
 JSON is formatted for inspection. Authorization, cookies, secret JSON fields, and the
 current API key are redacted. The file is created on the first request and survives restarts.
 
+Both logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
+`.5` the oldest). The oldest archive is removed on rotation; restarting does not clear logs.
+Together they retain at most 120 MiB. Entries larger than one file span multiple files without
+splitting UTF-8 characters. Existing oversized logs retain their latest 10 MiB on the next write.
+
 ## License
 
 [MIT](LICENSE.md). Dependency and asset notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

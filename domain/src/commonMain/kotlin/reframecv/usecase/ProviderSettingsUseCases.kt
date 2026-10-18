@@ -1,7 +1,10 @@
 package reframecv.usecase
 
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
 
@@ -9,6 +12,7 @@ import reframecv.repository.ProviderModelsRepository
 class ProviderSettingsUseCases(
     private val connections: ProviderConnectionsRepository,
     private val models: ProviderModelsRepository,
+    private val accounts: ProviderAccountRepository,
 ) {
     val supportedTypes: List<ApiProviderType> = ApiProviderType.entries
     fun observe() = connections.observe()
@@ -16,14 +20,27 @@ class ProviderSettingsUseCases(
     suspend fun loadModels(type: ApiProviderType, apiKey: String) =
         models.load(type, apiKey.trim().also { require(it.isNotEmpty()) })
 
+    suspend fun refreshAccountInfo(connection: ProviderConnection) =
+        accounts.load(connection.type, connection.apiKey.trim()).also { info ->
+            currentCoroutineContext().ensureActive()
+            if (connection.id != 0L) {
+                connections.updateAccountInfo(
+                    connection.id,
+                    connection.type,
+                    connection.apiKey.trim(),
+                    info,
+                )
+            }
+        }
+
     suspend fun save(connection: ProviderConnection): Long {
         require(connection.name.isNotBlank())
         require(connection.apiKey.isNotBlank())
-        require(connection.modelId.isNotBlank())
         return connections.save(
             connection.copy(
                 name = connection.name.trim(),
                 apiKey = connection.apiKey.trim(),
+                modelId = connection.modelId.trim(),
             ),
         )
     }

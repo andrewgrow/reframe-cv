@@ -36,6 +36,7 @@ class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditor
             state.value.copy(connection = state.value.connection.copy(modelId = id))
     }
     override fun onLoadModels() = Unit
+    override fun onRefreshAccount() = Unit
     override fun onSave() = Unit
     override fun onBack() = Unit
 }

@@ -26,6 +26,7 @@ interface ProjectsComponent {
 
     fun onBack()
     fun onConfigureProject()
+    fun onDeleteProject()
     fun onAddProject()
     fun onOpenProject(project: Project)
     fun onEditProject(project: Project)
@@ -63,6 +64,9 @@ class DefaultProjectsComponent(
 
         /** Opens editing for an existing project. */
         data class Update(val project: Project) : EditorConfiguration
+
+        /** Confirms deletion of the project whose empty page is open. */
+        data class Delete(val project: ProjectPathEntry) : EditorConfiguration
     }
 
     private val editorNavigation = SlotNavigation<EditorConfiguration>()
@@ -72,11 +76,14 @@ class DefaultProjectsComponent(
         handleBackButton = true,
     ) { configuration, childContext ->
         val project = (configuration as? EditorConfiguration.Update)?.project
+        val deletedProject = (configuration as? EditorConfiguration.Delete)?.project
+        val projectId = project?.id ?: deletedProject?.id
         DefaultEditorComponent(
             childContext,
             onClosed = { editorNavigation.dismiss() },
-            initialName = project?.name,
-            onDeleted = { project?.let { stateStore.accept(ProjectsIntent.DeleteProject(it.id)) } },
+            initialName = project?.name ?: deletedProject?.name,
+            deletionOnly = deletedProject != null,
+            onDeleted = { projectId?.let { stateStore.accept(ProjectsIntent.DeleteProject(it)) } },
             onSaved = { name ->
                 stateStore.accept(
                     if (project == null) {
@@ -118,7 +125,11 @@ class DefaultProjectsComponent(
                         editor?.deleteState?.value =
                             EditorDeleteState.Deleting
 
-                    ProjectsLabel.Deleted -> editorNavigation.dismiss()
+                    ProjectsLabel.Deleted -> {
+                        val deletedCurrentProject = editor?.deletionOnly == true
+                        editorNavigation.dismiss()
+                        if (deletedCurrentProject) onBack()
+                    }
 
                     ProjectsLabel.DeleteFailed ->
                         editor?.deleteState?.value =
@@ -137,6 +148,14 @@ class DefaultProjectsComponent(
 
     override fun onAddProject() {
         editorNavigation.activate(EditorConfiguration.Create)
+    }
+
+    override fun onDeleteProject() {
+        if (uiState.value == UiState.NoProjects) {
+            projectPath.lastOrNull()?.let {
+                editorNavigation.activate(EditorConfiguration.Delete(it))
+            }
+        }
     }
 
     override fun onOpenProject(project: Project) {

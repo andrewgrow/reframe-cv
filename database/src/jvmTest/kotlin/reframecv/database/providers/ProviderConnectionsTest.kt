@@ -4,15 +4,56 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ProviderAccountInfo
+import reframecv.domain.models.providers.ProviderBudget
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.LocalProviderConnectionsRepository
 
 class ProviderConnectionsTest : WorkspaceDatabaseTest() {
+    @Test
+    fun cachesAccountInfoAcrossReopensWithoutStaleDraftsOrOldKeysOverwritingIt() = runBlocking {
+        var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+        val id = repository.save(
+            ProviderConnection(
+                type = ApiProviderType.OpenRouter,
+                name = "Work",
+                apiKey = "old",
+                modelId = "model",
+            ),
+        )
+        val original = repository.observe().first().single()
+        val info =
+            ProviderAccountInfo(
+                listOf(ProviderBudget("key_limit", 50.0, 1.0, 49.0)),
+                expiresAt = 42,
+                fetchedAt = 123,
+            )
+        repository.updateAccountInfo(id, original.type, "wrong", info)
+        assertNull(repository.observe().first().single().accountInfo)
+        repository.updateAccountInfo(id, original.type, "old", info)
+        assertEquals(original.updatedAt, repository.observe().first().single().updatedAt)
+        repository.save(original.copy(name = "Edited"))
+        assertEquals(info, repository.observe().first().single().accountInfo)
+        database.close()
+        openDatabase()
+        repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+        assertEquals(info, repository.observe().first().single().accountInfo)
+
+        val refreshed = repository.observe().first().single()
+        repository.save(refreshed.copy(apiKey = "new"))
+        assertNull(repository.observe().first().single().accountInfo)
+        repository.updateAccountInfo(id, original.type, "old", info)
+        assertNull(repository.observe().first().single().accountInfo)
+        repository.updateAccountInfo(id, original.type, "new", info.copy(fetchedAt = 456))
+        assertEquals(456L, repository.observe().first().single().accountInfo?.fetchedAt)
+    }
+
     @Test
     fun startsEmptyAndPersistsConnectionsWithExactlyOneActiveSelection() = runBlocking {
         var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())

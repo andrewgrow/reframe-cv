@@ -17,6 +17,7 @@ internal fun String.isDeleteConfirmation(): Boolean = equals(DELETE_CONFIRMATION
 /** Lets one dialog create, rename, or delete a project. */
 interface EditorComponent {
     val initialName: String?
+    val deletionOnly: Boolean get() = false
     val saveState: Value<EditorSaveState>
     val deleteState: Value<EditorDeleteState>
     fun onSave(name: String)
@@ -31,6 +32,7 @@ class DefaultEditorComponent(
     private val onSaved: (String) -> Unit,
     override val initialName: String? = null,
     private val onDeleted: () -> Unit = {},
+    override val deletionOnly: Boolean = false,
 ) : EditorComponent,
     AppComponentContext by componentContext {
     override val saveState = MutableValue(EditorSaveState.Idle)
@@ -40,7 +42,7 @@ class DefaultEditorComponent(
             deleteState.value == EditorDeleteState.Deleting
 
     override fun onSave(name: String) {
-        if (name.isNotBlank() && !isBusy) onSaved(name.trim())
+        if (!deletionOnly && name.isNotBlank() && !isBusy) onSaved(name.trim())
     }
 
     override fun onClose() {

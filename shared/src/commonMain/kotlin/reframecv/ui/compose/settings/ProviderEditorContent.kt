@@ -8,10 +8,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Visibility
+import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuAnchorType
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -26,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.providers.AiModel
@@ -34,6 +44,8 @@ import reframecv.shared.generated.resources.settings_cancel
 import reframecv.shared.generated.resources.settings_choose_model
 import reframecv.shared.generated.resources.settings_edit
 import reframecv.shared.generated.resources.settings_key
+import reframecv.shared.generated.resources.settings_key_hide
+import reframecv.shared.generated.resources.settings_key_show
 import reframecv.shared.generated.resources.settings_load_models
 import reframecv.shared.generated.resources.settings_loading_models
 import reframecv.shared.generated.resources.settings_model
@@ -93,7 +105,7 @@ internal fun ProviderEditorContent(component: ProviderEditorComponent) {
                     stringResource(Res.string.settings_save),
                     component::onSave,
                     Modifier.testTag("settings.save"),
-                    enabled = !state.busy,
+                    enabled = !state.saving,
                     outlineState = FillButton.OutlineState.Visible,
                 )
                 FillButton(
@@ -106,14 +118,28 @@ internal fun ProviderEditorContent(component: ProviderEditorComponent) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ProviderTypeField(enabled: Boolean) {
     var expanded by remember { mutableStateOf(false) }
-    Column {
-        Text(stringResource(Res.string.settings_type))
-        OutlinedButton({ expanded = true }, enabled = enabled) { Text("OpenRouter") }
-        DropdownMenu(expanded, { expanded = false }) {
-            DropdownMenuItem(text = { Text("OpenRouter") }, onClick = { expanded = false })
+    ExposedDropdownMenuBox(expanded && enabled, { if (enabled) expanded = it }) {
+        OutlinedTextField(
+            value = "OpenRouter",
+            onValueChange = {},
+            readOnly = true,
+            enabled = enabled,
+            singleLine = true,
+            label = { Text(stringResource(Res.string.settings_type)) },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded && enabled) },
+            modifier = Modifier.fillMaxWidth().testTag("settings.provider.select")
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded && enabled, { expanded = false }) {
+            DropdownMenuItem(
+                text = { Text("OpenRouter") },
+                onClick = { expanded = false },
+                modifier = Modifier.testTag("settings.provider.openrouter"),
+            )
         }
     }
 }
@@ -124,6 +150,7 @@ private fun ProviderModelField(state: ProviderEditorState, select: (String) -> U
     var search by remember(state.models) { mutableStateOf("") }
     Text(stringResource(Res.string.settings_model), style = MaterialTheme.typography.titleSmall)
     if (state.models.isEmpty()) {
+        if (state.connection.modelId.isNotBlank()) Text(state.connection.modelId)
         Text(stringResource(Res.string.settings_model_hint), color = ReframeTheme.colorScheme.hint)
     } else {
         val models = state.models.filter {
@@ -136,6 +163,7 @@ private fun ProviderModelField(state: ProviderEditorState, select: (String) -> U
             }, enabled = !state.busy, modifier = Modifier.testTag("settings.models.select")) {
                 Text(
                     state.models.find { it.id == state.connection.modelId }?.name
+                        ?: state.connection.modelId.takeIf(String::isNotBlank)
                         ?: stringResource(Res.string.settings_choose_model),
                 )
             }
@@ -204,6 +232,7 @@ private fun ProviderEditorFields(state: ProviderEditorState, component: Provider
         }
         ProviderModelField(state, component::onModel)
         state.error?.let { SettingsErrorText(it) }
+        ProviderAccountContent(state, component::onRefreshAccount)
     }
 }
 
@@ -225,13 +254,37 @@ private fun ProviderCredentialFields(
             state.error == SettingsError.Validation &&
                 state.connection.name.isBlank(),
     )
+    ProviderApiKeyField(state, component)
+}
+
+@Composable
+private fun ProviderApiKeyField(state: ProviderEditorState, component: ProviderEditorComponent) {
+    var visible by remember(component) { mutableStateOf(false) }
     OutlinedTextField(
         state.connection.apiKey,
         component::onKey,
         Modifier.fillMaxWidth().testTag("settings.key"),
         enabled = !state.busy,
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (visible) {
+            VisualTransformation.None
+        } else {
+            PasswordVisualTransformation()
+        },
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }, enabled = !state.busy) {
+                Icon(
+                    imageVector = if (visible) {
+                        Icons.Outlined.VisibilityOff
+                    } else {
+                        Icons.Outlined.Visibility
+                    },
+                    contentDescription = stringResource(
+                        if (visible) Res.string.settings_key_hide else Res.string.settings_key_show,
+                    ),
+                )
+            }
+        },
         label = {
             Text(stringResource(Res.string.settings_key))
         },

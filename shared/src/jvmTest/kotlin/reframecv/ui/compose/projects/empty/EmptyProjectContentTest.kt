@@ -3,21 +3,31 @@ package reframecv.ui.compose.projects.empty
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import reframecv.domain.models.project.Project
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_cancel
+import reframecv.shared.generated.resources.action_delete
+import reframecv.shared.generated.resources.action_full_delete
+import reframecv.shared.generated.resources.action_update
 import reframecv.shared.generated.resources.project_add
 import reframecv.shared.generated.resources.project_configure
+import reframecv.shared.generated.resources.project_delete_confirmation
+import reframecv.shared.generated.resources.project_delete_warning
 import reframecv.shared.generated.resources.project_editor_create_title
 import reframecv.shared.generated.resources.project_empty
 import reframecv.shared.generated.resources.project_empty_help
@@ -33,6 +43,34 @@ import reframecv.ui.compose.projects.ProjectsContent
 
 @OptIn(ExperimentalTestApi::class)
 class EmptyProjectContentTest {
+    @Test
+    fun deleteIsSeparateFromTheRightActionsAndOpensTheExistingConfirmation() = runComposeUiTest {
+        val component = TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend")))
+        setContent { ProjectsContent(component) }
+        val delete = onNodeWithText(getTestString(Res.string.action_delete))
+        val configure = onNodeWithText(getTestString(Res.string.project_configure))
+        val add = onNodeWithText(getTestString(Res.string.project_add))
+        val deleteBounds = delete.fetchSemanticsNode().boundsInRoot
+        val configureBounds = configure.fetchSemanticsNode().boundsInRoot
+        val addBounds = add.fetchSemanticsNode().boundsInRoot
+        assertTrue(deleteBounds.right < configureBounds.left)
+        assertTrue(configureBounds.right < addBounds.left)
+        assertEquals(deleteBounds.top, configureBounds.top)
+        delete.performClick()
+        onNodeWithTag("project.delete.dialog").assertExists()
+        onNodeWithText(getTestString(Res.string.project_delete_warning)).assertIsDisplayed()
+        onNodeWithText(getTestString(Res.string.action_update)).assertDoesNotExist()
+        val confirm = onNodeWithText(getTestString(Res.string.action_full_delete))
+        confirm.assertIsNotEnabled()
+        onNodeWithText(
+            getTestString(Res.string.project_delete_confirmation),
+        ).performTextInput("dElEtE")
+        confirm.assertIsEnabled()
+        onNodeWithText(getTestString(Res.string.action_cancel)).performClick()
+        onNodeWithTag("project.delete.dialog").assertDoesNotExist()
+        onNodeWithText(getTestString(Res.string.project_empty)).assertIsDisplayed()
+    }
+
     @Test
     fun hoveringConfigureClearsAddFocusAfterCancellingDialog() = runComposeUiTest {
         val component = TestProjectsComponent(projectPath = listOf(ProjectPathEntry(1, "Backend")))

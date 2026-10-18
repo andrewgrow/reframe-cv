@@ -26,6 +26,12 @@ class TestProjectsComponent(
 
     override fun onConfigureProject() = onConfigureProjectClick()
 
+    override fun onDeleteProject() {
+        projectPath.lastOrNull()?.let {
+            editorSlot.value = createEditorSlot(it.name, deletionOnly = true)
+        }
+    }
+
     override fun onAddProject() {
         if (editorSlot.value.child == null) {
             editorSlot.value = createEditorSlot()
@@ -39,13 +45,15 @@ class TestProjectsComponent(
         editorSlot.value = createEditorSlot(project.name)
     }
 
-    private fun createEditorSlot(initialName: String? = null): ChildSlot<Unit, EditorComponent> =
-        ChildSlot(
-            child = Child.Created(
-                Unit,
-                TestEditorComponent(initialName) {
-                    editorSlot.value = ChildSlot<Unit, EditorComponent>()
-                },
-            ),
-        )
+    private fun createEditorSlot(
+        initialName: String? = null,
+        deletionOnly: Boolean = false,
+    ): ChildSlot<Unit, EditorComponent> = ChildSlot(
+        child = Child.Created(
+            Unit,
+            TestEditorComponent(initialName, deletionOnly = deletionOnly) {
+                editorSlot.value = ChildSlot<Unit, EditorComponent>()
+            },
+        ),
+    )
 }

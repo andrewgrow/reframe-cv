@@ -25,6 +25,37 @@ import reframecv.usecase.ProjectsUseCases
 
 class DefaultProjectsComponentTest : ComponentTest() {
     @Test
+    fun deletingTheOpenProjectRequiresConfirmationAndReturnsToItsParentAfterSuccess() =
+        runOnUiThread {
+            lifecycle.resume()
+            var returns = 0
+            val executor = TestProjectsExecutor()
+            val component = DefaultProjectsComponent(
+                appComponentContext(),
+                projectPath = listOf(ProjectPathEntry(2, "Backend"), ProjectPathEntry(7, "Java")),
+                back = { returns++ },
+                executorFactory = { executor },
+            )
+            component.onDeleteProject()
+            val cancelled = assertNotNull(component.editorSlot.value.child).instance
+            assertTrue(cancelled.deletionOnly)
+            assertEquals("Java", cancelled.initialName)
+            cancelled.onClose()
+            assertEquals(0, returns)
+            assertEquals(ProjectsIntent.LoadProjects, executor.lastIntent)
+
+            component.onDeleteProject()
+            val editor = assertNotNull(component.editorSlot.value.child).instance
+            editor.onSave("Rename is unavailable")
+            editor.onDelete("DELET")
+            assertEquals(ProjectsIntent.LoadProjects, executor.lastIntent)
+            editor.onDelete("dElEtE")
+            assertEquals(ProjectsIntent.DeleteProject(7), executor.lastIntent)
+            assertEquals(1, returns)
+            assertNull(component.editorSlot.value.child)
+        }
+
+    @Test
     fun failedCreationKeepsEditorOpenAndDoesNotNavigate() = runBlocking {
         val states = Channel<EditorSaveState>(Channel.UNLIMITED)
         val opened = mutableListOf<Project>()

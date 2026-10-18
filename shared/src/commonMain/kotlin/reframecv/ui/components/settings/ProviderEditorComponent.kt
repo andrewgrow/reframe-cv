@@ -27,20 +27,21 @@ enum class SettingsError {
     InvalidResponse,
     NoModels,
     Validation,
+    AccountRefresh,
 }
 
 /** Keeps credentials and model choices in a draft until explicit Save. */
 data class ProviderEditorState(
     val connection: ProviderConnection,
     val models: List<AiModel> = emptyList(),
-    val verified: Boolean = false,
     val loading: Boolean = false,
     val saving: Boolean = false,
     val error: SettingsError? = null,
+    val refreshingAccount: Boolean = false,
+    val accountError: SettingsError? = null,
 ) {
     val busy get() = loading || saving
-    val valid get() = connection.name.isNotBlank() && connection.apiKey.isNotBlank() &&
-        verified && models.any { it.id == connection.modelId }
+    val valid get() = connection.name.isNotBlank() && connection.apiKey.isNotBlank()
 }
 
 /** Lets users configure a provider connection without persisting unfinished input. */
@@ -52,9 +53,10 @@ interface ProviderEditorComponent {
     fun onLoadModels()
     fun onSave()
     fun onBack()
+    fun onRefreshAccount()
 }
 
-/** Validates credentials, retains failed drafts, and saves a selected model explicitly. */
+/** Saves connection drafts independently of optional credential checks and model discovery. */
 class DefaultProviderEditorComponent(
     context: AppComponentContext,
     connection: ProviderConnection,
@@ -65,19 +67,10 @@ class DefaultProviderEditorComponent(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var job: Job? = null
     private var generation = 0L
-    override val state = MutableValue(
-        ProviderEditorState(
-            connection,
-            models = if (connection.id ==
-                0L
-            ) {
-                emptyList()
-            } else {
-                listOf(AiModel(connection.modelId, connection.modelId))
-            },
-            verified = connection.id != 0L,
-        ),
-    )
+    override val state = MutableValue(ProviderEditorState(connection))
+    private val account = ProviderAccountController(useCases, context.lifecycle, scope, state)
+
+    override fun onRefreshAccount() = account.refresh()
     init {
         context.lifecycle.doOnDestroy {
             generation++
@@ -95,11 +88,15 @@ class DefaultProviderEditorComponent(
     }
     override fun onKey(value: String) {
         if (!state.value.busy) {
+            account.cancel()
             state.value = state.value.copy(
-                connection = state.value.connection.copy(apiKey = value, modelId = ""),
+                connection = state.value.connection.copy(
+                    apiKey = value,
+                    accountInfo = null,
+                ),
                 models = emptyList(),
-                verified = false,
                 error = null,
+                accountError = null,
             )
         }
     }
@@ -111,8 +108,9 @@ class DefaultProviderEditorComponent(
 
     @Suppress("TooGenericExceptionCaught")
     override fun onLoadModels() {
+        if (state.value.busy) return
+        account.cancel()
         val draft = state.value
-        if (draft.busy) return
         if (draft.connection.apiKey.isBlank()) {
             state.value = draft.copy(error = SettingsError.Validation)
             return
@@ -125,22 +123,16 @@ class DefaultProviderEditorComponent(
                 currentCoroutineContext().ensureActive()
                 if (request == generation) {
                     state.value = draft.copy(
-                        connection = draft.connection.copy(
-                            modelId = draft.connection.modelId.takeIf { id ->
-                                models.any { it.id == id }
-                            }.orEmpty(),
-                        ),
                         models = models,
-                        verified = true,
                         error = if (models.isEmpty()) SettingsError.NoModels else null,
                     )
+                    account.refresh()
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 if (request == generation) {
                     state.value = draft.copy(
-                        verified = false,
                         error = when (
                             (error as? ProviderSetupException)?.reason
                         ) {
@@ -156,8 +148,10 @@ class DefaultProviderEditorComponent(
 
     @Suppress("TooGenericExceptionCaught")
     override fun onSave() {
+        if (state.value.saving) return
+        if (state.value.loading) cancelModelLoading()
+        account.cancel()
         val draft = state.value
-        if (draft.busy) return
         if (!draft.valid) {
             state.value = draft.copy(error = SettingsError.Validation)
             return
@@ -177,11 +171,15 @@ class DefaultProviderEditorComponent(
     override fun onBack() {
         if (state.value.saving) return
         if (state.value.loading) {
-            generation++
-            job?.cancel()
-            state.value = state.value.copy(loading = false)
+            cancelModelLoading()
         } else {
             back()
         }
+    }
+
+    private fun cancelModelLoading() {
+        generation++
+        job?.cancel()
+        state.value = state.value.copy(loading = false)
     }
 }

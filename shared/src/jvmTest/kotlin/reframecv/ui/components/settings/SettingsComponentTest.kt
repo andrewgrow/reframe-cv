@@ -19,7 +19,9 @@ import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
 import reframecv.repository.ProviderSetupError
@@ -40,13 +42,25 @@ class SettingsComponentTest : ComponentTest() {
             return 1
         }
         override suspend fun activate(id: Long) = Unit
+        override suspend fun updateAccountInfo(
+            id: Long,
+            type: ApiProviderType,
+            apiKey: String,
+            info: ProviderAccountInfo,
+        ) = Unit
     }
     private fun connection() =
         ProviderConnection(type = ApiProviderType.OpenRouter, name = "", apiKey = "", modelId = "")
     private fun context(models: ProviderModelsRepository) = DefaultAppComponentContext(
         DefaultComponentContext(lifecycle),
         object : ApplicationDependencies by dependencies {
-            override val providerSettingsUseCases = ProviderSettingsUseCases(repository, models)
+            override val providerSettingsUseCases = ProviderSettingsUseCases(
+                repository,
+                models,
+                ProviderAccountRepository { _, _ ->
+                    ProviderAccountInfo(fetchedAt = reframecv.shared.nowMillis())
+                },
+            )
         },
     )
 
@@ -68,7 +82,7 @@ class SettingsComponentTest : ComponentTest() {
     }
 
     @Test
-    fun validatesLoadsModelsAndSavesOnlyAfterExplicitSelection() = runBlocking {
+    fun loadsAndSelectsModelsOnlyWhenRequested() = runBlocking {
         var saved = false
         val editor = runOnUiThread {
             lifecycle.resume()
@@ -91,12 +105,12 @@ class SettingsComponentTest : ComponentTest() {
             editor.onKey(" example-key ")
             editor.onLoadModels()
         }
-        await(editor.state) { it.verified }
+        await(editor.state) { !it.loading && it.models.isNotEmpty() }
         assertTrue(records.value.isEmpty())
         runOnUiThread {
-            assertFalse(editor.state.value.valid)
+            assertTrue(editor.state.value.valid)
             editor.onModel("unknown")
-            assertFalse(editor.state.value.valid)
+            assertEquals("", editor.state.value.connection.modelId)
             editor.onModel("model-a")
             editor.onSave()
         }
@@ -108,7 +122,7 @@ class SettingsComponentTest : ComponentTest() {
     }
 
     @Test
-    fun keyChangesInvalidateModelsAndApiFailuresKeepTheDraft() = runBlocking {
+    fun failedKeyChecksKeepTheSelectedModelAndDoNotPreventSaving() = runBlocking {
         val editor = runOnUiThread {
             lifecycle.resume()
             DefaultProviderEditorComponent(
@@ -130,17 +144,21 @@ class SettingsComponentTest : ComponentTest() {
         }
         runOnUiThread {
             editor.onKey("new-key")
-            assertFalse(editor.state.value.verified)
-            assertEquals("", editor.state.value.connection.modelId)
+            assertTrue(editor.state.value.models.isEmpty())
+            assertEquals("old-model", editor.state.value.connection.modelId)
             editor.onLoadModels()
         }
         await(editor.state) { it.error == SettingsError.Unauthorized }
         runOnUiThread {
             assertEquals("Keep name", editor.state.value.connection.name)
             assertEquals("new-key", editor.state.value.connection.apiKey)
-            assertFalse(editor.state.value.valid)
+            assertTrue(editor.state.value.valid)
+            assertTrue(records.value.isEmpty())
+            editor.onSave()
         }
-        assertTrue(records.value.isEmpty())
+        withTimeout(10_000) { records.firstNonEmpty() }
+        assertEquals("new-key", records.value.single().apiKey)
+        assertEquals("old-model", records.value.single().modelId)
     }
 
     @Test

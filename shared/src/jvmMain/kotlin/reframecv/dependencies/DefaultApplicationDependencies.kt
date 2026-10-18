@@ -26,6 +26,7 @@ import reframecv.network.createDesktopNetworkClient
 import reframecv.photos.DesktopResumePhotoPicker
 import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
+import reframecv.providers.RemoteProviderAccountRepository
 import reframecv.providers.RemoteProviderModelsRepository
 import reframecv.providers.openrouter.OpenRouterClient
 import reframecv.providers.openrouter.OpenRouterSetupClient
@@ -207,18 +208,14 @@ class DefaultApplicationDependencies(
         }
 
     private val providerSettings by lazy {
+        val client = OpenRouterSetupClient(
+            transport.value,
+            FileHttpTrafficLogger(applicationDataDirectory().resolve("openrouter-http.log")),
+        )
         ProviderSettingsUseCases(
             LocalProviderConnectionsRepository(database.value.providerConnectionsDao()),
-            RemoteProviderModelsRepository(
-                mapOf(
-                    ApiProviderType.OpenRouter to OpenRouterSetupClient(
-                        transport.value,
-                        FileHttpTrafficLogger(
-                            applicationDataDirectory().resolve("openrouter-http.log"),
-                        ),
-                    ),
-                ),
-            ),
+            RemoteProviderModelsRepository(mapOf(ApiProviderType.OpenRouter to client)),
+            RemoteProviderAccountRepository(mapOf(ApiProviderType.OpenRouter to client)),
         )
     }
     override val providerSettingsUseCases: ProviderSettingsUseCases

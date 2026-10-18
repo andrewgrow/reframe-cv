@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 class TestEditorComponent(
     override val initialName: String? = null,
     private val onDeleteClick: (String) -> Unit = {},
+    override val deletionOnly: Boolean = false,
     private val onCloseClick: () -> Unit = {},
 ) : EditorComponent {
     override val saveState = MutableValue(EditorSaveState.Idle)

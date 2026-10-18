@@ -6,6 +6,8 @@ import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.export.DocumentExportResult
 import reframecv.export.ResumeExportResult
@@ -24,6 +26,7 @@ import reframecv.recognition.RecognitionOutcome
 import reframecv.recognition.VacancyDocumentReader
 import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.repository.ProjectsRepository
+import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
 import reframecv.repository.TestAppSettingsRepository
@@ -174,11 +177,30 @@ class TestApplicationDependencies : ApplicationDependencies {
                     )
                 return id
             }
+            override suspend fun updateAccountInfo(
+                id: Long,
+                type: ApiProviderType,
+                apiKey: String,
+                info: ProviderAccountInfo,
+            ) {
+                connections.value = connections.value.map {
+                    if (it.id == id && it.type == type &&
+                        it.apiKey == apiKey
+                    ) {
+                        it.copy(accountInfo = info)
+                    } else {
+                        it
+                    }
+                }
+            }
             override suspend fun activate(id: Long) {
                 connections.value = connections.value.map { it.copy(active = it.id == id) }
             }
         },
         ProviderModelsRepository { _, _ -> emptyList() },
+        ProviderAccountRepository { _, _ ->
+            ProviderAccountInfo(fetchedAt = reframecv.shared.nowMillis())
+        },
     )
     override fun close() = Unit
 }

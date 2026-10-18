@@ -31,6 +31,13 @@ private const val PROJECT_NAME = "Test Project"
 @OptIn(ExperimentalTestApi::class)
 class EditorDeleteScreenshotTest : GoldenScreenshotTest() {
     @Test
+    fun deletionFromEmptyProjectMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this, captureTag = "project.delete.dialog") {
+            EditorContent(TestEditorComponent(initialName = PROJECT_NAME, deletionOnly = true))
+        }
+    }
+
+    @Test
     fun emptyDeletionFieldsWithCancelFocusedMatchesReference() = runDesktopComposeUiTest {
         val projectNameLabel = getString(Res.string.project_name)
         val confirmationLabel = getString(Res.string.project_delete_confirmation)

@@ -50,7 +50,6 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                 editor = ProviderEditorState(
                     connection,
                     listOf(AiModel("example/model", "Example model", true)),
-                    verified = true,
                 ),
             )
         setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }

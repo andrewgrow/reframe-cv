@@ -22,6 +22,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_retry
+import reframecv.shared.generated.resources.settings_account_error
 import reframecv.shared.generated.resources.settings_activate
 import reframecv.shared.generated.resources.settings_active
 import reframecv.shared.generated.resources.settings_add
@@ -107,6 +108,7 @@ internal fun SettingsErrorText(error: SettingsError) {
         SettingsError.InvalidResponse -> Res.string.settings_error_response
         SettingsError.NoModels -> Res.string.settings_error_empty
         SettingsError.Validation -> Res.string.settings_error_validation
+        SettingsError.AccountRefresh -> Res.string.settings_account_error
     }
     Text(
         stringResource(message),
@@ -142,7 +144,8 @@ private fun ProviderConnectionsList(
                 ) {
                     Text(connection.name, style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "OpenRouter · ${connection.modelId}",
+                        listOfNotNull("OpenRouter", connection.modelId.takeIf(String::isNotBlank))
+                            .joinToString(" · "),
                         color = ReframeTheme.colorScheme.hint,
                     )
                     if (connection.active) {

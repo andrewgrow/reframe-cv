@@ -67,6 +67,7 @@ private fun ProjectBody(state: UiState, component: ProjectsComponent) {
             EmptyProjectContent(
                 onAddProject = component::onAddProject,
                 onConfigureProject = component::onConfigureProject,
+                onDeleteProject = component::onDeleteProject,
             )
         }
 

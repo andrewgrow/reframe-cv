@@ -2,10 +2,7 @@ package reframecv.logging
 
 import io.klogging.noCoLogger
 import java.io.IOException
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardOpenOption.APPEND
-import java.nio.file.StandardOpenOption.CREATE
 import kotlin.time.Instant
 import reframecv.filesystem.applicationDataDirectory
 import reframecv.shared.nowMillis
@@ -16,6 +13,7 @@ class FileApplicationLogger(
     private val history: EventHistory = EventHistory(),
 ) : ApplicationLogger {
     private val console = noCoLogger("ApplicationErrors")
+    private val output = RotatingLogFile(file)
 
     override fun error(operation: String, error: Throwable, context: Map<String, Any?>) {
         val message = "$operation $context"
@@ -30,24 +28,17 @@ class FileApplicationLogger(
             appendLine(error.stackTraceToString())
             appendLine()
         }
-        synchronized(writeLock) {
-            try {
-                file.parent?.let(Files::createDirectories)
-                Files.writeString(file, entry, CREATE, APPEND)
-            } catch (failure: IOException) {
-                reportWriteFailure(failure)
-            } catch (failure: SecurityException) {
-                reportWriteFailure(failure)
-            }
+        try {
+            output.append(entry)
+        } catch (failure: IOException) {
+            reportWriteFailure(failure)
+        } catch (failure: SecurityException) {
+            reportWriteFailure(failure)
         }
     }
 
     private fun reportWriteFailure(error: Exception) {
         runCatching { console.error(error, "Could not append error log to {path}", file) }
         System.err.println("Could not append error log to $file: $error")
-    }
-
-    companion object {
-        private val writeLock = Any()
     }
 }

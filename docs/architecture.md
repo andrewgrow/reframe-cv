@@ -23,7 +23,8 @@ build and verification commands belong in the [README](../README.md).
 - `database` depends on `domain` and owns Room entities, DAOs, converters, local repositories,
   and the exported schemas in `database/schemas`. Database construction accepts a path;
   desktop application dependencies select the application data directory.
-- `network` owns Ktor transport, platform engines, and common timeouts; it has no knowledge
+- `network` owns Ktor transport, platform engines, common timeouts, and the JVM rotating
+  diagnostic file writer reused by HTTP and application error logging; it has no knowledge
   of concrete AI providers or vacancy recognition DTOs.
 - `providers` depends on `domain` and `network`. External repositories call an injected
   `AiProviderClient`, whose contract is in `domain`. Provider implementations own service-specific
@@ -259,6 +260,10 @@ Missing saved files remain replaceable/removable without discarding resume conte
   `createSaved` returns ID/timestamps without a fallible follow-up read after insertion.
 - Loading is explicit; a spinner appears only after one second to avoid navigation flashes.
   Resume feedback reserves space so notifications do not move page controls.
+- Empty project pages place Delete on the left and Configure/Add project on the right,
+  wrapping actions on narrow screens. Delete reuses the project editor's warning and
+  case-insensitive DELETE confirmation; cancellation keeps the page, successful deletion
+  returns to the parent list, and failures keep the confirmation available for retry.
 
 ## UI, device settings, and diagnostics
 
@@ -275,6 +280,13 @@ Errors include operation context and stacks in `stacktrace.txt`, preceded by the
 200 Store/tree events. Event summaries omit document contents and project names.
 Logging must preserve coroutine cancellation. The in-memory event history resets each launch.
 
+Both diagnostic logs use `RotatingLogFile`: a 10 MiB active file plus five archives per log,
+numbered `.1` (newest) through `.5` (oldest). Rotation removes only the oldest archive and
+does not depend on application restarts. A shared process lock serializes appends and rotation
+across instances. Ordinary entries remain together; oversized entries span files at UTF-8
+character boundaries. Existing oversized files retain their latest 10 MiB before appending.
+The retained files for both logs total at most 120 MiB. File failures remain diagnostic-only.
+
 ## Current limits
 
 Cover-letter storage/repositories exist, but its editor is not implemented. Resume adaptation
@@ -290,7 +302,7 @@ Settings and returns to the previous destination. Back during model loading canc
 without discarding the draft; saves cannot be interrupted through navigation.
 
 `provider_connections` starts empty. Users create named OpenRouter connections with an API key
-and model ID. Multiple connections may use the same provider. The first saved connection becomes
+and an optional model ID. Multiple connections may use the same provider. The first saved connection becomes
 active; switching the active connection is transactional. Editing preserves the row ID, creation
 time, and active state. Keys are currently stored as plain text in the local database, masked in
 form fields, and omitted from model string representations and operation logs.
@@ -299,8 +311,11 @@ form fields, and omitted from model string representations and operation logs.
 `RemoteProviderModelsRepository` routes discovery to an injected `ProviderSetupClient`. OpenRouter setup
 validates credentials with GET `/api/v1/key`, then reads `/api/v1/models/user`. The list is searchable;
 model metadata identifies advertised structured-output support without guaranteeing endpoint
-compatibility. Changing the key invalidates the loaded model selection. Only explicit Save writes
-the draft. Failures retain fields and display safe error categories; raw HTTP errors/bodies are
+compatibility. Saving requires only a nonblank name and API key; checking credentials and loading
+or choosing a model are optional, independent operations. Save cancels pending model discovery,
+and late results cannot replace the saved draft. Changing the key clears the loaded catalog and
+account cache but keeps the configured model ID. Catalog refreshes never clear that ID implicitly.
+Only explicit Save writes the draft. Failures retain fields and display safe error categories; raw HTTP errors/bodies are
 not exposed in the UI. Tests use MockEngine and do not send credentials or documents to a real service.
 
 OpenRouter setup receives an injected `HttpTrafficLogger` from `network`. Desktop wiring
@@ -312,3 +327,25 @@ failures must not change API results, and coroutine cancellation remains cancell
 
 Saved connections do not enable PDF recognition yet. OpenRouter generation remains the existing
 NotConfigured stub until request handling and active-connection routing are implemented.
+
+`ProviderAccountClient` exposes account details separately from model discovery. The external
+`RemoteProviderAccountRepository` routes to the selected implementation; OpenRouter reuses
+GET `/api/v1/key` and maps budgets, the effective budget, key expiry, and fetch time to
+`ProviderAccountInfo`. Older responses fall back to the key's limit/remaining fields and
+usage for its configured reset period. Missing amounts or dates remain unknown; limits
+from different scopes are displayed separately, never added together.
+
+`provider_connections.account_info` stores the last successful typed snapshot as nullable JSON,
+without the raw response or provider account identifiers. Refresh writes only the matching
+saved ID/type/key and does not change the connection's edit timestamp. Saving a stale draft
+preserves the latest cache for unchanged credentials; changing credentials clears the cache.
+New connection drafts retain account details in memory until explicit Save.
+
+The connection editor displays cached values immediately. It refreshes stale information on
+resume and every five minutes while visible, with a manual Refresh action. Requests use the
+same sanitized HTTP log as model discovery. Pausing, changing the key, or closing the editor
+cancels pending work; cancelled/late responses cannot update drafts or storage. Refreshing
+does not block editing or navigation. Failures retain cached values and show separate feedback;
+timestamps are displayed explicitly in UTC. Tests use controlled ticks rather than real waits.
+
+Provider reference: [OpenRouter current-key endpoint](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-key).

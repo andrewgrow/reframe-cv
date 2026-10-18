@@ -25,7 +25,11 @@ import androidx.compose.ui.Modifier
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun EmptyProjectContent(onAddProject: () -> Unit, onConfigureProject: () -> Unit = {}) {
+internal fun EmptyProjectContent(
+    onAddProject: () -> Unit,
+    onConfigureProject: () -> Unit = {},
+    onDeleteProject: () -> Unit = {},
+) {
     val tokens = ReframeTheme.tokens
     var showHelp by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize()) {
@@ -57,7 +61,7 @@ internal fun EmptyProjectContent(onAddProject: () -> Unit, onConfigureProject: (
             Modifier.fillMaxWidth().padding(tokens.spacing.medium),
             contentAlignment = Alignment.Center,
         ) {
-            EmptyProjectActions(onAddProject, onConfigureProject)
+            EmptyProjectActions(onAddProject, onConfigureProject, onDeleteProject)
         }
     }
 }

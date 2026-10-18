@@ -14,6 +14,7 @@ import kotlinx.serialization.json.jsonObject
 import reframecv.domain.models.providers.AiModel
 import reframecv.network.HttpTrafficLog
 import reframecv.network.HttpTrafficLogger
+import reframecv.providers.ProviderAccountClient
 import reframecv.providers.ProviderSetupClient
 import reframecv.repository.ProviderSetupError
 import reframecv.repository.ProviderSetupException
@@ -22,18 +23,27 @@ import reframecv.repository.ProviderSetupException
 class OpenRouterSetupClient(
     private val transport: HttpClient,
     logger: HttpTrafficLogger = HttpTrafficLogger.None,
-) : ProviderSetupClient {
+) : ProviderSetupClient,
+    ProviderAccountClient {
     private val traffic = HttpTrafficLog(logger)
     private val json = Json { ignoreUnknownKeys = true }
 
-    @Suppress("TooGenericExceptionCaught")
-    override suspend fun loadModels(apiKey: String): List<AiModel> = try {
+    override suspend fun loadModels(apiKey: String): List<AiModel> = call {
         val key = json.parseToJsonElement(request("key", apiKey)).jsonObject
         checkNotNull(key["data"]).jsonObject
         val response = json.decodeFromString<Catalog>(request("models/user", apiKey))
         response.data.filter { it.id.isNotBlank() && it.name.isNotBlank() }
             .distinctBy { it.id }.sortedBy { it.name.lowercase() }
             .map { AiModel(it.id, it.name, "structured_outputs" in it.parameters) }
+    }
+
+    override suspend fun accountInfo(apiKey: String) = call {
+        json.decodeFromString<OpenRouterAccountResponse>(request("key", apiKey)).data.toDomain()
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun <T> call(block: suspend () -> T): T = try {
+        block()
     } catch (error: CancellationException) {
         throw error
     } catch (error: ProviderSetupException) {

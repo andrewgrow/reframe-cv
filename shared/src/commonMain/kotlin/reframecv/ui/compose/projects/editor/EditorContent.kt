@@ -29,6 +29,10 @@ fun EditorContent(
     initialName: String? = component.initialName,
     onSave: (String) -> Unit = component::onSave,
 ) {
+    if (component.deletionOnly) {
+        ProjectDeletionDialog(component)
+        return
+    }
     val saveState by component.saveState.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
     val isBusy = saveState == EditorSaveState.Saving || deleteState == EditorDeleteState.Deleting

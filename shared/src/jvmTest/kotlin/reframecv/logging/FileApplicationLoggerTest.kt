@@ -15,6 +15,21 @@ class FileApplicationLoggerTest {
     val temporaryFolder = TemporaryFolder()
 
     @Test
+    fun rotatesFullErrorLogsWithoutDroppingTheNewStackTrace() {
+        val file = temporaryFolder.root.toPath().resolve("stacktrace.txt")
+        Files.writeString(file, "x".repeat(RotatingLogFile.DEFAULT_MAX_FILE_BYTES))
+        val error = IllegalStateException("Write failed")
+        FileApplicationLogger(file).error("Save resume", error, mapOf("resumeId" to 42))
+        assertEquals(
+            RotatingLogFile.DEFAULT_MAX_FILE_BYTES.toLong(),
+            Files.size(file.resolveSibling("stacktrace.txt.1")),
+        )
+        val text = Files.readString(file)
+        assertContains(text, "ERROR Save resume {resumeId=42}")
+        assertContains(text, error.stackTraceToString())
+    }
+
+    @Test
     fun appendsAcrossInstancesWithContextOriginalStackAndCause() {
         val file = temporaryFolder.root.toPath().resolve("data/stacktrace.txt")
         val cause = IllegalArgumentException("Invalid record")

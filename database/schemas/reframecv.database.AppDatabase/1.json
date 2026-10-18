@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "3b5ee4efd997f186b4c48ef0ec8efecc",
+    "identityHash": "fbec641e4746ff006974f8b0d13fa759",
     "entities": [
       {
         "tableName": "app_settings",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "provider_connections",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `api_key` TEXT NOT NULL, `model_id` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `api_key` TEXT NOT NULL, `model_id` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `account_info` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -91,6 +91,11 @@
             "columnName": "updated_at",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "accountInfo",
+            "columnName": "account_info",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -810,7 +815,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '3b5ee4efd997f186b4c48ef0ec8efecc')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fbec641e4746ff006974f8b0d13fa759')"
     ]
   }
 }
