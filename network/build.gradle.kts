@@ -10,8 +10,12 @@ kotlin {
         commonMain.dependencies {
             api(project(":domain"))
             api(libs.ktor.client.core)
+            implementation(libs.kotlinx.serializationJson)
         }
-        jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+        jvmMain.dependencies {
+            implementation(libs.ktor.client.cio)
+            implementation(libs.klogging)
+        }
         commonTest.dependencies {
             implementation(libs.ktor.client.mock)
             implementation(libs.kotlin.test)

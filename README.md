@@ -136,7 +136,7 @@ Generated Room implementations and Compose resources are excluded.
 ## Local data and diagnostics
 
 The application data directory contains `reframe-cv.db`, managed document files,
-and `stacktrace.txt`:
+`stacktrace.txt`, and `openrouter-http.log`:
 
 | Platform | Directory |
 | --- | --- |
@@ -163,6 +163,12 @@ open "$HOME/Library/Application Support/ReframeCV"
 Errors append timestamps, operation context, and stack traces to `stacktrace.txt`.
 Each error includes the latest 200 in-memory Store/project-tree events. Summaries
 omit document text and project names. The file survives restarts; event history does not.
+
+OpenRouter connection checks and model discovery append HTTP requests and complete text
+responses to `openrouter-http.log` and the console through Klogging (`OpenRouterHttp`, INFO),
+including status, headers, and unknown JSON fields.
+JSON is formatted for inspection. Authorization, cookies, secret JSON fields, and the
+current API key are redacted. The file is created on the first request and survives restarts.
 
 ## License
 

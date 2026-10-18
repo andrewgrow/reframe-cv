@@ -149,8 +149,8 @@ Desktop application dependencies compose the reader, repository, and lazy `OpenR
 with Ktor transport from `network`. Closing application dependencies releases the initialized
 provider client, HTTP client, and engine; repositories do not own the shared transport.
 
-OpenRouter remains an unconfigured implementation: it returns NotConfigured and sends no HTTP
-requests. No credentials, model selection, or API connection rows are added by this refactoring.
+OpenRouter PDF generation remains unconfigured: recognition returns NotConfigured and sends
+no generation requests. PDF generation requests are still deferred; connection setup is implemented separately below.
 Client configuration provides 15-second connection and 120-second request/socket timeouts;
 real provider requests and cancellation behavior need testing when integration is added.
 
@@ -281,3 +281,34 @@ Cover-letter storage/repositories exist, but its editor is not implemented. Resu
 UX, PDF/print output, URL snapshot fetching, and source parsing remain deferred. There is no
 photo data in JSON exports. Database migrations and platform targets beyond desktop are not
 implemented. Test/screenshot environments and verification commands are documented in README.
+
+## Global settings and API connections
+
+Settings is a persistent footer entry in the left navigation, independent of project scrolling.
+It opens in the main content area. Back/Escape closes the connection editor before leaving
+Settings and returns to the previous destination. Back during model loading cancels the request
+without discarding the draft; saves cannot be interrupted through navigation.
+
+`provider_connections` starts empty. Users create named OpenRouter connections with an API key
+and model ID. Multiple connections may use the same provider. The first saved connection becomes
+active; switching the active connection is transactional. Editing preserves the row ID, creation
+time, and active state. Keys are currently stored as plain text in the local database, masked in
+form fields, and omitted from model string representations and operation logs.
+
+`ProviderSettingsUseCases` separates storage from provider model discovery. The external
+`RemoteProviderModelsRepository` routes discovery to an injected `ProviderSetupClient`. OpenRouter setup
+validates credentials with GET `/api/v1/key`, then reads `/api/v1/models/user`. The list is searchable;
+model metadata identifies advertised structured-output support without guaranteeing endpoint
+compatibility. Changing the key invalidates the loaded model selection. Only explicit Save writes
+the draft. Failures retain fields and display safe error categories; raw HTTP errors/bodies are
+not exposed in the UI. Tests use MockEngine and do not send credentials or documents to a real service.
+
+OpenRouter setup receives an injected `HttpTrafficLogger` from `network`. Desktop wiring
+appends timestamped requests and complete text responses to `openrouter-http.log` beside
+the database and mirrors them to Klogging (`OpenRouterHttp`, INFO), before DTO parsing or
+HTTP error handling. Unknown JSON fields remain visible;
+authorization, cookies, secret JSON fields, and the current API key are redacted. Logging
+failures must not change API results, and coroutine cancellation remains cancellable.
+
+Saved connections do not enable PDF recognition yet. OpenRouter generation remains the existing
+NotConfigured stub until request handling and active-connection routing are implemented.

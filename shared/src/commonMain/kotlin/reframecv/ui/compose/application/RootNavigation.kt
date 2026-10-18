@@ -35,7 +35,11 @@ import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
-internal fun RootNavigation(component: ProjectTreeComponent, modifier: Modifier = Modifier) {
+internal fun ProjectNavigationTree(
+    component: ProjectTreeComponent,
+    modifier: Modifier = Modifier,
+    settingsSelected: Boolean = false,
+) {
     val state by component.state.subscribeAsState()
     val rows = state.visibleRows()
     val tokens = ReframeTheme.tokens
@@ -64,7 +68,7 @@ internal fun RootNavigation(component: ProjectTreeComponent, modifier: Modifier 
                 item(key = "root") {
                     ProjectTreeEntry(
                         name = stringResource(Res.string.navigation_projects),
-                        selected = state.selectedId == null,
+                        selected = state.selectedId == null && !settingsSelected,
                         onClick = component::onProjectsList,
                         modifier = Modifier.testTag("navigation.root"),
                     )

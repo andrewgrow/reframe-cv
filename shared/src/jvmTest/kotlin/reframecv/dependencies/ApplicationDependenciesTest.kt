@@ -120,13 +120,7 @@ class ApplicationDependenciesTest {
             assertSame(dependencies.resumesRepository, dependencies.resumesRepository)
             assertSame(dependencies.vacanciesRepository, dependencies.vacanciesRepository)
             assertSame(dependencies.coverLettersRepository, dependencies.coverLettersRepository)
-            assertSame(dependencies.projectsUseCases, dependencies.projectsUseCases)
-            assertSame(dependencies.resumesUseCases, dependencies.resumesUseCases)
-            assertSame(dependencies.vacanciesUseCases, dependencies.vacanciesUseCases)
-            assertSame(dependencies.observeDashboard, dependencies.observeDashboard)
-            assertSame(dependencies.recognizeVacancy, dependencies.recognizeVacancy)
-            assertSame(dependencies.resumeFilesUseCases, dependencies.resumeFilesUseCases)
-            assertSame(dependencies.vacancyFilesUseCases, dependencies.vacancyFilesUseCases)
+            assertReusesUseCases(dependencies)
             assertEquals(1, opened)
             assertFailsWith<IllegalArgumentException> { repository.createProject("  ") }
             val project = repository.createProject("  Android Developer  ")
@@ -141,6 +135,7 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
         assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
         assertFailsWith<IllegalStateException> { dependencies.appSettingsRepository }
+        assertFailsWith<IllegalStateException> { dependencies.providerSettingsUseCases }
         assertFailsWith<IllegalStateException> { dependencies.projectsUseCases }
         assertFailsWith<IllegalStateException> { dependencies.resumesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.vacanciesUseCases }
@@ -175,6 +170,7 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.vacanciesRepository }
         assertFailsWith<IllegalStateException> { dependencies.coverLettersRepository }
         assertFailsWith<IllegalStateException> { dependencies.appSettingsRepository }
+        assertFailsWith<IllegalStateException> { dependencies.providerSettingsUseCases }
         assertFailsWith<IllegalStateException> { dependencies.projectsUseCases }
         assertFailsWith<IllegalStateException> { dependencies.resumesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.vacanciesUseCases }
@@ -182,5 +178,15 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.recognizeVacancy }
         assertFailsWith<IllegalStateException> { dependencies.resumeFilesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.vacancyFilesUseCases }
+    }
+    private fun assertReusesUseCases(dependencies: DefaultApplicationDependencies) {
+        assertSame(dependencies.providerSettingsUseCases, dependencies.providerSettingsUseCases)
+        assertSame(dependencies.projectsUseCases, dependencies.projectsUseCases)
+        assertSame(dependencies.resumesUseCases, dependencies.resumesUseCases)
+        assertSame(dependencies.vacanciesUseCases, dependencies.vacanciesUseCases)
+        assertSame(dependencies.observeDashboard, dependencies.observeDashboard)
+        assertSame(dependencies.recognizeVacancy, dependencies.recognizeVacancy)
+        assertSame(dependencies.resumeFilesUseCases, dependencies.resumeFilesUseCases)
+        assertSame(dependencies.vacancyFilesUseCases, dependencies.vacancyFilesUseCases)
     }
 }

@@ -21,16 +21,22 @@ import reframecv.ui.components.projects.resumes.DefaultResumesComponent
 import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
+import reframecv.ui.components.settings.DefaultSettingsComponent
+import reframecv.ui.components.settings.SettingsComponent
 import reframecv.ui.context.AppComponentContext
 
 /** Lets the application shell show the selected screen alongside project navigation. */
 interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
     val projectTree: ProjectTreeComponent
+    fun onSettings()
     fun onProjectsList()
 
     /** Lets the application shell render the component belonging to the active destination. */
     sealed interface Child {
+        /** Lets the root render global settings. */
+        data class Settings(val component: SettingsComponent) : Child
+
         /** Lets the root render project organization screens. */
         data class Projects(val component: ProjectsComponent) : Child
 
@@ -55,6 +61,20 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     override fun onProjectsList() {
         if (isDocumentEditorBusy()) return
         navigation.popTo(0)
+    }
+
+    override fun onSettings() {
+        if (isDocumentEditorBusy()) return
+        val existing = childStack.value.items.indexOfLast {
+            it.configuration == Configuration.Settings
+        }
+        if (existing >=
+            0
+        ) {
+            navigation.popTo(existing)
+        } else {
+            navigation.pushNew(Configuration.Settings)
+        }
     }
 
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = childStack(
@@ -87,6 +107,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     private fun isDocumentEditorBusy(): Boolean = when (
         val child = childStack.value.active.instance
     ) {
+        is RootComponent.Child.Settings -> child.component.isBusy
         is RootComponent.Child.Vacancies -> child.component.editor?.isBusy == true
         is RootComponent.Child.Resumes -> child.component.editor?.isBusy == true
         else -> false
@@ -146,6 +167,10 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         configuration: Configuration,
         componentContext: AppComponentContext,
     ): RootComponent.Child = when (configuration) {
+        Configuration.Settings -> RootComponent.Child.Settings(
+            DefaultSettingsComponent(componentContext, back = { navigation.pop() }),
+        )
+
         is Configuration.Projects -> RootComponent.Child.Projects(
             DefaultProjectsComponent(
                 componentContext,
@@ -197,6 +222,11 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     /** Keeps each destination tied to its project so Back can reach the parent. */
     private sealed interface Configuration {
         val projectPath: List<ProjectPathEntry>
+
+        /** Identifies application-wide preferences independently of a project. */
+        data object Settings : Configuration {
+            override val projectPath: List<ProjectPathEntry> = emptyList()
+        }
 
         /** Identifies which project's children the destination should show. */
         data class Projects(override val projectPath: List<ProjectPathEntry> = emptyList()) :

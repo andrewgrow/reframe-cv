@@ -10,6 +10,7 @@ import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
+import reframecv.ui.components.settings.SettingsComponent
 
 class TestRootComponent(
     projectsComponent: ProjectsComponent = TestProjectsComponent(),
@@ -18,6 +19,7 @@ class TestRootComponent(
     initialTreeState: ProjectTreeState = ProjectTreeState(loading = false),
     vacanciesComponent: VacanciesComponent? = null,
     resumesComponent: ResumesComponent? = null,
+    settingsComponent: SettingsComponent? = null,
 ) : RootComponent {
     override val projectTree = object : ProjectTreeComponent {
         override val state = MutableValue(initialTreeState)
@@ -26,11 +28,13 @@ class TestRootComponent(
         override fun onProjectsList() = onProjectsListClick()
         override fun onRetry() = Unit
     }
+    override fun onSettings() = Unit
     override fun onProjectsList() = onProjectsListClick()
     override val childStack: Value<ChildStack<*, RootComponent.Child>> = MutableValue(
         ChildStack(
             configuration = Unit,
-            instance = resumesComponent?.let { RootComponent.Child.Resumes(it) }
+            instance = settingsComponent?.let { RootComponent.Child.Settings(it) }
+                ?: resumesComponent?.let { RootComponent.Child.Resumes(it) }
                 ?: vacanciesComponent?.let { RootComponent.Child.Vacancies(it) }
                 ?: dashboardComponent?.let { RootComponent.Child.Dashboard(it) }
                 ?: RootComponent.Child.Projects(projectsComponent),

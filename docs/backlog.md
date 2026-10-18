@@ -39,10 +39,8 @@ belong in the [README](../README.md).
 - [ ] Define multi-keyword search semantics: match all or any.
 - [ ] Revisit left-pane sizing and deep nesting if current scrolling is insufficient.
 
-## API provider settings
+## API providers
 
-- [ ] Add Settings navigation and a user-managed list of provider connections; start empty.
-- [ ] Add connection creation/editing: supported provider type, name, credentials, key validation,
-  model loading/selection, and explicit Save. Choose an active connection for AI operations.
-- [ ] Extend provider contracts with credential checks and model discovery when implementing
-  the settings flow; preserve drafts on failure and keep credentials out of logs.
+- [ ] Route AI operations through the active saved connection and chosen model.
+- [ ] Implement OpenRouter generation requests and verify structured-output/PDF compatibility.
+- [ ] Add provider connection deletion and decide how to handle deleting the active connection.

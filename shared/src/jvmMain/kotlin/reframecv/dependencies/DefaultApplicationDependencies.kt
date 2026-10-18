@@ -7,6 +7,7 @@ import reframecv.attachments.FileAttachmentStorage
 import reframecv.database.AppDatabase
 import reframecv.database.buildDatabase
 import reframecv.database.createDatabaseBuilder
+import reframecv.domain.models.providers.ApiProviderType
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
@@ -20,11 +21,14 @@ import reframecv.logging.ApplicationLogger
 import reframecv.logging.EventHistory
 import reframecv.logging.FileApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
+import reframecv.network.FileHttpTrafficLogger
 import reframecv.network.createDesktopNetworkClient
 import reframecv.photos.DesktopResumePhotoPicker
 import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
+import reframecv.providers.RemoteProviderModelsRepository
 import reframecv.providers.openrouter.OpenRouterClient
+import reframecv.providers.openrouter.OpenRouterSetupClient
 import reframecv.providers.recognition.RemoteVacancyRecognitionRepository
 import reframecv.providers.recognition.vacancyRecognitionSchema
 import reframecv.recognition.DesktopVacancyDocumentReader
@@ -35,6 +39,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.LocalAppSettingsRepository
 import reframecv.repository.LocalCoverLettersRepository
 import reframecv.repository.LocalProjectsRepository
+import reframecv.repository.LocalProviderConnectionsRepository
 import reframecv.repository.LocalResumePhotos
 import reframecv.repository.LocalResumesRepository
 import reframecv.repository.LocalVacanciesRepository
@@ -44,6 +49,7 @@ import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
@@ -69,7 +75,8 @@ class DefaultApplicationDependencies(
 ) : ApplicationDependencies {
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
-    private val provider = lazy { OpenRouterClient(createDesktopNetworkClient()) }
+    private val transport = lazy { createDesktopNetworkClient() }
+    private val provider = lazy { OpenRouterClient(transport.value) }
     private val recognitionRepository = lazy {
         RemoteVacancyRecognitionRepository(provider.value, vacancyRecognitionSchema())
     }
@@ -199,10 +206,34 @@ class DefaultApplicationDependencies(
             return vacancyFilesUseCasesInstance
         }
 
+    private val providerSettings by lazy {
+        ProviderSettingsUseCases(
+            LocalProviderConnectionsRepository(database.value.providerConnectionsDao()),
+            RemoteProviderModelsRepository(
+                mapOf(
+                    ApiProviderType.OpenRouter to OpenRouterSetupClient(
+                        transport.value,
+                        FileHttpTrafficLogger(
+                            applicationDataDirectory().resolve("openrouter-http.log"),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    }
+    override val providerSettingsUseCases: ProviderSettingsUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return providerSettings
+        }
+
     override fun close() {
         if (closed) return
         closed = true
-        if (provider.isInitialized()) provider.value.close()
+        if (transport.isInitialized()) {
+            transport.value.close()
+            transport.value.engine.close()
+        }
         if (database.isInitialized()) database.value.close()
     }
 }

@@ -6,6 +6,7 @@ import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.export.DocumentExportResult
 import reframecv.export.ResumeExportResult
 import reframecv.export.ResumeExporter
@@ -23,6 +24,8 @@ import reframecv.recognition.RecognitionOutcome
 import reframecv.recognition.VacancyDocumentReader
 import reframecv.recognition.VacancyRecognitionRepository
 import reframecv.repository.ProjectsRepository
+import reframecv.repository.ProviderConnectionsRepository
+import reframecv.repository.ProviderModelsRepository
 import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
 import reframecv.repository.TestResumesRepository
@@ -30,6 +33,7 @@ import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
@@ -155,5 +159,26 @@ class TestApplicationDependencies : ApplicationDependencies {
         attachmentPicker,
     )
 
+    private val connections = MutableStateFlow<List<ProviderConnection>>(emptyList())
+    override val providerSettingsUseCases = ProviderSettingsUseCases(
+        object : ProviderConnectionsRepository {
+            override fun observe() = connections
+            override suspend fun save(connection: ProviderConnection): Long {
+                val id = connection.id.takeIf { it != 0L }
+                    ?: ((connections.value.maxOfOrNull { it.id } ?: 0) + 1)
+                connections.value = connections.value.filterNot { it.id == id } +
+                    connection.copy(
+                        id = id,
+                        active =
+                            connections.value.isEmpty() || connection.active,
+                    )
+                return id
+            }
+            override suspend fun activate(id: Long) {
+                connections.value = connections.value.map { it.copy(active = it.id == id) }
+            }
+        },
+        ProviderModelsRepository { _, _ -> emptyList() },
+    )
     override fun close() = Unit
 }
