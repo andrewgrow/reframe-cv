@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.nowMillis
 import reframecv.usecase.ProviderSettingsUseCases
 
@@ -27,7 +28,11 @@ internal class ProviderAccountController(
     private var polling: Job? = null
     private var request: Job? = null
     private var generation = 0L
-    private val savedConnection = state.value.connection.takeIf { it.id != 0L }
+    private var savedConnection = state.value.connection.takeIf { it.id != 0L }
+
+    fun onSaved(connection: ProviderConnection) {
+        savedConnection = connection
+    }
 
     init {
         lifecycle.subscribe(object : Lifecycle.Callbacks {
@@ -50,7 +55,7 @@ internal class ProviderAccountController(
                     it.id == draft.connection.id && it.type == draft.connection.type &&
                         it.apiKey == draft.connection.apiKey.trim()
                 } == true
-                if (sameCredentials && stale) refresh()
+                if (sameCredentials && stale && draft.connection.active) refresh()
                 val wait = if (stale) {
                     ACCOUNT_REFRESH_INTERVAL_MILLIS
                 } else {
@@ -77,7 +82,8 @@ internal class ProviderAccountController(
     @Suppress("TooGenericExceptionCaught")
     fun refresh() {
         val draft = state.value
-        val canRefresh = lifecycle.state == Lifecycle.State.RESUMED && !draft.busy
+        val canRefresh =
+            lifecycle.state == Lifecycle.State.RESUMED && !draft.busy && draft.connection.active
         if (!canRefresh || draft.refreshingAccount || draft.connection.apiKey.isBlank()) {
             return
         }

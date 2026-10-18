@@ -63,7 +63,7 @@ internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () ->
                     onRefresh,
                     Modifier.testTag("settings.account.refresh"),
                     enabled =
-                        !state.busy && !state.refreshingAccount &&
+                        state.connection.active && !state.busy && !state.refreshingAccount &&
                             state.connection.apiKey.isNotBlank(),
                     outlineState = FillButton.OutlineState.Visible,
                 )

@@ -9,8 +9,9 @@ import reframecv.domain.models.providers.ProviderConnection
 /** Stores user-created API connections; supported implementations are defined in code. */
 interface ProviderConnectionsRepository {
     fun observe(): Flow<List<ProviderConnection>>
+    suspend fun get(id: Long): ProviderConnection?
     suspend fun save(connection: ProviderConnection): Long
-    suspend fun activate(id: Long)
+    suspend fun setActive(id: Long, active: Boolean)
     suspend fun updateAccountInfo(
         id: Long,
         type: ApiProviderType,
@@ -30,7 +31,7 @@ fun interface ProviderModelsRepository {
 }
 
 /** Reports setup failures without leaking HTTP requests or credentials into UI/logs. */
-enum class ProviderSetupError { Unauthorized, Unavailable, InvalidResponse }
+enum class ProviderSetupError { Unauthorized, Unavailable, InvalidResponse, Disabled }
 
 /** Carries only a safe error category across the provider boundary. */
 class ProviderSetupException(val reason: ProviderSetupError) : Exception(reason.name)

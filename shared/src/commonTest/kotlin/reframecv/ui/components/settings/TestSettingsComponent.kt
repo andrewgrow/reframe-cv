@@ -16,7 +16,7 @@ class TestSettingsComponent(
     )
     override fun onAdd() = Unit
     override fun onEdit(connection: ProviderConnection) = Unit
-    override fun onActivate(id: Long) = Unit
+    override fun onActiveChange(id: Long, active: Boolean) = Unit
     override fun onRetry() = Unit
     override fun onBack() = Unit
 }
@@ -34,6 +34,10 @@ class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditor
     override fun onModel(id: String) {
         state.value =
             state.value.copy(connection = state.value.connection.copy(modelId = id))
+    }
+    override fun onActiveChange(active: Boolean) {
+        state.value =
+            state.value.copy(connection = state.value.connection.copy(active = active))
     }
     override fun onLoadModels() = Unit
     override fun onRefreshAccount() = Unit

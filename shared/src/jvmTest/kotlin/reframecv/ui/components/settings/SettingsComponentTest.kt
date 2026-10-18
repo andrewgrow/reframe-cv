@@ -37,11 +37,14 @@ class SettingsComponentTest : ComponentTest() {
     private val records = MutableStateFlow<List<ProviderConnection>>(emptyList())
     private val repository = object : ProviderConnectionsRepository {
         override fun observe() = records
+        override suspend fun get(id: Long) = records.value.find { it.id == id }
         override suspend fun save(connection: ProviderConnection): Long {
             records.value = listOf(connection.copy(id = 1))
             return 1
         }
-        override suspend fun activate(id: Long) = Unit
+        override suspend fun setActive(id: Long, active: Boolean) {
+            records.value = records.value.map { if (it.id == id) it.copy(active = active) else it }
+        }
         override suspend fun updateAccountInfo(
             id: Long,
             type: ApiProviderType,
@@ -125,6 +128,15 @@ class SettingsComponentTest : ComponentTest() {
     fun failedKeyChecksKeepTheSelectedModelAndDoNotPreventSaving() = runBlocking {
         val editor = runOnUiThread {
             lifecycle.resume()
+            records.value =
+                listOf(
+                    connection().copy(
+                        id = 7,
+                        name = "Keep name",
+                        apiKey = "old",
+                        modelId = "old-model",
+                    ),
+                )
             DefaultProviderEditorComponent(
                 context(
                     ProviderModelsRepository { _, _ ->
@@ -153,10 +165,10 @@ class SettingsComponentTest : ComponentTest() {
             assertEquals("Keep name", editor.state.value.connection.name)
             assertEquals("new-key", editor.state.value.connection.apiKey)
             assertTrue(editor.state.value.valid)
-            assertTrue(records.value.isEmpty())
+            assertEquals("old", records.value.single().apiKey)
             editor.onSave()
         }
-        withTimeout(10_000) { records.firstNonEmpty() }
+        withTimeout(10_000) { records.first { it.singleOrNull()?.apiKey == "new-key" } }
         assertEquals("new-key", records.value.single().apiKey)
         assertEquals("old-model", records.value.single().modelId)
     }

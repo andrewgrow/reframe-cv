@@ -41,6 +41,6 @@ belong in the [README](../README.md).
 
 ## API providers
 
-- [ ] Route AI operations through the active saved connection and chosen model.
+- [ ] Route AI operations through an enabled saved connection and chosen model.
 - [ ] Implement OpenRouter generation requests and verify structured-output/PDF compatibility.
-- [ ] Add provider connection deletion and decide how to handle deleting the active connection.
+- [ ] Add provider connection deletion and decide how to handle deleting a connection in use.

@@ -28,6 +28,7 @@ import reframecv.shared.generated.resources.settings_active
 import reframecv.shared.generated.resources.settings_add
 import reframecv.shared.generated.resources.settings_empty
 import reframecv.shared.generated.resources.settings_error_auth
+import reframecv.shared.generated.resources.settings_error_disabled
 import reframecv.shared.generated.resources.settings_error_empty
 import reframecv.shared.generated.resources.settings_error_load
 import reframecv.shared.generated.resources.settings_error_network
@@ -109,59 +110,11 @@ internal fun SettingsErrorText(error: SettingsError) {
         SettingsError.NoModels -> Res.string.settings_error_empty
         SettingsError.Validation -> Res.string.settings_error_validation
         SettingsError.AccountRefresh -> Res.string.settings_account_error
+        SettingsError.Disabled -> Res.string.settings_error_disabled
     }
     Text(
         stringResource(message),
         color = ReframeTheme.colorScheme.critical,
         modifier = Modifier.testTag("settings.error"),
     )
-}
-
-@Composable
-private fun ProviderConnectionsList(
-    state: reframecv.ui.components.settings.SettingsState,
-    component: SettingsComponent,
-) {
-    val spacing = ReframeTheme.tokens.spacing
-    if (state.loading) {
-        LoadingContent()
-    } else {
-        FastScrollColumn {
-            if (state.connections.isEmpty() && state.error == null) {
-                Text(
-                    stringResource(Res.string.settings_empty),
-                    color = ReframeTheme.colorScheme.hint,
-                )
-            }
-            state.connections.forEach { connection ->
-                Column(
-                    Modifier.fillMaxWidth().clickable {
-                        component.onEdit(connection)
-                    }.padding(
-                        spacing.small,
-                    ).testTag("settings.connection.${connection.id}"),
-                    verticalArrangement = Arrangement.spacedBy(spacing.small),
-                ) {
-                    Text(connection.name, style = MaterialTheme.typography.titleMedium)
-                    Text(
-                        listOfNotNull("OpenRouter", connection.modelId.takeIf(String::isNotBlank))
-                            .joinToString(" · "),
-                        color = ReframeTheme.colorScheme.hint,
-                    )
-                    if (connection.active) {
-                        Text(
-                            stringResource(Res.string.settings_active),
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    } else {
-                        FillButton(stringResource(Res.string.settings_activate), {
-                            component.onActivate(connection.id)
-                        })
-                    }
-                }
-                HorizontalDivider()
-            }
-            state.error?.let { SettingsErrorText(it) }
-        }
-    }
 }

@@ -12,7 +12,7 @@ data class ProviderConnection(
     val name: String,
     val apiKey: String,
     val modelId: String,
-    val active: Boolean = false,
+    val active: Boolean = true,
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
     val accountInfo: ProviderAccountInfo? = null,

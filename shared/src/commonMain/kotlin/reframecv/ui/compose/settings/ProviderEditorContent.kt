@@ -6,13 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -23,7 +20,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -38,23 +34,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
-import reframecv.domain.models.providers.AiModel
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_cancel
-import reframecv.shared.generated.resources.settings_choose_model
+import reframecv.shared.generated.resources.settings_close
 import reframecv.shared.generated.resources.settings_edit
 import reframecv.shared.generated.resources.settings_key
 import reframecv.shared.generated.resources.settings_key_hide
 import reframecv.shared.generated.resources.settings_key_show
-import reframecv.shared.generated.resources.settings_load_models
-import reframecv.shared.generated.resources.settings_loading_models
-import reframecv.shared.generated.resources.settings_model
-import reframecv.shared.generated.resources.settings_model_hint
 import reframecv.shared.generated.resources.settings_name
 import reframecv.shared.generated.resources.settings_new
 import reframecv.shared.generated.resources.settings_save
-import reframecv.shared.generated.resources.settings_search
-import reframecv.shared.generated.resources.settings_structured
 import reframecv.shared.generated.resources.settings_type
 import reframecv.ui.components.settings.ProviderEditorComponent
 import reframecv.ui.components.settings.ProviderEditorState
@@ -89,31 +78,13 @@ internal fun ProviderEditorContent(component: ProviderEditorComponent) {
                         },
                     ),
                     component::onBack,
-                    !state.saving,
+                    !state.saving && !state.changingActive,
                 )
                 ProviderEditorFields(state, component)
             }
             HorizontalDivider()
-            Row(
-                Modifier.fillMaxWidth().padding(spacing.medium),
-                horizontalArrangement = Arrangement.spacedBy(
-                    spacing.medium,
-                    androidx.compose.ui.Alignment.CenterHorizontally,
-                ),
-            ) {
-                FillButton(
-                    stringResource(Res.string.settings_save),
-                    component::onSave,
-                    Modifier.testTag("settings.save"),
-                    enabled = !state.saving,
-                    outlineState = FillButton.OutlineState.Visible,
-                )
-                FillButton(
-                    stringResource(Res.string.settings_cancel),
-                    component::onBack,
-                    enabled = !state.saving,
-                )
-            }
+            ProviderSaveFeedback(state)
+            ProviderEditorActions(state, component)
         }
     }
 }
@@ -145,93 +116,21 @@ private fun ProviderTypeField(enabled: Boolean) {
 }
 
 @Composable
-private fun ProviderModelField(state: ProviderEditorState, select: (String) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    var search by remember(state.models) { mutableStateOf("") }
-    Text(stringResource(Res.string.settings_model), style = MaterialTheme.typography.titleSmall)
-    if (state.models.isEmpty()) {
-        if (state.connection.modelId.isNotBlank()) Text(state.connection.modelId)
-        Text(stringResource(Res.string.settings_model_hint), color = ReframeTheme.colorScheme.hint)
-    } else {
-        val models = state.models.filter {
-            it.name.contains(search, true) ||
-                it.id.contains(search, true)
-        }
-        Column {
-            OutlinedButton({
-                expanded = true
-            }, enabled = !state.busy, modifier = Modifier.testTag("settings.models.select")) {
-                Text(
-                    state.models.find { it.id == state.connection.modelId }?.name
-                        ?: state.connection.modelId.takeIf(String::isNotBlank)
-                        ?: stringResource(Res.string.settings_choose_model),
-                )
-            }
-            DropdownMenu(expanded && !state.busy, {
-                expanded = false
-            }, Modifier.heightIn(max = ReframeTheme.tokens.dimensions.providerModelMenuMaxHeight)) {
-                OutlinedTextField(
-                    search,
-                    {
-                        search = it
-                    },
-                    Modifier.fillMaxWidth().testTag(
-                        "settings.models.search",
-                    ),
-                    singleLine = true,
-                    enabled = !state.busy,
-                    label = {
-                        Text(stringResource(Res.string.settings_search))
-                    },
-                )
-
-                models.forEach { model ->
-                    DropdownMenuItem(text = { ModelLabel(model) }, onClick = {
-                        select(model.id)
-                        expanded =
-                            false
-                    })
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ModelLabel(model: AiModel) {
-    Column {
-        Text(model.name)
-        Text(model.id, style = MaterialTheme.typography.bodySmall)
-        if (model.structuredOutput) {
-            Text(
-                stringResource(Res.string.settings_structured),
-                style = MaterialTheme.typography.bodySmall,
-            )
-        }
-    }
-}
-
-@Composable
 private fun ProviderEditorFields(state: ProviderEditorState, component: ProviderEditorComponent) {
     FastScrollColumn(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         ProviderTypeField(!state.busy)
         ProviderCredentialFields(state, component)
-        FillButton(
-            stringResource(Res.string.settings_load_models),
-            component::onLoadModels,
-            Modifier.testTag("settings.models.load"),
-            enabled =
-                !state.busy && state.connection.apiKey.isNotBlank(),
-            outlineState = FillButton.OutlineState.Visible,
+        ProviderStatusField(
+            state.connection.active,
+            !state.saving && !state.changingActive,
+            component::onActiveChange,
         )
-        if (state.loading) {
-            CircularProgressIndicator(Modifier.testTag("settings.models.progress"))
-            Text(stringResource(Res.string.settings_loading_models))
-        }
-        ProviderModelField(state, component::onModel)
-        state.error?.let { SettingsErrorText(it) }
+        ProviderModelField(state, component)
+        state.error?.takeUnless {
+            it == SettingsError.Save || it == SettingsError.Validation
+        }?.let { SettingsErrorText(it) }
         ProviderAccountContent(state, component::onRefreshAccount)
     }
 }
@@ -250,9 +149,6 @@ private fun ProviderCredentialFields(
         label = {
             Text(stringResource(Res.string.settings_name))
         },
-        isError =
-            state.error == SettingsError.Validation &&
-                state.connection.name.isBlank(),
     )
     ProviderApiKeyField(state, component)
 }
@@ -295,4 +191,37 @@ private fun ProviderApiKeyField(state: ProviderEditorState, component: ProviderE
                         state.connection.apiKey.isBlank()
                     ),
     )
+}
+
+@Composable
+private fun ProviderEditorActions(state: ProviderEditorState, component: ProviderEditorComponent) {
+    val spacing = ReframeTheme.tokens.spacing
+    Row(
+        Modifier.fillMaxWidth().padding(spacing.medium),
+        horizontalArrangement = Arrangement.spacedBy(
+            spacing.medium,
+            androidx.compose.ui.Alignment.CenterHorizontally,
+        ),
+    ) {
+        FillButton(
+            stringResource(Res.string.settings_save),
+            component::onSave,
+            Modifier.testTag("settings.save"),
+            enabled = !state.saving && !state.changingActive,
+            outlineState = FillButton.OutlineState.Visible,
+        )
+        FillButton(
+            stringResource(
+                if (state.connection.id ==
+                    0L
+                ) {
+                    Res.string.settings_cancel
+                } else {
+                    Res.string.settings_close
+                },
+            ),
+            component::onBack,
+            enabled = !state.saving && !state.changingActive,
+        )
+    }
 }

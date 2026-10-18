@@ -166,14 +166,13 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val providerSettingsUseCases = ProviderSettingsUseCases(
         object : ProviderConnectionsRepository {
             override fun observe() = connections
+            override suspend fun get(id: Long) = connections.value.find { it.id == id }
             override suspend fun save(connection: ProviderConnection): Long {
                 val id = connection.id.takeIf { it != 0L }
                     ?: ((connections.value.maxOfOrNull { it.id } ?: 0) + 1)
                 connections.value = connections.value.filterNot { it.id == id } +
                     connection.copy(
                         id = id,
-                        active =
-                            connections.value.isEmpty() || connection.active,
                     )
                 return id
             }
@@ -193,8 +192,9 @@ class TestApplicationDependencies : ApplicationDependencies {
                     }
                 }
             }
-            override suspend fun activate(id: Long) {
-                connections.value = connections.value.map { it.copy(active = it.id == id) }
+            override suspend fun setActive(id: Long, active: Boolean) {
+                connections.value =
+                    connections.value.map { if (it.id == id) it.copy(active = active) else it }
             }
         },
         ProviderModelsRepository { _, _ -> emptyList() },

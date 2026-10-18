@@ -7,7 +7,7 @@ import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
 
-/** Persists connections and keeps a single active selection atomically. */
+/** Persists connections and their independent enabled states. */
 @Dao
 abstract class ProviderConnectionsDao {
     @Query("SELECT * FROM provider_connections ORDER BY id ASC")
@@ -16,30 +16,24 @@ abstract class ProviderConnectionsDao {
     @Query("SELECT * FROM provider_connections WHERE id = :id")
     abstract suspend fun get(id: Long): ProviderConnectionEntity?
 
-    @Query("SELECT COUNT(*) FROM provider_connections")
-    abstract suspend fun count(): Int
-
     @Insert
     abstract suspend fun insert(connection: ProviderConnectionEntity): Long
 
     @Update
     abstract suspend fun update(connection: ProviderConnectionEntity): Int
 
-    @Query("UPDATE provider_connections SET active = 0 WHERE active = 1")
-    abstract suspend fun clearActive()
-
-    @Query("UPDATE provider_connections SET active = 1 WHERE id = :id")
-    abstract suspend fun setActive(id: Long)
+    @Query("UPDATE provider_connections SET active = :active WHERE id = :id")
+    abstract suspend fun updateActive(id: Long, active: Boolean): Int
 
     @Query(
         "UPDATE provider_connections SET account_info = :info " +
-            "WHERE id = :id AND type = :type AND api_key = :apiKey",
+            "WHERE id = :id AND type = :type AND api_key = :apiKey AND active = 1",
     )
     abstract suspend fun updateAccountInfo(id: Long, type: String, apiKey: String, info: String)
 
     @Transaction
     open suspend fun save(connection: ProviderConnectionEntity): Long {
-        if (connection.id == 0L) return insert(connection.copy(active = count() == 0))
+        if (connection.id == 0L) return insert(connection)
         val previous = checkNotNull(get(connection.id)) { "Connection does not exist" }
         check(
             update(
@@ -60,9 +54,7 @@ abstract class ProviderConnectionsDao {
     }
 
     @Transaction
-    open suspend fun activate(id: Long) {
-        checkNotNull(get(id)) { "Connection does not exist" }
-        clearActive()
-        setActive(id)
+    open suspend fun setActive(id: Long, active: Boolean) {
+        check(updateActive(id, active) == 1) { "Connection does not exist" }
     }
 }

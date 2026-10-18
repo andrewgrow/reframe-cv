@@ -301,17 +301,24 @@ It opens in the main content area. Back/Escape closes the connection editor befo
 Settings and returns to the previous destination. Back during model loading cancels the request
 without discarding the draft; saves cannot be interrupted through navigation.
 
-`provider_connections` starts empty. Users create named OpenRouter connections with an API key
-and an optional model ID. Multiple connections may use the same provider. The first saved connection becomes
-active; switching the active connection is transactional. Editing preserves the row ID, creation
-time, and active state. Keys are currently stored as plain text in the local database, masked in
-form fields, and omitted from model string representations and operation logs.
+`provider_connections` starts empty. Users create OpenRouter connections with an optional
+connection name, an API key, and an optional model ID. Each connection has an independent
+Active/Disabled state; new connections default to Active. Status switches persist immediately
+for saved connections and never affect other connections. Disabling cancels pending requests.
+Ordinary Save preserves the stored status, preventing stale drafts from re-enabling a connection.
+Keys are currently plain text in the local database, masked in form fields, and omitted from
+model string representations and operation logs.
+
+The list uses one row per connection: Provider, optional Connection name, and Status. Model
+selection and Load/Refresh models share one row in the editor. Save keeps the same editor,
+updates its persisted identity, and shows a green notification for three seconds in a reserved
+footer line. Further saves update the same row. Closing still discards unsaved field edits.
 
 `ProviderSettingsUseCases` separates storage from provider model discovery. The external
 `RemoteProviderModelsRepository` routes discovery to an injected `ProviderSetupClient`. OpenRouter setup
 validates credentials with GET `/api/v1/key`, then reads `/api/v1/models/user`. The list is searchable;
 model metadata identifies advertised structured-output support without guaranteeing endpoint
-compatibility. Saving requires only a nonblank name and API key; checking credentials and loading
+compatibility. Saving requires only a nonblank API key; checking credentials and loading
 or choosing a model are optional, independent operations. Save cancels pending model discovery,
 and late results cannot replace the saved draft. Changing the key clears the loaded catalog and
 account cache but keeps the configured model ID. Catalog refreshes never clear that ID implicitly.
@@ -349,3 +356,10 @@ does not block editing or navigation. Failures retain cached values and show sep
 timestamps are displayed explicitly in UTC. Tests use controlled ticks rather than real waits.
 
 Provider reference: [OpenRouter current-key endpoint](https://openrouter.ai/docs/api/api-reference/api-keys/get-current-key).
+
+Provider settings use cases check the connection's enabled state before and after remote calls,
+including a fresh lookup of saved connections. A stale caller cannot bypass a persisted disable.
+The account controller skips disabled connections on timer ticks; manual network actions are
+also disabled. Account-cache writes require `active = 1`, so a response racing with disabling
+cannot update a disabled row. Cached values remain readable while disabled. Recognition is
+still a stub; future provider operations must enforce the same access rule.

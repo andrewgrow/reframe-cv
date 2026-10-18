@@ -25,6 +25,7 @@ data class SettingsState(
     val connections: List<ProviderConnection> = emptyList(),
     val loading: Boolean = true,
     val error: SettingsError? = null,
+    val changingActive: Set<Long> = emptySet(),
 )
 
 /** Lets the application open global settings and configure API connections. */
@@ -33,7 +34,7 @@ interface SettingsComponent {
     val editorSlot: Value<ChildSlot<*, ProviderEditorComponent>>
     fun onAdd()
     fun onEdit(connection: ProviderConnection)
-    fun onActivate(id: Long)
+    fun onActiveChange(id: Long, active: Boolean)
     fun onRetry()
     fun onBack()
     val isBusy: Boolean get() = editorSlot.value.child?.instance?.state?.value?.busy == true
@@ -58,7 +59,7 @@ class DefaultSettingsComponent(
         DefaultProviderEditorComponent(
             context,
             connection,
-            saved = { editorNavigation.dismiss() },
+            saved = {},
             back = { editorNavigation.dismiss() },
         ) as ProviderEditorComponent
     }
@@ -80,19 +81,24 @@ class DefaultSettingsComponent(
         ),
     )
     override fun onEdit(connection: ProviderConnection) {
-        if (!isBusy) editorNavigation.activate(connection)
+        if (!isBusy && connection.id !in state.value.changingActive) {
+            editorNavigation.activate(connection)
+        }
     }
 
     @Suppress("TooGenericExceptionCaught")
-    override fun onActivate(id: Long) {
-        if (isBusy) return
+    override fun onActiveChange(id: Long, active: Boolean) {
+        if (isBusy || id in state.value.changingActive) return
+        state.value = state.value.copy(changingActive = state.value.changingActive + id)
         scope.launch {
             try {
-                useCases.activate(id)
+                useCases.setActive(id, active)
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
                 state.value = state.value.copy(error = SettingsError.Save)
+            } finally {
+                state.value = state.value.copy(changingActive = state.value.changingActive - id)
             }
         }
     }
@@ -105,7 +111,7 @@ class DefaultSettingsComponent(
             try {
                 useCases.observe().collect {
                     state.value =
-                        SettingsState(connections = it, loading = false)
+                        state.value.copy(connections = it, loading = false, error = null)
                 }
             } catch (error: CancellationException) {
                 throw error

@@ -13,7 +13,8 @@ import reframecv.shared.nowMillis
 class LocalProviderConnectionsRepository(private val dao: ProviderConnectionsDao) :
     ProviderConnectionsRepository {
     override fun observe() = dao.observe().map { rows -> rows.map { it.toDomainModel() } }
-    override suspend fun activate(id: Long) = dao.activate(id)
+    override suspend fun get(id: Long) = dao.get(id)?.toDomainModel()
+    override suspend fun setActive(id: Long, active: Boolean) = dao.setActive(id, active)
     override suspend fun updateAccountInfo(
         id: Long,
         type: ApiProviderType,

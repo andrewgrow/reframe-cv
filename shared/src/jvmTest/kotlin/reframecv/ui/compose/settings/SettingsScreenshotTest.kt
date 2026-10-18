@@ -36,7 +36,18 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
     fun connectionsInLightThemeMatchReference() = runComposeUiTest {
         val component =
             TestSettingsComponent(
-                SettingsState(listOf(connection.copy(id = 1, active = true)), loading = false),
+                SettingsState(
+                    listOf(
+                        connection.copy(id = 1, active = true),
+                        connection.copy(id = 2, name = "", active = false),
+                        connection.copy(
+                            id = 3,
+                            name = "A very long connection name",
+                            active = true,
+                        ),
+                    ),
+                    loading = false,
+                ),
             )
         setAndCaptureGolden(this, themeMode = ThemeMode.Light) {
             RootContent(TestRootComponent(settingsComponent = component))
@@ -52,6 +63,22 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                     listOf(AiModel("example/model", "Example model", true)),
                 ),
             )
+        setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+    }
+
+    @Test
+    fun savedConnectionMatchesReference() = runComposeUiTest {
+        val component = TestSettingsComponent(
+            editor = ProviderEditorState(connection.copy(id = 1), successfulSaves = 1),
+        )
+        setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+    }
+
+    @Test
+    fun disabledConnectionMatchesReference() = runComposeUiTest {
+        val component = TestSettingsComponent(
+            editor = ProviderEditorState(connection.copy(id = 1, active = false)),
+        )
         setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
     }
 

@@ -9,6 +9,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -31,10 +32,16 @@ class ProviderSavingTest : ComponentTest() {
     private val saved = CompletableDeferred<Unit>()
     private val repository = object : ProviderConnectionsRepository {
         override fun observe() = records
-        override suspend fun activate(id: Long) = Unit
+        override suspend fun get(id: Long) = records.value.find { it.id == id }
+        override suspend fun setActive(id: Long, active: Boolean) {
+            records.value = records.value.map { if (it.id == id) it.copy(active = active) else it }
+        }
         override suspend fun save(connection: ProviderConnection): Long {
-            records.value = listOf(connection.copy(id = 1))
-            return 1
+            val id =
+                connection.id.takeIf { it != 0L }
+                    ?: ((records.value.maxOfOrNull { it.id } ?: 0L) + 1)
+            records.value = records.value.filterNot { it.id == id } + connection.copy(id = id)
+            return id
         }
         override suspend fun updateAccountInfo(
             id: Long,
@@ -116,6 +123,63 @@ class ProviderSavingTest : ComponentTest() {
             assertEquals("previous", records.value.single().modelId)
         } finally {
             runOnUiThread { subscription.cancel() }
+        }
+    }
+
+    @Test
+    fun unnamedConnectionsStayEditableAndRepeatedSavesUpdateTheSameRecord() = runBlocking {
+        val editor =
+            editor(ProviderModelsRepository { _, _ -> error("Unexpected network request") })
+        runOnUiThread {
+            editor.onName("  ")
+            editor.onSave()
+        }
+        withTimeout(10_000) { saved.await() }
+        val secondSave = CompletableDeferred<Unit>()
+        val subscription = runOnUiThread {
+            assertFalse(editor.state.value.saving)
+            assertEquals(1L, editor.state.value.connection.id)
+            assertEquals("", editor.state.value.connection.name)
+            val sub = editor.state.subscribe {
+                if (it.successfulSaves ==
+                    2L
+                ) {
+                    secondSave.complete(Unit)
+                }
+            }
+            editor.onName("Named later")
+            editor.onSave()
+            sub
+        }
+        try {
+            withTimeout(10_000) { secondSave.await() }
+            assertEquals(1, records.value.size)
+            assertEquals(1L, records.value.single().id)
+            assertEquals("Named later", records.value.single().name)
+        } finally {
+            runOnUiThread { subscription.cancel() }
+        }
+    }
+
+    @Test
+    fun switchingOffPersistsImmediatelyAndPreventsManualRequests() = runBlocking {
+        var requests = 0
+        val editor = editor(
+            ProviderModelsRepository { _, _ ->
+                requests++
+                emptyList()
+            },
+        )
+        runOnUiThread { editor.onSave() }
+        withTimeout(10_000) { saved.await() }
+        runOnUiThread { editor.onActiveChange(false) }
+        withTimeout(10_000) { records.first { it.singleOrNull()?.active == false } }
+        runOnUiThread {
+            assertFalse(editor.state.value.connection.active)
+            editor.onLoadModels()
+            editor.onRefreshAccount()
+            assertEquals(0, requests)
+            assertEquals(0, accountRequests)
         }
     }
 

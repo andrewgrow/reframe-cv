@@ -232,7 +232,7 @@
     <string name="settings_add">Add provider</string>
     <string name="settings_new">Add API connection</string>
     <string name="settings_edit">API connection</string>
-    <string name="settings_name">Connection name</string>
+    <string name="settings_name">Connection name (optional)</string>
     <string name="settings_key">API key</string>
     <string name="settings_key_show">Show API key</string>
     <string name="settings_key_hide">Hide API key</string>
@@ -240,6 +240,7 @@
     <string name="settings_load_models">Load models</string>
     <string name="settings_loading_models">Checking credentials and loading models…</string>
     <string name="settings_model">Model (optional)</string>
+    <string name="settings_models_no_matches">No matching models</string>
     <string name="settings_search">Search models</string>
     <string name="settings_save">Save</string>
     <string name="settings_cancel">Cancel</string>
@@ -252,7 +253,13 @@
     <string name="settings_error_network">Could not reach the provider. Please retry.</string>
     <string name="settings_error_response">The provider returned an invalid response. Please retry.</string>
     <string name="settings_error_empty">No models are available for this connection.</string>
-    <string name="settings_error_validation">Enter a connection name and API key.</string>
+    <string name="settings_error_validation">Enter an API key.</string>
+    <string name="settings_disabled">Disabled</string>
+    <string name="settings_status">Status</string>
+    <string name="settings_error_disabled">This connection is disabled. Enable it to contact the provider.</string>
+    <string name="settings_saved">Successfully saved</string>
+    <string name="settings_close">Close</string>
+    <string name="settings_refresh_models">Refresh models</string>
     <string name="settings_structured">Structured output</string>
     <string name="settings_choose_model">Choose a model</string>
     <string name="settings_account_title">Account information</string>

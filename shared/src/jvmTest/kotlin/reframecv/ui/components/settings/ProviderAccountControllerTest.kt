@@ -34,6 +34,7 @@ import reframecv.usecase.ProviderSettingsUseCases
 class ProviderAccountControllerTest : ComponentTest() {
     private var clock = 1_000_000L
     private val ticks = Channel<Unit>(Channel.UNLIMITED)
+    private val waiting = Channel<Unit>(Channel.UNLIMITED)
     private val writes = mutableListOf<ProviderAccountInfo>()
     private val cached = ProviderAccountInfo(
         listOf(ProviderBudget("key_limit", 50.0, 1.0, 49.0)),
@@ -59,8 +60,9 @@ class ProviderAccountControllerTest : ComponentTest() {
             lifecycle.doOnDestroy { scope.cancel() }
             val connections = object : ProviderConnectionsRepository {
                 override fun observe() = MutableStateFlow(emptyList<ProviderConnection>())
+                override suspend fun get(id: Long) = state.value.connection.takeIf { it.id == id }
                 override suspend fun save(connection: ProviderConnection) = connection.id
-                override suspend fun activate(id: Long) = Unit
+                override suspend fun setActive(id: Long, active: Boolean) = Unit
                 override suspend fun updateAccountInfo(
                     id: Long,
                     type: ApiProviderType,
@@ -82,7 +84,10 @@ class ProviderAccountControllerTest : ComponentTest() {
                 scope,
                 state,
                 now = { clock },
-                awaitNextRefresh = { _ -> ticks.receive() },
+                awaitNextRefresh = { _ ->
+                    waiting.send(Unit)
+                    ticks.receive()
+                },
             )
         }
 
@@ -114,6 +119,33 @@ class ProviderAccountControllerTest : ComponentTest() {
             assertEquals(2, requests)
             assertEquals(2, writes.size)
         }
+    }
+
+    @Test
+    fun disabledConnectionsSkipTimerAndManualRefreshUntilEnabled() = runBlocking {
+        var requests = 0
+        val controller = controller(
+            ProviderAccountRepository { _, _ ->
+                requests++
+                cached.copy(fetchedAt = clock)
+            },
+        )
+        withTimeout(10_000) { waiting.receive() }
+        runOnUiThread {
+            state.value = state.value.copy(connection = state.value.connection.copy(active = false))
+            clock += ACCOUNT_REFRESH_INTERVAL_MILLIS
+            controller.refresh()
+        }
+        ticks.send(Unit)
+        withTimeout(10_000) { waiting.receive() }
+        runOnUiThread {
+            assertEquals(0, requests)
+            assertTrue(writes.isEmpty())
+            state.value = state.value.copy(connection = state.value.connection.copy(active = true))
+        }
+        ticks.send(Unit)
+        await { it.connection.accountInfo?.fetchedAt == clock }
+        runOnUiThread { assertEquals(1, requests) }
     }
 
     @Test

@@ -45,6 +45,10 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
         repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
         assertEquals(info, repository.observe().first().single().accountInfo)
 
+        repository.setActive(id, false)
+        repository.updateAccountInfo(id, original.type, "old", info.copy(fetchedAt = 999))
+        assertEquals(info, repository.get(id)?.accountInfo)
+        repository.setActive(id, true)
         val refreshed = repository.observe().first().single()
         repository.save(refreshed.copy(apiKey = "new"))
         assertNull(repository.observe().first().single().accountInfo)
@@ -55,7 +59,7 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun startsEmptyAndPersistsConnectionsWithExactlyOneActiveSelection() = runBlocking {
+    fun persistsIndependentEnabledStatesAndPreservesThemWhenSavingDrafts() = runBlocking {
         var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
         assertEquals(emptyList(), repository.observe().first())
         val draft =
@@ -67,11 +71,16 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
             )
         val first = repository.save(draft)
         val second = repository.save(draft.copy(name = "Personal", modelId = "model-b"))
-        assertEquals(listOf(first), repository.observe().first().filter { it.active }.map { it.id })
-        repository.activate(second)
+        assertEquals(
+            listOf(first, second),
+            repository.observe().first().filter {
+                it.active
+            }.map { it.id },
+        )
+        repository.setActive(first, false)
         val created = repository.observe().first().last()
         repository.save(created.copy(name = "Edited", apiKey = "replacement", active = false))
-        assertFailsWith<IllegalStateException> { repository.activate(-1) }
+        assertFailsWith<IllegalStateException> { repository.setActive(-1, true) }
         database.close()
         openDatabase()
         repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())

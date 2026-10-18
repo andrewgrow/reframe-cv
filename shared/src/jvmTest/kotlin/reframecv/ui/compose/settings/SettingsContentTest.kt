@@ -5,6 +5,7 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -23,8 +24,10 @@ import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.settings_close
 import reframecv.shared.generated.resources.settings_key_hide
 import reframecv.shared.generated.resources.settings_key_show
+import reframecv.shared.generated.resources.settings_saved
 import reframecv.testing.ComponentTest
 import reframecv.testing.getTestString
 import reframecv.ui.components.application.DefaultRootComponent
@@ -37,7 +40,7 @@ import reframecv.ui.threading.runOnUiThread
 @OptIn(ExperimentalTestApi::class)
 class SettingsContentTest : ComponentTest() {
     @Test
-    fun savesANewConnectionWithoutLoadingModels() =
+    fun savesAnUnnamedConnectionAndStaysInTheSameEditor() =
         runDesktopComposeUiTest(width = 800, height = 600) {
             val root = runOnUiThread {
                 lifecycle.resume()
@@ -46,12 +49,47 @@ class SettingsContentTest : ComponentTest() {
             setContent { ReframeTheme { RootContent(root) } }
             onNodeWithTag("navigation.settings").performClick()
             onNodeWithTag("settings.add").performClick()
-            onNodeWithTag("settings.name").performTextInput("Offline connection")
             onNodeWithTag("settings.key").performTextInput("example-key")
             onNodeWithTag("settings.save").performClick()
             waitForIdle()
-            onNodeWithTag("settings.editor").assertDoesNotExist()
+            onNodeWithTag("settings.editor").assertExists()
+            onNodeWithText(getTestString(Res.string.settings_saved)).assertExists()
+            onNodeWithTag("settings.name").performTextInput("Offline connection")
+            onNodeWithTag("settings.save").performClick()
+            waitForIdle()
+            onNodeWithText(getTestString(Res.string.settings_close)).performClick()
             onNodeWithText("Offline connection").assertExists()
+            onNodeWithTag("settings.status.switch").performClick()
+            waitForIdle()
+            onNodeWithTag("settings.editor").assertDoesNotExist()
+            onNodeWithTag("settings.status.switch").assertIsOff()
+            onNodeWithTag("settings.connection.1").performClick()
+            onNodeWithTag("settings.status.switch").assertIsOff()
+        }
+
+    @Test
+    fun saveFeedbackDisappearsWithoutMovingTheControls() =
+        runDesktopComposeUiTest(width = 800, height = 600) {
+            mainClock.autoAdvance = false
+            val state = ProviderEditorState(
+                ProviderConnection(
+                    type = ApiProviderType.OpenRouter,
+                    name = "",
+                    apiKey = "key",
+                    modelId = "",
+                ),
+                successfulSaves = 1,
+            )
+            setContent {
+                ReframeTheme { ProviderEditorContent(TestProviderEditorComponent(state)) }
+            }
+            mainClock.advanceTimeByFrame()
+            val message = getTestString(Res.string.settings_saved)
+            onNodeWithText(message).assertExists()
+            val before = onNodeWithTag("settings.save").fetchSemanticsNode().boundsInRoot
+            mainClock.advanceTimeBy(3_100)
+            onNodeWithText(message).assertDoesNotExist()
+            assertEquals(before, onNodeWithTag("settings.save").fetchSemanticsNode().boundsInRoot)
         }
 
     @Test
@@ -165,7 +203,7 @@ class SettingsContentTest : ComponentTest() {
             )
             setContent { ReframeTheme { ProviderEditorContent(component) } }
             onNodeWithTag("settings.models.select").performClick()
-            onNodeWithTag("settings.models.search").performTextInput("Beta")
+            onNodeWithTag("settings.models.select").performTextInput("Beta")
             onNodeWithText("Beta model").performClick()
             runOnUiThread { assertEquals("b", component.state.value.connection.modelId) }
         }
