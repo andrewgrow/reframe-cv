@@ -1,15 +1,21 @@
 package reframecv.ui.compose.settings
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.time.Instant
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderBudget
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.settings.ProviderEditorState
 import reframecv.ui.components.settings.SettingsError
@@ -39,22 +45,57 @@ class ProviderAccountContentScreenshotTest : GoldenScreenshotTest() {
     @Test
     fun failedRefreshKeepsCachedBudgetsInLightTheme() = capture(ThemeMode.Light, failed = true)
 
-    private fun capture(theme: ThemeMode, failed: Boolean = false) = runDesktopComposeUiTest {
-        setAndCaptureGolden(this, themeMode = theme, captureTag = "settings.account") {
-            Box(Modifier.padding(ReframeTheme.tokens.spacing.medium)) {
-                ProviderAccountContent(
-                    ProviderEditorState(
-                        ProviderConnection(
-                            type = ApiProviderType.OpenRouter,
-                            name = "Work",
-                            apiKey = "key",
-                            modelId = "model",
-                            accountInfo = info,
-                        ),
-                        accountError = if (failed) SettingsError.AccountRefresh else null,
+    @Test
+    fun failedBalanceKeepsCachedCreditsAndBudgetsMatchReference() =
+        capture(ThemeMode.Dark, balanceFailed = true)
+
+    @Test
+    fun missingManagementKeyKeepsBudgetsAvailableMatchesReference() =
+        capture(ThemeMode.Light, managementKey = "")
+
+    private fun capture(
+        theme: ThemeMode,
+        failed: Boolean = false,
+        balanceFailed: Boolean = false,
+        managementKey: String = "management-key",
+    ) = runDesktopComposeUiTest(ScreenSize(800.dp, 900.dp)) {
+        setAndCaptureGolden(
+            this,
+            screenSize = ScreenSize(800.dp, 900.dp),
+            themeMode = theme,
+            captureTag = "settings.account.snapshot",
+        ) {
+            Column(
+                Modifier.padding(
+                    ReframeTheme.tokens.spacing.medium,
+                ).testTag(
+                    "settings.account.snapshot",
+                ).background(MaterialTheme.colorScheme.background),
+                verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.large),
+            ) {
+                val state = ProviderEditorState(
+                    ProviderConnection(
+                        type = ApiProviderType.OpenRouter,
+                        name = "Work",
+                        apiKey = "key",
+                        modelId = "model",
+                        accountInfo = info,
+                        managementApiKey = managementKey,
+                        creditBalance = if (managementKey.isEmpty()) {
+                            null
+                        } else {
+                            ProviderCreditBalance(
+                                5.0,
+                                4.84480375,
+                                info.fetchedAt,
+                            )
+                        },
                     ),
-                    onRefresh = {},
+                    accountError = if (failed) SettingsError.AccountRefresh else null,
+                    balanceError = balanceFailed,
                 )
+                ProviderManagementContent(state, onRefresh = {})
+                ProviderAccountContent(state, onRefresh = {})
             }
         }
     }

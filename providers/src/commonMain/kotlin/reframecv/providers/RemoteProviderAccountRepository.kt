@@ -9,6 +9,11 @@ import reframecv.repository.ProviderSetupException
 class RemoteProviderAccountRepository(
     private val clients: Map<ApiProviderType, ProviderAccountClient>,
 ) : ProviderAccountRepository {
+    override suspend fun balance(type: ApiProviderType, managementApiKey: String) = (
+        clients[type] ?: throw ProviderSetupException(
+            ProviderSetupError.Unavailable,
+        )
+        ).balance(managementApiKey)
     override suspend fun load(type: ApiProviderType, apiKey: String) = (
         clients[type] ?: throw ProviderSetupException(
             ProviderSetupError.Unavailable,

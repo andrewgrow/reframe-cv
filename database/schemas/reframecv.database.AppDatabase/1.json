@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "fbec641e4746ff006974f8b0d13fa759",
+    "identityHash": "2b79e9a0de2ca8dae0724788e393de67",
     "entities": [
       {
         "tableName": "app_settings",
@@ -42,7 +42,7 @@
       },
       {
         "tableName": "provider_connections",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `api_key` TEXT NOT NULL, `model_id` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `account_info` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `api_key` TEXT NOT NULL, `model_id` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `account_info` TEXT, `management_api_key` TEXT NOT NULL, `credit_balance` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -95,6 +95,17 @@
           {
             "fieldPath": "accountInfo",
             "columnName": "account_info",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "managementApiKey",
+            "columnName": "management_api_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "creditBalance",
+            "columnName": "credit_balance",
             "affinity": "TEXT"
           }
         ],
@@ -815,7 +826,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fbec641e4746ff006974f8b0d13fa759')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '2b79e9a0de2ca8dae0724788e393de67')"
     ]
   }
 }

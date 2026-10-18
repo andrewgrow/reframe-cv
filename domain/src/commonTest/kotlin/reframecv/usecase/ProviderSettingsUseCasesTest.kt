@@ -23,6 +23,7 @@ class ProviderSettingsUseCasesTest {
             name = "",
             apiKey = "valid-key",
             modelId = "model",
+            managementApiKey = "management-key",
         )
     private var stored = connection
     private var writes = 0
@@ -34,6 +35,12 @@ class ProviderSettingsUseCasesTest {
             stored =
                 stored.copy(active = active)
         }
+        override suspend fun updateCreditBalance(
+            id: Long,
+            type: ApiProviderType,
+            managementApiKey: String,
+            balance: reframecv.domain.models.providers.ProviderCreditBalance,
+        ) = Unit
         override suspend fun updateAccountInfo(
             id: Long,
             type: ApiProviderType,
@@ -73,6 +80,12 @@ class ProviderSettingsUseCasesTest {
                     useCases.refreshAccountInfo(draft)
                 }.reason,
             )
+            assertEquals(
+                ProviderSetupError.Disabled,
+                assertFailsWith<ProviderSetupException> {
+                    useCases.refreshCreditBalance(draft)
+                }.reason,
+            )
         }
         assertEquals(0, requests)
         assertEquals(0, writes)
@@ -87,14 +100,32 @@ class ProviderSettingsUseCasesTest {
                     stored = stored.copy(active = false)
                     listOf(AiModel("model", "Model"))
                 },
-                ProviderAccountRepository { _, _ ->
-                    stored = stored.copy(active = false)
-                    ProviderAccountInfo(fetchedAt = 1)
+                object : ProviderAccountRepository {
+                    override suspend fun load(
+                        type: ApiProviderType,
+                        apiKey: String,
+                    ): ProviderAccountInfo {
+                        stored = stored.copy(active = false)
+                        return ProviderAccountInfo(fetchedAt = 1)
+                    }
+                    override suspend fun balance(
+                        type: ApiProviderType,
+                        managementApiKey: String,
+                    ): reframecv.domain.models.providers.ProviderCreditBalance {
+                        stored = stored.copy(active = false)
+                        return reframecv.domain.models.providers.ProviderCreditBalance(
+                            50.0,
+                            1.0,
+                            123,
+                        )
+                    }
                 },
             )
             assertFailsWith<ProviderSetupException> { useCases.loadModels(connection) }
             stored = stored.copy(active = true)
             assertFailsWith<ProviderSetupException> { useCases.refreshAccountInfo(connection) }
+            stored = stored.copy(active = true)
+            assertFailsWith<ProviderSetupException> { useCases.refreshCreditBalance(connection) }
             assertEquals(0, writes)
         }
 }

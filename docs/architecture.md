@@ -363,3 +363,21 @@ The account controller skips disabled connections on timer ticks; manual network
 also disabled. Account-cache writes require `active = 1`, so a response racing with disabling
 cannot update a disabled row. Cached values remain readable while disabled. Recognition is
 still a stub; future provider operations must enforce the same access rule.
+
+OpenRouter connections may also store an optional management API key. It is used exclusively
+for GET `/api/v1/credits`, never for model discovery, ordinary-key budgets, or document requests.
+Account credits (`total_credits - total_usage`) have a separate typed cache and fetch timestamp;
+they are not spending limits. Management keys use the same local plain-text storage and masked
+input policy as ordinary keys, are excluded from model string representations, and are redacted
+from HTTP traffic. Blank management keys produce no credit requests. Credit failures preserve
+cached values and show independent feedback without blocking ordinary operations or Save.
+
+Account credits share the editor's visible-only refresh schedule but have independent TTLs,
+request jobs, and failures. Disabling, pausing, closing, saving, or changing credentials cancels
+pending requests. Changing the management key invalidates only the credit cache; changing the
+ordinary key invalidates only its budget cache. Credit-cache writes require matching provider,
+management key, connection ID, and enabled status; stale saves preserve newer cached values.
+
+The provider editor separates Management (management key and account credits) from Model API
+(ordinary key, model catalog, and key budgets). Both sections have independent manual refresh
+actions; connection identity and enabled status apply to the entire connection.

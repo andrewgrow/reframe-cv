@@ -12,6 +12,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.pressKey
@@ -49,12 +50,12 @@ class SettingsContentTest : ComponentTest() {
             setContent { ReframeTheme { RootContent(root) } }
             onNodeWithTag("navigation.settings").performClick()
             onNodeWithTag("settings.add").performClick()
-            onNodeWithTag("settings.key").performTextInput("example-key")
+            onNodeWithTag("settings.key").performScrollTo().performTextInput("example-key")
             onNodeWithTag("settings.save").performClick()
             waitForIdle()
             onNodeWithTag("settings.editor").assertExists()
             onNodeWithText(getTestString(Res.string.settings_saved)).assertExists()
-            onNodeWithTag("settings.name").performTextInput("Offline connection")
+            onNodeWithTag("settings.name").performScrollTo().performTextInput("Offline connection")
             onNodeWithTag("settings.save").performClick()
             waitForIdle()
             onNodeWithText(getTestString(Res.string.settings_close)).performClick()
@@ -119,7 +120,7 @@ class SettingsContentTest : ComponentTest() {
             val component =
                 mutableStateOf(TestProviderEditorComponent(ProviderEditorState(connection)))
             setContent { ReframeTheme { ProviderEditorContent(component.value) } }
-            val key = onNodeWithTag("settings.key")
+            val key = onNodeWithTag("settings.key").performScrollTo()
             fun displayedKey(): String {
                 val results = mutableListOf<TextLayoutResult>()
                 key.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(results) }
@@ -141,6 +142,36 @@ class SettingsContentTest : ComponentTest() {
             }
             waitForIdle()
             assertEquals(masked, displayedKey())
+        }
+
+    @Test
+    fun managementKeyHasIndependentVisibilityAndRemainsOptional() =
+        runDesktopComposeUiTest(width = 800, height = 600) {
+            val component = TestProviderEditorComponent(
+                ProviderEditorState(
+                    ProviderConnection(
+                        type = ApiProviderType.OpenRouter,
+                        name = "",
+                        apiKey = "ordinary",
+                        modelId = "",
+                    ),
+                ),
+            )
+            setContent { ReframeTheme { ProviderEditorContent(component) } }
+            val field = onNodeWithTag("settings.management.key").performScrollTo()
+            field.performTextInput("management-secret")
+            fun displayedKey(): String {
+                val results = mutableListOf<TextLayoutResult>()
+                field.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(results) }
+                return results.single().layoutInput.text.text
+            }
+            assertEquals("•".repeat("management-secret".length), displayedKey())
+            onNodeWithContentDescription("Show management API key").performClick()
+            assertEquals("management-secret", displayedKey())
+            onNodeWithContentDescription("Hide management API key").performClick()
+            assertEquals("•".repeat("management-secret".length), displayedKey())
+            assertEquals("ordinary", component.state.value.connection.apiKey)
+            onNodeWithTag("settings.save").assertIsEnabled()
         }
 
     @Test
@@ -178,8 +209,8 @@ class SettingsContentTest : ComponentTest() {
             onNodeWithTag("settings.editor").assertExists()
             onNodeWithTag("settings.save").performClick()
             onNodeWithTag("settings.error").assertExists()
-            onNodeWithTag("settings.name").performTextInput("Personal")
-            onNodeWithTag("settings.key").performTextInput("example-key")
+            onNodeWithTag("settings.name").performScrollTo().performTextInput("Personal")
+            onNodeWithTag("settings.key").performScrollTo().performTextInput("example-key")
             onRoot().performKeyInput { pressKey(Key.Escape) }
             onNodeWithTag("settings.editor").assertDoesNotExist()
             onNodeWithTag("settings.page").assertExists()
@@ -202,7 +233,7 @@ class SettingsContentTest : ComponentTest() {
                 ),
             )
             setContent { ReframeTheme { ProviderEditorContent(component) } }
-            onNodeWithTag("settings.models.select").performClick()
+            onNodeWithTag("settings.models.select").performScrollTo().performClick()
             onNodeWithTag("settings.models.select").performTextInput("Beta")
             onNodeWithText("Beta model").performClick()
             runOnUiThread { assertEquals("b", component.state.value.connection.modelId) }

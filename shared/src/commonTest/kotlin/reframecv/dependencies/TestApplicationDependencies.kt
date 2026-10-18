@@ -176,6 +176,22 @@ class TestApplicationDependencies : ApplicationDependencies {
                     )
                 return id
             }
+            override suspend fun updateCreditBalance(
+                id: Long,
+                type: ApiProviderType,
+                managementApiKey: String,
+                balance: reframecv.domain.models.providers.ProviderCreditBalance,
+            ) {
+                connections.value = connections.value.map {
+                    val matches =
+                        it.id == id && it.type == type && it.managementApiKey == managementApiKey
+                    if (matches && it.active) {
+                        it.copy(creditBalance = balance)
+                    } else {
+                        it
+                    }
+                }
+            }
             override suspend fun updateAccountInfo(
                 id: Long,
                 type: ApiProviderType,

@@ -44,3 +44,4 @@ belong in the [README](../README.md).
 - [ ] Route AI operations through an enabled saved connection and chosen model.
 - [ ] Implement OpenRouter generation requests and verify structured-output/PDF compatibility.
 - [ ] Add provider connection deletion and decide how to handle deleting a connection in use.
+- [ ] Add API-key rotation controls to the provider Management section.

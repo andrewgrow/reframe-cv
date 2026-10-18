@@ -1,6 +1,8 @@
 package reframecv.ui.compose.settings
 
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import reframecv.domain.models.providers.AiModel
@@ -63,7 +65,9 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                     listOf(AiModel("example/model", "Example model", true)),
                 ),
             )
-        setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+        setGoldenContent(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+        onNodeWithTag("settings.models.select").performScrollTo()
+        captureGolden(this)
     }
 
     @Test
@@ -91,6 +95,8 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                     error = SettingsError.Unauthorized,
                 ),
             )
-        setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+        setGoldenContent(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+        onNodeWithTag("settings.key").performScrollTo()
+        captureGolden(this)
     }
 }

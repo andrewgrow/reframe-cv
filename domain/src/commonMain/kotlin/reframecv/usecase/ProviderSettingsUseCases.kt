@@ -6,6 +6,7 @@ import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
@@ -48,12 +49,25 @@ class ProviderSettingsUseCases(
         }
     }
 
+    suspend fun refreshCreditBalance(connection: ProviderConnection): ProviderCreditBalance {
+        ensureEnabled(connection)
+        val key = connection.managementApiKey.trim()
+        require(key.isNotEmpty())
+        return accounts.balance(connection.type, key).also { balance ->
+            ensureEnabled(connection)
+            if (connection.id != 0L) {
+                connections.updateCreditBalance(connection.id, connection.type, key, balance)
+            }
+        }
+    }
+
     suspend fun save(connection: ProviderConnection): Long {
         require(connection.apiKey.isNotBlank())
         return connections.save(
             connection.copy(
                 name = connection.name.trim(),
                 apiKey = connection.apiKey.trim(),
+                managementApiKey = connection.managementApiKey.trim(),
                 modelId = connection.modelId.trim(),
             ),
         )

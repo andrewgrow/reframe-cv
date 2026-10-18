@@ -233,6 +233,17 @@
     <string name="settings_new">Add API connection</string>
     <string name="settings_edit">API connection</string>
     <string name="settings_name">Connection name (optional)</string>
+    <string name="settings_management_key">Management API key (optional)</string>
+    <string name="settings_management_key_show">Show management API key</string>
+    <string name="settings_management_key_hide">Hide management API key</string>
+    <string name="settings_balance_title">Account balance</string>
+    <string name="settings_balance_missing">Add a management API key to load your account balance.</string>
+    <string name="settings_balance_empty">Account balance has not been loaded.</string>
+    <string name="settings_balance_loading">Refreshing account balance…</string>
+    <string name="settings_balance_error">Could not refresh account balance. Check the management API key and try again.</string>
+    <string name="settings_balance_total">Purchased credits: %1$s USD</string>
+    <string name="settings_balance_used">Used credits: %1$s USD</string>
+    <string name="settings_balance_remaining">Remaining balance: %1$s USD</string>
     <string name="settings_key">API key</string>
     <string name="settings_key_show">Show API key</string>
     <string name="settings_key_hide">Hide API key</string>
@@ -262,6 +273,9 @@
     <string name="settings_refresh_models">Refresh models</string>
     <string name="settings_structured">Structured output</string>
     <string name="settings_choose_model">Choose a model</string>
+    <string name="settings_management_section">Management</string>
+    <string name="settings_models_section">Model API</string>
+    <string name="settings_key_info">API key information</string>
     <string name="settings_account_title">Account information</string>
     <string name="settings_account_refresh">Refresh</string>
     <string name="settings_account_refreshing">Refreshing account information…</string>

@@ -16,6 +16,8 @@ data class ProviderConnection(
     val createdAt: Long = 0,
     val updatedAt: Long = 0,
     val accountInfo: ProviderAccountInfo? = null,
+    val managementApiKey: String = "",
+    val creditBalance: ProviderCreditBalance? = null,
 ) : DomainModel {
     override fun toString() = "ProviderConnection(id=$id, type=$type, name=$name, modelId=$modelId)"
 }

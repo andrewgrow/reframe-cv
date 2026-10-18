@@ -7,17 +7,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -30,17 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_cancel
 import reframecv.shared.generated.resources.settings_close
 import reframecv.shared.generated.resources.settings_edit
-import reframecv.shared.generated.resources.settings_key
-import reframecv.shared.generated.resources.settings_key_hide
-import reframecv.shared.generated.resources.settings_key_show
 import reframecv.shared.generated.resources.settings_name
 import reframecv.shared.generated.resources.settings_new
 import reframecv.shared.generated.resources.settings_save
@@ -121,25 +111,19 @@ private fun ProviderEditorFields(state: ProviderEditorState, component: Provider
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         ProviderTypeField(!state.busy)
-        ProviderCredentialFields(state, component)
+        ProviderNameField(state, component)
         ProviderStatusField(
             state.connection.active,
             !state.saving && !state.changingActive,
             component::onActiveChange,
         )
-        ProviderModelField(state, component)
-        state.error?.takeUnless {
-            it == SettingsError.Save || it == SettingsError.Validation
-        }?.let { SettingsErrorText(it) }
-        ProviderAccountContent(state, component::onRefreshAccount)
+        ProviderManagementSection(state, component)
+        ProviderModelsSection(state, component)
     }
 }
 
 @Composable
-private fun ProviderCredentialFields(
-    state: ProviderEditorState,
-    component: ProviderEditorComponent,
-) {
+private fun ProviderNameField(state: ProviderEditorState, component: ProviderEditorComponent) {
     OutlinedTextField(
         state.connection.name,
         component::onName,
@@ -149,47 +133,6 @@ private fun ProviderCredentialFields(
         label = {
             Text(stringResource(Res.string.settings_name))
         },
-    )
-    ProviderApiKeyField(state, component)
-}
-
-@Composable
-private fun ProviderApiKeyField(state: ProviderEditorState, component: ProviderEditorComponent) {
-    var visible by remember(component) { mutableStateOf(false) }
-    OutlinedTextField(
-        state.connection.apiKey,
-        component::onKey,
-        Modifier.fillMaxWidth().testTag("settings.key"),
-        enabled = !state.busy,
-        singleLine = true,
-        visualTransformation = if (visible) {
-            VisualTransformation.None
-        } else {
-            PasswordVisualTransformation()
-        },
-        trailingIcon = {
-            IconButton(onClick = { visible = !visible }, enabled = !state.busy) {
-                Icon(
-                    imageVector = if (visible) {
-                        Icons.Outlined.VisibilityOff
-                    } else {
-                        Icons.Outlined.Visibility
-                    },
-                    contentDescription = stringResource(
-                        if (visible) Res.string.settings_key_hide else Res.string.settings_key_show,
-                    ),
-                )
-            }
-        },
-        label = {
-            Text(stringResource(Res.string.settings_key))
-        },
-        isError =
-            state.error == SettingsError.Unauthorized ||
-                (
-                    state.error == SettingsError.Validation &&
-                        state.connection.apiKey.isBlank()
-                    ),
     )
 }
 

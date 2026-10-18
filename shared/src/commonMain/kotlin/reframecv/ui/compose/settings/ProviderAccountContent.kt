@@ -25,7 +25,6 @@ import reframecv.shared.generated.resources.settings_account_expires
 import reframecv.shared.generated.resources.settings_account_no_expiry
 import reframecv.shared.generated.resources.settings_account_refresh
 import reframecv.shared.generated.resources.settings_account_refreshing
-import reframecv.shared.generated.resources.settings_account_title
 import reframecv.shared.generated.resources.settings_account_updated
 import reframecv.shared.generated.resources.settings_budget_effective
 import reframecv.shared.generated.resources.settings_budget_key
@@ -36,6 +35,7 @@ import reframecv.shared.generated.resources.settings_budget_remaining
 import reframecv.shared.generated.resources.settings_budget_reset
 import reframecv.shared.generated.resources.settings_budget_spent
 import reframecv.shared.generated.resources.settings_budget_unknown
+import reframecv.shared.generated.resources.settings_key_info
 import reframecv.ui.components.settings.ProviderEditorState
 import reframecv.ui.compose.common.FillButton
 import reframecv.ui.theme.ReframeTheme
@@ -46,7 +46,7 @@ internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () ->
     val info = state.connection.accountInfo
     Surface(
         Modifier.fillMaxWidth().testTag("settings.account"),
-        color = MaterialTheme.colorScheme.background,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface,
     ) {
         Column(
@@ -55,7 +55,7 @@ internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () ->
             HorizontalDivider(Modifier.padding(vertical = spacing.small))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    stringResource(Res.string.settings_account_title),
+                    stringResource(Res.string.settings_key_info),
                     style = MaterialTheme.typography.titleMedium,
                 )
                 FillButton(
@@ -140,10 +140,10 @@ private fun BudgetContent(budget: ProviderBudget, effective: Boolean = false) {
 }
 
 @Composable
-private fun usd(value: Double?): String = value?.let { "${it.toString().removeSuffix(".0")} USD" }
+private fun usd(value: Double?): String = value?.let { "${providerAmount(it)} USD" }
     ?: stringResource(Res.string.settings_budget_unknown)
 
-private fun accountTimestamp(value: Long): String {
+internal fun accountTimestamp(value: Long): String {
     val utc = Instant.fromEpochMilliseconds(value).toLocalDateTime(TimeZone.UTC)
     return "${utc.date} ${utc.hour.toString().padStart(
         2,

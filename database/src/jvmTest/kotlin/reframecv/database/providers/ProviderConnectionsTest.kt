@@ -59,6 +59,48 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
+    fun balanceCacheUsesItsOwnCredentialAndSurvivesReopensAndUnrelatedEdits() = runBlocking {
+        var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+        val id = repository.save(
+            ProviderConnection(
+                type = ApiProviderType.OpenRouter,
+                name = "",
+                apiKey = "ordinary",
+                modelId = "",
+                managementApiKey = "management",
+            ),
+        )
+        val original = repository.get(id)!!
+        val balance = reframecv.domain.models.providers.ProviderCreditBalance(100.0, 25.0, 123)
+        repository.updateCreditBalance(id, original.type, "wrong-key", balance)
+        assertNull(repository.get(id)?.creditBalance)
+        repository.updateCreditBalance(id, original.type, "management", balance)
+        repository.save(original.copy(name = "Edited", apiKey = "changed-ordinary"))
+        assertEquals(balance, repository.get(id)?.creditBalance)
+        database.close()
+        openDatabase()
+        repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+        assertEquals("management", repository.get(id)?.managementApiKey)
+        assertEquals(balance, repository.get(id)?.creditBalance)
+        repository.setActive(id, false)
+        repository.updateCreditBalance(
+            id,
+            original.type,
+            "management",
+            balance.copy(fetchedAt = 456),
+        )
+        assertEquals(balance, repository.get(id)?.creditBalance)
+        repository.save(repository.get(id)!!.copy(managementApiKey = "new-management"))
+        assertNull(repository.get(id)?.creditBalance)
+        repository.setActive(id, true)
+        repository.updateCreditBalance(id, original.type, "management", balance)
+        assertNull(repository.get(id)?.creditBalance)
+        repository.updateCreditBalance(id, original.type, "new-management", balance)
+        assertEquals(balance, repository.get(id)?.creditBalance)
+        assertFalse(repository.get(id).toString().contains("new-management"))
+    }
+
+    @Test
     fun persistsIndependentEnabledStatesAndPreservesThemWhenSavingDrafts() = runBlocking {
         var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
         assertEquals(emptyList(), repository.observe().first())

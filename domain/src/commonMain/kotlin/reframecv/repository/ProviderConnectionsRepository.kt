@@ -5,6 +5,7 @@ import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.ProviderCreditBalance
 
 /** Stores user-created API connections; supported implementations are defined in code. */
 interface ProviderConnectionsRepository {
@@ -12,6 +13,12 @@ interface ProviderConnectionsRepository {
     suspend fun get(id: Long): ProviderConnection?
     suspend fun save(connection: ProviderConnection): Long
     suspend fun setActive(id: Long, active: Boolean)
+    suspend fun updateCreditBalance(
+        id: Long,
+        type: ApiProviderType,
+        managementApiKey: String,
+        balance: ProviderCreditBalance,
+    )
     suspend fun updateAccountInfo(
         id: Long,
         type: ApiProviderType,
@@ -23,6 +30,8 @@ interface ProviderConnectionsRepository {
 /** Retrieves provider account details through the configured external implementation. */
 fun interface ProviderAccountRepository {
     suspend fun load(type: ApiProviderType, apiKey: String): ProviderAccountInfo
+    suspend fun balance(type: ApiProviderType, managementApiKey: String): ProviderCreditBalance =
+        throw ProviderSetupException(ProviderSetupError.Unavailable)
 }
 
 /** Loads models after checking the supplied credentials with the external service. */

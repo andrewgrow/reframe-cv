@@ -31,6 +31,10 @@ class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditor
         state.value =
             state.value.copy(connection = state.value.connection.copy(apiKey = value))
     }
+    override fun onManagementKey(value: String) {
+        state.value =
+            state.value.copy(connection = state.value.connection.copy(managementApiKey = value))
+    }
     override fun onModel(id: String) {
         state.value =
             state.value.copy(connection = state.value.connection.copy(modelId = id))
@@ -41,6 +45,7 @@ class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditor
     }
     override fun onLoadModels() = Unit
     override fun onRefreshAccount() = Unit
+    override fun onRefreshBalance() = Unit
     override fun onSave() = Unit
     override fun onBack() = Unit
 }

@@ -45,6 +45,12 @@ class SettingsComponentTest : ComponentTest() {
         override suspend fun setActive(id: Long, active: Boolean) {
             records.value = records.value.map { if (it.id == id) it.copy(active = active) else it }
         }
+        override suspend fun updateCreditBalance(
+            id: Long,
+            type: ApiProviderType,
+            managementApiKey: String,
+            balance: reframecv.domain.models.providers.ProviderCreditBalance,
+        ) = Unit
         override suspend fun updateAccountInfo(
             id: Long,
             type: ApiProviderType,

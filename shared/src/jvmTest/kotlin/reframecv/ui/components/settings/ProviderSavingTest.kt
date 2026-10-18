@@ -43,6 +43,12 @@ class ProviderSavingTest : ComponentTest() {
             records.value = records.value.filterNot { it.id == id } + connection.copy(id = id)
             return id
         }
+        override suspend fun updateCreditBalance(
+            id: Long,
+            type: ApiProviderType,
+            managementApiKey: String,
+            balance: reframecv.domain.models.providers.ProviderCreditBalance,
+        ) = Unit
         override suspend fun updateAccountInfo(
             id: Long,
             type: ApiProviderType,
@@ -91,12 +97,16 @@ class ProviderSavingTest : ComponentTest() {
                 error("No network")
             },
         )
-        runOnUiThread { editor.onSave() }
+        runOnUiThread {
+            editor.onManagementKey(" management-key ")
+            editor.onSave()
+        }
         withTimeout(10_000) { saved.await() }
         assertEquals("example-key", records.value.single().apiKey)
         assertEquals("", records.value.single().modelId)
         assertEquals(0, modelRequests)
         assertEquals(0, accountRequests)
+        assertEquals("management-key", editor.state.value.connection.managementApiKey)
     }
 
     @Test

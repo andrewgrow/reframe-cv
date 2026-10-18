@@ -25,6 +25,7 @@ internal class ProviderAccountController(
     private val now: () -> Long = ::nowMillis,
     private val awaitNextRefresh: suspend (Long) -> Unit = { delay(it) },
 ) {
+    private val balance = ProviderBalanceController(useCases, lifecycle, scope, state)
     private var polling: Job? = null
     private var request: Job? = null
     private var generation = 0L
@@ -55,13 +56,14 @@ internal class ProviderAccountController(
                     it.id == draft.connection.id && it.type == draft.connection.type &&
                         it.apiKey == draft.connection.apiKey.trim()
                 } == true
-                if (sameCredentials && stale && draft.connection.active) refresh()
+                if (sameCredentials && stale && draft.connection.active) refreshBudgets()
+                val balanceWait = balance.refreshIfStale(savedConnection, now())
                 val wait = if (stale) {
                     ACCOUNT_REFRESH_INTERVAL_MILLIS
                 } else {
                     ACCOUNT_REFRESH_INTERVAL_MILLIS - checkNotNull(age)
                 }
-                awaitNextRefresh(wait)
+                awaitNextRefresh(minOf(wait, balanceWait))
             }
         }
     }
@@ -73,14 +75,22 @@ internal class ProviderAccountController(
     }
 
     fun cancel() {
+        balance.cancel()
         generation++
         request?.cancel()
         request = null
         state.value = state.value.copy(refreshingAccount = false)
     }
 
-    @Suppress("TooGenericExceptionCaught")
+    fun refreshBalance() = balance.refresh()
+
     fun refresh() {
+        refreshBudgets()
+        balance.refresh()
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    fun refreshBudgets() {
         val draft = state.value
         val canRefresh =
             lifecycle.state == Lifecycle.State.RESUMED && !draft.busy && draft.connection.active

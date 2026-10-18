@@ -19,7 +19,7 @@ import reframecv.providers.ProviderSetupClient
 import reframecv.repository.ProviderSetupError
 import reframecv.repository.ProviderSetupException
 
-/** Validates OpenRouter credentials and loads the user's model catalog without generation. */
+/** Loads OpenRouter models, key budgets, and optional management-account credits. */
 class OpenRouterSetupClient(
     private val transport: HttpClient,
     logger: HttpTrafficLogger = HttpTrafficLogger.None,
@@ -39,6 +39,12 @@ class OpenRouterSetupClient(
 
     override suspend fun accountInfo(apiKey: String) = call {
         json.decodeFromString<OpenRouterAccountResponse>(request("key", apiKey)).data.toDomain()
+    }
+
+    override suspend fun balance(managementApiKey: String) = call {
+        json.decodeFromString<OpenRouterCreditsResponse>(
+            request("credits", managementApiKey),
+        ).data.toDomain()
     }
 
     @Suppress("TooGenericExceptionCaught")

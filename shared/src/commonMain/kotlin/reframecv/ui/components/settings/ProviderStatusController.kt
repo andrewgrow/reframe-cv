@@ -23,6 +23,7 @@ internal class ProviderStatusController(
             connection = draft.connection.copy(active = active),
             error = null,
             accountError = null,
+            balanceError = false,
             changingActive = draft.connection.id != 0L,
         )
         if (draft.connection.id == 0L) return

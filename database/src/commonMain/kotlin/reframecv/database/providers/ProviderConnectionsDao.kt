@@ -31,6 +31,17 @@ abstract class ProviderConnectionsDao {
     )
     abstract suspend fun updateAccountInfo(id: Long, type: String, apiKey: String, info: String)
 
+    @Query(
+        "UPDATE provider_connections SET credit_balance = :balance " +
+            "WHERE id = :id AND type = :type AND management_api_key = :managementApiKey AND active = 1",
+    )
+    abstract suspend fun updateCreditBalance(
+        id: Long,
+        type: String,
+        managementApiKey: String,
+        balance: String,
+    )
+
     @Transaction
     open suspend fun save(connection: ProviderConnectionEntity): Long {
         if (connection.id == 0L) return insert(connection)
@@ -40,6 +51,13 @@ abstract class ProviderConnectionsDao {
                 connection.copy(
                     active = previous.active,
                     createdAt = previous.createdAt,
+                    creditBalance = if (connection.managementApiKey == previous.managementApiKey &&
+                        connection.type == previous.type
+                    ) {
+                        previous.creditBalance ?: connection.creditBalance
+                    } else {
+                        null
+                    },
                     accountInfo = if (connection.apiKey == previous.apiKey &&
                         connection.type == previous.type
                     ) {

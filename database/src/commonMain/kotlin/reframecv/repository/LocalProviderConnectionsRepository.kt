@@ -7,6 +7,7 @@ import reframecv.database.providers.ProviderConnectionsDao
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.shared.nowMillis
 
 /** Keeps provider connections available across application launches. */
@@ -15,6 +16,12 @@ class LocalProviderConnectionsRepository(private val dao: ProviderConnectionsDao
     override fun observe() = dao.observe().map { rows -> rows.map { it.toDomainModel() } }
     override suspend fun get(id: Long) = dao.get(id)?.toDomainModel()
     override suspend fun setActive(id: Long, active: Boolean) = dao.setActive(id, active)
+    override suspend fun updateCreditBalance(
+        id: Long,
+        type: ApiProviderType,
+        managementApiKey: String,
+        balance: ProviderCreditBalance,
+    ) = dao.updateCreditBalance(id, type.name, managementApiKey, Json.encodeToString(balance))
     override suspend fun updateAccountInfo(
         id: Long,
         type: ApiProviderType,
@@ -34,6 +41,8 @@ class LocalProviderConnectionsRepository(private val dao: ProviderConnectionsDao
                 now,
                 now,
                 connection.accountInfo?.let { Json.encodeToString(it) },
+                connection.managementApiKey,
+                connection.creditBalance?.let { Json.encodeToString(it) },
             ),
         )
     }

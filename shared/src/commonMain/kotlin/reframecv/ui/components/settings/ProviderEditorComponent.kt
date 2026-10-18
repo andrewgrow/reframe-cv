@@ -42,6 +42,8 @@ data class ProviderEditorState(
     val accountError: SettingsError? = null,
     val changingActive: Boolean = false,
     val successfulSaves: Long = 0,
+    val refreshingBalance: Boolean = false,
+    val balanceError: Boolean = false,
 ) {
     val busy get() = loading || saving || changingActive
     val valid get() = connection.apiKey.isNotBlank()
@@ -51,11 +53,13 @@ data class ProviderEditorState(
 interface ProviderEditorComponent {
     val state: Value<ProviderEditorState>
     fun onName(value: String)
+    fun onManagementKey(value: String)
     fun onKey(value: String)
     fun onModel(id: String)
     fun onLoadModels()
     fun onSave()
     fun onBack()
+    fun onRefreshBalance()
     fun onRefreshAccount()
     fun onActiveChange(active: Boolean)
 }
@@ -78,7 +82,8 @@ class DefaultProviderEditorComponent(
         account.cancel()
     }
 
-    override fun onRefreshAccount() = account.refresh()
+    override fun onRefreshAccount() = account.refreshBudgets()
+    override fun onRefreshBalance() = account.refreshBalance()
     override fun onActiveChange(active: Boolean) = status.change(active)
     init {
         context.lifecycle.doOnDestroy {
@@ -109,6 +114,18 @@ class DefaultProviderEditorComponent(
             )
         }
     }
+    override fun onManagementKey(value: String) {
+        if (!state.value.busy) {
+            account.cancel()
+            state.value = state.value.copy(
+                connection = state.value.connection.copy(
+                    managementApiKey = value,
+                    creditBalance = null,
+                ),
+                balanceError = false,
+            )
+        }
+    }
     override fun onModel(id: String) {
         if (!state.value.busy && state.value.models.any { it.id == id }) {
             state.value = state.value.copy(connection = state.value.connection.copy(modelId = id))
@@ -135,7 +152,7 @@ class DefaultProviderEditorComponent(
                         models = models,
                         error = if (models.isEmpty()) SettingsError.NoModels else null,
                     )
-                    account.refresh()
+                    account.refreshBudgets()
                 }
             } catch (error: CancellationException) {
                 throw error
@@ -174,6 +191,7 @@ class DefaultProviderEditorComponent(
                     id = id,
                     name = draft.connection.name.trim(),
                     apiKey = draft.connection.apiKey.trim(),
+                    managementApiKey = draft.connection.managementApiKey.trim(),
                     modelId = draft.connection.modelId.trim(),
                 )
                 state.value = state.value.copy(
