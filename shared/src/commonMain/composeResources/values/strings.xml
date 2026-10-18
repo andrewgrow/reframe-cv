@@ -293,4 +293,24 @@
     <string name="settings_budget_reset">Resets: %1$s</string>
     <string name="settings_budget_no_reset">No reset reported</string>
     <string name="settings_budget_unknown">Not reported</string>
+    <string name="prompts_list_title">Title</string>
+    <string name="prompts_list_component">Component</string>
+    <string name="prompts_title">Prompts</string>
+    <string name="prompts_new">Add prompt</string>
+    <string name="prompts_editor">Prompt</string>
+    <string name="prompts_add">Add prompt</string>
+    <string name="prompts_empty">No prompts yet.</string>
+    <string name="prompts_optional_title">Title (optional)</string>
+    <string name="prompts_component">Component (optional)</string>
+    <string name="prompts_text">Prompt text</string>
+    <string name="prompts_untitled">Prompt #%1$d</string>
+    <string name="prompts_all_components">All components</string>
+    <string name="prompts_resume">Resume</string>
+    <string name="prompts_vacancies">Vacancies</string>
+    <string name="prompts_cover_letters">Cover letters</string>
+    <string name="prompts_projects">Projects</string>
+    <string name="prompts_error_validation">Enter prompt text before saving.</string>
+    <string name="prompts_error_save">Could not save the prompt. Please try again.</string>
+    <string name="prompts_error_load">Could not load prompts. Please try again.</string>
+    <string name="prompts_saved">Prompt successfully saved.</string>
 </resources>

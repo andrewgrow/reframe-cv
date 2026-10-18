@@ -18,7 +18,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.ui.components.settings.prompts.DefaultPromptsComponent
+import reframecv.ui.components.settings.prompts.PromptsComponent
 import reframecv.ui.context.AppComponentContext
+
+/** Identifies a top-level settings destination. */
+enum class SettingsSection { Overview, ApiProviders }
 
 /** Supplies the persisted provider list and retryable operation feedback. */
 data class SettingsState(
@@ -26,21 +31,26 @@ data class SettingsState(
     val loading: Boolean = true,
     val error: SettingsError? = null,
     val changingActive: Set<Long> = emptySet(),
+    val section: SettingsSection = SettingsSection.Overview,
 )
 
-/** Lets the application open global settings and configure API connections. */
+/** Provides global provider and prompt settings. */
 interface SettingsComponent {
     val state: Value<SettingsState>
     val editorSlot: Value<ChildSlot<*, ProviderEditorComponent>>
+    val promptsSlot: Value<ChildSlot<*, PromptsComponent>>
+    fun onProviders()
+    fun onPrompts()
     fun onAdd()
     fun onEdit(connection: ProviderConnection)
     fun onActiveChange(id: Long, active: Boolean)
     fun onRetry()
     fun onBack()
-    val isBusy: Boolean get() = editorSlot.value.child?.instance?.state?.value?.busy == true
+    val isBusy: Boolean get() = editorSlot.value.child?.instance?.state?.value?.busy == true ||
+        promptsSlot.value.child?.instance?.isBusy == true
 }
 
-/** Observes saved connections while the connection editor owns its independent draft lifecycle. */
+/** Owns global settings navigation and the saved provider list. */
 class DefaultSettingsComponent(
     componentContext: AppComponentContext,
     private val back: () -> Unit,
@@ -63,6 +73,27 @@ class DefaultSettingsComponent(
             back = { editorNavigation.dismiss() },
         ) as ProviderEditorComponent
     }
+    private val promptsNavigation = SlotNavigation<Unit>()
+    override val promptsSlot =
+        childSlot(
+            promptsNavigation,
+            serializer = null,
+            key = "PromptsSlot",
+            handleBackButton = false,
+        ) {
+                _,
+                context,
+            ->
+            DefaultPromptsComponent(context, back = {
+                promptsNavigation.dismiss()
+            }) as PromptsComponent
+        }
+    override fun onProviders() {
+        if (!isBusy) state.value = state.value.copy(section = SettingsSection.ApiProviders)
+    }
+    override fun onPrompts() {
+        if (!isBusy) promptsNavigation.activate(Unit)
+    }
     init {
         val callback = BackCallback { onBack() }
         backHandler.register(callback)
@@ -82,6 +113,7 @@ class DefaultSettingsComponent(
     )
     override fun onEdit(connection: ProviderConnection) {
         if (!isBusy && connection.id !in state.value.changingActive) {
+            onProviders()
             editorNavigation.activate(connection)
         }
     }
@@ -121,6 +153,17 @@ class DefaultSettingsComponent(
         }
     }
     override fun onBack() {
-        editorSlot.value.child?.instance?.onBack() ?: back()
+        val prompts = promptsSlot.value.child?.instance
+        val editor = editorSlot.value.child?.instance
+        when {
+            prompts != null -> prompts.onBack()
+
+            editor != null -> editor.onBack()
+
+            state.value.section == SettingsSection.ApiProviders ->
+                state.value = state.value.copy(section = SettingsSection.Overview)
+
+            else -> back()
+        }
     }
 }

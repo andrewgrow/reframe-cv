@@ -87,6 +87,9 @@ class SettingsComponentTest : ComponentTest() {
         assertEquals(null, page.editorSlot.value.child)
         assertIs<RootComponent.Child.Settings>(root.childStack.value.active.instance)
         page.onBack()
+        assertEquals(SettingsSection.Overview, page.state.value.section)
+        assertIs<RootComponent.Child.Settings>(root.childStack.value.active.instance)
+        page.onBack()
         assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
     }
 

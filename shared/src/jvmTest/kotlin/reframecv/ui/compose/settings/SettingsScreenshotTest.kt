@@ -12,6 +12,7 @@ import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.application.TestRootComponent
 import reframecv.ui.components.settings.ProviderEditorState
 import reframecv.ui.components.settings.SettingsError
+import reframecv.ui.components.settings.SettingsSection
 import reframecv.ui.components.settings.SettingsState
 import reframecv.ui.components.settings.TestSettingsComponent
 import reframecv.ui.compose.application.RootContent
@@ -35,6 +36,15 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
+    fun emptyProvidersMatchesReference() = runComposeUiTest {
+        val component =
+            TestSettingsComponent(
+                SettingsState(loading = false, section = SettingsSection.ApiProviders),
+            )
+        setAndCaptureGolden(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+    }
+
+    @Test
     fun connectionsInLightThemeMatchReference() = runComposeUiTest {
         val component =
             TestSettingsComponent(
@@ -49,6 +59,7 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                         ),
                     ),
                     loading = false,
+                    section = SettingsSection.ApiProviders,
                 ),
             )
         setAndCaptureGolden(this, themeMode = ThemeMode.Light) {

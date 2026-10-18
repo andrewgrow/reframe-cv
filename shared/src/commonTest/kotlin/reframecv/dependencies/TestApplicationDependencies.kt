@@ -31,11 +31,13 @@ import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
 import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
+import reframecv.repository.TestPromptsRepository
 import reframecv.repository.TestResumesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.PromptsUseCases
 import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
@@ -161,6 +163,9 @@ class TestApplicationDependencies : ApplicationDependencies {
         vacancyExporter,
         attachmentPicker,
     )
+
+    val promptsRepository = TestPromptsRepository()
+    override val promptsUseCases = PromptsUseCases(promptsRepository)
 
     private val connections = MutableStateFlow<List<ProviderConnection>>(emptyList())
     override val providerSettingsUseCases = ProviderSettingsUseCases(

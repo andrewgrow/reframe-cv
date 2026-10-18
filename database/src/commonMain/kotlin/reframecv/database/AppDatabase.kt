@@ -11,6 +11,8 @@ import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.coverletter.CoverLetterKeywordEntity
 import reframecv.database.project.ProjectDao
 import reframecv.database.project.ProjectEntity
+import reframecv.database.prompts.PromptEntity
+import reframecv.database.prompts.PromptsDao
 import reframecv.database.providers.ProviderConnectionEntity
 import reframecv.database.providers.ProviderConnectionsDao
 import reframecv.database.resume.ResumeDao
@@ -29,6 +31,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
     entities = [
         AppSettingsEntity::class,
         ProviderConnectionEntity::class,
+        PromptEntity::class,
         ProjectEntity::class,
         VacancyAttachmentEntity::class,
         ResumeEntity::class, ResumeKeywordEntity::class,
@@ -40,6 +43,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun promptsDao(): PromptsDao
     abstract fun providerConnectionsDao(): ProviderConnectionsDao
     abstract fun appSettingsDao(): AppSettingsDao
     abstract fun vacancyAttachmentDao(): VacancyAttachmentDao

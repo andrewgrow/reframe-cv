@@ -381,3 +381,27 @@ management key, connection ID, and enabled status; stale saves preserve newer ca
 The provider editor separates Management (management key and account credits) from Model API
 (ordinary key, model catalog, and key budgets). Both sections have independent manual refresh
 actions; connection identity and enabled status apply to the entire connection.
+
+## Reusable prompts
+
+Settings owns a prompt list and a separate editor. A prompt stores enabled status, optional
+title, optional component scope (Resume, Vacancies, Cover letters, Projects), instructions,
+and creation/update timestamps. No scope means available to every component. The management
+list includes disabled records; feature selection must use `PromptsUseCases.observeAvailable`,
+which excludes disabled prompts and includes both global and matching component-scoped records.
+
+The prompt collection starts empty. Users create all prompts themselves; observing the list
+or saving a prompt never inserts additional records. Existing prompts are retained unchanged.
+Records are ordered by ascending ID. Save requires nonblank
+instructions, trims outer whitespace, retains internal formatting, and keeps the editor open with
+a temporary success notification. Repeated saves update the same record; Close/Esc discard edits.
+Status changes are draft fields until Save. Errors retain the draft and are logged with operation
+context. JSON schemas remain application contracts, separate from editable prompt instructions.
+
+The prompt manager does not execute AI requests. Processing screens will select from active
+prompts when their request controls are connected; recognition currently retains its existing
+provider stub and request wiring.
+
+The Settings overview exposes matching text navigation entries for API Providers and Prompts.
+Provider connections and Add provider live on the API Providers page. Back/Esc returns from
+the connection editor to that list, then to the Settings overview, then out of Settings.

@@ -49,6 +49,7 @@ class SettingsContentTest : ComponentTest() {
             }
             setContent { ReframeTheme { RootContent(root) } }
             onNodeWithTag("navigation.settings").performClick()
+            onNodeWithTag("settings.providers").performClick()
             onNodeWithTag("settings.add").performClick()
             onNodeWithTag("settings.key").performScrollTo().performTextInput("example-key")
             onNodeWithTag("settings.save").performClick()
@@ -196,7 +197,7 @@ class SettingsContentTest : ComponentTest() {
         }
 
     @Test
-    fun opensFromTheFooterAndEscapeClosesTheEditorBeforeLeavingSettings() =
+    fun escapeReturnsThroughEditorProvidersAndSettings() =
         runDesktopComposeUiTest(width = 800, height = 600) {
             val root = runOnUiThread {
                 lifecycle.resume()
@@ -205,6 +206,7 @@ class SettingsContentTest : ComponentTest() {
             setContent { ReframeTheme { RootContent(root) } }
             onNodeWithTag("navigation.settings").performClick()
             onNodeWithTag("settings.page").assertExists()
+            onNodeWithTag("settings.providers").performClick()
             onNodeWithTag("settings.add").performClick()
             onNodeWithTag("settings.editor").assertExists()
             onNodeWithTag("settings.save").performClick()
@@ -213,6 +215,8 @@ class SettingsContentTest : ComponentTest() {
             onNodeWithTag("settings.key").performScrollTo().performTextInput("example-key")
             onRoot().performKeyInput { pressKey(Key.Escape) }
             onNodeWithTag("settings.editor").assertDoesNotExist()
+            onNodeWithTag("settings.providers.page").assertExists()
+            onRoot().performKeyInput { pressKey(Key.Escape) }
             onNodeWithTag("settings.page").assertExists()
             onRoot().performKeyInput { pressKey(Key.Escape) }
             onNodeWithTag("settings.page").assertDoesNotExist()

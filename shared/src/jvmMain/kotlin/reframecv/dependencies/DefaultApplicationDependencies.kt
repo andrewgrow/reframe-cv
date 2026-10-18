@@ -40,6 +40,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.LocalAppSettingsRepository
 import reframecv.repository.LocalCoverLettersRepository
 import reframecv.repository.LocalProjectsRepository
+import reframecv.repository.LocalPromptsRepository
 import reframecv.repository.LocalProviderConnectionsRepository
 import reframecv.repository.LocalResumePhotos
 import reframecv.repository.LocalResumesRepository
@@ -50,6 +51,7 @@ import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
+import reframecv.usecase.PromptsUseCases
 import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
@@ -205,6 +207,15 @@ class DefaultApplicationDependencies(
         get() {
             check(!closed) { "Application dependencies are closed" }
             return vacancyFilesUseCasesInstance
+        }
+
+    private val prompts by lazy {
+        PromptsUseCases(LocalPromptsRepository(database.value.promptsDao()))
+    }
+    override val promptsUseCases: PromptsUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return prompts
         }
 
     private val providerSettings by lazy {

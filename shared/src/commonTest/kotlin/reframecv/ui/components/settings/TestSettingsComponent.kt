@@ -4,16 +4,27 @@ import com.arkivanov.decompose.Child
 import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.ui.components.settings.prompts.PromptsComponent
 
 class TestSettingsComponent(
     initial: SettingsState = SettingsState(loading = false),
     editor: ProviderEditorState? = null,
+    prompts: PromptsComponent? = null,
 ) : SettingsComponent {
     override val state = MutableValue(initial)
     override val editorSlot = MutableValue<ChildSlot<*, ProviderEditorComponent>>(
         editor?.let { ChildSlot(child = Child.Created(Unit, TestProviderEditorComponent(it))) }
             ?: ChildSlot<Unit, ProviderEditorComponent>(),
     )
+    override val promptsSlot =
+        MutableValue<ChildSlot<*, PromptsComponent>>(
+            prompts?.let {
+                ChildSlot(child = Child.Created(Unit, it))
+            }
+                ?: ChildSlot<Unit, PromptsComponent>(),
+        )
+    override fun onProviders() = Unit
+    override fun onPrompts() = Unit
     override fun onAdd() = Unit
     override fun onEdit(connection: ProviderConnection) = Unit
     override fun onActiveChange(id: Long, active: Boolean) = Unit

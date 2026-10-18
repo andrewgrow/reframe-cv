@@ -5,11 +5,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,12 +19,8 @@ import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
-import reframecv.shared.generated.resources.navigation_retry
+import reframecv.shared.generated.resources.prompts_title
 import reframecv.shared.generated.resources.settings_account_error
-import reframecv.shared.generated.resources.settings_activate
-import reframecv.shared.generated.resources.settings_active
-import reframecv.shared.generated.resources.settings_add
-import reframecv.shared.generated.resources.settings_empty
 import reframecv.shared.generated.resources.settings_error_auth
 import reframecv.shared.generated.resources.settings_error_disabled
 import reframecv.shared.generated.resources.settings_error_empty
@@ -39,64 +33,73 @@ import reframecv.shared.generated.resources.settings_providers
 import reframecv.shared.generated.resources.settings_title
 import reframecv.ui.components.settings.SettingsComponent
 import reframecv.ui.components.settings.SettingsError
+import reframecv.ui.components.settings.SettingsSection
 import reframecv.ui.compose.common.FastScrollColumn
-import reframecv.ui.compose.common.FillButton
-import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
+import reframecv.ui.compose.settings.prompts.PromptsContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 fun SettingsContent(component: SettingsComponent) {
+    val state by component.state.subscribeAsState()
     val editor by component.editorSlot.subscribeAsState()
     val child = editor.child?.instance
+    val prompts by component.promptsSlot.subscribeAsState()
+    val promptsChild = prompts.child?.instance
     Box(
-        Modifier.fillMaxSize().pageBackHandler(component::onBack, destination = child ?: component),
+        Modifier.fillMaxSize().pageBackHandler(
+            component::onBack,
+            destination =
+                child ?: promptsChild ?: state.section,
+        ),
     ) {
-        if (child != null) ProviderEditorContent(child) else SettingsListContent(component)
+        when {
+            child != null -> ProviderEditorContent(child)
+            promptsChild != null -> PromptsContent(promptsChild)
+            state.section == SettingsSection.ApiProviders -> ProviderConnectionsContent(component)
+            else -> SettingsListContent(component)
+        }
     }
 }
 
 @Composable
 private fun SettingsListContent(component: SettingsComponent) {
-    val state by component.state.subscribeAsState()
     val spacing = ReframeTheme.tokens.spacing
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
-            Modifier.fillMaxSize().background(
-                MaterialTheme.colorScheme.background,
-            ).testTag("settings.page"),
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                .padding(spacing.medium).testTag("settings.page"),
+            verticalArrangement = Arrangement.spacedBy(spacing.medium),
         ) {
-            Column(
-                Modifier.weight(1f).fillMaxWidth().padding(spacing.medium),
+            PageHeader(stringResource(Res.string.settings_title), component::onBack)
+            FastScrollColumn(
+                Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(spacing.medium),
             ) {
-                PageHeader(stringResource(Res.string.settings_title), component::onBack)
-                Text(
+                SettingsNavigationItem(
                     stringResource(Res.string.settings_providers),
-                    style = MaterialTheme.typography.titleMedium,
+                    component::onProviders,
+                    "settings.providers",
                 )
-                ProviderConnectionsList(state, component)
-            }
-            HorizontalDivider()
-            Row(
-                Modifier.fillMaxWidth().padding(spacing.medium),
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                FillButton(
-                    stringResource(Res.string.settings_add),
-                    component::onAdd,
-                    Modifier.testTag("settings.add"),
-                    outlineState = FillButton.OutlineState.Visible,
+                SettingsNavigationItem(
+                    stringResource(Res.string.prompts_title),
+                    component::onPrompts,
+                    "settings.prompts",
                 )
-                if (state.error !=
-                    null
-                ) {
-                    FillButton(stringResource(Res.string.navigation_retry), component::onRetry)
-                }
             }
         }
     }
+}
+
+@Composable
+private fun SettingsNavigationItem(title: String, onClick: () -> Unit, tag: String) {
+    Text(
+        "$title  ›",
+        Modifier.fillMaxWidth().clickable(onClick = onClick)
+            .padding(ReframeTheme.tokens.spacing.small).testTag(tag),
+        style = MaterialTheme.typography.titleMedium,
+    )
 }
 
 @Composable
