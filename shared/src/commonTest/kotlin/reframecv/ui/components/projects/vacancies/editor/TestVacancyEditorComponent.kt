@@ -1,7 +1,10 @@
 package reframecv.ui.components.projects.vacancies.editor
 
 import com.arkivanov.decompose.value.MutableValue
+import reframecv.domain.models.screenstate.ScreenStateOwner
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.ui.components.common.section.CollapsibleSectionComponent
+import reframecv.ui.components.common.section.CollapsibleSectionState
 
 class TestVacancyEditorComponent(
     override val initialVacancy: Vacancy? = null,
@@ -10,6 +13,13 @@ class TestVacancyEditorComponent(
     private val delete: () -> Unit = {},
     imported: () -> Unit = {},
 ) : VacancyEditorComponent {
+    override val details = object : CollapsibleSectionComponent {
+        override val state = MutableValue(CollapsibleSectionState())
+        override fun onToggle() {
+            state.value = state.value.copy(expanded = !state.value.expanded)
+        }
+        override fun onBindOwner(owner: ScreenStateOwner) = Unit
+    }
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     override fun onDraftChange(draft: VacancyDraft) {

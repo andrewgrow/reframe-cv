@@ -5,6 +5,7 @@ import androidx.room3.Transaction
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.coverletter.CoverLetter
+import reframecv.domain.models.screenstate.ScreenType
 
 /** Saves, loads, and searches cover letters in the local database. */
 @Dao
@@ -49,6 +50,7 @@ interface CoverLetterDao :
         val projectId = findById(id)?.entity?.projectId ?: return 0
         clearVacancyLetters(id, updatedAt)
         val changed = deleteEntity(id)
+        if (changed > 0) clearScreenStates(ScreenType.CoverLetter.name, id)
         if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
         return changed
     }

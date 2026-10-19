@@ -7,6 +7,7 @@ import reframecv.attachments.SnapshotChange
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
+import reframecv.domain.models.screenstate.ScreenType
 import reframecv.domain.models.vacancy.Vacancy
 
 /** Saves, loads, searches, and permanently deletes vacancies in the local database. */
@@ -110,6 +111,7 @@ interface VacancyDao :
     suspend fun delete(id: Long, updatedAt: Long): Int {
         val existing = findById(id)?.entity ?: return 0
         val changed = deleteEntity(id)
+        if (changed > 0) clearScreenStates(ScreenType.Vacancy.name, id)
         if (changed > 0) {
             existing.vacancyAttachmentId?.let { deleteUnusedVacancyAttachment(it) }
             resetEmptyWorkspace(existing.projectId, updatedAt)

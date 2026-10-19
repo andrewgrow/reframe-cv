@@ -10,7 +10,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(libs.kotlinx.coroutinesCore)
-            implementation(libs.kotlinx.serializationJson)
+            api(libs.kotlinx.serializationJson)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmTest.dependencies { implementation(libs.kotlin.testJunit) }

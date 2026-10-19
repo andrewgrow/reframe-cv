@@ -2,8 +2,82 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "594d2578b01274802a695b1b5b427e66",
+    "identityHash": "9f60648383cf5a63e8cecba1d145088f",
     "entities": [
+      {
+        "tableName": "screen_states",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `screen` TEXT NOT NULL, `document_id` INTEGER, `states` TEXT NOT NULL, `project_id` INTEGER, PRIMARY KEY(`key`), FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "screen",
+            "columnName": "screen",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "documentId",
+            "columnName": "document_id",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "states",
+            "columnName": "states",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "projectId",
+            "columnName": "project_id",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_screen_states_project_id",
+            "unique": false,
+            "columnNames": [
+              "project_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_screen_states_project_id` ON `${TABLE_NAME}` (`project_id`)"
+          },
+          {
+            "name": "index_screen_states_screen_document_id",
+            "unique": true,
+            "columnNames": [
+              "screen",
+              "document_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_screen_states_screen_document_id` ON `${TABLE_NAME}` (`screen`, `document_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "projects",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "project_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
       {
         "tableName": "app_settings",
         "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `window_width` REAL NOT NULL, `window_height` REAL NOT NULL, `window_maximized` INTEGER NOT NULL, PRIMARY KEY(`id`))",
@@ -931,7 +1005,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '594d2578b01274802a695b1b5b427e66')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9f60648383cf5a63e8cecba1d145088f')"
     ]
   }
 }

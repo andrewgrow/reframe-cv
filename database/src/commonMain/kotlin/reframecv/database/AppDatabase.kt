@@ -18,6 +18,8 @@ import reframecv.database.providers.ProviderConnectionsDao
 import reframecv.database.resume.ResumeDao
 import reframecv.database.resume.ResumeEntity
 import reframecv.database.resume.ResumeKeywordEntity
+import reframecv.database.screenstate.ScreenStateEntity
+import reframecv.database.screenstate.ScreenStatesDao
 import reframecv.database.settings.AppSettingsDao
 import reframecv.database.settings.AppSettingsEntity
 import reframecv.database.vacancy.VacancyDao
@@ -30,6 +32,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 /** Keeps projects, workspace documents, and device preferences in one local database. */
 @Database(
     entities = [
+        ScreenStateEntity::class,
         AppSettingsEntity::class,
         ProviderConnectionEntity::class,
         PromptEntity::class,
@@ -44,6 +47,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun screenStatesDao(): ScreenStatesDao
     abstract fun promptsDao(): PromptsDao
     abstract fun providerConnectionsDao(): ProviderConnectionsDao
     abstract fun appSettingsDao(): AppSettingsDao

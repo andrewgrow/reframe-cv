@@ -52,8 +52,8 @@ class VacancyDescriptionFieldTest {
     fun holdingHandleAtViewportEdgeContinuesGrowingAndScrolling() =
         runDesktopComposeUiTest(width = 800, height = 600) {
             setContent { ReframeTheme { VacancyEditorContent(TestVacancyEditorComponent()) } }
+            val handle = onNodeWithTag("vacancy.description.resize").performScrollTo()
             mainClock.autoAdvance = false
-            val handle = onNodeWithTag("vacancy.description.resize")
             val fields = onNodeWithTag("vacancy.fields")
             val bottom = fields.fetchSemanticsNode().boundsInRoot.bottom
             val start = handle.fetchSemanticsNode().boundsInRoot.center.y

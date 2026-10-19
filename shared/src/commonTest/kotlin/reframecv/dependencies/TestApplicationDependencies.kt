@@ -2,6 +2,7 @@ package reframecv.dependencies
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.runBlocking
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
@@ -33,6 +34,7 @@ import reframecv.repository.TestAppSettingsRepository
 import reframecv.repository.TestCoverLettersRepository
 import reframecv.repository.TestPromptsRepository
 import reframecv.repository.TestResumesRepository
+import reframecv.repository.TestScreenStatesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.usecase.ObserveDashboardUseCase
@@ -42,6 +44,7 @@ import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.ScreenStateUseCases
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
@@ -227,5 +230,10 @@ class TestApplicationDependencies : ApplicationDependencies {
             ProviderAccountInfo(fetchedAt = reframecv.shared.nowMillis())
         },
     )
-    override fun close() = Unit
+    val screenStatesRepository = TestScreenStatesRepository()
+    private val screenStates = lazy { ScreenStateUseCases(screenStatesRepository, logger) }
+    override val screenStateUseCases get() = screenStates.value
+    override fun close() {
+        if (screenStates.isInitialized()) runBlocking { screenStates.value.close() }
+    }
 }

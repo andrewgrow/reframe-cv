@@ -1,5 +1,6 @@
 package reframecv.dependencies
 
+import kotlinx.coroutines.runBlocking
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.AttachmentStorage
 import reframecv.attachments.DesktopAttachmentPicker
@@ -44,6 +45,7 @@ import reframecv.repository.LocalPromptsRepository
 import reframecv.repository.LocalProviderConnectionsRepository
 import reframecv.repository.LocalResumePhotos
 import reframecv.repository.LocalResumesRepository
+import reframecv.repository.LocalScreenStatesRepository
 import reframecv.repository.LocalVacanciesRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
@@ -56,6 +58,7 @@ import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.ScreenStateUseCases
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
@@ -125,6 +128,17 @@ class DefaultApplicationDependencies(
     private val settingsRepository by lazy {
         LocalAppSettingsRepository(database.value.appSettingsDao())
     }
+    private val screenStates = lazy {
+        ScreenStateUseCases(
+            LocalScreenStatesRepository(database.value.screenStatesDao()),
+            logger,
+        )
+    }
+    override val screenStateUseCases: ScreenStateUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return screenStates.value
+        }
     private var closed = false
 
     override val appSettingsRepository: AppSettingsRepository
@@ -247,6 +261,7 @@ class DefaultApplicationDependencies(
     override fun close() {
         if (closed) return
         closed = true
+        if (screenStates.isInitialized()) runBlocking { screenStates.value.close() }
         if (transport.isInitialized()) {
             transport.value.close()
             transport.value.engine.close()

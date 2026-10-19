@@ -1,4 +1,7 @@
 <resources>
+    <string name="vacancy_job_details">Job details</string>
+    <string name="section_collapse">Collapse</string>
+    <string name="section_expand">Expand</string>
     <string name="navigation_projects">Projects</string>
     <string name="navigation_expand">Expand %1$s</string>
     <string name="navigation_collapse">Collapse %1$s</string>

@@ -2,10 +2,14 @@ package reframecv.ui.components.projects.vacancies.editor
 
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import reframecv.domain.models.screenstate.ScreenStateOwner
+import reframecv.domain.models.screenstate.ScreenType
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.recognition.RecognitionSource
 import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.applyTo
+import reframecv.ui.components.common.section.CollapsibleSectionComponent
+import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.context.AppComponentContext
 
 /** Lets the vacancy editor show save progress and failures. */
@@ -18,6 +22,7 @@ enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
+    val details: CollapsibleSectionComponent
     val resumes: VacancyResumesComponent
     val snapshot: VacancySnapshotComponent
     val recognition: VacancyRecognitionComponent
@@ -53,6 +58,11 @@ class DefaultVacancyEditorComponent(
     projectId: Long = initialVacancy?.projectId ?: 0,
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
+    override val details = DefaultCollapsibleSectionComponent(
+        componentContext,
+        "job_details",
+        initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
+    )
     private var persistedVacancy = initialVacancy
     override val initialVacancy: Vacancy? get() = persistedVacancy
     override val draft =
@@ -158,7 +168,16 @@ class DefaultVacancyEditorComponent(
     }
 
     internal fun onSaveCompleted(state: VacancySaveState, createdVacancy: Vacancy? = null) {
-        if (createdVacancy != null) persistedVacancy = createdVacancy
+        if (createdVacancy != null) {
+            persistedVacancy = createdVacancy
+            details.onBindOwner(
+                ScreenStateOwner(
+                    ScreenType.Vacancy,
+                    createdVacancy.id,
+                    createdVacancy.projectId,
+                ),
+            )
+        }
         saveState.value = state
         if (state == VacancySaveState.Idle) {
             snapshot.onSaved(createdVacancy?.id)

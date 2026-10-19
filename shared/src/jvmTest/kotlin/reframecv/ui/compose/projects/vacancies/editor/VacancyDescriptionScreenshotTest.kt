@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performMouseInput
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextReplacement
 import kotlin.test.Test
 import reframecv.testing.GoldenScreenshotTest
@@ -17,7 +18,7 @@ class VacancyDescriptionScreenshotTest : GoldenScreenshotTest() {
         onNodeWithTag("vacancy.description").performTextReplacement(
             "Build a Kotlin application.\nWork with the team on architecture and delivery.",
         )
-        onNodeWithTag("vacancy.description.resize").performMouseInput {
+        onNodeWithTag("vacancy.description.resize").performScrollTo().performMouseInput {
             moveTo(center)
             press()
             moveBy(Offset(0f, 20f))

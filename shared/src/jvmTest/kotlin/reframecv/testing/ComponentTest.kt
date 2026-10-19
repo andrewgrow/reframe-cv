@@ -28,5 +28,6 @@ abstract class ComponentTest {
         if (::lifecycle.isInitialized) {
             lifecycle.destroy()
         }
+        dependencies.close()
     }
 }

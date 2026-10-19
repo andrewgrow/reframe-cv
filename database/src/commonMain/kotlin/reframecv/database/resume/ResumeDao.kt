@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.screenstate.ScreenType
 import reframecv.repository.MainResumeChange
 
 /** Saves, loads, and searches resumes in the local database. */
@@ -98,6 +99,7 @@ interface ResumeDao :
         clearSourceResume(id, updatedAt)
         updateLinkedVacancyTimestamps(id, updatedAt)
         val changed = deleteEntity(id)
+        if (changed > 0) clearScreenStates(ScreenType.Resume.name, id)
         if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
         return changed
     }

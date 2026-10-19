@@ -25,21 +25,26 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.vacancy_company
+import reframecv.shared.generated.resources.vacancy_job_details
 import reframecv.shared.generated.resources.vacancy_job_title
 import reframecv.shared.generated.resources.vacancy_keywords
 import reframecv.shared.generated.resources.vacancy_keywords_hint
 import reframecv.shared.generated.resources.vacancy_name
 import reframecv.shared.generated.resources.vacancy_save_error
 import reframecv.shared.generated.resources.vacancy_url
+import reframecv.ui.components.common.section.CollapsibleSectionComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDraft
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
+import reframecv.ui.compose.common.CollapsibleSection
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.theme.ReframeTheme
 
+@Suppress("LongParameterList")
 @Composable
 internal fun VacancyEditorFields(
     draft: VacancyDraft,
@@ -48,6 +53,7 @@ internal fun VacancyEditorFields(
     onSave: () -> Unit,
     enabled: Boolean,
     nameError: String?,
+    details: CollapsibleSectionComponent,
     attachment: @Composable () -> Unit,
 ) {
     val nameFocus = remember { FocusRequester() }
@@ -71,7 +77,8 @@ internal fun VacancyEditorFields(
             onChange(draft.copy(name = it))
         }
         VacancyPostingFields(draft, onChange, enabled, submit)
-        VacancyDetailFields(draft, onChange, enabled, submit, scroll, viewport)
+        VacancyJobDetails(draft, onChange, enabled, scroll, viewport, details)
+        VacancyDetailFields(draft, onChange, enabled, submit)
         SelectableText(
             stringResource(Res.string.vacancy_keywords_hint),
             color = ReframeTheme.colorScheme.hint,
@@ -119,22 +126,39 @@ private fun VacancyPostingFields(
 }
 
 @Composable
+private fun VacancyJobDetails(
+    draft: VacancyDraft,
+    onChange: (VacancyDraft) -> Unit,
+    enabled: Boolean,
+    scroll: ScrollState,
+    viewport: Rect,
+    component: CollapsibleSectionComponent,
+) {
+    val state by component.state.subscribeAsState()
+    CollapsibleSection(
+        title = stringResource(Res.string.vacancy_job_details),
+        state = state,
+        toggle = component::onToggle,
+        tag = "vacancy.details",
+    ) {
+        VacancyDescriptionField(
+            value = draft.description,
+            onValueChange = { onChange(draft.copy(description = it)) },
+            enabled = enabled,
+            scroll = scroll,
+            viewport = viewport,
+        )
+        VacancyListFields(draft, onChange, enabled, scroll, viewport)
+    }
+}
+
+@Composable
 private fun VacancyDetailFields(
     draft: VacancyDraft,
     onChange: (VacancyDraft) -> Unit,
     enabled: Boolean,
     submit: () -> Unit,
-    scroll: ScrollState,
-    viewport: Rect,
 ) {
-    VacancyDescriptionField(
-        value = draft.description,
-        onValueChange = { onChange(draft.copy(description = it)) },
-        enabled = enabled,
-        scroll = scroll,
-        viewport = viewport,
-    )
-    VacancyListFields(draft, onChange, enabled, scroll, viewport)
     VacancyField(
         draft.url,
         stringResource(Res.string.vacancy_url),

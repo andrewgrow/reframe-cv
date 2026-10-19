@@ -83,6 +83,28 @@ class VacancyEditorScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
+    fun collapsedJobDetailsMatchReference() = runDesktopComposeUiTest {
+        val component = TestVacancyEditorComponent()
+        component.draft.value =
+            component.draft.value.copy(name = "Android shortlist", jobTitle = "Android Developer")
+        component.details.onToggle()
+        setAndCaptureGolden(this, captureTag = VACANCY_EDITOR_TAG) {
+            VacancyEditorContent(component)
+        }
+    }
+
+    @Test
+    fun collapsedJobDetailsInLightThemeMatchReference() = runDesktopComposeUiTest {
+        val component = TestVacancyEditorComponent()
+        component.draft.value =
+            component.draft.value.copy(name = "Android shortlist", jobTitle = "Android Developer")
+        component.details.onToggle()
+        setAndCaptureGolden(this, captureTag = VACANCY_EDITOR_TAG, themeMode = ThemeMode.Light) {
+            VacancyEditorContent(component)
+        }
+    }
+
+    @Test
     fun failedSaveMatchesReference() = runDesktopComposeUiTest {
         val component = TestVacancyEditorComponent()
         setGoldenContent(this) { VacancyEditorContent(component) }

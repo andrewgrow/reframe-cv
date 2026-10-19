@@ -79,6 +79,33 @@ operation. See the README for reset and backup instructions.
   and vacancy references; letter deletion clears vacancy references. Independent content
   in surviving documents is retained.
 
+## Persisted screen state
+
+`ScreenState` stores arbitrary JSON view-state fields in one `screen_states` row per
+screen and document. Standalone pages such as Settings have no document ID. Document
+screens also retain their project ID for ownership checks and cascading cleanup.
+The vacancy screen currently understands `job_details: "collapsed" | "expanded"`.
+Screens interpret their own fields: unknown keys are preserved, invalid field values
+fall back independently, and malformed or non-object JSON loads as an empty state.
+Updating a field merges it into the existing object atomically, including unknown
+nested objects, arrays, numbers, and booleans. There is no separate row per section.
+
+`ScreenStateUseCases` serializes reads and patches for the application lifetime.
+Reopening a page waits behind pending writes; navigation does not cancel them.
+Application dependencies flush the queue before closing the database. Storage failures
+are logged and do not affect document saving. New unsaved documents keep local state;
+a successful first Save binds that state to the new document ID.
+
+Project deletion cascades its screen states; vacancy, resume, and letter deletion
+clear their own entries in the same transaction. Late writes for missing documents
+are ignored. Screen state is excluded from document import, export, and recognition.
+
+Vacancy Description, Responsibilities, Requirements, and Nice to have are grouped in
+Job details. New documents default to expanded. The shared CollapsibleSection animates
+visibility and retains field resize state across collapse and expansion. Restored state
+loads before showing the contents to avoid briefly exposing a collapsed section.
+The restored state appears without animation; only user toggles animate.
+
 ## Resume document contract
 
 `Resume.content` is typed `ResumeContent`, stored as versioned JSON. It contains profile,

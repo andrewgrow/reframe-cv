@@ -167,6 +167,7 @@ private fun ColumnScope.VacancyEditorBody(
             save,
             enabled,
             vacancyNameError(snapshot.selected != null, draft.name),
+            component.details,
         ) {
             VacancySnapshotContent(
                 component.snapshot,

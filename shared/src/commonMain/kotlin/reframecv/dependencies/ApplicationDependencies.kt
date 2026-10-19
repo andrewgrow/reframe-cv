@@ -24,6 +24,7 @@ import reframecv.usecase.ProviderSettingsUseCases
 import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
+import reframecv.usecase.ScreenStateUseCases
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
@@ -41,6 +42,7 @@ interface ApplicationDependencies {
     val vacancyImporter: VacancyImporter
     val resumeImporter: ResumeImporter
     val resumePhotos: ResumePhotos
+    val screenStateUseCases: ScreenStateUseCases
     val appSettingsRepository: AppSettingsRepository
     val projectsRepository: ProjectsRepository
     val resumesRepository: ResumesRepository

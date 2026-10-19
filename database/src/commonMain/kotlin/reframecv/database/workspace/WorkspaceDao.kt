@@ -1,9 +1,10 @@
 package reframecv.database.workspace
 
 import androidx.room3.Query
+import reframecv.database.screenstate.ScreenStateCleanupQueries
 
 /** Provides shared database operations for workspace modes and document references. */
-interface WorkspaceDao {
+interface WorkspaceDao : ScreenStateCleanupQueries {
     @Query(
         "UPDATE projects SET mode = 'Workspace', updated_at = :updatedAt " +
             "WHERE id = :id AND mode IN ('Unconfigured', 'Workspace') " +
