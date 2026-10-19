@@ -1,6 +1,7 @@
 package reframecv.repository
 
 import kotlinx.coroutines.flow.Flow
+import reframecv.assessment.ResumeAssessment
 import reframecv.attachments.SnapshotChange
 import reframecv.attachments.SnapshotInfo
 import reframecv.domain.models.vacancy.Vacancy
@@ -25,5 +26,11 @@ interface VacanciesRepository {
     }
     suspend fun snapshot(vacancyId: Long): SnapshotInfo? = null
     suspend fun openSnapshot(vacancyId: Long) = Unit
+    suspend fun saveResumeAssessment(
+        vacancyId: Long,
+        projectId: Long,
+        resumeId: Long,
+        assessment: ResumeAssessment,
+    )
     suspend fun delete(id: Long)
 }

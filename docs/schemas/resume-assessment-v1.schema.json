@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:resume-assessment:1",
+  "title": "ResumeAssessmentResult",
+  "description": "Evidence-based resume suitability for a vacancy. This is not a prediction of an ATS or hiring decision.",
+  "type": "object",
+  "properties": {
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    }
+  },
+  "required": [
+    "score",
+    "summary"
+  ],
+  "additionalProperties": false
+}

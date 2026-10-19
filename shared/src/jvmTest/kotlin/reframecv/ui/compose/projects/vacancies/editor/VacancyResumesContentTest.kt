@@ -18,6 +18,8 @@ import androidx.compose.ui.test.v2.runDesktopComposeUiTest
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import reframecv.assessment.ResumeAssessment
+import reframecv.assessment.ResumeAssessmentResult
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.ui.components.projects.vacancies.editor.TestVacancyEditorComponent
@@ -27,6 +29,22 @@ import reframecv.ui.theme.ReframeTheme
 @OptIn(ExperimentalTestApi::class)
 class VacancyResumesContentTest {
     @Test
+    fun clickingAssessedScoreOpensItsResult() = runDesktopComposeUiTest {
+        val assessment =
+            ResumeAssessment(
+                ResumeAssessmentResult(82, "Relevant experience."),
+                1,
+                0,
+                "{}",
+                "Work",
+                "model",
+            )
+        val editor = showResumes(listOf(VacancyResume(1, 82, assessment)))
+        onNodeWithTag("vacancy.resumes.score.1").performClick()
+        assertEquals(1L, editor.assessment.selection.value.resumeId)
+    }
+
+    @Test
     fun filtersNamesAndKeywordsAndPreventsDuplicates() = runDesktopComposeUiTest {
         val editor = showResumes()
         onNodeWithTag("vacancy.resumes.select").performClick().performTextReplacement("KoTL")
@@ -35,6 +53,7 @@ class VacancyResumesContentTest {
         assertEquals(listOf(VacancyResume(1)), editor.draft.value.resumes)
         onNodeWithTag("vacancy.resumes.score.1").assertExists()
         onNodeWithTag("vacancy.resumes.assess.1").performClick()
+        assertEquals(1L, editor.assessment.requestedId)
         assertEquals(listOf(VacancyResume(1)), editor.draft.value.resumes)
         onNodeWithTag("vacancy.resumes.select").performClick().performTextReplacement("CV")
         onNodeWithTag("vacancy.resumes.option.1").assertDoesNotExist()
@@ -89,6 +108,7 @@ class VacancyResumesContentTest {
                         state,
                         editor.resumes,
                         state.unlinkId == null,
+                        editor.assessment,
                     )
                     VacancyResumeUnlinkConfirmation(state, editor.resumes)
                 }

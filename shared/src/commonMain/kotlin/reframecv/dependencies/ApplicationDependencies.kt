@@ -17,6 +17,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
+import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
 import reframecv.usecase.PromptsUseCases
@@ -55,6 +56,7 @@ interface ApplicationDependencies {
     val vacanciesUseCases: VacanciesUseCases
     val observeDashboard: ObserveDashboardUseCase
     val recognizeVacancy: RecognizeVacancyUseCase
+    val assessResume: AssessResumeUseCase
     val resumeFilesUseCases: ResumeFilesUseCases
     val vacancyFilesUseCases: VacancyFilesUseCases
     fun close()

@@ -23,6 +23,7 @@ interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
     val details: CollapsibleSectionComponent
+    val assessment: VacancyResumeAssessmentComponent
     val resumes: VacancyResumesComponent
     val snapshot: VacancySnapshotComponent
     val recognition: VacancyRecognitionComponent
@@ -41,6 +42,7 @@ interface VacancyEditorComponent {
             deleteState.value == VacancyDeleteState.Deleting ||
             exportComponent.state.value == VacancyExportState.Exporting ||
             importComponent.state.value == VacancyImportState.Importing ||
+            assessment.dialog.value.component != null ||
             recognition.dialog.value.component != null ||
             recognition.state.value == VacancyRecognitionState.Processing
     fun onSave(draft: VacancyDraft)
@@ -67,7 +69,9 @@ class DefaultVacancyEditorComponent(
     override val initialVacancy: Vacancy? get() = persistedVacancy
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
-    private val modalOpen get() = exportVisible.value || resumes.state.value.unlinkId != null
+    private val modalOpen: Boolean get() = exportVisible.value ||
+        resumes.state.value.unlinkId != null ||
+        assessment.selection.value.resumeId != null
     override val resumes: DefaultVacancyResumesComponent = DefaultVacancyResumesComponent(
         componentContext,
         projectId,
@@ -77,6 +81,16 @@ class DefaultVacancyEditorComponent(
             !isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle
         },
     )
+    override val assessment: VacancyResumeAssessmentComponent =
+        DefaultVacancyResumeAssessmentComponent(
+            componentContext,
+            vacancy = {
+                draft.value.applyTo(this.initialVacancy ?: draft.value.toVacancy(projectId))
+            },
+            resumes = { resumes.state.value.available },
+            changed = { draft.value = draft.value.copy(resumes = it) },
+            canEdit = { !isBusy && !modalOpen && deleteState.value == VacancyDeleteState.Idle },
+        )
     override val snapshot: DefaultVacancySnapshotComponent = DefaultVacancySnapshotComponent(
         componentContext,
         initialVacancy?.id,
@@ -205,22 +219,24 @@ class DefaultVacancyEditorComponent(
     }
 
     override fun onClose() {
-        if (resumes.state.value.unlinkId != null) {
-            resumes.onCancelUnlink()
-            return
-        }
-        if (recognition.dialog.value.component != null) {
-            recognition.onCancel()
-            return
-        }
-        if (!isBusy) {
-            if (exportVisible.value) {
-                onCloseExport()
-            } else if (deleteState.value != VacancyDeleteState.Idle) {
-                deleteState.value = VacancyDeleteState.Idle
-            } else {
-                importComponent.onClose()
-                close()
+        when {
+            assessment.selection.value.resumeId != null -> assessment.onCloseResult()
+
+            assessment.dialog.value.component != null -> assessment.onCancel()
+
+            resumes.state.value.unlinkId != null -> resumes.onCancelUnlink()
+
+            recognition.dialog.value.component != null -> recognition.onCancel()
+
+            !isBusy -> {
+                if (exportVisible.value) {
+                    onCloseExport()
+                } else if (deleteState.value != VacancyDeleteState.Idle) {
+                    deleteState.value = VacancyDeleteState.Idle
+                } else {
+                    importComponent.onClose()
+                    close()
+                }
             }
         }
     }

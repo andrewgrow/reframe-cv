@@ -29,6 +29,8 @@ import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
 import reframecv.providers.RemoteProviderAccountRepository
 import reframecv.providers.RemoteProviderModelsRepository
+import reframecv.providers.assessment.RemoteResumeAssessmentRepository
+import reframecv.providers.assessment.resumeAssessmentSchema
 import reframecv.providers.openrouter.OpenRouterClient
 import reframecv.providers.openrouter.OpenRouterSetupClient
 import reframecv.providers.recognition.RemoteVacancyRecognitionRepository
@@ -51,6 +53,7 @@ import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
+import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
 import reframecv.usecase.PromptsUseCases
@@ -212,6 +215,20 @@ class DefaultApplicationDependencies(
         get() {
             check(!closed) { "Application dependencies are closed" }
             return recognizeVacancyInstance
+        }
+
+    private val assessResumeInstance by lazy {
+        AssessResumeUseCase(
+            RemoteResumeAssessmentRepository(provider.value, resumeAssessmentSchema()),
+            providerSettingsUseCases,
+            vacanciesRepository,
+        )
+    }
+
+    override val assessResume: AssessResumeUseCase
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return assessResumeInstance
         }
 
     private val resumeFilesUseCasesInstance by lazy {

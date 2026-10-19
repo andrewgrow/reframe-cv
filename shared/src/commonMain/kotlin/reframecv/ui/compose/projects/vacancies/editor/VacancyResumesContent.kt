@@ -1,5 +1,6 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,6 +15,7 @@ import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.vacancy.VacancyResume
@@ -33,6 +35,7 @@ import reframecv.ui.components.common.confirmation.ConfirmationDialogAction
 import reframecv.ui.components.common.confirmation.ConfirmationDialogContent
 import reframecv.ui.components.common.confirmation.ConfirmationDialogState
 import reframecv.ui.components.common.confirmation.ConfirmationDialogTone
+import reframecv.ui.components.projects.vacancies.editor.VacancyResumeAssessmentComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesState
 import reframecv.ui.compose.common.ConfirmationDialog
@@ -45,6 +48,7 @@ internal fun VacancyResumesContent(
     state: VacancyResumesState,
     component: VacancyResumesComponent,
     enabled: Boolean,
+    assessment: VacancyResumeAssessmentComponent? = null,
 ) {
     Column(
         Modifier.fillMaxWidth().testTag("vacancy.resumes"),
@@ -59,7 +63,9 @@ internal fun VacancyResumesContent(
             key(link.resumeId) {
                 val name = state.available.find { it.id == link.resumeId }?.name
                     ?: stringResource(Res.string.vacancy_resume_missing, link.resumeId)
-                VacancyResumeRow(link, name, enabled) { component.onUnlink(link.resumeId) }
+                VacancyResumeRow(link, name, enabled, assessment) {
+                    component.onUnlink(link.resumeId)
+                }
             }
         }
         VacancyResumePicker(
@@ -87,6 +93,7 @@ private fun VacancyResumeRow(
     link: VacancyResume,
     name: String,
     enabled: Boolean,
+    assessment: VacancyResumeAssessmentComponent?,
     unlink: () -> Unit,
 ) {
     Row(
@@ -105,15 +112,24 @@ private fun VacancyResumeRow(
         )
         Text(
             stringResource(Res.string.vacancy_resume_ats, link.atsScore),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = if (link.assessment !=
+                null
+            ) {
+                MaterialTheme.colorScheme.primary
+            } else {
+                MaterialTheme.colorScheme.onSurface
+            },
             textAlign = TextAlign.Center,
             maxLines = 1,
             modifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyAtsScoreWidth)
-                .testTag("vacancy.resumes.score.${link.resumeId}"),
+                .testTag("vacancy.resumes.score.${link.resumeId}")
+                .clickable(enabled = enabled && link.assessment != null, role = Role.Button) {
+                    assessment?.onView(link.resumeId)
+                },
         )
         FillButton(
             stringResource(Res.string.vacancy_resume_assess),
-            {},
+            { assessment?.onAssess(link.resumeId) },
             Modifier.testTag("vacancy.resumes.assess.${link.resumeId}"),
             enabled = enabled,
             outlineState = FillButton.OutlineState.Visible,

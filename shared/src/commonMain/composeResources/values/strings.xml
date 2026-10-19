@@ -1,4 +1,7 @@
 <resources>
+    <string name="resume_assessment_warning">Sends the resume and current vacancy as JSON to the selected provider. Photos and source files are not sent. The result estimates documented fit, not an ATS pass probability. For an existing vacancy, the assessed resume link and result are saved immediately. For a new vacancy, use Save to keep them.</string>
+    <string name="resume_assessment_title">Resume assessment</string>
+    <string name="resume_assessment_stale">The resume or vacancy has changed since this assessment. Reassess to evaluate the current content.</string>
     <string name="navigation_hide">Collapse navigation</string>
     <string name="navigation_show">Expand navigation</string>
     <string name="vacancy_job_details">Job details</string>
@@ -61,7 +64,7 @@
     <string name="vacancy_resume_unlink_title">Unlink resume</string>
     <string name="vacancy_resume_unlink_question">Are you sure you want to unlink this resume? The resume itself will be kept. Save the vacancy to apply this change.</string>
     <string name="vacancy_resume_assess">Assess</string>
-    <string name="vacancy_resume_ats">ATS: %1$d%</string>
+    <string name="vacancy_resume_ats">Match: %1$d%</string>
     <string name="vacancy_resume_missing">Resume #%1$d (unavailable)</string>
     <string name="vacancy_list_hint">One item per line</string>
     <string name="vacancy_resize_list">Resize %1$s</string>
@@ -337,7 +340,7 @@
     <string name="prompts_error_load">Could not load prompts. Please try again.</string>
     <string name="prompts_saved">Prompt successfully saved.</string>
     <string name="ai_request_title">AI request</string>
-    <string name="ai_request_source">File to send: %1$s</string>
+    <string name="ai_request_source">Data to send: %1$s</string>
     <string name="ai_request_provider">Provider connection</string>
     <string name="ai_request_prompt">Prompt</string>
     <string name="ai_request_model">Model: %1$s</string>

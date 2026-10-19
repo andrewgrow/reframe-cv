@@ -35,7 +35,7 @@ class VacancyRecognitionContentTest {
         onNodeWithText("Save").assertIsNotEnabled()
         onNodeWithText("Parse PDF").performScrollTo().assertIsEnabled().performClick()
         onNodeWithTag("ai.request.dialog").assertExists()
-        onNodeWithText("File to send: job.pdf").assertExists()
+        onNodeWithText("Data to send: job.pdf").assertExists()
         onNodeWithTag("ai.request.run").assertIsNotEnabled()
     }
 

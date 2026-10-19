@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "9f60648383cf5a63e8cecba1d145088f",
+    "identityHash": "07f88e7f0f23c2ff458d5ce5d4cfcd63",
     "entities": [
       {
         "tableName": "screen_states",
@@ -932,7 +932,7 @@
       },
       {
         "tableName": "vacancies_resumes",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vacancy_id` INTEGER NOT NULL, `resume_id` INTEGER NOT NULL, `ats_score` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`vacancy_id`, `resume_id`), FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vacancy_id` INTEGER NOT NULL, `resume_id` INTEGER NOT NULL, `ats_score` INTEGER NOT NULL, `position` INTEGER NOT NULL, `assessment` TEXT, PRIMARY KEY(`vacancy_id`, `resume_id`), FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "vacancyId",
@@ -957,6 +957,11 @@
             "columnName": "position",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "assessment",
+            "columnName": "assessment",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1005,7 +1010,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9f60648383cf5a63e8cecba1d145088f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07f88e7f0f23c2ff458d5ce5d4cfcd63')"
     ]
   }
 }

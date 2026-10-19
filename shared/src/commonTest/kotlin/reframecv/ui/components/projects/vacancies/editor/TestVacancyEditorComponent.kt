@@ -13,6 +13,7 @@ class TestVacancyEditorComponent(
     private val delete: () -> Unit = {},
     imported: () -> Unit = {},
 ) : VacancyEditorComponent {
+    override val assessment = TestVacancyResumeAssessmentComponent()
     override val details = object : CollapsibleSectionComponent {
         override val state = MutableValue(CollapsibleSectionState())
         override fun onToggle() {

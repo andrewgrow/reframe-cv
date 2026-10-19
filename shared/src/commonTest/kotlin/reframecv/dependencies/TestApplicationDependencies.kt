@@ -3,6 +3,8 @@ package reframecv.dependencies
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
+import reframecv.assessment.ResumeAssessmentOutcome
+import reframecv.assessment.ResumeAssessmentRepository
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
 import reframecv.domain.models.project.Project
@@ -37,6 +39,7 @@ import reframecv.repository.TestResumesRepository
 import reframecv.repository.TestScreenStatesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
+import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
 import reframecv.usecase.PromptsUseCases
@@ -155,6 +158,19 @@ class TestApplicationDependencies : ApplicationDependencies {
         vacanciesRepository,
         coverLettersRepository,
     )
+    val assessmentInputs = mutableListOf<Pair<String, String>>()
+    var assessmentResponse: suspend () -> ResumeAssessmentOutcome = {
+        ResumeAssessmentOutcome.Failed("Assessment unavailable")
+    }
+    override val assessResume get() = AssessResumeUseCase(
+        ResumeAssessmentRepository { resume, vacancy, _, _ ->
+            assessmentInputs += resume to vacancy
+            assessmentResponse()
+        },
+        providerSettingsUseCases,
+        vacanciesRepository,
+    )
+
     override val recognizeVacancy get() = RecognizeVacancyUseCase(
         vacancyDocumentReader,
         vacancyRecognitionRepository,

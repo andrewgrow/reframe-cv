@@ -4,6 +4,7 @@ import androidx.room3.ColumnInfo
 import androidx.room3.Entity
 import androidx.room3.ForeignKey
 import androidx.room3.Index
+import reframecv.assessment.ResumeAssessmentJson
 import reframecv.database.resume.ResumeEntity
 import reframecv.domain.models.vacancy.VacancyResume
 
@@ -32,6 +33,14 @@ data class VacancyResumeEntity(
     @ColumnInfo(name = "resume_id") val resumeId: Long,
     @ColumnInfo(name = "ats_score") val atsScore: Int = 0,
     val position: Int = 0,
+    val assessment: String? = null,
 ) {
-    fun toDomainModel() = VacancyResume(resumeId, atsScore)
+    fun toDomainModel() = VacancyResume(
+        resumeId,
+        atsScore,
+        assessment?.let {
+            runCatching { ResumeAssessmentJson.decode(it) }
+                .getOrNull()?.takeIf { value -> value.result.score == atsScore }
+        },
+    )
 }

@@ -3,6 +3,7 @@ package reframecv.repository
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import reframecv.assessment.ResumeAssessment
 import reframecv.attachments.SnapshotChange
 import reframecv.database.vacancy.VacancyDao
 import reframecv.domain.models.vacancy.Vacancy
@@ -54,6 +55,13 @@ class LocalVacanciesRepository(
             dao.update(updated)
         }
     }
+
+    override suspend fun saveResumeAssessment(
+        vacancyId: Long,
+        projectId: Long,
+        resumeId: Long,
+        assessment: ResumeAssessment,
+    ) = dao.saveResumeAssessment(vacancyId, projectId, resumeId, assessment, nowMillis())
 
     override suspend fun delete(id: Long) {
         if (snapshots != null) {

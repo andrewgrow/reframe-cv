@@ -67,8 +67,8 @@ operation. See the README for reset and backup instructions.
 - `Project.mainResumeId` selects at most one resume from that workspace.
   `Resume.sourceResumeId` records provenance; adaptations are independent documents.
 - A vacancy can link multiple resumes, one cover letter, and one immutable VacancyAttachment.
-  `vacancies_resumes` stores ordered, unique vacancy–resume pairs and an integer ATS score
-  from 0 to 100 per pair (default 0). Resume and vacancy deletion cascade their links;
+  `vacancies_resumes` stores ordered, unique vacancy–resume pairs, a match score from
+  0 to 100 (default 0), and optional assessment JSON. Resume and vacancy deletion cascade their links;
   unlinking keeps the resume itself. Document and link changes share a save transaction.
 - DAO operations validate existence and same-project document relationships.
   Main-resume assignment and document writes are atomic.
@@ -213,11 +213,30 @@ contract; local file paths and application IDs are not part of it.
 Below source recognition, the vacancy editor lists linked resumes and one empty picker.
 The picker searches current-project resumes by partial, case-insensitive matches in
 names and keywords, excluding already linked resumes. Choices are observed live and
-load failures expose Retry. Each linked row has Unlink, its ATS percentage, and Assess.
-Unlink uses the shared confirmation dialog without typed confirmation. Changes remain
-in the vacancy draft until Save; closing the page discards them. Assess is a UI placeholder
-and does not send an AI request or change the score. Recognition and file import preserve
-these local links; portable JSON does not include links or ATS scores.
+load failures expose Retry. Each linked row has Unlink, its match percentage, and Assess.
+Unlink uses the shared confirmation dialog without typed confirmation. Ordinary link changes
+remain in the vacancy draft until Save. Recognition and file import preserve these links;
+portable JSON does not include links or assessments.
+
+Assess opens the shared AI request dialog with active providers and vacancy/general prompts.
+The provider receives the same versioned JSON content used by resume and vacancy exports as
+two named text documents, never PDFs, attachments, photos, local paths, or persistence IDs.
+The response contract is [resume-assessment-v1](schemas/resume-assessment-v1.schema.json):
+only an integer `score` (0–100) and a nonblank `summary`. This is documented content fit,
+not a prediction of an employer's ATS or hiring decision. Invalid output stays in the dialog
+as an actionable failure; closing it cancels work and late responses are discarded.
+
+For existing vacancies, the assessment use case atomically upserts only the assessed link
+and result immediately, preserving other stored links and vacancy fields. It can attach a
+resume linked only in the current draft. An assessment of a new vacancy stays in its draft
+until Save. Save always writes the complete current draft again. Persistence failures keep
+the request dialog open and do not apply a false success to the draft.
+
+The saved JSON includes result, timestamp, provider/model, resume update timestamp, and the
+exact portable vacancy JSON used for assessment. Clicking an assessed score reopens its
+summary; a changed resume timestamp or vacancy JSON shows a stale-result warning. Reassessment
+replaces only that link's result. Cascade deletion removes the assessment with its link.
+No default prompt is seeded; users can copy the assessment example from prompt_examples.md.
 
 ## Vacancy JSON export
 

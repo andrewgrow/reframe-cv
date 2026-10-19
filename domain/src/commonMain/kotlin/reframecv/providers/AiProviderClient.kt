@@ -5,12 +5,16 @@ import reframecv.domain.models.providers.ProviderConnection
 /** Supplies an original document without exposing device paths to an AI provider. */
 class AiDocument(val fileName: String, val mediaType: String, val bytes: ByteArray)
 
+/** Supplies a named JSON document as text rather than an uploaded file. */
+data class AiTextDocument(val name: String, val content: String)
+
 /** Describes a structured generation task independently of a provider's request format. */
 data class AiRequest(
     val instruction: String,
     val responseSchema: String,
     val documents: List<AiDocument>,
     val connection: ProviderConnection,
+    val textDocuments: List<AiTextDocument> = emptyList(),
 )
 
 /** Classifies provider failures without exposing HTTP or SDK types to application code. */

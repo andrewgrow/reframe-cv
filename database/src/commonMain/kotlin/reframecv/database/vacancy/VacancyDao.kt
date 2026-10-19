@@ -3,12 +3,15 @@ package reframecv.database.vacancy
 import androidx.room3.Dao
 import androidx.room3.Query
 import androidx.room3.Transaction
+import reframecv.assessment.ResumeAssessment
+import reframecv.assessment.ResumeAssessmentJson
 import reframecv.attachments.SnapshotChange
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.screenstate.ScreenType
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 
 /** Saves, loads, searches, and permanently deletes vacancies in the local database. */
 @Dao
@@ -79,6 +82,28 @@ interface VacancyDao :
     }
 
     @Transaction
+    suspend fun saveResumeAssessment(
+        vacancyId: Long,
+        projectId: Long,
+        resumeId: Long,
+        assessment: ResumeAssessment,
+        updatedAt: Long,
+    ) {
+        val stored = checkNotNull(findById(vacancyId)) { "Vacancy no longer exists" }
+        require(stored.entity.projectId == projectId)
+        requireActiveResume(resumeId, projectId)
+        val record = stored.toDomainModel()
+        val link = VacancyResume(resumeId, assessment.result.score, assessment)
+        val links = if (record.resumes.any { it.resumeId == resumeId }) {
+            record.resumes.map { if (it.resumeId == resumeId) link else it }
+        } else {
+            record.resumes + link
+        }
+        replaceResumes(vacancyId, record.copy(resumes = links))
+        check(updateEntity(stored.entity.copy(updatedAt = updatedAt)) == 1)
+    }
+
+    @Transaction
     suspend fun replaceResumes(id: Long, record: Vacancy) {
         require(record.resumes.map { it.resumeId }.distinct().size == record.resumes.size) {
             "A resume can only be linked once"
@@ -87,7 +112,13 @@ interface VacancyDao :
         clearResumes(id)
         insertResumes(
             record.resumes.mapIndexed { position, link ->
-                VacancyResumeEntity(id, link.resumeId, link.atsScore, position)
+                VacancyResumeEntity(
+                    id,
+                    link.resumeId,
+                    link.atsScore,
+                    position,
+                    link.assessment?.let(ResumeAssessmentJson::encode),
+                )
             },
         )
     }

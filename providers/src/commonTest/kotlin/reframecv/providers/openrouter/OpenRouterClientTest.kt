@@ -25,6 +25,7 @@ import reframecv.providers.AiDocument
 import reframecv.providers.AiProviderError
 import reframecv.providers.AiRequest
 import reframecv.providers.AiResponse
+import reframecv.providers.AiTextDocument
 
 class OpenRouterClientTest {
     private val connection = ProviderConnection(
@@ -41,6 +42,47 @@ class OpenRouterClientTest {
         listOf(AiDocument("job.pdf", "application/pdf", "%PDF".encodeToByteArray())),
         connection,
     )
+
+    @Test
+    fun sendsJsonDocumentsAsTextWithoutUsingTheFileUploadFormat() = runBlocking {
+        val client = OpenRouterClient(
+            createNetworkClient(
+                MockEngine { http ->
+                    val body = Json.parseToJsonElement((http.body as TextContent).text).jsonObject
+                    val parts = body.getValue(
+                        "messages",
+                    ).jsonArray.first().jsonObject.getValue("content").jsonArray
+                    assertEquals(
+                        listOf("text", "text", "text"),
+                        parts.map {
+                            it.jsonObject.getValue("type").jsonPrimitive.content
+                        },
+                    )
+                    assertEquals(
+                        "resume.json\n{\"resume\":1}",
+                        parts[1].jsonObject.getValue("text").jsonPrimitive.content,
+                    )
+                    assertEquals(
+                        "vacancy.json\n{\"vacancy\":2}",
+                        parts[2].jsonObject.getValue("text").jsonPrimitive.content,
+                    )
+                    respond("""{"choices":[{"finish_reason":"stop","message":{"content":"{}"}}]}""")
+                },
+            ),
+        )
+        try {
+            val request = request().copy(
+                documents = emptyList(),
+                textDocuments = listOf(
+                    AiTextDocument("resume.json", "{\"resume\":1}"),
+                    AiTextDocument("vacancy.json", "{\"vacancy\":2}"),
+                ),
+            )
+            assertEquals(AiResponse.Generated("{}"), client.execute(request))
+        } finally {
+            client.close()
+        }
+    }
 
     @Test
     fun sendsSelectedModelPromptPdfAndStrictSchemaAndLogsWithoutCredentialsOrFileBytes() =

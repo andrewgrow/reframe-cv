@@ -108,6 +108,12 @@ private fun requestBody(request: AiRequest) = buildJsonObject {
                     put("type", "text")
                     put("text", request.instruction)
                 }
+                request.textDocuments.forEach { document ->
+                    addJsonObject {
+                        put("type", "text")
+                        put("text", "${document.name}\n${document.content}")
+                    }
+                }
                 request.documents.forEach { document ->
                     addJsonObject {
                         put("type", "file")

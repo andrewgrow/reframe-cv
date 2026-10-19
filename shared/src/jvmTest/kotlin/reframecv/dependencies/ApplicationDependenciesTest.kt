@@ -141,6 +141,7 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.vacanciesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.observeDashboard }
         assertFailsWith<IllegalStateException> { dependencies.recognizeVacancy }
+        assertFailsWith<IllegalStateException> { dependencies.assessResume }
         assertFailsWith<IllegalStateException> { dependencies.resumeFilesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.vacancyFilesUseCases }
         val reopened =
@@ -176,6 +177,7 @@ class ApplicationDependenciesTest {
         assertFailsWith<IllegalStateException> { dependencies.vacanciesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.observeDashboard }
         assertFailsWith<IllegalStateException> { dependencies.recognizeVacancy }
+        assertFailsWith<IllegalStateException> { dependencies.assessResume }
         assertFailsWith<IllegalStateException> { dependencies.resumeFilesUseCases }
         assertFailsWith<IllegalStateException> { dependencies.vacancyFilesUseCases }
     }
@@ -186,6 +188,7 @@ class ApplicationDependenciesTest {
         assertSame(dependencies.vacanciesUseCases, dependencies.vacanciesUseCases)
         assertSame(dependencies.observeDashboard, dependencies.observeDashboard)
         assertSame(dependencies.recognizeVacancy, dependencies.recognizeVacancy)
+        assertSame(dependencies.assessResume, dependencies.assessResume)
         assertSame(dependencies.resumeFilesUseCases, dependencies.resumeFilesUseCases)
         assertSame(dependencies.vacancyFilesUseCases, dependencies.vacancyFilesUseCases)
     }

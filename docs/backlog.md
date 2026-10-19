@@ -7,8 +7,6 @@ belong in the [README](../README.md).
 
 ## Resume adaptations
 
-- [ ] Connect vacancy-specific ATS assessment to the shared AI request dialog.
-
 - [ ] Decide where adaptation starts: a vacancy, the resume list, or both.
 - [ ] Default to the main resume, with an explicit alternative source.
 - [ ] Create an independent document linked by `sourceResumeId`; decide what is copied

@@ -44,6 +44,8 @@ internal const val VACANCY_EDITOR_TAG = "vacancies.editor"
 fun VacancyEditorContent(component: VacancyEditorComponent) {
     val resumes by component.resumes.state.subscribeAsState()
     val aiDialog by component.recognition.dialog.subscribeAsState()
+    val assessmentDialog by component.assessment.dialog.subscribeAsState()
+    val assessmentResult by component.assessment.selection.subscribeAsState()
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
@@ -57,7 +59,8 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
         exportState,
         importState,
         recognitionState,
-        aiDialog.component != null,
+        aiDialog.component != null || assessmentDialog.component != null ||
+            assessmentResult.resumeId != null,
     )
     val confirming = deleteState != VacancyDeleteState.Idle
     val save = { component.onSave(component.draft.value) }
@@ -69,7 +72,8 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                     component::onClose,
                     enabled =
                         (!isBusy || parsing) && !exportVisible && aiDialog.component == null &&
-                            resumes.unlinkId == null,
+                            resumes.unlinkId == null && assessmentDialog.component == null &&
+                            assessmentResult.resumeId == null,
                 ),
         ) {
             VacancyEditorBody(
@@ -90,16 +94,25 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                     component.initialVacancy != null,
             )
         }
-        aiDialog.component?.let {
-            AiRequestDialogContent(
-                it,
-                stringResource(Res.string.vacancy_parse_pdf),
-                stringResource(Res.string.vacancy_parse_replace_warning),
-            )
-        }
-        VacancyResumeUnlinkConfirmation(resumes, component.resumes)
-        if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)
+        VacancyEditorOverlays(component)
     }
+}
+
+@Composable
+private fun VacancyEditorOverlays(component: VacancyEditorComponent) {
+    val resumes by component.resumes.state.subscribeAsState()
+    val aiDialog by component.recognition.dialog.subscribeAsState()
+    val exportVisible by component.exportVisible.subscribeAsState()
+    aiDialog.component?.let {
+        AiRequestDialogContent(
+            it,
+            stringResource(Res.string.vacancy_parse_pdf),
+            stringResource(Res.string.vacancy_parse_replace_warning),
+        )
+    }
+    VacancyAssessmentContent(component)
+    VacancyResumeUnlinkConfirmation(resumes, component.resumes)
+    if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)
 }
 
 @Composable
@@ -179,7 +192,13 @@ private fun ColumnScope.VacancyEditorBody(
                 onRecognize = component::onRecognize,
             )
             Spacer(Modifier.height(ReframeTheme.tokens.spacing.large))
-            VacancyResumesContent(draft.resumes, resumes, component.resumes, enabled)
+            VacancyResumesContent(
+                draft.resumes,
+                resumes,
+                component.resumes,
+                enabled,
+                component.assessment,
+            )
         }
     }
 }
