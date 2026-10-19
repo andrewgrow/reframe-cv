@@ -42,5 +42,6 @@ fun interface ProviderModelsRepository {
 /** Reports setup failures without leaking HTTP requests or credentials into UI/logs. */
 enum class ProviderSetupError { Unauthorized, Unavailable, InvalidResponse, Disabled }
 
-/** Carries only a safe error category across the provider boundary. */
-class ProviderSetupException(val reason: ProviderSetupError) : Exception(reason.name)
+/** Carries an error category and optional credential-redacted provider feedback. */
+class ProviderSetupException(val reason: ProviderSetupError, val providerMessage: String? = null) :
+    Exception(reason.name)

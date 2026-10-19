@@ -55,7 +55,10 @@ internal fun ProviderBalanceContent(state: ProviderEditorState) {
             }
             if (state.balanceError) {
                 Text(
-                    stringResource(Res.string.settings_balance_error),
+                    providerErrorMessage(
+                        stringResource(Res.string.settings_balance_error),
+                        state.balanceErrorDetails,
+                    ),
                     color = ReframeTheme.colorScheme.critical,
                     modifier = Modifier.testTag("settings.balance.error"),
                 )

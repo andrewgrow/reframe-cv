@@ -75,7 +75,10 @@ internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () ->
             }
             if (state.accountError != null) {
                 Text(
-                    stringResource(Res.string.settings_account_error),
+                    providerErrorMessage(
+                        stringResource(Res.string.settings_account_error),
+                        state.accountErrorDetails,
+                    ),
                     color = ReframeTheme.colorScheme.critical,
                     modifier = Modifier.testTag("settings.account.error"),
                 )

@@ -426,6 +426,10 @@ they are not spending limits. Management keys use the same local plain-text stor
 input policy as ordinary keys, are excluded from model string representations, and are redacted
 from HTTP traffic. Blank management keys produce no credit requests. Credit failures preserve
 cached values and show independent feedback without blocking ordinary operations or Save.
+OpenRouter errors expose only the structured `error.message`, with the request key redacted,
+for credit refresh, key information, model discovery, and AI requests. Missing, blank, or
+malformed messages fall back to the existing localized feedback; raw responses and transport
+exception messages are not displayed. Retrying or changing credentials clears stale details.
 
 Account credits share the editor's visible-only refresh schedule but have independent TTLs,
 request jobs, and failures. Disabling, pausing, closing, saving, or changing credentials cancels

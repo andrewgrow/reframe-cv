@@ -11,6 +11,7 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.repository.ProviderSetupException
 import reframecv.shared.nowMillis
 import reframecv.usecase.ProviderSettingsUseCases
 
@@ -98,7 +99,8 @@ internal class ProviderAccountController(
             return
         }
         val version = ++generation
-        state.value = draft.copy(refreshingAccount = true, accountError = null)
+        state.value =
+            draft.copy(refreshingAccount = true, accountError = null, accountErrorDetails = null)
         request = scope.launch {
             try {
                 val info = useCases.refreshAccountInfo(draft.connection)
@@ -111,11 +113,12 @@ internal class ProviderAccountController(
                 }
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Exception) {
+            } catch (error: Exception) {
                 if (generation == version) {
                     state.value = state.value.copy(
                         refreshingAccount = false,
                         accountError = SettingsError.AccountRefresh,
+                        accountErrorDetails = (error as? ProviderSetupException)?.providerMessage,
                     )
                 }
             }

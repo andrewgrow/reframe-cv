@@ -5,6 +5,7 @@ import com.arkivanov.essenty.lifecycle.resume
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
@@ -21,6 +22,8 @@ import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
+import reframecv.repository.ProviderSetupError
+import reframecv.repository.ProviderSetupException
 import reframecv.testing.ComponentTest
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -86,6 +89,41 @@ class ProviderSavingTest : ComponentTest() {
             saved = { saved.complete(Unit) },
             back = {},
         )
+    }
+
+    @Test
+    fun modelDiscoveryShowsProviderMessageAndDoesNotReuseItForUnrelatedFailures() = runBlocking {
+        var expired = true
+        val editor = editor(
+            ProviderModelsRepository { _, _ ->
+                if (expired) {
+                    throw ProviderSetupException(
+                        ProviderSetupError.Unauthorized,
+                        "API key expired.",
+                    )
+                }
+                error("Unsafe transport details with credentials")
+            },
+        )
+        suspend fun load() {
+            val failed = CompletableDeferred<Unit>()
+            runOnUiThread {
+                editor.onLoadModels()
+                editor.state.subscribe { if (it.error != null) failed.complete(Unit) }
+            }
+            withTimeout(5000) { failed.await() }
+        }
+        load()
+        runOnUiThread {
+            assertEquals(SettingsError.Unauthorized, editor.state.value.error)
+            assertEquals("API key expired.", editor.state.value.errorDetails)
+            expired = false
+        }
+        load()
+        runOnUiThread {
+            assertEquals(SettingsError.Unavailable, editor.state.value.error)
+            assertNull(editor.state.value.errorDetails)
+        }
     }
 
     @Test

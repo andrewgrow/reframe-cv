@@ -9,6 +9,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.repository.ProviderSetupException
 import reframecv.usecase.ProviderSettingsUseCases
 
 /** Refreshes optional account credits independently of ordinary key budgets and model discovery. */
@@ -55,7 +56,8 @@ internal class ProviderBalanceController(
             return
         }
         val version = ++generation
-        state.value = draft.copy(refreshingBalance = true, balanceError = false)
+        state.value =
+            draft.copy(refreshingBalance = true, balanceError = false, balanceErrorDetails = null)
         request = scope.launch {
             try {
                 val balance = useCases.refreshCreditBalance(draft.connection)
@@ -68,9 +70,13 @@ internal class ProviderBalanceController(
                 }
             } catch (error: CancellationException) {
                 throw error
-            } catch (_: Exception) {
+            } catch (error: Exception) {
                 if (version == generation) {
-                    state.value = state.value.copy(refreshingBalance = false, balanceError = true)
+                    state.value = state.value.copy(
+                        refreshingBalance = false,
+                        balanceError = true,
+                        balanceErrorDetails = (error as? ProviderSetupException)?.providerMessage,
+                    )
                 }
             }
         }

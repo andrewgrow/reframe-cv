@@ -28,6 +28,8 @@ import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
+import reframecv.repository.ProviderSetupError
+import reframecv.repository.ProviderSetupException
 import reframecv.testing.ComponentTest
 import reframecv.ui.threading.runOnUiThread
 import reframecv.usecase.ProviderSettingsUseCases
@@ -232,7 +234,12 @@ class ProviderAccountControllerTest : ComponentTest() {
         val controller = controller(object : ProviderAccountRepository {
             override suspend fun load(type: ApiProviderType, apiKey: String): ProviderAccountInfo {
                 budgetRequests++
-                if (failBudgets) error("Ordinary key rejected")
+                if (failBudgets) {
+                    throw ProviderSetupException(
+                        ProviderSetupError.Unauthorized,
+                        "API key expired.",
+                    )
+                }
                 return cached.copy(fetchedAt = clock + 1)
             }
             override suspend fun balance(
@@ -240,7 +247,12 @@ class ProviderAccountControllerTest : ComponentTest() {
                 managementApiKey: String,
             ): ProviderCreditBalance {
                 balanceRequests++
-                if (failBalance) error("Management key rejected")
+                if (failBalance) {
+                    throw ProviderSetupException(
+                        ProviderSetupError.Unauthorized,
+                        "Management API key expired.",
+                    )
+                }
                 return ProviderCreditBalance(50.0, 2.0, clock)
             }
         })
@@ -257,6 +269,7 @@ class ProviderAccountControllerTest : ComponentTest() {
         }
         await { it.balanceError && !it.refreshingAccount }
         runOnUiThread {
+            assertEquals("Management API key expired.", state.value.balanceErrorDetails)
             assertEquals(2, budgetRequests)
             assertNull(state.value.accountError)
             failBalance = false
@@ -267,6 +280,8 @@ class ProviderAccountControllerTest : ComponentTest() {
         runOnUiThread {
             assertEquals(48.0, state.value.connection.creditBalance?.remainingUsd)
             assertFalse(state.value.balanceError)
+            assertNull(state.value.balanceErrorDetails)
+            assertEquals("API key expired.", state.value.accountErrorDetails)
             assertEquals(clock + 1, state.value.connection.accountInfo?.fetchedAt)
         }
     }

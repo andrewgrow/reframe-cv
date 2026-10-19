@@ -45,7 +45,7 @@ internal fun ProviderModelsSection(state: ProviderEditorState, component: Provid
         state.error?.takeUnless {
             it == SettingsError.Save || it == SettingsError.Validation
         }?.let {
-            SettingsErrorText(it)
+            SettingsErrorText(it, state.errorDetails)
         }
         ProviderAccountContent(state, component::onRefreshAccount)
     }

@@ -92,6 +92,7 @@ class OpenRouterSetupClient(
                 } else {
                     ProviderSetupError.Unavailable
                 },
+                providerMessage = openRouterErrorMessage(body, key),
             )
         }
         return body

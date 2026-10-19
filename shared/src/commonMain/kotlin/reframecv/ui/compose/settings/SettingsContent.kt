@@ -103,7 +103,7 @@ private fun SettingsNavigationItem(title: String, onClick: () -> Unit, tag: Stri
 }
 
 @Composable
-internal fun SettingsErrorText(error: SettingsError) {
+internal fun SettingsErrorText(error: SettingsError, details: String? = null) {
     val message = when (error) {
         SettingsError.Load -> Res.string.settings_error_load
         SettingsError.Save -> Res.string.settings_error_save
@@ -116,8 +116,11 @@ internal fun SettingsErrorText(error: SettingsError) {
         SettingsError.Disabled -> Res.string.settings_error_disabled
     }
     Text(
-        stringResource(message),
+        providerErrorMessage(stringResource(message), details),
         color = ReframeTheme.colorScheme.critical,
         modifier = Modifier.testTag("settings.error"),
     )
 }
+
+internal fun providerErrorMessage(fallback: String, details: String?): String =
+    details?.takeIf { it.isNotBlank() } ?: fallback

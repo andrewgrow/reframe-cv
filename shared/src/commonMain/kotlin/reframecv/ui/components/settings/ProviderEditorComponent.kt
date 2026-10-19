@@ -44,6 +44,9 @@ data class ProviderEditorState(
     val successfulSaves: Long = 0,
     val refreshingBalance: Boolean = false,
     val balanceError: Boolean = false,
+    val errorDetails: String? = null,
+    val accountErrorDetails: String? = null,
+    val balanceErrorDetails: String? = null,
 ) {
     val busy get() = loading || saving || changingActive
     val valid get() = connection.apiKey.isNotBlank()
@@ -97,6 +100,7 @@ class DefaultProviderEditorComponent(
             state.value = state.value.copy(
                 connection = state.value.connection.copy(name = value),
                 error = null,
+                errorDetails = null,
             )
         }
     }
@@ -110,7 +114,9 @@ class DefaultProviderEditorComponent(
                 ),
                 models = emptyList(),
                 error = null,
+                errorDetails = null,
                 accountError = null,
+                accountErrorDetails = null,
             )
         }
     }
@@ -123,6 +129,7 @@ class DefaultProviderEditorComponent(
                     creditBalance = null,
                 ),
                 balanceError = false,
+                balanceErrorDetails = null,
             )
         }
     }
@@ -138,11 +145,11 @@ class DefaultProviderEditorComponent(
         account.cancel()
         val draft = state.value
         if (draft.connection.apiKey.isBlank()) {
-            state.value = draft.copy(error = SettingsError.Validation)
+            state.value = draft.copy(error = SettingsError.Validation, errorDetails = null)
             return
         }
         val request = ++generation
-        state.value = draft.copy(loading = true, error = null)
+        state.value = draft.copy(loading = true, error = null, errorDetails = null)
         job = scope.launch {
             try {
                 val models = useCases.loadModels(draft.connection)
@@ -151,6 +158,7 @@ class DefaultProviderEditorComponent(
                     state.value = draft.copy(
                         models = models,
                         error = if (models.isEmpty()) SettingsError.NoModels else null,
+                        errorDetails = null,
                     )
                     account.refreshBudgets()
                 }
@@ -167,6 +175,7 @@ class DefaultProviderEditorComponent(
                             ProviderSetupError.Disabled -> SettingsError.Disabled
                             else -> SettingsError.Unavailable
                         },
+                        errorDetails = (error as? ProviderSetupException)?.providerMessage,
                     )
                 }
             }
@@ -180,10 +189,10 @@ class DefaultProviderEditorComponent(
         account.cancel()
         val draft = state.value
         if (!draft.valid) {
-            state.value = draft.copy(error = SettingsError.Validation)
+            state.value = draft.copy(error = SettingsError.Validation, errorDetails = null)
             return
         }
-        state.value = draft.copy(saving = true, error = null)
+        state.value = draft.copy(saving = true, error = null, errorDetails = null)
         job = scope.launch {
             try {
                 val id = useCases.save(draft.connection)
@@ -204,7 +213,7 @@ class DefaultProviderEditorComponent(
             } catch (error: CancellationException) {
                 throw error
             } catch (_: Exception) {
-                state.value = draft.copy(error = SettingsError.Save)
+                state.value = draft.copy(error = SettingsError.Save, errorDetails = null)
             }
         }
     }

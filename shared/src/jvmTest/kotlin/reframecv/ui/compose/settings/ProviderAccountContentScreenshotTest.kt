@@ -53,11 +53,20 @@ class ProviderAccountContentScreenshotTest : GoldenScreenshotTest() {
     fun missingManagementKeyKeepsBudgetsAvailableMatchesReference() =
         capture(ThemeMode.Light, managementKey = "")
 
+    @Test
+    fun expiredKeysShowProviderMessagesInLightTheme() = capture(
+        ThemeMode.Light,
+        failed = true,
+        balanceFailed = true,
+        details = "API key expired.",
+    )
+
     private fun capture(
         theme: ThemeMode,
         failed: Boolean = false,
         balanceFailed: Boolean = false,
         managementKey: String = "management-key",
+        details: String? = null,
     ) = runDesktopComposeUiTest(ScreenSize(800.dp, 900.dp)) {
         setAndCaptureGolden(
             this,
@@ -93,6 +102,8 @@ class ProviderAccountContentScreenshotTest : GoldenScreenshotTest() {
                     ),
                     accountError = if (failed) SettingsError.AccountRefresh else null,
                     balanceError = balanceFailed,
+                    accountErrorDetails = details,
+                    balanceErrorDetails = details,
                 )
                 ProviderManagementContent(state, onRefresh = {})
                 ProviderAccountContent(state, onRefresh = {})

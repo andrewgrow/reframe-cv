@@ -14,12 +14,14 @@ import reframecv.providers.AiResponse
 /** Decodes provider envelopes separately from the operation's structured result. */
 internal fun decodeGeneration(content: String, status: Int, key: String): AiResponse =
     if (!HttpStatusCode.fromValue(status).isSuccess()) {
-        val result = runCatching { Json.parseToJsonElement(content).jsonObject }.getOrNull()
-        AiResponse.Failed(AiProviderError.Unavailable, errorMessage(result, key) ?: "HTTP $status")
+        AiResponse.Failed(
+            AiProviderError.Unavailable,
+            openRouterErrorMessage(content, key) ?: "HTTP $status",
+        )
     } else {
         val result = Json.parseToJsonElement(content).jsonObject
         if (result["error"] != null) {
-            AiResponse.Failed(AiProviderError.Unavailable, errorMessage(result, key))
+            AiResponse.Failed(AiProviderError.Unavailable, openRouterErrorMessage(content, key))
         } else {
             decodeChoice(result)
         }
@@ -38,12 +40,3 @@ private fun decodeChoice(result: JsonObject): AiResponse {
         AiResponse.Generated(text)
     }
 }
-
-private fun errorMessage(result: JsonObject?, key: String): String? = (
-    (
-        result?.get(
-            "error",
-        ) as? JsonObject
-        )?.get("message") as? kotlinx.serialization.json.JsonPrimitive
-    )
-    ?.contentOrNull?.replace(key, "[REDACTED]")
