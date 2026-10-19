@@ -29,7 +29,9 @@ internal data class ProjectAction(
 @Composable
 internal fun ProjectControls(actions: List<ProjectAction>, modifier: Modifier = Modifier) {
     val tokens = ReframeTheme.tokens
-    BoxWithConstraints(modifier.fillMaxWidth().padding(tokens.spacing.medium)) {
+    BoxWithConstraints(
+        modifier.fillMaxWidth().testTag("projects.footer").padding(tokens.spacing.medium),
+    ) {
         val columnWidth = tokens.dimensions.projectActionWidth + tokens.spacing.small
         val columns = ((maxWidth + tokens.spacing.small) / columnWidth).toInt().coerceAtLeast(1)
         val rows = if (actions.size > columns) MAX_CONTROL_ROWS else 1

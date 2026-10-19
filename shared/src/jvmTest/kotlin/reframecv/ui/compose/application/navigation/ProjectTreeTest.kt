@@ -1,5 +1,6 @@
 package reframecv.ui.compose.application.navigation
 
+import androidx.compose.runtime.remember
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
@@ -18,6 +19,7 @@ import kotlin.test.assertEquals
 import reframecv.domain.models.project.Project
 import reframecv.ui.components.application.navigation.ProjectTreeState
 import reframecv.ui.components.application.navigation.TestProjectTreeComponent
+import reframecv.ui.components.common.section.TestCollapsibleSectionComponent
 import reframecv.ui.compose.application.RootNavigation
 import reframecv.ui.theme.ReframeTheme
 
@@ -35,7 +37,11 @@ class ProjectTreeTest {
             ProjectTreeState(projects, loading = false),
             onSelect = { selected += it },
         )
-        setContent { ReframeTheme { RootNavigation(component) } }
+        setContent {
+            ReframeTheme {
+                RootNavigation(component, remember { TestCollapsibleSectionComponent() })
+            }
+        }
         onNodeWithText("Java").assertDoesNotExist()
         onNodeWithContentDescription("Expand Backend").performClick()
         onNodeWithText("Java").assertIsDisplayed()
@@ -54,7 +60,11 @@ class ProjectTreeTest {
             ProjectTreeState(projects, loading = false),
             onSelect = { selected += it },
         )
-        setContent { ReframeTheme { RootNavigation(component) } }
+        setContent {
+            ReframeTheme {
+                RootNavigation(component, remember { TestCollapsibleSectionComponent() })
+            }
+        }
         onNodeWithText("Backend").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         onNodeWithText("Backend").assertIsFocused().performKeyInput {
             pressKey(Key.DirectionRight)
@@ -70,7 +80,11 @@ class ProjectTreeTest {
     fun revealsSelectionAfterChangingProjectsInLongTree() = runComposeUiTest {
         val many = List(40) { index -> Project(index.toLong() + 1, "Project $index", 0, 0) }
         val component = TestProjectTreeComponent(ProjectTreeState(many, loading = false))
-        setContent { ReframeTheme { RootNavigation(component) } }
+        setContent {
+            ReframeTheme {
+                RootNavigation(component, remember { TestCollapsibleSectionComponent() })
+            }
+        }
         runOnIdle { component.state.value = component.state.value.copy(selectedId = 40) }
         waitForIdle()
         onNodeWithText("Project 39").assertIsDisplayed().assertIsSelected()

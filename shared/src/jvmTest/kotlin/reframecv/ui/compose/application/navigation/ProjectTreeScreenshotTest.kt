@@ -1,8 +1,11 @@
 package reframecv.ui.compose.application.navigation
 
+import androidx.compose.runtime.remember
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performMouseInput
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
@@ -11,6 +14,7 @@ import reframecv.domain.models.project.Project
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.application.navigation.ProjectTreeState
 import reframecv.ui.components.application.navigation.TestProjectTreeComponent
+import reframecv.ui.components.common.section.TestCollapsibleSectionComponent
 import reframecv.ui.compose.application.RootNavigation
 import reframecv.ui.theme.ReframeTheme.ThemeMode
 
@@ -31,7 +35,7 @@ class ProjectTreeScreenshotTest : GoldenScreenshotTest() {
         ScreenSize(220.dp, 420.dp),
     ) {
         setGoldenContent(this, ScreenSize(220.dp, 420.dp)) {
-            RootNavigation(component())
+            RootNavigation(component(), remember { TestCollapsibleSectionComponent() })
         }
         onNodeWithText("Java").performSemanticsAction(SemanticsActions.RequestFocus) { it() }
         onNodeWithText("Full-stack").performMouseInput { enter(center) }
@@ -43,8 +47,24 @@ class ProjectTreeScreenshotTest : GoldenScreenshotTest() {
         ScreenSize(220.dp, 420.dp),
     ) {
         setAndCaptureGolden(this, ScreenSize(220.dp, 420.dp), themeMode = ThemeMode.Light) {
-            RootNavigation(component())
+            RootNavigation(component(), remember { TestCollapsibleSectionComponent() })
         }
+    }
+
+    @Test
+    fun collapsedTreeInDarkThemeMatchesReference() = collapsedTree(ThemeMode.Dark)
+
+    @Test
+    fun collapsedTreeInLightThemeMatchesReference() = collapsedTree(ThemeMode.Light)
+
+    private fun collapsedTree(themeMode: ThemeMode) = runDesktopComposeUiTest(
+        ScreenSize(220.dp, 420.dp),
+    ) {
+        setGoldenContent(this, ScreenSize(220.dp, 420.dp), themeMode) {
+            RootNavigation(component(), remember { TestCollapsibleSectionComponent() })
+        }
+        onNodeWithContentDescription("Collapse navigation").performClick()
+        captureGolden(this, "navigation.panel")
     }
 
     private fun component() = TestProjectTreeComponent(

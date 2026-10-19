@@ -31,7 +31,8 @@ interface ScreenStatesDao {
             "WHERE id = :id AND project_id = :projectId) " +
             "WHEN 'Project' THEN EXISTS(SELECT 1 FROM projects " +
             "WHERE id = :id AND id = :projectId) " +
-            "WHEN 'Settings' THEN :id IS NULL AND :projectId IS NULL ELSE 0 END",
+            "WHEN 'Settings' THEN :id IS NULL AND :projectId IS NULL " +
+            "WHEN 'Application' THEN :id IS NULL AND :projectId IS NULL ELSE 0 END",
     )
     suspend fun ownerExists(screen: String, id: Long?, projectId: Long?): Boolean
 

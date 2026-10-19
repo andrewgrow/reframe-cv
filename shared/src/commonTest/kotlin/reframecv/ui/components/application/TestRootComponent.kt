@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import reframecv.ui.components.application.navigation.ProjectTreeComponent
 import reframecv.ui.components.application.navigation.ProjectTreeState
+import reframecv.ui.components.common.section.TestCollapsibleSectionComponent
 import reframecv.ui.components.projects.ProjectsComponent
 import reframecv.ui.components.projects.TestProjectsComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
@@ -21,6 +22,7 @@ class TestRootComponent(
     resumesComponent: ResumesComponent? = null,
     settingsComponent: SettingsComponent? = null,
 ) : RootComponent {
+    override val navigationPanel = TestCollapsibleSectionComponent()
     override val projectTree = object : ProjectTreeComponent {
         override val state = MutableValue(initialTreeState)
         override fun onToggle(id: Long) = Unit

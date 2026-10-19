@@ -297,6 +297,13 @@ Missing saved files remain replaceable/removable without discarding resume conte
 
 ## Navigation and editing lifecycle
 
+The Projects header stays visible above the scrollable tree and includes a collapse control.
+Collapsing animates the sidebar to an icon rail containing only Expand and Settings;
+its state is persisted as Application / navigation_panel in ScreenState, survives restarts,
+and is restored before rendering the shell without an initial width animation. Expanding
+restores the tree selection and expanded branches.
+
+
 - The root owns the project tree and right-pane destination. Tree expansion and selection
   are separate from content navigation; `ProjectPathEntry` represents hierarchy without
   visual breadcrumb rows.
@@ -464,3 +471,12 @@ The database schema is unchanged by AI request handling.
 The Settings overview exposes matching text navigation entries for API Providers and Prompts.
 Provider connections and Add provider live on the API Providers page. Back/Esc returns from
 the connection editor to that list, then to the Settings overview, then out of Settings.
+
+## Document footer alignment
+
+Resume and vacancy editors share DocumentFooter, reserving a notification line and
+one standard action row using the current typography and spacing tokens. The root
+navigation footer uses the same minimum while an editor is active and follows its
+measured height if wrapped buttons or additional messages require more room. Returning
+to a list restores the normal navigation footer height. Notification content does not
+shift the divider while it fits the reserved space.

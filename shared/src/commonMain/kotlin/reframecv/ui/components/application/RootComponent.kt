@@ -10,8 +10,12 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
+import reframecv.domain.models.screenstate.ScreenStateOwner
+import reframecv.domain.models.screenstate.ScreenType
 import reframecv.ui.components.application.navigation.DefaultProjectTreeComponent
 import reframecv.ui.components.application.navigation.ProjectTreeComponent
+import reframecv.ui.components.common.section.CollapsibleSectionComponent
+import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
 import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.ProjectsComponent
@@ -28,6 +32,7 @@ import reframecv.ui.context.AppComponentContext
 /** Lets the application shell show the selected screen alongside project navigation. */
 interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
+    val navigationPanel: CollapsibleSectionComponent
     val projectTree: ProjectTreeComponent
     fun onSettings()
     fun onProjectsList()
@@ -55,6 +60,11 @@ interface RootComponent {
 class DefaultRootComponent(componentContext: AppComponentContext) :
     RootComponent,
     AppComponentContext by componentContext {
+    override val navigationPanel = DefaultCollapsibleSectionComponent(
+        componentContext,
+        "navigation_panel",
+        ScreenStateOwner(ScreenType.Application),
+    )
     private val navigation = StackNavigation<Configuration>()
     private var activeProjects: List<Project> = emptyList()
 

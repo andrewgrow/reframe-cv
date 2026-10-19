@@ -5,7 +5,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import reframecv.domain.DomainModel
 
 /** Identifies screens whose independent view preferences can be restored. */
-enum class ScreenType { Vacancy, Resume, CoverLetter, Project, Settings }
+enum class ScreenType { Vacancy, Resume, CoverLetter, Project, Settings, Application }
 
 /** Identifies a document screen or a standalone page without mixing their view states. */
 data class ScreenStateOwner(
@@ -14,7 +14,7 @@ data class ScreenStateOwner(
     val projectId: Long? = null,
 ) {
     init {
-        val global = screen == ScreenType.Settings
+        val global = screen == ScreenType.Settings || screen == ScreenType.Application
         require(global == (documentId == null) && global == (projectId == null))
     }
 }

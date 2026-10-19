@@ -41,6 +41,7 @@ internal fun ProjectTreeEntry(
     hasChildren: Boolean = false,
     expanded: Boolean = false,
     onToggle: () -> Unit = {},
+    leadingContent: (@Composable () -> Unit)? = null,
 ) {
     val tokens = ReframeTheme.tokens
     val colors = MaterialTheme.colorScheme
@@ -67,7 +68,9 @@ internal fun ProjectTreeEntry(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(tokens.dimensions.iconSize), contentAlignment = Alignment.Center) {
-            if (hasChildren) {
+            if (leadingContent != null) {
+                leadingContent()
+            } else if (hasChildren) {
                 ProjectTreeArrow(name, expanded, arrowInteraction, onToggle)
             }
         }

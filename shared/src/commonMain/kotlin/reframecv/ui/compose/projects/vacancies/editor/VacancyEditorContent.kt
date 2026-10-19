@@ -33,6 +33,7 @@ import reframecv.ui.components.projects.vacancies.editor.VacancyImportState
 import reframecv.ui.components.projects.vacancies.editor.VacancyRecognitionState
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.compose.common.AiRequestDialogContent
+import reframecv.ui.compose.common.DocumentFooter
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.theme.ReframeTheme
@@ -130,16 +131,18 @@ private fun VacancyEditorFooter(
     val importState by component.importComponent.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     val snapshot by component.snapshot.state.subscribeAsState()
-    Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
-        VacancyImportFeedback(importState)
-        VacancyEditorActions(
-            component,
-            draft.name.isNotBlank() && !snapshot.selecting,
-            isBusy,
-            deleteState,
-            save,
-            editing,
-        )
+    DocumentFooter {
+        Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
+            VacancyImportFeedback(importState)
+            VacancyEditorActions(
+                component,
+                draft.name.isNotBlank() && !snapshot.selecting,
+                isBusy,
+                deleteState,
+                save,
+                editing,
+            )
+        }
     }
 }
 

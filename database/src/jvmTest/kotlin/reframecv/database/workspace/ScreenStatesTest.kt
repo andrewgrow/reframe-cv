@@ -85,6 +85,22 @@ class ScreenStatesTest : WorkspaceDatabaseTest() {
         assertEquals("collapsed", repository.get(global)?.text("details"))
     }
 
+    @Test
+    fun applicationPanelStateSurvivesDatabaseReopeningAndProjectDeletion() = runBlocking {
+        val project = project()
+        val application = ScreenStateOwner(ScreenType.Application)
+        val settings = ScreenStateOwner(ScreenType.Settings)
+        var repository = LocalScreenStatesRepository(database.screenStatesDao())
+        repository.update(application, change("navigation_panel", "collapsed"))
+        repository.update(settings, change("tab", "providers"))
+        database.projectDao().deleteSubtree(project)
+        closeDatabase()
+        openDatabase()
+        repository = LocalScreenStatesRepository(database.screenStatesDao())
+        assertEquals("collapsed", repository.get(application)?.text("navigation_panel"))
+        assertEquals("providers", repository.get(settings)?.text("tab"))
+    }
+
     private fun owner(screen: ScreenType, id: Long, project: Long) =
         ScreenStateOwner(screen, id, project)
 }

@@ -25,6 +25,7 @@ import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
 import reframecv.ui.components.projects.resumes.editor.ResumeImportState
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
+import reframecv.ui.compose.common.DocumentFooter
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.theme.ReframeTheme
@@ -39,8 +40,6 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
     val draft by component.draft.subscribeAsState()
     val deleteState by component.deleteState.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
-    val successfulSaves by component.successfulSaves.subscribeAsState()
-    val validationFailures by component.validationFailures.subscribeAsState()
     val validationRequested by component.validationRequested.subscribeAsState()
     val busy = saveState == ResumeSaveState.Saving ||
         deleteState == ResumeDeleteState.Deleting || exportState == ResumeExportState.Exporting ||
@@ -77,13 +76,7 @@ fun ResumeEditorContent(component: ResumeEditorComponent) {
                 )
             }
             HorizontalDivider()
-            ResumeSaveFeedback(
-                saveState,
-                successfulSaves,
-                importState = importState,
-                validationFailures = validationFailures,
-            )
-            ResumeEditorActions(component, onExport = component::onExport)
+            ResumeEditorFooter(component)
         }
         ResumeEditorOverlays(component, photoVisible, deleteState, exportVisible)
     }
@@ -103,5 +96,24 @@ private fun ResumeEditorOverlays(
             component.exportComponent,
             onClose = component::onCloseExport,
         )
+    }
+}
+
+@Composable
+private fun ResumeEditorFooter(component: ResumeEditorComponent) {
+    val saveState by component.saveState.subscribeAsState()
+    val successfulSaves by component.successfulSaves.subscribeAsState()
+    val importState by component.importComponent.state.subscribeAsState()
+    val validationFailures by component.validationFailures.subscribeAsState()
+    DocumentFooter {
+        Column {
+            ResumeSaveFeedback(
+                saveState,
+                successfulSaves,
+                importState = importState,
+                validationFailures = validationFailures,
+            )
+            ResumeEditorActions(component, onExport = component::onExport)
+        }
     }
 }
