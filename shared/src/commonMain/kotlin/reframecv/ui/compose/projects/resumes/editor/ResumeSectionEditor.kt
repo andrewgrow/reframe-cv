@@ -13,7 +13,6 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.resume.content.ResumeContactsSection
 import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
@@ -25,7 +24,6 @@ import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.ResumeTextSection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_section_title
-import reframecv.shared.generated.resources.resume_summary
 import reframecv.ui.components.projects.resumes.editor.ResumeSectionDraft
 import reframecv.ui.theme.ReframeTheme
 
@@ -54,13 +52,9 @@ internal fun ResumeSectionEditor(
             Modifier.padding(tokens.spacing.medium),
             verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
         ) {
-            if (draft.value is ResumeSummarySection) {
-                form.Heading(Res.string.resume_summary)
-            } else {
-                form.Field(draft.value.title, Res.string.resume_section_title, {
-                    onChange(draft.copy(value = draft.value.withMetadata(title = it)))
-                })
-            }
+            form.Field(draft.value.title, Res.string.resume_section_title, {
+                onChange(draft.copy(value = draft.value.withMetadata(title = it)))
+            })
             form.SectionActions(
                 removeLabel = draft.value.removeLabel(),
                 expanded = expanded,
@@ -78,13 +72,8 @@ internal fun ResumeSectionEditor(
         }
     }
     if (confirmingRemoval) {
-        val name = if (draft.value is ResumeSummarySection) {
-            stringResource(Res.string.resume_summary)
-        } else {
-            draft.value.title
-        }
         ResumeSectionRemoveConfirmation(
-            name,
+            draft.value.title,
             removeLabel = draft.value.removeLabel(),
             enabled = form.enabled,
             onCancel = { confirmingRemoval = false },

@@ -13,6 +13,7 @@ import reframecv.shared.generated.resources.resume_add_tool
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_category
 import reframecv.shared.generated.resources.resume_description
+import reframecv.shared.generated.resources.resume_project_links
 import reframecv.shared.generated.resources.resume_project_name
 import reframecv.shared.generated.resources.resume_remove_project
 import reframecv.shared.generated.resources.resume_remove_project_question
@@ -54,6 +55,9 @@ internal fun ResumeFormScope.ProjectEntries(
         Field(project.description, Res.string.resume_description, {
             update(project.copy(description = it))
         }, multiline = true)
+        LinkFields(project.links, Res.string.resume_project_links) {
+            update(project.copy(links = it))
+        }
         Column(
             Modifier.padding(top = ReframeTheme.tokens.spacing.small),
             verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),

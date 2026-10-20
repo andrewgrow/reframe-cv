@@ -8,6 +8,10 @@ class TestVacancyResumesComponent(
     private val changed: (List<VacancyResume>) -> Unit,
 ) : VacancyResumesComponent {
     override val state = MutableValue(VacancyResumesState())
+    var openedId: Long? = null
+    override fun onOpen(id: Long) {
+        openedId = id
+    }
     override fun onSelect(id: Long) {
         if (current().none { it.resumeId == id }) changed(current() + VacancyResume(id))
     }

@@ -13,6 +13,7 @@ class TestVacancyEditorComponent(
     private val delete: () -> Unit = {},
     imported: () -> Unit = {},
 ) : VacancyEditorComponent {
+    override val improvement = TestVacancyResumeImprovementComponent()
     override val assessment = TestVacancyResumeAssessmentComponent()
     override val details = object : CollapsibleSectionComponent {
         override val state = MutableValue(CollapsibleSectionState())
@@ -66,23 +67,23 @@ class TestVacancyEditorComponent(
         }
     }
     override fun onClose() {
-        if (recognition.dialog.value.component != null ||
-            recognition.state.value == VacancyRecognitionState.Processing
-        ) {
-            recognition.onCancel()
-            return
-        }
-        if (isBusy) {
-            return
-        }
-        if (exportVisible.value) {
-            onCloseExport()
-        } else if (deleteState.value !=
-            VacancyDeleteState.Idle
-        ) {
-            deleteState.value = VacancyDeleteState.Idle
-        } else {
-            close()
+        when {
+            improvement.dialog.value.component != null -> improvement.onCancel()
+
+            recognition.dialog.value.component != null ||
+                recognition.state.value == VacancyRecognitionState.Processing -> {
+                recognition.onCancel()
+            }
+
+            isBusy -> Unit
+
+            exportVisible.value -> onCloseExport()
+
+            deleteState.value != VacancyDeleteState.Idle ->
+                deleteState.value =
+                    VacancyDeleteState.Idle
+
+            else -> close()
         }
     }
 }

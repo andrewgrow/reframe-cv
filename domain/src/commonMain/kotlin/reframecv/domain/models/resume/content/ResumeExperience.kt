@@ -11,4 +11,6 @@ data class ResumeExperience(
     val period: ResumeDateRange = ResumeDateRange(),
     val achievements: List<String> = emptyList(),
     val projects: List<ResumeProject> = emptyList(),
+    val description: String = "",
+    val links: List<ResumeLink> = emptyList(),
 )

@@ -13,19 +13,15 @@ import reframecv.ui.compose.common.ConfirmationDialog
 @Composable
 internal fun ResumeDeleteConfirmation(component: ResumeEditorComponent) {
     val state by component.deleteState.subscribeAsState()
-    val input by component.deleteConfirmation.subscribeAsState()
     val content = component.deleteDialogContent
     ConfirmationDialog(
         content = content,
         state = ConfirmationDialogState(
-            input = input,
             confirmEnabled = component.canConfirmDelete,
             busy = state == ResumeDeleteState.Deleting,
             error = if (state == ResumeDeleteState.Failed) content.failureMessage else null,
         ),
         onAction = component::onDeleteDialogAction,
-        onInputChange = component::onDeleteConfirmationChange,
         modifier = Modifier.testTag("resume.delete.dialog"),
-        inputModifier = Modifier.testTag("resume.delete.confirmation"),
     )
 }

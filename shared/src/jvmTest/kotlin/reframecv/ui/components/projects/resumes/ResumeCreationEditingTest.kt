@@ -59,7 +59,6 @@ class ResumeCreationEditingTest : ComponentTest() {
                 assertNotNull(editor.initialResume)
                 editor.onCloseExport()
                 editor.onRequestDelete()
-                editor.onDeleteConfirmationChange("delete")
                 editor.onConfirmDelete()
             }
             val closed = Channel<Unit>(Channel.CONFLATED)

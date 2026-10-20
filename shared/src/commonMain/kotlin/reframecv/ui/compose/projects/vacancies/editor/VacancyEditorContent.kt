@@ -21,11 +21,13 @@ import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.resume_improvement_warning
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
 import reframecv.shared.generated.resources.vacancy_name_required
 import reframecv.shared.generated.resources.vacancy_parse_pdf
 import reframecv.shared.generated.resources.vacancy_parse_replace_warning
+import reframecv.shared.generated.resources.vacancy_resume_improve
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
@@ -43,9 +45,7 @@ internal const val VACANCY_EDITOR_TAG = "vacancies.editor"
 @Composable
 fun VacancyEditorContent(component: VacancyEditorComponent) {
     val resumes by component.resumes.state.subscribeAsState()
-    val aiDialog by component.recognition.dialog.subscribeAsState()
-    val assessmentDialog by component.assessment.dialog.subscribeAsState()
-    val assessmentResult by component.assessment.selection.subscribeAsState()
+    val aiModal = component.aiModalVisible()
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
     val saveState by component.saveState.subscribeAsState()
@@ -59,8 +59,7 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
         exportState,
         importState,
         recognitionState,
-        aiDialog.component != null || assessmentDialog.component != null ||
-            assessmentResult.resumeId != null,
+        aiModal,
     )
     val confirming = deleteState != VacancyDeleteState.Idle
     val save = { component.onSave(component.draft.value) }
@@ -71,9 +70,8 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 .pageBackHandler(
                     component::onClose,
                     enabled =
-                        (!isBusy || parsing) && !exportVisible && aiDialog.component == null &&
-                            resumes.unlinkId == null && assessmentDialog.component == null &&
-                            assessmentResult.resumeId == null,
+                        (!isBusy || parsing) && !exportVisible && resumes.unlinkId == null &&
+                            !aiModal,
                 ),
         ) {
             VacancyEditorBody(
@@ -99,6 +97,19 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
 }
 
 @Composable
+private fun VacancyEditorComponent.aiModalVisible(): Boolean {
+    val recognition by this.recognition.dialog.subscribeAsState()
+    val improvement by this.improvement.dialog.subscribeAsState()
+    val assessment by this.assessment.dialog.subscribeAsState()
+    val result by this.assessment.selection.subscribeAsState()
+    return listOf(recognition.component, improvement.component, assessment.component).any {
+        it !=
+            null
+    } ||
+        result.resumeId != null
+}
+
+@Composable
 private fun VacancyEditorOverlays(component: VacancyEditorComponent) {
     val resumes by component.resumes.state.subscribeAsState()
     val aiDialog by component.recognition.dialog.subscribeAsState()
@@ -108,6 +119,14 @@ private fun VacancyEditorOverlays(component: VacancyEditorComponent) {
             it,
             stringResource(Res.string.vacancy_parse_pdf),
             stringResource(Res.string.vacancy_parse_replace_warning),
+        )
+    }
+    val improvement by component.improvement.dialog.subscribeAsState()
+    improvement.component?.let {
+        AiRequestDialogContent(
+            it,
+            stringResource(Res.string.vacancy_resume_improve),
+            stringResource(Res.string.resume_improvement_warning),
         )
     }
     VacancyAssessmentContent(component)
@@ -198,6 +217,7 @@ private fun ColumnScope.VacancyEditorBody(
                 component.resumes,
                 enabled,
                 component.assessment,
+                component.improvement,
             )
         }
     }

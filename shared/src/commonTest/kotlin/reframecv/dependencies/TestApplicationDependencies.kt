@@ -18,6 +18,8 @@ import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
 import reframecv.importing.ResumeImporter
 import reframecv.importing.VacancyImporter
+import reframecv.improvement.ResumeImprovementOutcome
+import reframecv.improvement.ResumeImprovementRepository
 import reframecv.logging.EventHistory
 import reframecv.logging.RecordingApplicationLogger
 import reframecv.logging.createHistoryStoreFactory
@@ -40,6 +42,7 @@ import reframecv.repository.TestScreenStatesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
 import reframecv.usecase.PromptsUseCases
@@ -144,9 +147,9 @@ class TestApplicationDependencies : ApplicationDependencies {
         }
     }
 
-    override val resumesRepository = TestResumesRepository()
-
     override val vacanciesRepository = TestVacanciesRepository()
+
+    override val resumesRepository = TestResumesRepository(vacanciesRepository)
 
     override val coverLettersRepository = TestCoverLettersRepository()
 
@@ -157,6 +160,18 @@ class TestApplicationDependencies : ApplicationDependencies {
         resumesRepository,
         vacanciesRepository,
         coverLettersRepository,
+    )
+    val improvementInputs = mutableListOf<Pair<String, String>>()
+    var improvementResponse: suspend () -> ResumeImprovementOutcome = {
+        ResumeImprovementOutcome.Failed("Improvement unavailable")
+    }
+    override val improveResume get() = ImproveResumeUseCase(
+        ResumeImprovementRepository { resume, vacancy, _, _ ->
+            improvementInputs += resume to vacancy
+            improvementResponse()
+        },
+        providerSettingsUseCases,
+        resumesRepository,
     )
     val assessmentInputs = mutableListOf<Pair<String, String>>()
     var assessmentResponse: suspend () -> ResumeAssessmentOutcome = {

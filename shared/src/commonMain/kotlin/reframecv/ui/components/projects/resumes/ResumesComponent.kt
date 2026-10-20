@@ -48,6 +48,7 @@ class DefaultResumesComponent(
     override val projectId: Long,
     private val back: () -> Unit,
     storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
+    initialResume: Resume? = null,
 ) : ResumesComponent,
     AppComponentContext by componentContext {
     private val store = createResumesStore(
@@ -113,13 +114,21 @@ class DefaultResumesComponent(
                     },
                     initialResume = original,
                     initialRole = initialRole,
-                    close = { editorNavigation.pop() },
+                    close = { if (initialResume != null) back() else editorNavigation.pop() },
                 ),
             )
         }
     }
 
     init {
+        var openedInitialResume = false
+        val initialSubscription = uiState.subscribe { state ->
+            if (!openedInitialResume && initialResume != null && state is ResumesState.Ready) {
+                openedInitialResume = true
+                state.resumes.find { it.id == initialResume.id }?.let(::onEdit)
+            }
+        }
+        lifecycle.doOnDestroy { initialSubscription.cancel() }
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
         val stackSubscription = childStack.subscribe {
@@ -139,7 +148,8 @@ class DefaultResumesComponent(
                         editor?.onSaveCompleted(ResumeSaveState.Idle, label.createdResume)
                     }
 
-                    ResumesLabel.Deleted -> editorNavigation.pop()
+                    ResumesLabel.Deleted ->
+                        if (initialResume != null) back() else editorNavigation.pop()
 
                     ResumesLabel.Deleting -> editor?.deleteState?.value = ResumeDeleteState.Deleting
 

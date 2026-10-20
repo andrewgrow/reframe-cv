@@ -9,6 +9,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
@@ -28,7 +29,7 @@ class ResumeDeletionComponentTest : ComponentTest() {
         Resume(id = 12, projectId = 7, name = "Mobile", createdAt = 0, updatedAt = 0)
 
     @Test
-    fun confirmationRequiresWordAndBackCancelsDialogBeforeLeavingPage() = runOnUiThread {
+    fun confirmationNeedsSecondActionAndBackCancelsDialogBeforeLeavingPage() = runOnUiThread {
         lifecycle.resume()
         val component = DefaultResumesComponent(appComponentContext(), 7, back = {})
         component.onAdd()
@@ -39,9 +40,7 @@ class ResumeDeletionComponentTest : ComponentTest() {
         val editor = assertIs<DefaultResumeEditorComponent>(component.editor)
         editor.onDraftChange(editor.draft.value.copy(name = ""))
         editor.onRequestDelete()
-        editor.onDeleteConfirmationChange("DEL")
-        assertFalse(editor.canConfirmDelete)
-        editor.onConfirmDelete()
+        assertTrue(editor.canConfirmDelete)
         assertEquals(ResumeDeleteState.Confirming, editor.deleteState.value)
         editor.onSave()
         assertFalse(editor.validationRequested.value)
@@ -49,7 +48,6 @@ class ResumeDeletionComponentTest : ComponentTest() {
         back.back()
         assertSame(editor, component.editor)
         assertEquals(ResumeDeleteState.Idle, editor.deleteState.value)
-        assertEquals("", editor.deleteConfirmation.value)
         back.back()
         assertNull(component.editor)
     }
@@ -77,7 +75,6 @@ class ResumeDeletionComponentTest : ComponentTest() {
             component.onEdit(original)
             assertIs<DefaultResumeEditorComponent>(component.editor).also {
                 it.onRequestDelete()
-                it.onDeleteConfirmationChange(" dElEtE ")
                 it.onConfirmDelete()
             }
         }
@@ -88,7 +85,7 @@ class ResumeDeletionComponentTest : ComponentTest() {
             assertSame(failure, logged.error)
             runOnUiThread {
                 assertEquals(ResumeDeleteState.Failed, editor.deleteState.value)
-                assertEquals(" dElEtE ", editor.deleteConfirmation.value)
+                assertTrue(editor.canConfirmDelete)
                 fail = false
                 editor.onConfirmDelete()
                 editor.onConfirmDelete()

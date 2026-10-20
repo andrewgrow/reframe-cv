@@ -7,6 +7,7 @@ import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.domain.models.vacancy.VacancyResume
+import reframecv.ui.components.common.ai.AiPromptPreference
 import reframecv.ui.components.common.ai.AiRequestDialogSlot
 import reframecv.ui.components.common.ai.AiRequestException
 import reframecv.ui.components.common.ai.DefaultAiRequestDialogComponent
@@ -33,6 +34,7 @@ class DefaultVacancyResumeAssessmentComponent(
     private val resumes: () -> List<Resume>,
     private val changed: (List<VacancyResume>) -> Unit,
     private val canEdit: () -> Boolean,
+    private val promptPreference: AiPromptPreference? = null,
 ) : VacancyResumeAssessmentComponent {
     override val dialog = MutableValue(AiRequestDialogSlot())
     override val selection = MutableValue(ResumeAssessmentSelection())
@@ -66,6 +68,7 @@ class DefaultVacancyResumeAssessmentComponent(
                 },
                 completed = { assessment -> apply(id, assessment) },
                 dismissed = { dialog.value = AiRequestDialogSlot() },
+                promptPreference = promptPreference,
             ),
         )
     }

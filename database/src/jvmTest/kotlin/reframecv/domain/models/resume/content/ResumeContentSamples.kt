@@ -1,7 +1,13 @@
 package reframecv.domain.models.resume.content
 
 fun sampleResumeContent() = ResumeContent(
-    profile = ResumeProfile("Alex Résumé", "Mobile Developer", "Warsaw"),
+    profile = ResumeProfile(
+        "Alex Résumé",
+        "Mobile Developer",
+        "Warsaw",
+        workArrangement = "Remote or hybrid",
+        workAuthorization = "Eligible to work in Austria",
+    ),
     sections = listOf(
         ResumeContactsSection(
             entries = listOf(ResumeContact("email", "Email", "alex@example.com")),
@@ -20,11 +26,14 @@ fun sampleResumeContent() = ResumeContent(
                     company = "Example",
                     location = "Remote",
                     period = ResumeDateRange(start = ResumeDate(2021, 9), isCurrent = true),
+                    description = "Builds production apps.\nWorks across teams.",
+                    links = listOf(ResumeLink("Google Play", "https://example.com/app")),
                     achievements = listOf("Reduced release time"),
                     projects = listOf(
                         ResumeProject(
                             name = "Banking app",
                             description = "Secure mobile banking",
+                            links = listOf(ResumeLink("Project", "https://example.com/project")),
                             skillsOrTools = listOf(ResumeSkillOrTool("Kotlin", "Language")),
                         ),
                     ),
@@ -36,6 +45,7 @@ fun sampleResumeContent() = ResumeContent(
                 ResumeEducation(
                     institution = "University",
                     degree = "Bachelor",
+                    notes = "Graduated with honors.\nFaculty award.",
                     specialty = "Computer science",
                     period = ResumeDateRange(ResumeDate(2016), ResumeDate(2020, 6)),
                 ),

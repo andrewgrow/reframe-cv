@@ -3,10 +3,12 @@ package reframecv.ui.compose.projects.vacancies.editor
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -36,6 +38,7 @@ import reframecv.ui.components.common.confirmation.ConfirmationDialogContent
 import reframecv.ui.components.common.confirmation.ConfirmationDialogState
 import reframecv.ui.components.common.confirmation.ConfirmationDialogTone
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumeAssessmentComponent
+import reframecv.ui.components.projects.vacancies.editor.VacancyResumeImprovementComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesState
 import reframecv.ui.compose.common.ConfirmationDialog
@@ -49,6 +52,7 @@ internal fun VacancyResumesContent(
     component: VacancyResumesComponent,
     enabled: Boolean,
     assessment: VacancyResumeAssessmentComponent? = null,
+    improvement: VacancyResumeImprovementComponent? = null,
 ) {
     Column(
         Modifier.fillMaxWidth().testTag("vacancy.resumes"),
@@ -63,7 +67,14 @@ internal fun VacancyResumesContent(
             key(link.resumeId) {
                 val name = state.available.find { it.id == link.resumeId }?.name
                     ?: stringResource(Res.string.vacancy_resume_missing, link.resumeId)
-                VacancyResumeRow(link, name, enabled, assessment) {
+                VacancyResumeRow(
+                    link,
+                    name,
+                    enabled,
+                    assessment,
+                    improvement,
+                    open = { component.onOpen(link.resumeId) },
+                ) {
                     component.onUnlink(link.resumeId)
                 }
             }
@@ -94,6 +105,8 @@ private fun VacancyResumeRow(
     name: String,
     enabled: Boolean,
     assessment: VacancyResumeAssessmentComponent?,
+    improvement: VacancyResumeImprovementComponent?,
+    open: () -> Unit,
     unlink: () -> Unit,
 ) {
     Row(
@@ -110,6 +123,7 @@ private fun VacancyResumeRow(
             label = { Text(stringResource(Res.string.vacancy_resume)) },
             modifier = Modifier.weight(1f),
         )
+        ResumeOpenButton(link.resumeId, enabled, open)
         Text(
             stringResource(Res.string.vacancy_resume_ats, link.atsScore),
             color = if (link.assessment !=
@@ -121,12 +135,14 @@ private fun VacancyResumeRow(
             },
             textAlign = TextAlign.Center,
             maxLines = 1,
-            modifier = Modifier.width(ReframeTheme.tokens.dimensions.vacancyAtsScoreWidth)
+            modifier = Modifier.widthIn(min = ReframeTheme.tokens.dimensions.vacancyAtsScoreWidth)
+                .width(IntrinsicSize.Max)
                 .testTag("vacancy.resumes.score.${link.resumeId}")
                 .clickable(enabled = enabled && link.assessment != null, role = Role.Button) {
                     assessment?.onView(link.resumeId)
                 },
         )
+        ResumeImproveButton(link.resumeId, enabled) { improvement?.onImprove(link.resumeId) }
         FillButton(
             stringResource(Res.string.vacancy_resume_assess),
             { assessment?.onAssess(link.resumeId) },

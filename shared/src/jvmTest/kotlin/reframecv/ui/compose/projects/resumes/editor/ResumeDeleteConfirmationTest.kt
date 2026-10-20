@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
-import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -20,36 +19,36 @@ import reframecv.ui.components.projects.resumes.editor.TestResumeEditorComponent
 @OptIn(ExperimentalTestApi::class)
 class ResumeDeleteConfirmationTest : GoldenScreenshotTest() {
     @Test
-    fun dialogRequiresDeleteAndEnterConfirmsWithoutClosingManagementPageOnEscape() =
-        runDesktopComposeUiTest {
-            var closes = 0
-            var deletes = 0
-            val component = TestResumeEditorComponent(
-                initialResume = Resume(
-                    id = 12,
-                    projectId = 1,
-                    name = "Mobile",
-                    createdAt = 0,
-                    updatedAt = 0,
-                ),
-                close = { closes++ },
-                delete = { deletes++ },
-            )
-            setGoldenContent(this) { ResumeEditorContent(component) }
-            onNodeWithText("Delete").performClick()
-            onNodeWithText("Permanently delete").assertIsNotEnabled()
-            onNodeWithTag("resume.delete.confirmation").performTextReplacement("DEL")
-            onNodeWithText("Permanently delete").assertIsNotEnabled()
-            onNodeWithTag("resume.delete.confirmation").performTextReplacement("delete")
-            onNodeWithText("Permanently delete").assertIsEnabled()
-            onNodeWithTag("resume.delete.confirmation").performKeyInput { pressKey(Key.Escape) }
-            onNodeWithTag("resume.delete.dialog").assertDoesNotExist()
-            assertEquals(0, closes)
-            onNodeWithText("Delete").performClick()
-            onNodeWithTag("resume.delete.confirmation").performTextReplacement("DeLeTe")
-            onNodeWithTag("resume.delete.confirmation").performKeyInput { pressKey(Key.Enter) }
-            assertEquals(1, deletes)
-        }
+    fun dialogConfirmsWithSecondButtonAndEscapeKeepsManagementPage() = runDesktopComposeUiTest {
+        var closes = 0
+        var deletes = 0
+        val component = TestResumeEditorComponent(
+            initialResume = Resume(
+                id = 12,
+                projectId = 1,
+                name = "Mobile",
+                createdAt = 0,
+                updatedAt = 0,
+            ),
+            close = { closes++ },
+            delete = { deletes++ },
+        )
+        setGoldenContent(this) { ResumeEditorContent(component) }
+        onNodeWithText("Delete").performClick()
+        onNodeWithTag("resume.delete.confirmation").assertDoesNotExist()
+        onNodeWithText("Permanently delete").assertIsEnabled()
+        assertEquals(0, deletes)
+        onNodeWithTag("resume.delete.dialog").performKeyInput { pressKey(Key.Escape) }
+        onNodeWithTag("resume.delete.dialog").assertDoesNotExist()
+        assertEquals(0, closes)
+        onNodeWithText("Delete").performClick()
+        onNodeWithText("Cancel").performClick()
+        assertEquals(0, deletes)
+        onNodeWithTag("resume.delete.dialog").assertDoesNotExist()
+        onNodeWithText("Delete").performClick()
+        onNodeWithText("Permanently delete").performClick()
+        assertEquals(1, deletes)
+    }
 
     @Test
     fun deletingDisablesConfirmationCancelAndDismissal() = runDesktopComposeUiTest {
@@ -66,7 +65,8 @@ class ResumeDeleteConfirmationTest : GoldenScreenshotTest() {
         onNodeWithText("Delete").performClick()
         runOnIdle { component.deleteState.value = ResumeDeleteState.Deleting }
         onNodeWithText("Permanently delete").assertIsNotEnabled()
-        onNodeWithTag("resume.delete.confirmation").performKeyInput { pressKey(Key.Escape) }
+        onNodeWithText("Cancel").assertIsNotEnabled()
+        onNodeWithTag("resume.delete.dialog").performKeyInput { pressKey(Key.Escape) }
         onNodeWithTag("resume.delete.dialog").assertExists()
         assertEquals(ResumeDeleteState.Deleting, component.deleteState.value)
     }

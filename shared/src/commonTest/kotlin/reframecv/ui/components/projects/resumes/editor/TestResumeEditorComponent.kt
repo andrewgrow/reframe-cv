@@ -19,7 +19,6 @@ class TestResumeEditorComponent(
                 ?: ResumeDraft(),
         )
     override val deleteState = MutableValue(ResumeDeleteState.Idle)
-    override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val successfulSaves = MutableValue(0L)
     override val validationFailures = MutableValue(0L)
@@ -61,16 +60,12 @@ class TestResumeEditorComponent(
     override fun onRequestDelete() {
         if (initialResume != null && !isBusy) deleteState.value = ResumeDeleteState.Confirming
     }
-    override fun onDeleteConfirmationChange(value: String) {
-        if (!isBusy) deleteConfirmation.value = value
-    }
     override fun onConfirmDelete() {
         if (canConfirmDelete) delete()
     }
     override fun onCancelDelete() {
         if (!isBusy) {
             deleteState.value = ResumeDeleteState.Idle
-            deleteConfirmation.value = ""
         }
     }
     override fun onClose() {

@@ -8,4 +8,6 @@ data class ResumeProfile(
     val name: String = "",
     val headline: String = "",
     val location: String = "",
+    val workArrangement: String = "",
+    val workAuthorization: String = "",
 )

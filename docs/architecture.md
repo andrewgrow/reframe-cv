@@ -84,7 +84,8 @@ operation. See the README for reset and backup instructions.
 `ScreenState` stores arbitrary JSON view-state fields in one `screen_states` row per
 screen and document. Standalone pages such as Settings have no document ID. Document
 screens also retain their project ID for ownership checks and cascading cleanup.
-The vacancy screen currently understands `job_details: "collapsed" | "expanded"`.
+The vacancy screen understands `job_details: "collapsed" | "expanded"` and the positive
+numeric prompt IDs `resume_assessment_prompt_id` and `resume_improvement_prompt_id`.
 Screens interpret their own fields: unknown keys are preserved, invalid field values
 fall back independently, and malformed or non-object JSON loads as an empty state.
 Updating a field merges it into the existing object atomically, including unknown
@@ -110,9 +111,20 @@ The restored state appears without animation; only user toggles animate.
 
 `Resume.content` is typed `ResumeContent`, stored as versioned JSON. It contains profile,
 ordered typed sections, document language, and nested consent text/visibility. Section
-visibility preserves content. Partial and ongoing dates have explicit model rules.
+visibility preserves content. Profile includes optional free-text work arrangement and work
+authorization fields, separate from location. Experience entries keep an introductory
+description separate from achievement bullets and projects. Positions and projects each
+own ordered labeled URL links (`ResumeLink`); education entries have optional notes for
+honors and other details. The editor exposes all these fields and confirms link removal.
+Summary has an editable section title. Summary text, position descriptions, and achievement
+lists have vertical resize handles that scroll the form when dragged near its viewport edge.
+Resizing preserves text and is disabled while the form is busy.
+Partial and ongoing dates have explicit model rules.
 The [JSON Schema](schemas/resume-content-v1.schema.json) describes the storage/export
 contract; its `$defs/ResumeContent` can be used independently.
+
+New optional content fields use empty-string/list defaults, so existing version-1 documents
+remain readable without a database reset. The Room table structure is unchanged.
 
 Database decoding is strict. File import tolerantly keeps recognized fields and section
 types, skips incompatible/unknown values, and rejects malformed or unsupported-version
@@ -238,6 +250,36 @@ summary; a changed resume timestamp or vacancy JSON shows a stale-result warning
 replaces only that link's result. Cascade deletion removes the assessment with its link.
 No default prompt is seeded; users can copy the assessment example from prompt_examples.md.
 
+## AI resume improvement
+
+Each linked resume has an Improve icon beside its match score. It opens the shared AI
+request dialog with active connections and vacancy/general prompts; the saved provider
+model is used. Prompt changes remain request-local unless Save prompt is pressed.
+Only portable resume and vacancy JSON are sent, without photos, attachments, resume
+keywords, local IDs, or paths. Portable vacancy keywords remain part of its JSON contract. The schema derives from the existing resume document contract;
+provider-compatible strict output makes object properties required, uses anyOf for section
+variants, and leaves date invariants to domain validation. Generated content is decoded
+strictly, without tolerant import repair or legacy consent normalization.
+
+`ImproveResumeUseCase` creates a new resume in the same project with the selected source's
+ID as `sourceResumeId`, a name suffixed `(AI yyyy-dd-MM HH:mm)` in the device's local time,
+and the generated content. Keywords and photo are empty; main-resume selection is unchanged.
+The source resume and its assessment are preserved. The new link starts at zero with no
+assessment. Each version can be assessed and improved again independently.
+
+For a saved vacancy, ResumeDao creates the adaptation and appends its link in one transaction,
+preserving existing links, scores, and all other stored vacancy fields. Missing/foreign
+vacancies or missing source resumes reject the operation without an orphan record. The
+vacancy editor adds the result to its draft and immediately displays its saved name.
+For a new vacancy, the adaptation is saved to the project immediately while its link remains
+in the vacancy draft until Save. Closing that draft keeps the created resume in the project.
+Later Save writes all current vacancy draft links again.
+
+Provider, invalid-output, and persistence failures keep the AI dialog open for retry.
+Closing the dialog or destroying its owner cancels work; cancelled remote results cannot
+create an adaptation. HTTP exchanges reuse sanitized provider logging, and unexpected
+failures include the AI operation context and stack in application diagnostics.
+
 ## Vacancy JSON export
 
 [Vacancy content schema](schemas/vacancy-content-v1.schema.json) defines the portable
@@ -329,6 +371,9 @@ restores the tree selection and expanded branches.
 - Back follows editor → list → dashboard → parent project list, rather than visit history.
   Pages expose Back/Escape; active dialogs handle dismissal first. Busy operations prevent
   leaving or submitting duplicate writes. Hardware Back uses the same component behavior.
+- Resume deletion uses a confirmation dialog with a second destructive button, without
+  typed confirmation. Cancel/Escape keeps the editor; failures remain retryable and busy
+  deletion prevents repeated confirmation or dismissal.
 - Resume and vacancy editors own drafts. Failures retain them; Close discards unsaved edits.
   A newly saved resume keeps the same component, draft, scroll position, and photo source,
   gains its persisted identity, and switches to management actions. Further saves update it.
@@ -364,8 +409,8 @@ The retained files for both logs total at most 120 MiB. File failures remain dia
 
 ## Current limits
 
-Cover-letter storage/repositories exist, but its editor is not implemented. Resume adaptation
-UX, PDF/print output, URL snapshot fetching, and source parsing remain deferred. There is no
+Cover-letter storage/repositories exist, but its editor is not implemented. Resume version
+comparison, PDF/print output, URL snapshot fetching, and additional source formats remain deferred. There is no
 photo data in JSON exports. Database migrations and platform targets beyond desktop are not
 implemented. Test/screenshot environments and verification commands are documented in README.
 
@@ -488,7 +533,18 @@ The selected height survives text edits; resizing is disabled during a request o
 Prompt text edits are request-local unless Save prompt is pressed. Errors remain in
 the dialog without discarding selections or text. Cancel/Escape cancels the operation
 and closes only the dialog; late results are discarded. A single available choice is
-selected automatically; multiple choices require selection. No selection is persisted.
+selected automatically; multiple choices require selection unless a valid saved prompt
+preference is available. Provider choices and PDF recognition prompt choices are not persisted.
+
+Vacancy assessment and improvement remember their last used prompt independently in
+ScreenState, scoped to the vacancy rather than the linked resume. A validated request launch
+records the selected prompt ID, including attempts that later fail or are cancelled; selecting
+a prompt and closing without running does not replace the preference. Reopening uses the
+current saved prompt text, not previous request-local edits. Deleted, disabled, wrong-scope,
+or malformed saved choices fall back to the ordinary selection rules. Preference read/write
+failures are diagnostic-only and do not block requests. New vacancy drafts retain used IDs
+in memory and bind them to the saved vacancy on first Save. Preferences share the existing
+screen-state write queue and survive dialog/page destruction and application restarts.
 The database schema is unchanged by AI request handling.
 
 The Settings overview exposes matching text navigation entries for API Providers and Prompts.

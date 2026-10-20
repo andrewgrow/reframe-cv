@@ -3,8 +3,10 @@ package reframecv.repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.vacancy.VacancyResume
 
-class TestResumesRepository : ResumesRepository {
+class TestResumesRepository(private val vacancies: TestVacanciesRepository? = null) :
+    ResumesRepository {
     val mainResumeIds = MutableStateFlow<Map<Long, Long?>>(emptyMap())
     override fun observeMainResumeId(projectId: Long) = mainResumeIds.map { it[projectId] }
     val records = MutableStateFlow<List<Resume>>(emptyList())
@@ -28,6 +30,36 @@ class TestResumesRepository : ResumesRepository {
     override suspend fun createSaved(record: Resume, mainResumeChange: MainResumeChange): Resume {
         val id = create(record, mainResumeChange)
         return records.value.single { it.id == id }
+    }
+    override suspend fun createAdaptation(record: Resume, vacancyId: Long?): Resume {
+        require(
+            records.value.any {
+                it.id == record.sourceResumeId &&
+                    it.projectId == record.projectId
+            },
+        )
+        val vacancy = vacancyId?.let { id ->
+            checkNotNull(
+                vacancies?.records?.value?.find {
+                    it.id ==
+                        id &&
+                        it.projectId == record.projectId
+                },
+            )
+        }
+        val result = createSaved(record, MainResumeChange.Keep)
+        if (vacancy != null) {
+            vacancies!!.records.value = vacancies.records.value.map {
+                if (it.id ==
+                    vacancy.id
+                ) {
+                    it.copy(resumes = it.resumes + VacancyResume(result.id))
+                } else {
+                    it
+                }
+            }
+        }
+        return result
     }
     override suspend fun update(record: Resume, mainResumeChange: MainResumeChange) {
         update(record)

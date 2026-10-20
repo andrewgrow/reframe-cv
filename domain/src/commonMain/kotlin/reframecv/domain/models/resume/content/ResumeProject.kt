@@ -8,4 +8,5 @@ data class ResumeProject(
     val name: String = "",
     val description: String = "",
     val skillsOrTools: List<ResumeSkillOrTool> = emptyList(),
+    val links: List<ResumeLink> = emptyList(),
 )

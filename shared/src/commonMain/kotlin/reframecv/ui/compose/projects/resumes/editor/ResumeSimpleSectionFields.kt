@@ -23,9 +23,13 @@ internal fun ResumeFormScope.SimpleSectionFields(
     onChange: (ResumeSection) -> Unit,
 ) {
     when (section) {
-        is ResumeSummarySection -> Field(section.text, Res.string.resume_text, {
+        is ResumeSummarySection -> ResizableField(
+            section.text,
+            Res.string.resume_text,
+            "resume.summary",
+        ) {
             onChange(section.copy(text = it))
-        }, multiline = true)
+        }
 
         is ResumeTextSection -> Field(section.text, Res.string.resume_text, {
             onChange(section.copy(text = it))

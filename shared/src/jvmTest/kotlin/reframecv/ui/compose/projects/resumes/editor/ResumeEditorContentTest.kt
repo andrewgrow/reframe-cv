@@ -359,15 +359,19 @@ class ResumeEditorContentTest : GoldenScreenshotTest() {
     }
 
     @Test
-    fun summaryHasNoEditableTitleAndKeepsItsExistingContent() = runDesktopComposeUiTest {
+    fun summaryCustomTitleIsEditableAndKeepsItsExistingContent() = runDesktopComposeUiTest {
         val section = ResumeSummarySection(title = "Existing title", text = "Summary text")
         val component = TestResumeEditorComponent(ResumeDraft("Mobile").addSection(section))
         setGoldenContent(this) { ResumeEditorContent(component) }
-        onNodeWithText("Section title").assertDoesNotExist()
+        onNodeWithText("Section title").performScrollTo()
+            .performTextReplacement("Professional profile")
         onNodeWithTag("resume.section.1").performScrollTo()
         onNodeWithText("Summary text").assertExists()
         onNodeWithText("Save").performClick()
-        assertEquals(section, component.draft.value.toResume(1).content.sections.single())
+        assertEquals(
+            section.copy(title = "Professional profile"),
+            component.draft.value.toResume(1).content.sections.single(),
+        )
     }
 
     @Test

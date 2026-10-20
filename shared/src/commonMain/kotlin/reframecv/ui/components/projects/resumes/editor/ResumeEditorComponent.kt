@@ -7,7 +7,6 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_delete_confirm
 import reframecv.shared.generated.resources.resume_delete_error
-import reframecv.shared.generated.resources.resume_delete_prompt
 import reframecv.shared.generated.resources.resume_delete_title
 import reframecv.shared.generated.resources.resume_delete_warning
 import reframecv.ui.components.common.confirmation.ConfirmationDialogAction
@@ -18,7 +17,7 @@ import reframecv.ui.context.AppComponentContext
 /** Reports resume save progress without discarding a failed draft. */
 enum class ResumeSaveState { Idle, Saving, Saved, Failed }
 
-/** Keeps typed deletion confirmation and failed deletions on the management page. */
+/** Keeps deletion confirmation and failed deletions on the management page. */
 enum class ResumeDeleteState { Idle, Confirming, Deleting, Failed }
 
 /** Lets creation and editing share a structured draft and save feedback. */
@@ -29,7 +28,6 @@ interface ResumeEditorComponent {
     val successfulSaves: Value<Long>
     val validationFailures: Value<Long>
     val deleteState: Value<ResumeDeleteState>
-    val deleteConfirmation: Value<String>
     val exportVisible: Value<Boolean>
     val exportComponent: ResumeExportComponent
     val importComponent: ResumeImportComponent
@@ -41,15 +39,13 @@ interface ResumeEditorComponent {
         importComponent.state.value == ResumeImportState.Importing ||
         photoComponent.state.value.loading
     val canConfirmDelete: Boolean get() = initialResume != null && !isBusy &&
-        deleteState.value != ResumeDeleteState.Idle &&
-        deleteConfirmation.value.isResumeDeleteConfirmation()
+        deleteState.value != ResumeDeleteState.Idle
     val deleteDialogContent: ConfirmationDialogContent get() = ConfirmationDialogContent(
         title = Res.string.resume_delete_title,
         message = Res.string.resume_delete_warning,
         confirmLabel = Res.string.resume_delete_confirm,
         cancelLabel = Res.string.resume_cancel,
         subject = initialResume?.name,
-        inputLabel = Res.string.resume_delete_prompt,
         failureMessage = Res.string.resume_delete_error,
         tone = ConfirmationDialogTone.Critical,
     )
@@ -60,7 +56,6 @@ interface ResumeEditorComponent {
         }
     }
     fun onRequestDelete()
-    fun onDeleteConfirmationChange(value: String)
     fun onConfirmDelete()
     fun onCancelDelete()
     fun onDraftChange(draft: ResumeDraft)
@@ -96,7 +91,6 @@ class DefaultResumeEditorComponent(
             } ?: ResumeDraft(),
         )
     override val deleteState = MutableValue(ResumeDeleteState.Idle)
-    override val deleteConfirmation = MutableValue("")
     override val saveState = MutableValue(ResumeSaveState.Idle)
     override val successfulSaves = MutableValue(0L)
     override val validationFailures = MutableValue(0L)
@@ -177,13 +171,8 @@ class DefaultResumeEditorComponent(
     override fun onRequestDelete() {
         if (initialResume == null || isBusy) return
         if (!exportVisible.value && deleteState.value == ResumeDeleteState.Idle) {
-            deleteConfirmation.value = ""
             deleteState.value = ResumeDeleteState.Confirming
         }
-    }
-
-    override fun onDeleteConfirmationChange(value: String) {
-        if (!isBusy && deleteState.value != ResumeDeleteState.Idle) deleteConfirmation.value = value
     }
 
     override fun onConfirmDelete() {
@@ -193,7 +182,6 @@ class DefaultResumeEditorComponent(
     override fun onCancelDelete() {
         if (!isBusy) {
             deleteState.value = ResumeDeleteState.Idle
-            deleteConfirmation.value = ""
         }
     }
 
@@ -212,6 +200,3 @@ class DefaultResumeEditorComponent(
         }
     }
 }
-
-internal fun String.isResumeDeleteConfirmation(): Boolean =
-    trim().equals("DELETE", ignoreCase = true)

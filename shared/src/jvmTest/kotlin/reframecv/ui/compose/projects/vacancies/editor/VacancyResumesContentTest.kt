@@ -3,21 +3,26 @@ package reframecv.ui.compose.projects.vacancies.editor
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.DesktopComposeUiTest
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.pressKey
 import androidx.compose.ui.test.v2.runDesktopComposeUiTest
+import androidx.compose.ui.text.TextLayoutResult
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import reframecv.assessment.ResumeAssessment
 import reframecv.assessment.ResumeAssessmentResult
 import reframecv.domain.models.resume.Resume
@@ -25,9 +30,54 @@ import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.ui.components.projects.vacancies.editor.TestVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesState
 import reframecv.ui.theme.ReframeTheme
+import reframecv.ui.theme.UiScale
 
 @OptIn(ExperimentalTestApi::class)
 class VacancyResumesContentTest {
+    @Test
+    fun savedPerfectScoreFitsAtDifferentUiScales() {
+        listOf(75, 100, 150).forEach { scale ->
+            runDesktopComposeUiTest {
+                showResumes(listOf(VacancyResume(1, 100)), uiScale = UiScale(scale))
+                val layouts = mutableListOf<TextLayoutResult>()
+                onNodeWithTag("vacancy.resumes.score.1").assertTextEquals("100%")
+                    .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+                assertFalse(layouts.single().hasVisualOverflow, "Score must fit at scale $scale")
+            }
+        }
+    }
+
+    @Test
+    fun perfectScoreRemainsFullyVisibleAfterAssessmentAndCanOpenItsResult() =
+        runDesktopComposeUiTest {
+            val editor = showResumes(listOf(VacancyResume(1)))
+            val assessment =
+                ResumeAssessment(
+                    ResumeAssessmentResult(100, "Matches all requirements."),
+                    1,
+                    0,
+                    "{}",
+                    "Work",
+                    "model",
+                )
+            runOnIdle {
+                editor.draft.value =
+                    editor.draft.value.copy(resumes = listOf(VacancyResume(1, 100, assessment)))
+            }
+            val score = onNodeWithTag("vacancy.resumes.score.1").assertTextEquals("100%")
+            val layouts = mutableListOf<TextLayoutResult>()
+            score.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+            val layout = layouts.single()
+            assertFalse(
+                layout.hasVisualOverflow,
+                "size=${layout.size} constraints=${layout.layoutInput.constraints} " +
+                    "width=${layout.didOverflowWidth} height=${layout.didOverflowHeight} " +
+                    "lines=${layout.lineCount} right=${layout.getLineRight(0)}",
+            )
+            score.performClick()
+            assertEquals(1L, editor.assessment.selection.value.resumeId)
+        }
+
     @Test
     fun clickingAssessedScoreOpensItsResult() = runDesktopComposeUiTest {
         val assessment =
@@ -52,6 +102,10 @@ class VacancyResumesContentTest {
         onNodeWithTag("vacancy.resumes.option.1").assertExists().performClick()
         assertEquals(listOf(VacancyResume(1)), editor.draft.value.resumes)
         onNodeWithTag("vacancy.resumes.score.1").assertExists()
+        onNodeWithTag("vacancy.resumes.open.1").performClick()
+        assertEquals(1L, editor.resumes.openedId)
+        onNodeWithTag("vacancy.resumes.improve.1").performClick()
+        assertEquals(1L, editor.improvement.requestedId)
         onNodeWithTag("vacancy.resumes.assess.1").performClick()
         assertEquals(1L, editor.assessment.requestedId)
         assertEquals(listOf(VacancyResume(1)), editor.draft.value.resumes)
@@ -82,6 +136,7 @@ class VacancyResumesContentTest {
 
     private fun DesktopComposeUiTest.showResumes(
         links: List<VacancyResume> = emptyList(),
+        uiScale: UiScale = UiScale.Default,
     ): TestVacancyEditorComponent {
         val editor = TestVacancyEditorComponent()
         editor.draft.value = editor.draft.value.copy(resumes = links)
@@ -101,7 +156,7 @@ class VacancyResumesContentTest {
         setContent {
             val draft by editor.draft.subscribeAsState()
             val state by editor.resumes.state.subscribeAsState()
-            ReframeTheme {
+            ReframeTheme(uiScale = uiScale) {
                 Column {
                     VacancyResumesContent(
                         draft.resumes,
@@ -109,6 +164,7 @@ class VacancyResumesContentTest {
                         editor.resumes,
                         state.unlinkId == null,
                         editor.assessment,
+                        editor.improvement,
                     )
                     VacancyResumeUnlinkConfirmation(state, editor.resumes)
                 }

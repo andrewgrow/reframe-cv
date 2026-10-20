@@ -8,13 +8,43 @@ import kotlinx.serialization.SerializationException
 import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
 import reframecv.domain.models.resume.content.ResumeDate
+import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.domain.models.resume.content.ResumeExperienceSection
+import reframecv.domain.models.resume.content.ResumeLink
 import reframecv.domain.models.resume.content.ResumeSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.serialization.ResumeContentJson
 
 class ResumeImportJsonTest {
+    @Test
+    fun extendedFieldsKeepValidValuesWhenImportedAlongsideInvalidSiblings() {
+        val document = """{"formatVersion":1,"content":{
+            "profile":{"workArrangement":"Hybrid","workAuthorization":42},
+            "sections":[
+                {"type":"experience","entries":[{"description":"Context",
+                    "links":[42,{"label":"App","url":"https://example.com","extra":true}],
+                    "projects":[{"name":"Camera","links":[{"url":"https://example.com/camera"}]}]
+                }]},
+                {"type":"education","entries":[{"notes":"With honors"}]}
+            ]
+        }}"""
+        val content = ResumeImportJson.decode(document)
+        assertEquals("Hybrid", content.profile.workArrangement)
+        assertEquals("", content.profile.workAuthorization)
+        val position = assertIs<ResumeExperienceSection>(content.sections[0]).entries.single()
+        assertEquals("Context", position.description)
+        assertEquals(listOf(ResumeLink("App", "https://example.com")), position.links)
+        assertEquals(
+            listOf(ResumeLink(url = "https://example.com/camera")),
+            position.projects.single().links,
+        )
+        assertEquals(
+            "With honors",
+            assertIs<ResumeEducationSection>(content.sections[1]).entries.single().notes,
+        )
+    }
+
     @Test
     fun exportedDocumentImportsEverySectionInOrderWithDatesAndHiddenConsent() {
         val content = sampleResumeContent().copy(

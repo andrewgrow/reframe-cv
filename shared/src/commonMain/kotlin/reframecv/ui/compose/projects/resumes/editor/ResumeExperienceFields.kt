@@ -15,6 +15,8 @@ import reframecv.shared.generated.resources.resume_add_position
 import reframecv.shared.generated.resources.resume_company
 import reframecv.shared.generated.resources.resume_location
 import reframecv.shared.generated.resources.resume_position
+import reframecv.shared.generated.resources.resume_position_description
+import reframecv.shared.generated.resources.resume_position_links
 import reframecv.shared.generated.resources.resume_projects
 import reframecv.ui.components.projects.resumes.editor.ResumePeriodDraft
 import reframecv.ui.components.projects.resumes.editor.ResumeSectionDraft
@@ -81,9 +83,21 @@ private fun ResumeFormScope.ExperienceDetails(
     entry: ResumeExperience,
     change: (ResumeExperience) -> Unit,
 ) {
-    Field(entry.achievements.joinToString("\n"), Res.string.resume_achievements, {
+    ResizableField(
+        entry.description,
+        Res.string.resume_position_description,
+        "resume.position.description",
+    ) {
+        change(entry.copy(description = it))
+    }
+    ResizableField(
+        entry.achievements.joinToString("\n"),
+        Res.string.resume_achievements,
+        "resume.position.achievements",
+    ) {
         change(entry.copy(achievements = it.split('\n')))
-    }, multiline = true)
+    }
+    LinkFields(entry.links, Res.string.resume_position_links) { change(entry.copy(links = it)) }
     Column(
         Modifier.padding(top = ReframeTheme.tokens.spacing.medium),
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.large),

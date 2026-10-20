@@ -25,6 +25,7 @@ data class VacancyResumesState(
 /** Lets the vacancy page attach resumes and confirm unlinking without deleting resumes. */
 interface VacancyResumesComponent {
     val state: Value<VacancyResumesState>
+    fun onOpen(id: Long)
     fun onSelect(id: Long)
     fun onUnlink(id: Long)
     fun onConfirmUnlink()
@@ -39,6 +40,7 @@ class DefaultVacancyResumesComponent(
     private val current: () -> List<VacancyResume>,
     private val changed: (List<VacancyResume>) -> Unit,
     private val canEdit: () -> Boolean,
+    private val open: (Resume) -> Unit = {},
 ) : VacancyResumesComponent {
     private val dependencies = componentContext.dependencies
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -70,6 +72,26 @@ class DefaultVacancyResumesComponent(
                 state.value = state.value.copy(loading = false, failed = true)
             }
         }
+    }
+
+    fun onCreated(record: Resume) {
+        require(record.projectId == projectId)
+        state.value =
+            state.value.copy(
+                available = (
+                    state.value.available.filterNot { it.id == record.id } +
+                        record
+                    ).sortedBy { it.id },
+            )
+    }
+
+    override fun onOpen(id: Long) {
+        if (!canEdit() || state.value.unlinkId != null ||
+            current().none { it.resumeId == id }
+        ) {
+            return
+        }
+        state.value.available.find { it.id == id && it.projectId == projectId }?.let(open)
     }
 
     override fun onSelect(id: Long) {

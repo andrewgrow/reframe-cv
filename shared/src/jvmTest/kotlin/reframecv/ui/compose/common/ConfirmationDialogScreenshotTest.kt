@@ -3,11 +3,11 @@ package reframecv.ui.compose.common
 import androidx.compose.ui.test.ExperimentalTestApi
 import kotlin.test.Test
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.project_delete_confirmation
 import reframecv.shared.generated.resources.resume_cancel
 import reframecv.shared.generated.resources.resume_create
 import reframecv.shared.generated.resources.resume_delete_confirm
 import reframecv.shared.generated.resources.resume_delete_error
-import reframecv.shared.generated.resources.resume_delete_prompt
 import reframecv.shared.generated.resources.resume_delete_title
 import reframecv.shared.generated.resources.resume_delete_warning
 import reframecv.shared.generated.resources.resume_name_hint
@@ -47,7 +47,7 @@ class ConfirmationDialogScreenshotTest : GoldenScreenshotTest() {
                     Res.string.resume_delete_warning,
                     Res.string.resume_delete_confirm,
                     Res.string.resume_cancel,
-                    inputLabel = Res.string.resume_delete_prompt,
+                    inputLabel = Res.string.project_delete_confirmation,
                     tone = ConfirmationDialogTone.Critical,
                 ),
                 ConfirmationDialogState(input = "DELETE", error = Res.string.resume_delete_error),

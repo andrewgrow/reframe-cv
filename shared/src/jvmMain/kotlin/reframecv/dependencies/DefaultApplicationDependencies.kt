@@ -31,6 +31,8 @@ import reframecv.providers.RemoteProviderAccountRepository
 import reframecv.providers.RemoteProviderModelsRepository
 import reframecv.providers.assessment.RemoteResumeAssessmentRepository
 import reframecv.providers.assessment.resumeAssessmentSchema
+import reframecv.providers.improvement.RemoteResumeImprovementRepository
+import reframecv.providers.improvement.resumeImprovementSchema
 import reframecv.providers.openrouter.OpenRouterClient
 import reframecv.providers.openrouter.OpenRouterSetupClient
 import reframecv.providers.recognition.RemoteVacancyRecognitionRepository
@@ -54,6 +56,7 @@ import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
 import reframecv.usecase.PromptsUseCases
@@ -215,6 +218,19 @@ class DefaultApplicationDependencies(
         get() {
             check(!closed) { "Application dependencies are closed" }
             return recognizeVacancyInstance
+        }
+
+    private val improveResumeInstance by lazy {
+        ImproveResumeUseCase(
+            RemoteResumeImprovementRepository(provider.value, resumeImprovementSchema()),
+            providerSettingsUseCases,
+            resumesRepository,
+        )
+    }
+    override val improveResume: ImproveResumeUseCase
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return improveResumeInstance
         }
 
     private val assessResumeInstance by lazy {

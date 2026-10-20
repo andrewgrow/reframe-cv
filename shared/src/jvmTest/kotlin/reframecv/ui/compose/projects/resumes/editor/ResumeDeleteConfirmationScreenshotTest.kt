@@ -31,7 +31,6 @@ class ResumeDeleteConfirmationScreenshotTest : GoldenScreenshotTest() {
     @Test
     fun failedDeletionInLightThemeMatchesReference() = runDesktopComposeUiTest {
         val component = component()
-        component.onDeleteConfirmationChange("DELETE")
         component.deleteState.value = ResumeDeleteState.Failed
         setGoldenContent(this, themeMode = ThemeMode.Light) { ResumeDeleteConfirmation(component) }
         onNodeWithText("Permanently delete").performClick()

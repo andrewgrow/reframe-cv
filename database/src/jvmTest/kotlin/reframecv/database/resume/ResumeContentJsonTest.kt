@@ -9,10 +9,36 @@ import kotlinx.serialization.SerializationException
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeConsent
 import reframecv.domain.models.resume.content.ResumeContent
+import reframecv.domain.models.resume.content.ResumeEducationSection
+import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.sampleResumeContent
 import reframecv.serialization.ResumeContentJson
 
 class ResumeContentJsonTest {
+    @Test
+    fun olderDocumentsDefaultNewFieldsWithoutLosingExistingContent() {
+        val original = """{"formatVersion":1,"content":{
+            "profile":{"name":"Alex","location":"Vienna"},
+            "sections":[
+                {"type":"experience","entries":[{"company":"Example",
+                    "achievements":["Delivered app"],"projects":[{"name":"Camera"}]}]},
+                {"type":"education","entries":[{"institution":"University"}]}
+            ]
+        }}"""
+        val content = ResumeContentJson.decode(original)
+        assertEquals("Alex", content.profile.name)
+        assertEquals("", content.profile.workArrangement)
+        assertEquals("", content.profile.workAuthorization)
+        val position = (content.sections[0] as ResumeExperienceSection).entries.single()
+        assertEquals("Example", position.company)
+        assertEquals(listOf("Delivered app"), position.achievements)
+        assertEquals("", position.description)
+        assertEquals(emptyList(), position.links)
+        assertEquals(emptyList(), position.projects.single().links)
+        assertEquals("", (content.sections[1] as ResumeEducationSection).entries.single().notes)
+        assertEquals(content, ResumeContentJson.decode(ResumeContentJson.encode(content)))
+    }
+
     @Test
     fun legacyConsentLoadsWithoutLosingTextOrVisibilityAndWritesOnlyNestedConsent() {
         val legacy = """{"formatVersion":1,"content":{

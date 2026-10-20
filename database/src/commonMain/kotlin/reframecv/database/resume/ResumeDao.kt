@@ -4,6 +4,7 @@ import androidx.room3.Dao
 import androidx.room3.Query
 import androidx.room3.Transaction
 import kotlinx.coroutines.flow.Flow
+import reframecv.database.vacancy.VacancyResumeEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.resume.Resume
@@ -14,6 +15,7 @@ import reframecv.repository.MainResumeChange
 @Dao
 interface ResumeDao :
     ResumeQueries,
+    ResumeAdaptationQueries,
     WorkspaceDao {
     @Query("SELECT main_resume_id FROM projects WHERE id = :projectId")
     fun observeMainResumeId(projectId: Long): Flow<Long?>
@@ -24,6 +26,23 @@ interface ResumeDao :
             "(SELECT 1 FROM resumes WHERE id = :resumeId AND project_id = :projectId)",
     )
     suspend fun selectMainResume(projectId: Long, resumeId: Long, updatedAt: Long): Int
+
+    @Transaction
+    suspend fun createAdaptation(record: Resume, vacancyId: Long?): Long {
+        if (vacancyId != null) {
+            require(vacancyProject(vacancyId) == record.projectId) {
+                "Vacancy must exist in the same project"
+            }
+        }
+        val id = create(record)
+        if (vacancyId != null) {
+            insertVacancyResume(
+                VacancyResumeEntity(vacancyId, id, position = nextVacancyResumePosition(vacancyId)),
+            )
+            check(touchVacancy(vacancyId, record.updatedAt) == 1)
+        }
+        return id
+    }
 
     @Transaction
     suspend fun create(record: Resume, mainResumeChange: MainResumeChange): Long {

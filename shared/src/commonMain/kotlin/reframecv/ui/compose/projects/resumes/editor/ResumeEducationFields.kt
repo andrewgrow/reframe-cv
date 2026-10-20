@@ -9,6 +9,7 @@ import reframecv.domain.models.resume.content.ResumeEducationSection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_add_entry
 import reframecv.shared.generated.resources.resume_degree
+import reframecv.shared.generated.resources.resume_education_notes
 import reframecv.shared.generated.resources.resume_institution
 import reframecv.shared.generated.resources.resume_specialty
 import reframecv.ui.components.projects.resumes.editor.ResumePeriodDraft
@@ -47,6 +48,9 @@ internal fun ResumeFormScope.EducationFields(
                         ),
                     )
                 }
+                Field(entry.notes, Res.string.resume_education_notes, {
+                    change(entry.copy(notes = it))
+                }, multiline = true, tag = "resume.education.notes")
                 EducationRemoveAction(draft, index, onChange)
             }
         }

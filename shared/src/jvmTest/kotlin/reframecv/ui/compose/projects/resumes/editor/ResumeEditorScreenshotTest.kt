@@ -233,6 +233,20 @@ class ResumeEditorScreenshotTest : GoldenScreenshotTest() {
     )
 
     @Test
+    fun positionDescriptionMatchesReference() = captureSection(
+        sampleResumeContent().sections[3],
+        ThemeMode.Dark,
+        scrollTo = "Position description",
+    )
+
+    @Test
+    fun educationNotesInLightThemeMatchReference() = captureSection(
+        sampleResumeContent().sections[4],
+        ThemeMode.Light,
+        scrollTo = "Education notes",
+    )
+
+    @Test
     fun educationSectionMatchesReference() = captureSection(4)
 
     @Test

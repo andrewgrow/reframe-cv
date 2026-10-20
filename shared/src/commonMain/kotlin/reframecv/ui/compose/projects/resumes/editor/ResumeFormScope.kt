@@ -1,9 +1,11 @@
 package reframecv.ui.compose.projects.resumes.editor
 
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -11,16 +13,43 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_add_entry
+import reframecv.shared.generated.resources.resume_resize_text
+import reframecv.ui.compose.common.ResizableTextField
 import reframecv.ui.theme.ReframeTheme
 
 /** Keeps repeated section controls and form fields consistent across the structured editor. */
-internal class ResumeFormScope(val enabled: Boolean) {
+internal class ResumeFormScope(
+    val enabled: Boolean,
+    private val scroll: ScrollState? = null,
+    private val viewport: () -> Rect = { Rect.Zero },
+) {
+    @Composable
+    fun ResizableField(
+        value: String,
+        label: StringResource,
+        tag: String,
+        onChange: (String) -> Unit,
+    ) {
+        ResizableTextField(
+            value,
+            onChange,
+            enabled = enabled,
+            scroll = scroll ?: rememberScrollState(),
+            viewport = viewport(),
+            label = stringResource(label),
+            resizeLabel = stringResource(Res.string.resume_resize_text),
+            tag = tag,
+            minimumHeight = ReframeTheme.tokens.dimensions.resumeTextMinHeight,
+        )
+    }
+
     @Composable
     fun Field(
         value: String,

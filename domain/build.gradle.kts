@@ -11,6 +11,7 @@ kotlin {
         commonMain.dependencies {
             api(libs.kotlinx.coroutinesCore)
             api(libs.kotlinx.serializationJson)
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies { implementation(libs.kotlin.test) }
         jvmTest.dependencies { implementation(libs.kotlin.testJunit) }

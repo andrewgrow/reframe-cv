@@ -2,12 +2,15 @@ package reframecv.ui.components.projects.vacancies.editor
 
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.screenstate.ScreenStateOwner
 import reframecv.domain.models.screenstate.ScreenType
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.recognition.RecognitionSource
 import reframecv.recognition.RecognizedVacancy
 import reframecv.recognition.applyTo
+import reframecv.ui.components.common.ai.AiPromptPreference
 import reframecv.ui.components.common.section.CollapsibleSectionComponent
 import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.context.AppComponentContext
@@ -23,6 +26,7 @@ interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
     val details: CollapsibleSectionComponent
+    val improvement: VacancyResumeImprovementComponent
     val assessment: VacancyResumeAssessmentComponent
     val resumes: VacancyResumesComponent
     val snapshot: VacancySnapshotComponent
@@ -42,6 +46,7 @@ interface VacancyEditorComponent {
             deleteState.value == VacancyDeleteState.Deleting ||
             exportComponent.state.value == VacancyExportState.Exporting ||
             importComponent.state.value == VacancyImportState.Importing ||
+            improvement.dialog.value.component != null ||
             assessment.dialog.value.component != null ||
             recognition.dialog.value.component != null ||
             recognition.state.value == VacancyRecognitionState.Processing
@@ -58,11 +63,22 @@ class DefaultVacancyEditorComponent(
     initialVacancy: Vacancy? = null,
     private val delete: () -> Unit = {},
     projectId: Long = initialVacancy?.projectId ?: 0,
+    openResume: (Resume) -> Unit = {},
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
     override val details = DefaultCollapsibleSectionComponent(
         componentContext,
         "job_details",
+        initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
+    )
+    private val assessmentPrompt = AiPromptPreference(
+        componentContext,
+        "resume_assessment_prompt_id",
+        initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
+    )
+    private val improvementPrompt = AiPromptPreference(
+        componentContext,
+        "resume_improvement_prompt_id",
         initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
     )
     private var persistedVacancy = initialVacancy
@@ -76,6 +92,7 @@ class DefaultVacancyEditorComponent(
         componentContext,
         projectId,
         current = { draft.value.resumes },
+        open = openResume,
         changed = { draft.value = draft.value.copy(resumes = it) },
         canEdit = {
             !isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle
@@ -90,6 +107,26 @@ class DefaultVacancyEditorComponent(
             resumes = { resumes.state.value.available },
             changed = { draft.value = draft.value.copy(resumes = it) },
             canEdit = { !isBusy && !modalOpen && deleteState.value == VacancyDeleteState.Idle },
+            promptPreference = assessmentPrompt,
+        )
+    override val improvement: VacancyResumeImprovementComponent =
+        DefaultVacancyResumeImprovementComponent(
+            componentContext,
+            vacancy = {
+                draft.value.applyTo(this.initialVacancy ?: draft.value.toVacancy(projectId))
+            },
+            resumes = { resumes.state.value.available },
+            improved = { record ->
+                resumes.onCreated(record)
+                draft.value =
+                    draft.value.copy(
+                        resumes =
+                            draft.value.resumes +
+                                VacancyResume(record.id),
+                    )
+            },
+            canEdit = { !isBusy && !modalOpen && deleteState.value == VacancyDeleteState.Idle },
+            promptPreference = improvementPrompt,
         )
     override val snapshot: DefaultVacancySnapshotComponent = DefaultVacancySnapshotComponent(
         componentContext,
@@ -184,13 +221,11 @@ class DefaultVacancyEditorComponent(
     internal fun onSaveCompleted(state: VacancySaveState, createdVacancy: Vacancy? = null) {
         if (createdVacancy != null) {
             persistedVacancy = createdVacancy
-            details.onBindOwner(
-                ScreenStateOwner(
-                    ScreenType.Vacancy,
-                    createdVacancy.id,
-                    createdVacancy.projectId,
-                ),
-            )
+            val owner =
+                ScreenStateOwner(ScreenType.Vacancy, createdVacancy.id, createdVacancy.projectId)
+            assessmentPrompt.onBindOwner(owner)
+            improvementPrompt.onBindOwner(owner)
+            details.onBindOwner(owner)
         }
         saveState.value = state
         if (state == VacancySaveState.Idle) {
@@ -220,6 +255,8 @@ class DefaultVacancyEditorComponent(
 
     override fun onClose() {
         when {
+            improvement.dialog.value.component != null -> improvement.onCancel()
+
             assessment.selection.value.resumeId != null -> assessment.onCloseResult()
 
             assessment.dialog.value.component != null -> assessment.onCancel()

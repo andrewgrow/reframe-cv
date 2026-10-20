@@ -64,7 +64,8 @@
     <string name="vacancy_resume_unlink_title">Unlink resume</string>
     <string name="vacancy_resume_unlink_question">Are you sure you want to unlink this resume? The resume itself will be kept. Save the vacancy to apply this change.</string>
     <string name="vacancy_resume_assess">Assess</string>
-    <string name="vacancy_resume_ats">Match: %1$d%</string>
+    <string name="vacancy_resume_open">Open resume</string>
+    <string name="vacancy_resume_ats">%1$d%</string>
     <string name="vacancy_resume_missing">Resume #%1$d (unavailable)</string>
     <string name="vacancy_list_hint">One item per line</string>
     <string name="vacancy_resize_list">Resize %1$s</string>
@@ -156,7 +157,6 @@
     <string name="resume_main_hint">Only one resume can be the main resume for a project. Selecting this replaces the current main resume.</string>
     <string name="resume_delete_title">Delete resume?</string>
     <string name="resume_delete_warning">This permanently deletes the resume and its stored content. Links from vacancies and derived resumes will be cleared. This cannot be undone.</string>
-    <string name="resume_delete_prompt">Type DELETE to confirm</string>
     <string name="resume_delete_confirm">Permanently delete</string>
     <string name="resume_delete_error">Could not delete the resume. Please try again.</string>
     <string name="action_export">Export</string>
@@ -353,4 +353,19 @@
     <string name="vacancy_parse_replace_warning">The selected file will be sent to the provider. The result will replace vacancy fields except Internal name, Keywords, and the attachment. Changes are saved only when you press Save on the vacancy page.</string>
     <string name="vacancy_source_parsed">Successfully parsed from this document.</string>
     <string name="prompts_resize_text">Resize prompt text</string>
+    <string name="resume_work_arrangement">Work arrangement (optional)</string>
+    <string name="resume_work_authorization">Work authorization (optional)</string>
+    <string name="resume_position_description">Position description</string>
+    <string name="resume_education_notes">Education notes</string>
+    <string name="resume_position_links">Position links</string>
+    <string name="resume_project_links">Project links</string>
+    <string name="resume_link_label">Link label</string>
+    <string name="resume_link_url">URL</string>
+    <string name="resume_add_link">Add Link</string>
+    <string name="resume_remove_link">Remove Link</string>
+    <string name="resume_remove_link_title">Remove link?</string>
+    <string name="resume_remove_link_question">Are you sure you want to remove this link?</string>
+    <string name="resume_resize_text">Resize resume text</string>
+    <string name="vacancy_resume_improve">Improve resume with AI</string>
+    <string name="resume_improvement_warning">The resume and vacancy JSON will be sent to the provider. Success immediately saves a new linked resume without photos, keywords, or main status. The source is kept. For a new vacancy, Save persists the link; closing keeps the new resume in the project.</string>
 </resources>

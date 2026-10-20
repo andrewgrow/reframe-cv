@@ -7,10 +7,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.testTag
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_sections
@@ -29,12 +35,14 @@ internal fun ResumeEditorFields(
 ) {
     val scroll = rememberScrollState()
     val focus = remember { FocusRequester() }
-    val form = remember(enabled) { ResumeFormScope(enabled) }
+    var viewport by remember { mutableStateOf(Rect.Zero) }
+    val form = remember(enabled, scroll) { ResumeFormScope(enabled, scroll) { viewport } }
     val nameError = validationRequested && draft.name.isBlank()
     val tokens = ReframeTheme.tokens
     FastScrollColumn(
         scrollState = scroll,
-        contentModifier = Modifier.testTag("resume.fields"),
+        contentModifier = Modifier.testTag("resume.fields")
+            .onGloballyPositioned { viewport = it.boundsInWindow() },
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
         form.NameAndPhotoFields(draft, onChange, focus, nameError, photoComponent)

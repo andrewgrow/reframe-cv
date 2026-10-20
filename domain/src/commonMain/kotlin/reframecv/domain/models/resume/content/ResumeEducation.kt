@@ -9,4 +9,5 @@ data class ResumeEducation(
     val degree: String = "",
     val specialty: String = "",
     val period: ResumeDateRange = ResumeDateRange(),
+    val notes: String = "",
 )

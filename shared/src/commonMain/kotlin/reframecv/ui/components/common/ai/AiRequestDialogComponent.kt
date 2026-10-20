@@ -68,12 +68,15 @@ class DefaultAiRequestDialogComponent<Result>(
     private val execute: suspend (ProviderConnection, String) -> Result,
     private val completed: (Result) -> Unit,
     private val dismissed: () -> Unit,
+    private val promptPreference: AiPromptPreference? = null,
 ) : AiRequestDialogComponent {
     private val dependencies = context.dependencies
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observation: Job? = null
     private var closed = false
     private var generation = 0L
+    private var preferredPromptId: Long? = null
+    private var preferenceLoaded = false
     override val state = MutableValue(AiRequestDialogState(sourceName))
 
     init {
@@ -88,6 +91,10 @@ class DefaultAiRequestDialogComponent<Result>(
         state.value = state.value.copy(loading = true, choicesFailed = false, error = null)
         observation = scope.launch {
             try {
+                if (!preferenceLoaded) {
+                    preferredPromptId = promptPreference?.load()
+                    preferenceLoaded = true
+                }
                 combine(
                     dependencies.providerSettingsUseCases.observe(),
                     dependencies.promptsUseCases.observeAvailable(component),
@@ -107,6 +114,7 @@ class DefaultAiRequestDialogComponent<Result>(
         val connectionId = old.connectionId?.takeIf { id -> connections.any { it.id == id } }
             ?: connections.singleOrNull()?.id
         val promptId = old.promptId?.takeIf { id -> prompts.any { it.id == id } }
+            ?: preferredPromptId?.takeIf { id -> prompts.any { it.id == id } }
             ?: prompts.singleOrNull()?.id
         state.value = old.copy(
             connections = connections,
@@ -185,6 +193,7 @@ class DefaultAiRequestDialogComponent<Result>(
                         .any { it.id == draft.promptId },
                 ) { "Prompt is no longer active" }
                 val connection = dependencies.providerSettingsUseCases.requireUsableConnection(id)
+                draft.promptId?.let { promptPreference?.remember(it) }
                 val result = execute(connection, draft.text)
                 currentCoroutineContext().ensureActive()
                 dependencies.providerSettingsUseCases.requireUsableConnection(id)

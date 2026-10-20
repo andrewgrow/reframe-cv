@@ -9,6 +9,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.ExperimentalTestApi
 import kotlin.test.Test
+import reframecv.assessment.ResumeAssessment
+import reframecv.assessment.ResumeAssessmentResult
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.vacancy.VacancyResume
 import reframecv.testing.GoldenScreenshotTest
@@ -16,6 +18,7 @@ import reframecv.ui.components.projects.vacancies.editor.TestVacancyResumesCompo
 import reframecv.ui.components.projects.vacancies.editor.VacancyResumesState
 import reframecv.ui.theme.ReframeTheme
 import reframecv.ui.theme.ReframeTheme.ThemeMode
+import reframecv.ui.theme.UiScale
 
 @OptIn(ExperimentalTestApi::class)
 class VacancyResumesScreenshotTest : GoldenScreenshotTest() {
@@ -30,6 +33,28 @@ class VacancyResumesScreenshotTest : GoldenScreenshotTest() {
         Resume(id = 2, projectId = 7, name = "Backend Developer", createdAt = 0, updatedAt = 0),
     )
     private val links = listOf(VacancyResume(1), VacancyResume(2, 82))
+    private val perfectAssessment = ResumeAssessment(
+        ResumeAssessmentResult(100, "Matches all requirements."),
+        1,
+        0,
+        "{}",
+        "Work",
+        "model",
+    )
+
+    @Test
+    fun perfectScoreMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this) { ResumeLinks(listOf(VacancyResume(1, 100, perfectAssessment))) }
+    }
+
+    @Test
+    fun perfectScoreAtIncreasedScaleMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this) {
+            ReframeTheme(themeMode = ThemeMode.Dark, uiScale = UiScale(150)) {
+                ResumeLinks(listOf(VacancyResume(1, 100, perfectAssessment)))
+            }
+        }
+    }
 
     @Test
     fun emptyPickerMatchesReference() = runDesktopComposeUiTest {

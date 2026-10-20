@@ -10,7 +10,10 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.ui.components.projects.resumes.DefaultResumesComponent
+import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyEditorComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyDeleteState
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
@@ -33,6 +36,9 @@ interface VacanciesComponent {
 
         /** Displays creation or editing without covering the application shell. */
         data class Editor(val component: VacancyEditorComponent) : Child
+
+        /** Opens a linked resume while retaining the vacancy draft underneath. */
+        data class LinkedResume(val component: ResumesComponent) : Child
     }
     fun onEdit(vacancy: Vacancy)
     fun onAdd()
@@ -67,6 +73,9 @@ class DefaultVacanciesComponent(
 
         /** Opens editing for an existing vacancy. */
         data class Edit(val vacancy: Vacancy) : EditorConfiguration
+
+        /** Opens a resume linked to the current vacancy. */
+        data class LinkedResume(val resume: Resume) : EditorConfiguration
     }
 
     private val editorNavigation = StackNavigation<EditorConfiguration>()
@@ -78,6 +87,15 @@ class DefaultVacanciesComponent(
     ) { configuration, childContext ->
         if (configuration == EditorConfiguration.List) {
             VacanciesComponent.Child.List
+        } else if (configuration is EditorConfiguration.LinkedResume) {
+            VacanciesComponent.Child.LinkedResume(
+                DefaultResumesComponent(
+                    childContext,
+                    projectId,
+                    back = { editorNavigation.pop() },
+                    initialResume = configuration.resume,
+                ),
+            )
         } else {
             val original = (configuration as? EditorConfiguration.Edit)?.vacancy
             VacanciesComponent.Child.Editor(
@@ -99,6 +117,7 @@ class DefaultVacanciesComponent(
                         editor?.initialVacancy?.let { store.accept(VacanciesIntent.Delete(it.id)) }
                     },
                     close = { editorNavigation.pop() },
+                    openResume = { editorNavigation.pushNew(EditorConfiguration.LinkedResume(it)) },
                 ),
             )
         }
@@ -108,7 +127,7 @@ class DefaultVacanciesComponent(
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
         val stackSubscription = childStack.subscribe {
-            editorBack.isEnabled = it.active.instance is VacanciesComponent.Child.Editor
+            editorBack.isEnabled = it.active.instance != VacanciesComponent.Child.List
         }
         lifecycle.doOnDestroy {
             stackSubscription.cancel()
@@ -152,7 +171,10 @@ class DefaultVacanciesComponent(
 
     override fun onRetry() = store.accept(VacanciesIntent.Load)
     override fun onBack() {
-        val editor = editor
-        if (editor != null) editor.onClose() else back()
+        when (val child = childStack.value.active.instance) {
+            is VacanciesComponent.Child.Editor -> child.component.onClose()
+            is VacanciesComponent.Child.LinkedResume -> child.component.onBack()
+            VacanciesComponent.Child.List -> back()
+        }
     }
 }
