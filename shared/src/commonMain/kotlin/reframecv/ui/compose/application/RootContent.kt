@@ -30,6 +30,7 @@ import reframecv.ui.compose.settings.SettingsContent
 
 @Composable
 fun RootContent(component: RootComponent) {
+    val balance by component.balanceNotice.subscribeAsState()
     val navigationState by component.navigationPanel.state.subscribeAsState()
     if (navigationState.loading) return
     val stack by component.childStack.subscribeAsState()
@@ -70,6 +71,7 @@ fun RootContent(component: RootComponent) {
                 onSettings = component::onSettings,
                 settingsSelected = active is RootComponent.Child.Settings,
                 footerHeight = footerHeight,
+                balance = balance.balance,
             )
             VerticalDivider()
             Children(

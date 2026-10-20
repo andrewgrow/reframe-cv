@@ -16,6 +16,67 @@ import reframecv.ui.threading.runOnUiThread
 
 class AiRequestDialogComponentTest : ComponentTest() {
     @Test
+    fun finishedRequestsRefreshBalanceWithoutDelayingResultsOrHidingRequestErrors() = runBlocking {
+        dependencies.providerSettingsUseCases.save(
+            connection("Work").copy(managementApiKey = "management"),
+        )
+        dependencies.promptsUseCases.save(Prompt(text = "Assess"))
+        val balanceStarted = CompletableDeferred<Unit>()
+        val balanceResponse =
+            CompletableDeferred<reframecv.domain.models.providers.ProviderCreditBalance>()
+        dependencies.balanceResponse = {
+            balanceStarted.complete(Unit)
+            balanceResponse.await()
+        }
+        val completed = CompletableDeferred<Unit>()
+        val success = runOnUiThread {
+            DefaultAiRequestDialogComponent(
+                appComponentContext(),
+                "resume",
+                PromptComponent.Vacancies,
+                execute = { _, _ ->
+                    "result"
+                },
+                completed = { completed.complete(Unit) },
+                dismissed = {},
+            )
+        }
+        await(success) { !it.loading }
+        runOnUiThread { success.onRun() }
+        withTimeout(5000) {
+            completed.await()
+            balanceStarted.await()
+        }
+        assertFalse(balanceResponse.isCompleted)
+        balanceResponse.complete(
+            reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1),
+        )
+        val shown = CompletableDeferred<Unit>()
+        runOnUiThread {
+            dependencies.aiRequestBalance.state.subscribe {
+                if (it.balance !=
+                    null
+                ) {
+                    shown.complete(Unit)
+                }
+            }
+        }
+        withTimeout(5000) { shown.await() }
+        assertEquals(listOf("management"), dependencies.balanceRequests)
+        val refreshed = CompletableDeferred<Unit>()
+        dependencies.balanceResponse = {
+            refreshed.complete(Unit)
+            reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.02, 2)
+        }
+        val failure = create()
+        await(failure) { !it.loading }
+        runOnUiThread { failure.onRun() }
+        await(failure) { it.error == "Rejected" && !it.running }
+        withTimeout(5000) { refreshed.await() }
+        assertTrue(failure.state.value.canRun)
+    }
+
+    @Test
     fun filtersDisabledAndOtherComponentChoicesAndRequiresExplicitSelectionWhenAmbiguous() =
         runBlocking {
             val first = dependencies.providerSettingsUseCases.save(connection("First"))

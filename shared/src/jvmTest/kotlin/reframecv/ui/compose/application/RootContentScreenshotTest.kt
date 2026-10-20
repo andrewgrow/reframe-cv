@@ -13,6 +13,27 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 class RootContentScreenshotTest : GoldenScreenshotTest() {
     @OptIn(ExperimentalTestApi::class)
     @Test
+    fun remainingBalanceAboveSettingsMatchesReference() = runComposeUiTest {
+        val root = TestRootComponent()
+        root.balanceNotice.value = reframecv.ui.components.common.ai.AiBalanceNotice(
+            reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1),
+        )
+        setAndCaptureGolden(this) { RootContent(root) }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
+    fun collapsedBalanceInLightThemeMatchesReference() = runComposeUiTest {
+        val root = TestRootComponent()
+        root.balanceNotice.value = reframecv.ui.components.common.ai.AiBalanceNotice(
+            reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1),
+        )
+        root.navigationPanel.onToggle()
+        setAndCaptureGolden(this, themeMode = ThemeMode.Light) { RootContent(root) }
+    }
+
+    @OptIn(ExperimentalTestApi::class)
+    @Test
     fun projectListMatchesReference() = runComposeUiTest {
         val project = Project(id = 1, name = "Android Developer", createdAt = 0, updatedAt = 0)
         val component = TestRootComponent(

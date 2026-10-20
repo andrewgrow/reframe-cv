@@ -262,8 +262,10 @@ variants, and leaves date invariants to domain validation. Generated content is 
 strictly, without tolerant import repair or legacy consent normalization.
 
 `ImproveResumeUseCase` creates a new resume in the same project with the selected source's
-ID as `sourceResumeId`, a name suffixed `(AI yyyy-dd-MM HH:mm)` in the device's local time,
-and the generated content. Keywords and photo are empty; main-resume selection is unchanged.
+ID as `sourceResumeId`, a name formed as `<source name> + <vacancy internal name> (AI yyyy-dd-MM HH:mm)` in the device's local time,
+and the generated content. Repeated trailing AI timestamps and matching vacancy-name suffixes
+are replaced, so repeated improvement for the same vacancy keeps one vacancy name and one AI timestamp.
+A blank draft vacancy name is omitted; other custom name parts are preserved. Keywords and photo are empty; main-resume selection is unchanged.
 The source resume and its assessment are preserved. The new link starts at zero with no
 assessment. Each version can be assessed and improved again independently.
 
@@ -500,6 +502,13 @@ request jobs, and failures. Disabling, pausing, closing, saving, or changing cre
 pending requests. Changing the management key invalidates only the credit cache; changing the
 ordinary key invalidates only its budget cache. Credit-cache writes require matching provider,
 management key, connection ID, and enabled status; stale saves preserve newer cached values.
+
+Completed AI requests (including failures, excluding cancellation) trigger a best-effort background
+credit refresh for the used connection. This application-scoped job survives the request dialog,
+does not delay its result, and skips disabled connections or missing management keys. A successful
+refresh updates the existing cache and shows Remaining balance above Settings for five seconds,
+rounded to cents as `$99,99`; the collapsed panel shows only the amount. New successful refreshes
+restart that timer. Failures are logged without changing the AI result, and shutdown cancels jobs.
 
 The provider editor separates Management (management key and account credits) from Model API
 (ordinary key, model catalog, and key budgets). Both sections have independent manual refresh

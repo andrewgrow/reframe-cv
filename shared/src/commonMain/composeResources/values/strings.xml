@@ -3,6 +3,7 @@
     <string name="resume_assessment_title">Resume assessment</string>
     <string name="resume_assessment_stale">The resume or vacancy has changed since this assessment. Reassess to evaluate the current content.</string>
     <string name="navigation_hide">Collapse navigation</string>
+    <string name="navigation_remaining_balance">Remaining balance</string>
     <string name="navigation_show">Expand navigation</string>
     <string name="vacancy_job_details">Job details</string>
     <string name="section_collapse">Collapse</string>

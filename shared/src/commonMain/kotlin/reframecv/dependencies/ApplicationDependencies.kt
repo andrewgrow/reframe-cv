@@ -17,6 +17,7 @@ import reframecv.repository.CoverLettersRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
+import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
@@ -32,6 +33,7 @@ import reframecv.usecase.VacancyFilesUseCases
 
 /** Defines the contract each platform implements to provide application dependencies. */
 interface ApplicationDependencies {
+    val aiRequestBalance: AiRequestBalance
     val eventHistory: EventHistory
     val storeFactory: StoreFactory
     val logger: ApplicationLogger

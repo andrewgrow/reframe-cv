@@ -58,7 +58,7 @@ class ImproveResumeUseCase(
         val time = timestamp()
         val record = Resume(
             projectId = source.projectId,
-            name = "${source.name} (AI ${improvementTimestamp(time)})",
+            name = improvementName(source.name, vacancy.name, time),
             createdAt = time,
             updatedAt = time,
             content = content,
@@ -80,6 +80,16 @@ class ImproveResumeUseCase(
     }
 }
 
+private fun improvementName(source: String, vacancy: String, millis: Long): String {
+    var base = source.replace(aiNameSuffix, "").trimEnd()
+    if (vacancy.isNotBlank()) {
+        val suffix = " + ${vacancy.trim()}"
+        while (base.endsWith(suffix)) base = base.removeSuffix(suffix).trimEnd()
+        base += suffix
+    }
+    return "$base (AI ${improvementTimestamp(millis)})"
+}
+
 private fun improvementTimestamp(millis: Long): String {
     val time = Instant.fromEpochMilliseconds(
         millis,
@@ -88,3 +98,5 @@ private fun improvementTimestamp(millis: Long): String {
     return "${time.year}-${time.day.twoDigits()}-${(time.month.ordinal + 1).twoDigits()} " +
         "${time.hour.twoDigits()}:${time.minute.twoDigits()}"
 }
+
+private val aiNameSuffix = Regex("""(?: \(AI \d{4}-\d{2}-\d{2} \d{2}:\d{2}\))+$""")

@@ -22,6 +22,8 @@ class TestRootComponent(
     resumesComponent: ResumesComponent? = null,
     settingsComponent: SettingsComponent? = null,
 ) : RootComponent {
+    override val balanceNotice =
+        MutableValue(reframecv.ui.components.common.ai.AiBalanceNotice())
     override val navigationPanel = TestCollapsibleSectionComponent()
     override val projectTree = object : ProjectTreeComponent {
         override val state = MutableValue(initialTreeState)

@@ -14,6 +14,7 @@ import reframecv.domain.models.screenstate.ScreenStateOwner
 import reframecv.domain.models.screenstate.ScreenType
 import reframecv.ui.components.application.navigation.DefaultProjectTreeComponent
 import reframecv.ui.components.application.navigation.ProjectTreeComponent
+import reframecv.ui.components.common.ai.AiBalanceNotice
 import reframecv.ui.components.common.section.CollapsibleSectionComponent
 import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
@@ -32,6 +33,7 @@ import reframecv.ui.context.AppComponentContext
 /** Lets the application shell show the selected screen alongside project navigation. */
 interface RootComponent {
     val childStack: Value<ChildStack<*, Child>>
+    val balanceNotice: Value<AiBalanceNotice>
     val navigationPanel: CollapsibleSectionComponent
     val projectTree: ProjectTreeComponent
     fun onSettings()
@@ -60,6 +62,7 @@ interface RootComponent {
 class DefaultRootComponent(componentContext: AppComponentContext) :
     RootComponent,
     AppComponentContext by componentContext {
+    override val balanceNotice get() = dependencies.aiRequestBalance.state
     override val navigationPanel = DefaultCollapsibleSectionComponent(
         componentContext,
         "navigation_panel",

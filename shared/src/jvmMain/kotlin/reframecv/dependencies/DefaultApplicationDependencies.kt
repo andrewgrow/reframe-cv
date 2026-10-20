@@ -55,6 +55,7 @@ import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
+import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
@@ -291,7 +292,11 @@ class DefaultApplicationDependencies(
             return providerSettings
         }
 
+    private val requestBalance = lazy { AiRequestBalance(providerSettingsUseCases, logger) }
+    override val aiRequestBalance get() = requestBalance.value
+
     override fun close() {
+        if (requestBalance.isInitialized()) requestBalance.value.close()
         if (closed) return
         closed = true
         if (screenStates.isInitialized()) runBlocking { screenStates.value.close() }

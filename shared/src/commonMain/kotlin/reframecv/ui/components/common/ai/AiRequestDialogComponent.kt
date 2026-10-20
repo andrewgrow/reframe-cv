@@ -13,6 +13,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
@@ -194,7 +195,13 @@ class DefaultAiRequestDialogComponent<Result>(
                 ) { "Prompt is no longer active" }
                 val connection = dependencies.providerSettingsUseCases.requireUsableConnection(id)
                 draft.promptId?.let { promptPreference?.remember(it) }
-                val result = execute(connection, draft.text)
+                val result = try {
+                    execute(connection, draft.text)
+                } finally {
+                    if (currentCoroutineContext().isActive) {
+                        dependencies.aiRequestBalance.onRequestFinished(connection.id)
+                    }
+                }
                 currentCoroutineContext().ensureActive()
                 dependencies.providerSettingsUseCases.requireUsableConnection(id)
                 if (!closed && request == generation) {

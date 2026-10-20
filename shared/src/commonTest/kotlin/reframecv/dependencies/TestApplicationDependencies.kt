@@ -41,6 +41,7 @@ import reframecv.repository.TestResumesRepository
 import reframecv.repository.TestScreenStatesRepository
 import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
+import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
@@ -205,6 +206,10 @@ class TestApplicationDependencies : ApplicationDependencies {
     val promptsRepository = TestPromptsRepository()
     override val promptsUseCases = PromptsUseCases(promptsRepository)
 
+    val balanceRequests = mutableListOf<String>()
+    var balanceResponse: suspend () -> reframecv.domain.models.providers.ProviderCreditBalance = {
+        reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1)
+    }
     private val connections = MutableStateFlow<List<ProviderConnection>>(emptyList())
     override val providerSettingsUseCases = ProviderSettingsUseCases(
         object : ProviderConnectionsRepository {
@@ -257,14 +262,26 @@ class TestApplicationDependencies : ApplicationDependencies {
             }
         },
         ProviderModelsRepository { _, _ -> emptyList() },
-        ProviderAccountRepository { _, _ ->
-            ProviderAccountInfo(fetchedAt = reframecv.shared.nowMillis())
+        object : ProviderAccountRepository {
+            override suspend fun load(type: ApiProviderType, apiKey: String) =
+                ProviderAccountInfo(fetchedAt = reframecv.shared.nowMillis())
+            override suspend fun balance(
+                type: ApiProviderType,
+                managementApiKey: String,
+            ): reframecv.domain.models.providers.ProviderCreditBalance {
+                balanceRequests += managementApiKey
+                return balanceResponse()
+            }
         },
     )
     val screenStatesRepository = TestScreenStatesRepository()
     private val screenStates = lazy { ScreenStateUseCases(screenStatesRepository, logger) }
     override val screenStateUseCases get() = screenStates.value
+    private val requestBalance = lazy { AiRequestBalance(providerSettingsUseCases, logger) }
+    override val aiRequestBalance get() = requestBalance.value
+
     override fun close() {
+        if (requestBalance.isInitialized()) requestBalance.value.close()
         if (screenStates.isInitialized()) runBlocking { screenStates.value.close() }
     }
 }

@@ -158,6 +158,17 @@ incorporate them. Keep additions consistent with the candidate's role, seniority
 purpose, employment period, and technologies available at that time. If there is no
 plausible existing position or project, leave the requirement uncovered.
 
+For permitted experience additions, describe concrete hands-on application within the
+selected existing position or project: what the candidate designed, implemented,
+integrated, configured, tested, optimized, or maintained, and how it served that project.
+Do not default to weaker wording such as "evaluated", "reviewed", "explored", or
+"familiar with" merely because the source did not explicitly name the requirement.
+Close the gap through a plausible practical contribution, not just a keyword mention
+or a statement of theoretical awareness. Apply this consistently to protocols, streaming,
+security, device integration, testing, and other relevant requirements. Keep the scope
+proportionate to the existing role and project; do not inflate it into expert-level
+mastery, ownership of an entire platform, certified compliance, or invented outcomes.
+
 Integrate these additions naturally into the resume prose, without assumption labels,
 separate explanations, questions, or review notes. The user will review the resulting
 resume. Do not create new employers, positions, or projects, invent qualifications or
@@ -200,4 +211,6 @@ and measurements. Preserve position and project links with their original owners
 Include every field required by the response schema; use empty strings and arrays for
 missing values, and null only where the schema allows it. Never add local IDs, paths,
 photos, keywords, or application metadata.
+
+Systematically identify and close as many gaps as possible between the vacancy and the resume by integrating relevant terminology, skills, and plausible experience into the most appropriate existing positions, projects, and skill groups, while respecting the factual constraints above.
 ```

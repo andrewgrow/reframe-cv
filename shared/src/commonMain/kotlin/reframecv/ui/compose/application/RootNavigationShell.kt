@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_show
 import reframecv.shared.generated.resources.settings_title
@@ -45,6 +46,7 @@ internal fun RootNavigation(
     onSettings: () -> Unit = {},
     settingsSelected: Boolean = false,
     footerHeight: Dp? = null,
+    balance: ProviderCreditBalance? = null,
 ) {
     val tokens = ReframeTheme.tokens
     val state by panel.state.subscribeAsState()
@@ -85,6 +87,7 @@ internal fun RootNavigation(
                 )
             }
         }
+        NavigationBalance(balance, collapsed)
         NavigationSettings(onSettings, settingsSelected, collapsed, footerHeight)
     }
 }
