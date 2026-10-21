@@ -423,4 +423,15 @@
     <string name="letter_import_progress">Importing cover letter...</string>
     <string name="resumes_more_links">%1$d more</string>
     <string name="resumes_linked_vacancies">Linked vacancies</string>
+    <string name="settings_transfer_title">Import / export settings</string>
+    <string name="settings_transfer_description">Back up API connections, prompts and global settings. Import adds new records and skips exact duplicates without overwriting existing connections or credentials. Projects and documents are not included.</string>
+    <string name="settings_transfer_keys">Include API keys in export</string>
+    <string name="settings_transfer_secret_warning">This JSON will contain API keys and Management API keys in plain text. Keep it private and store it securely.</string>
+    <string name="settings_transfer_import">Import JSON</string>
+    <string name="settings_transfer_export">Export JSON</string>
+    <string name="settings_transfer_exported">Settings exported successfully.</string>
+    <string name="settings_transfer_imported">Imported %1$d connections and %2$d prompts. Skipped %3$d duplicates and %4$d invalid or unsupported records.</string>
+    <string name="settings_transfer_window">Window preferences restored. They apply on the next launch.</string>
+    <string name="settings_transfer_import_error">Could not import settings. Choose a supported settings backup (up to 10 MB) and try again. No settings were changed.</string>
+    <string name="settings_transfer_export_error">Could not export settings. Try again.</string>
 </resources>

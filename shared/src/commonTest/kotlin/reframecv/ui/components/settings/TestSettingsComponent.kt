@@ -10,7 +10,9 @@ class TestSettingsComponent(
     initial: SettingsState = SettingsState(loading = false),
     editor: ProviderEditorState? = null,
     prompts: PromptsComponent? = null,
+    override val transfer: SettingsTransferComponent = TestSettingsTransferComponent(),
 ) : SettingsComponent {
+    override fun onTransfer() = Unit
     override val state = MutableValue(initial)
     override val editorSlot = MutableValue<ChildSlot<*, ProviderEditorComponent>>(
         editor?.let { ChildSlot(child = Child.Created(Unit, TestProviderEditorComponent(it))) }

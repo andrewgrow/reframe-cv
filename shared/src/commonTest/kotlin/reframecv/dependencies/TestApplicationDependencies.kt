@@ -63,6 +63,20 @@ import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
 class TestApplicationDependencies : ApplicationDependencies {
+    override val settingsBackupUseCases = reframecv.usecase.SettingsBackupUseCases(
+        object : reframecv.settings.SettingsBackupRepository {
+            override suspend fun snapshot() = reframecv.settings.SettingsBackup()
+            override suspend fun restore(backup: reframecv.settings.SettingsBackup) =
+                reframecv.settings.SettingsImportReport(
+                    backup.connections.size,
+                    backup.prompts.size,
+                )
+        },
+        object : reframecv.settings.SettingsBackupFiles {
+            override suspend fun read(): String? = null
+            override suspend fun write(json: String) = DocumentExportResult.Cancelled
+        },
+    )
     override val eventHistory = EventHistory()
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     override val logger = RecordingApplicationLogger()

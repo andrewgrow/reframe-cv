@@ -676,3 +676,11 @@ Heading chains stay with their opening text, oversized text splits at measured l
 and each page contains only its own text. All PDF templates share a renderer lock.
 File selection, temporary-file cleanup, and progress use the existing export lifecycle.
 See [PDF rendering](pdf-rendering.md) for supported fields and development checks.
+
+## Portable settings backups
+
+`SettingsBackupUseCases` coordinates versioned JSON in `domain`, transactional reads/restores
+through `SettingsBackupRepository` in `database`, and native JSON file operations in `shared`.
+Imports add supported records, skip duplicates and never overwrite stored provider credentials.
+Global preferences are restored in the same transaction. API keys require explicit export consent;
+account caches and screen states are excluded. See [Settings backups](settings-backups.md).

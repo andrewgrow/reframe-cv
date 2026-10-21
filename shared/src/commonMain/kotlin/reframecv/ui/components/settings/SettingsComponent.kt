@@ -23,7 +23,7 @@ import reframecv.ui.components.settings.prompts.PromptsComponent
 import reframecv.ui.context.AppComponentContext
 
 /** Identifies a top-level settings destination. */
-enum class SettingsSection { Overview, ApiProviders }
+enum class SettingsSection { Overview, ApiProviders, Transfer }
 
 /** Supplies the persisted provider list and retryable operation feedback. */
 data class SettingsState(
@@ -36,9 +36,11 @@ data class SettingsState(
 
 /** Provides global provider and prompt settings. */
 interface SettingsComponent {
+    val transfer: SettingsTransferComponent
     val state: Value<SettingsState>
     val editorSlot: Value<ChildSlot<*, ProviderEditorComponent>>
     val promptsSlot: Value<ChildSlot<*, PromptsComponent>>
+    fun onTransfer()
     fun onProviders()
     fun onPrompts()
     fun onAdd()
@@ -46,7 +48,8 @@ interface SettingsComponent {
     fun onActiveChange(id: Long, active: Boolean)
     fun onRetry()
     fun onBack()
-    val isBusy: Boolean get() = editorSlot.value.child?.instance?.state?.value?.busy == true ||
+    val isBusy: Boolean get() = transfer.state.value.operation != null ||
+        editorSlot.value.child?.instance?.state?.value?.busy == true ||
         promptsSlot.value.child?.instance?.isBusy == true
 }
 
@@ -56,6 +59,12 @@ class DefaultSettingsComponent(
     private val back: () -> Unit,
 ) : SettingsComponent,
     AppComponentContext by componentContext {
+    override val transfer = DefaultSettingsTransferComponent(componentContext) {
+        state.value = state.value.copy(section = SettingsSection.Overview)
+    }
+    override fun onTransfer() {
+        if (!isBusy) state.value = state.value.copy(section = SettingsSection.Transfer)
+    }
     private val useCases = dependencies.providerSettingsUseCases
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observation: Job? = null
@@ -156,6 +165,8 @@ class DefaultSettingsComponent(
         val prompts = promptsSlot.value.child?.instance
         val editor = editorSlot.value.child?.instance
         when {
+            state.value.section == SettingsSection.Transfer -> transfer.onBack()
+
             prompts != null -> prompts.onBack()
 
             editor != null -> editor.onBack()

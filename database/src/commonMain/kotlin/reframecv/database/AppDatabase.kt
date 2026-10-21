@@ -6,6 +6,7 @@ import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import kotlinx.coroutines.Dispatchers
+import reframecv.database.backup.SettingsBackupDao
 import reframecv.database.coverletter.CoverLetterDao
 import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.coverletter.CoverLetterKeywordEntity
@@ -49,6 +50,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun settingsBackupDao(): SettingsBackupDao
     abstract fun screenStatesDao(): ScreenStatesDao
     abstract fun promptsDao(): PromptsDao
     abstract fun providerConnectionsDao(): ProviderConnectionsDao

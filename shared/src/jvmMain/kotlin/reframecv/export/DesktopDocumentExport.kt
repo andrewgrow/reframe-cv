@@ -17,11 +17,11 @@ internal class DesktopDocumentExport(
 ) {
     suspend fun export(
         kind: String,
-        id: Long,
+        id: Long?,
         extension: String,
         content: () -> ByteArray,
     ): DocumentExportResult {
-        require(id > 0)
+        require(id == null || id > 0)
         var temporary: Path? = null
         try {
             val filename = withContext(Dispatchers.IO) {
@@ -33,7 +33,7 @@ internal class DesktopDocumentExport(
                     Files.createTempFile(temporaryDirectory, "reframecv-$kind-", ".$extension")
                 }
                 Files.write(checkNotNull(temporary), content())
-                "$kind-$id-$stamp.$extension"
+                listOfNotNull(kind, id?.toString(), stamp).joinToString("-") + ".$extension"
             }
             val destination = picker.pick(filename) ?: return DocumentExportResult.Cancelled
             withContext(Dispatchers.IO) {

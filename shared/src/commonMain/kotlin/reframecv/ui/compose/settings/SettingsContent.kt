@@ -31,6 +31,7 @@ import reframecv.shared.generated.resources.settings_error_save
 import reframecv.shared.generated.resources.settings_error_validation
 import reframecv.shared.generated.resources.settings_providers
 import reframecv.shared.generated.resources.settings_title
+import reframecv.shared.generated.resources.settings_transfer_title
 import reframecv.ui.components.settings.SettingsComponent
 import reframecv.ui.components.settings.SettingsError
 import reframecv.ui.components.settings.SettingsSection
@@ -55,6 +56,7 @@ fun SettingsContent(component: SettingsComponent) {
         ),
     ) {
         when {
+            state.section == SettingsSection.Transfer -> SettingsTransferContent(component.transfer)
             child != null -> ProviderEditorContent(child)
             promptsChild != null -> PromptsContent(promptsChild)
             state.section == SettingsSection.ApiProviders -> ProviderConnectionsContent(component)
@@ -86,6 +88,11 @@ private fun SettingsListContent(component: SettingsComponent) {
                     stringResource(Res.string.prompts_title),
                     component::onPrompts,
                     "settings.prompts",
+                )
+                SettingsNavigationItem(
+                    stringResource(Res.string.settings_transfer_title),
+                    component::onTransfer,
+                    "settings.transfer",
                 )
             }
         }

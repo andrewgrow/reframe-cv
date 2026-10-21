@@ -33,11 +33,13 @@ import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
 import reframecv.usecase.ScreenStateUseCases
+import reframecv.usecase.SettingsBackupUseCases
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
 /** Defines the contract each platform implements to provide application dependencies. */
 interface ApplicationDependencies {
+    val settingsBackupUseCases: SettingsBackupUseCases
     val aiRequestBalance: AiRequestBalance
     val eventHistory: EventHistory
     val storeFactory: StoreFactory

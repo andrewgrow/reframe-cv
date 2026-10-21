@@ -74,6 +74,20 @@ class SettingsComponentTest : ComponentTest() {
     )
 
     @Test
+    fun backupPageReturnsToSettingsOverview() = runOnUiThread<Unit> {
+        lifecycle.resume()
+        var closed = false
+        val settings = DefaultSettingsComponent(appComponentContext()) { closed = true }
+        settings.onTransfer()
+        assertEquals(SettingsSection.Transfer, settings.state.value.section)
+        settings.onBack()
+        assertEquals(SettingsSection.Overview, settings.state.value.section)
+        assertFalse(closed)
+        settings.onBack()
+        assertTrue(closed)
+    }
+
+    @Test
     fun settingsAndItsEditorParticipateInBackNavigation() = runOnUiThread<Unit> {
         lifecycle.resume()
         val root = DefaultRootComponent(appComponentContext())

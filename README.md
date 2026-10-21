@@ -186,3 +186,5 @@ splitting UTF-8 characters. Existing oversized logs retain their latest 10 MiB o
 ## License
 
 [MIT](LICENSE.md). Dependency and asset notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+Settings backup format, restore rules and developer checks are described in [Settings backups](docs/settings-backups.md).

@@ -14,6 +14,7 @@ import reframecv.export.DesktopCoverLetterExporter
 import reframecv.export.DesktopCoverLetterPdfExporter
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.DesktopResumePdfExporter
+import reframecv.export.DesktopSettingsBackupFiles
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
@@ -58,6 +59,7 @@ import reframecv.repository.LocalProviderConnectionsRepository
 import reframecv.repository.LocalResumePhotos
 import reframecv.repository.LocalResumesRepository
 import reframecv.repository.LocalScreenStatesRepository
+import reframecv.repository.LocalSettingsBackupRepository
 import reframecv.repository.LocalVacanciesRepository
 import reframecv.repository.ProjectsRepository
 import reframecv.repository.ResumesRepository
@@ -77,6 +79,7 @@ import reframecv.usecase.RecognizeVacancyUseCase
 import reframecv.usecase.ResumeFilesUseCases
 import reframecv.usecase.ResumesUseCases
 import reframecv.usecase.ScreenStateUseCases
+import reframecv.usecase.SettingsBackupUseCases
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
@@ -100,6 +103,12 @@ class DefaultApplicationDependencies(
         buildDatabase(createDatabaseBuilder(applicationDataDirectory().resolve("reframe-cv.db")))
     },
 ) : ApplicationDependencies {
+    override val settingsBackupUseCases by lazy {
+        SettingsBackupUseCases(
+            LocalSettingsBackupRepository(database.value.settingsBackupDao()),
+            DesktopSettingsBackupFiles(),
+        )
+    }
     override val storeFactory = createHistoryStoreFactory(eventHistory)
     private val database = lazy(databaseFactory)
     private val transport = lazy { createDesktopNetworkClient() }
