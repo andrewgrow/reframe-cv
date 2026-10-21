@@ -12,6 +12,7 @@ interface DashboardComponent {
     val projectId: Long
     val uiState: Value<DashboardState>
     fun onOpenResumes()
+    fun onOpenCoverLetters()
     fun onOpenVacancies()
     fun onBack()
     fun onRetry()
@@ -23,6 +24,7 @@ class DefaultDashboardComponent(
     override val projectId: Long,
     storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
     private val openVacancies: () -> Unit = {},
+    private val openCoverLetters: () -> Unit = {},
     private val openResumes: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : DashboardComponent,
@@ -42,6 +44,8 @@ class DefaultDashboardComponent(
     }
 
     override fun onBack() = back()
+
+    override fun onOpenCoverLetters() = openCoverLetters()
 
     override fun onOpenResumes() = openResumes()
 

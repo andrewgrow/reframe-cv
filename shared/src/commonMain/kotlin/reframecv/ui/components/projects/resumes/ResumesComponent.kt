@@ -17,12 +17,15 @@ import reframecv.ui.components.projects.resumes.editor.ResumeDeleteState
 import reframecv.ui.components.projects.resumes.editor.ResumeEditorComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeRole
 import reframecv.ui.components.projects.resumes.editor.ResumeSaveState
+import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
+import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
 /** Lets a project browse, create, and edit its structured resumes. */
 interface ResumesComponent {
     val projectId: Long
+    val selection: ResumeSelectionComponent
     val uiState: Value<ResumesState>
     val childStack: Value<ChildStack<*, Child>>
     val editor: ResumeEditorComponent?
@@ -35,7 +38,16 @@ interface ResumesComponent {
 
         /** Displays resume creation or editing within the application shell. */
         data class Editor(val component: ResumeEditorComponent) : Child
+
+        /** Opens a linked vacancy while retaining the list's selection and scroll position. */
+        data class LinkedVacancy(val component: VacanciesComponent) : Child
     }
+    val isBusy: Boolean get() = when (val child = childStack.value.active.instance) {
+        is Child.Editor -> child.component.isBusy
+        is Child.LinkedVacancy -> child.component.isBusy
+        Child.List -> selection.state.value.deleting
+    }
+    fun onOpenVacancy(id: Long)
     fun onEdit(resume: Resume)
     fun onAdd()
     fun onRetry()
@@ -70,6 +82,9 @@ class DefaultResumesComponent(
 
         /** Opens an independent draft of the selected saved resume. */
         data class Edit(val resume: Resume) : EditorConfiguration
+
+        /** Identifies a vacancy opened from the Linked column. */
+        data class LinkedVacancy(val id: Long) : EditorConfiguration
     }
 
     private val editorNavigation = StackNavigation<EditorConfiguration>()
@@ -81,6 +96,15 @@ class DefaultResumesComponent(
     ) { configuration, childContext ->
         if (configuration == EditorConfiguration.List) {
             ResumesComponent.Child.List
+        } else if (configuration is EditorConfiguration.LinkedVacancy) {
+            ResumesComponent.Child.LinkedVacancy(
+                DefaultVacanciesComponent(
+                    childContext,
+                    projectId,
+                    back = { editorNavigation.pop() },
+                    initialVacancyId = configuration.id,
+                ),
+            )
         } else {
             val original = (configuration as? EditorConfiguration.Edit)?.resume
             val initialRole = if (original != null &&
@@ -120,6 +144,13 @@ class DefaultResumesComponent(
         }
     }
 
+    override val selection: ResumeSelectionComponent = DefaultResumeSelectionComponent(
+        componentContext,
+        projectId,
+        uiState,
+        canEdit = { childStack.value.active.instance == ResumesComponent.Child.List },
+    )
+
     init {
         var openedInitialResume = false
         val initialSubscription = uiState.subscribe { state ->
@@ -132,9 +163,16 @@ class DefaultResumesComponent(
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
         val stackSubscription = childStack.subscribe {
-            editorBack.isEnabled = it.active.instance is ResumesComponent.Child.Editor
+            editorBack.isEnabled =
+                it.active.instance != ResumesComponent.Child.List ||
+                selection.state.value.confirming
+        }
+        val selectionSubscription = selection.state.subscribe {
+            editorBack.isEnabled =
+                childStack.value.active.instance != ResumesComponent.Child.List || it.confirming
         }
         lifecycle.doOnDestroy {
+            selectionSubscription.cancel()
             stackSubscription.cancel()
             backHandler.unregister(editorBack)
         }
@@ -165,18 +203,50 @@ class DefaultResumesComponent(
     }
 
     override fun onAdd() {
-        if (editor == null) editorNavigation.pushNew(EditorConfiguration.Create)
+        if (childStack.value.active.instance == ResumesComponent.Child.List &&
+            !selection.state.value.confirming
+        ) {
+            editorNavigation.pushNew(EditorConfiguration.Create)
+        }
     }
 
     override fun onEdit(resume: Resume) {
-        if (editor == null && resume.projectId == projectId && resume.id > 0) {
+        if (childStack.value.active.instance != ResumesComponent.Child.List ||
+            selection.state.value.confirming
+        ) {
+            return
+        }
+        if (resume.projectId == projectId &&
+            resume.id > 0
+        ) {
             editorNavigation.pushNew(EditorConfiguration.Edit(resume))
         }
     }
 
     override fun onRetry() = store.accept(ResumesIntent.Load)
+    override fun onOpenVacancy(id: Long) {
+        val ready = uiState.value as? ResumesState.Ready ?: return
+        if (childStack.value.active.instance != ResumesComponent.Child.List ||
+            selection.state.value.confirming
+        ) {
+            return
+        }
+        if (ready.linkedVacancies.any {
+                it.vacancyId == id
+            }
+        ) {
+            editorNavigation.pushNew(EditorConfiguration.LinkedVacancy(id))
+        }
+    }
     override fun onBack() {
-        val editor = editor
-        if (editor != null) editor.onClose() else back()
+        when (val child = childStack.value.active.instance) {
+            is ResumesComponent.Child.Editor -> child.component.onClose()
+
+            is ResumesComponent.Child.LinkedVacancy -> child.component.onBack()
+
+            ResumesComponent.Child.List -> {
+                if (selection.state.value.confirming) selection.onCancelDelete() else back()
+            }
+        }
     }
 }

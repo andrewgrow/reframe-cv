@@ -8,6 +8,7 @@ A local desktop application for managing resumes, vacancies, and cover letters w
 - [Backlog and open questions](docs/backlog.md): deferred work, without a fixed implementation order.
 - [Resume JSON Schema](docs/schemas/resume-content-v1.schema.json): the versioned document contract.
 - [Vacancy content schema](docs/schemas/vacancy-content-v1.schema.json): the portable JSON export contract.
+- [Cover letter content schema](docs/schemas/cover-letter-content-v1.schema.json): the portable JSON import/export contract.
 - [Vacancy recognition schema](docs/schemas/vacancy-recognition-v1.schema.json): the source-processing response contract.
 - [Resume content examples](docs/resume_examples.md): sample wording for editable resume fields.
 - [Prompt examples](prompt_examples.md): editable examples to copy into Settings → Prompts.

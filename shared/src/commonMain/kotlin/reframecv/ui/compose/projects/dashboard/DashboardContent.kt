@@ -59,6 +59,7 @@ fun DashboardContent(component: DashboardComponent) {
                         current,
                         component::onOpenVacancies,
                         component::onOpenResumes,
+                        component::onOpenCoverLetters,
                     )
                 }
             }
@@ -71,6 +72,7 @@ private fun DashboardLayout(
     state: DashboardState.Ready,
     onOpenVacancies: () -> Unit,
     onOpenResumes: () -> Unit,
+    onOpenCoverLetters: () -> Unit,
 ) {
     val tokens = ReframeTheme.tokens
     val colors = MaterialTheme.colorScheme
@@ -112,6 +114,7 @@ private fun DashboardLayout(
                 appColors.dashboardCoverLetters,
                 colors.onSurface,
                 Modifier.width(sectionWidth).fillMaxHeight(),
+                onClick = onOpenCoverLetters,
             )
         }
     }

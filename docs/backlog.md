@@ -30,9 +30,10 @@ Identity, employers, position titles, dates, qualifications, and other fixed fac
 Vacancies now support existing-letter selection, draft unlinking, AI generation from a selected
 linked resume, letter editing and confirmed permanent deletion. Letters remain reusable project documents.
 
-- [ ] Add a project-wide cover-letter list accessible from the dashboard.
-- [ ] Add manual letter creation independently of a vacancy.
-- [ ] Decide on letter export and printing formats.
+- [x] Add a project-wide cover-letter list with bulk deletion and source-resume links.
+- [x] Add manual letter creation and JSON import independently of a vacancy.
+- [x] Add versioned JSON export for cover letters.
+- [ ] Decide on letter printing formats.
 
 ## Vacancy sources
 

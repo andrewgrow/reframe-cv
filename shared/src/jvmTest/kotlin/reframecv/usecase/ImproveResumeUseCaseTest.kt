@@ -79,7 +79,7 @@ class ImproveResumeUseCaseTest : ComponentTest() {
             timestamp = { time },
         )
         val result = useCase(source, vacancy.copy(name = "Unsaved draft"), connection, "Improve")
-        assertEquals("main resume + Unsaved draft (AI 2026-20-10 18:10)", result.name)
+        assertEquals("main resume + Unsaved draft (AI 2026-10-20 18:10)", result.name)
         assertEquals(source.id, result.sourceResumeId)
         assertEquals(content, result.content)
         assertEquals(emptyList(), result.keywords)
@@ -109,23 +109,25 @@ class ImproveResumeUseCaseTest : ComponentTest() {
             "main resume (AI 2026-20-10 20:41) (AI 2026-20-10 20:50)",
             "main resume + Stored (AI 2026-20-10 20:41)",
             "main resume + Stored + Stored (AI 2026-20-10 20:41)",
+            "main resume + Stored (AI 2026-10-20 20:50)",
+            "main resume + Stored (AI 2026-20-10 20:41) (AI 2026-10-20 20:50)",
             "main resume + Stored",
         ).forEach { name ->
             val result = useCase(source.copy(name = name), vacancy, connection, "Improve")
-            assertEquals("main resume + Stored (AI 2026-20-10 21:10)", result.name)
+            assertEquals("main resume + Stored (AI 2026-10-20 21:10)", result.name)
         }
         val custom = "AI specialist (AI draft)"
         val result = useCase(source.copy(name = custom), vacancy, connection, "Improve")
-        assertEquals("$custom + Stored (AI 2026-20-10 21:10)", result.name)
+        assertEquals("$custom + Stored (AI 2026-10-20 21:10)", result.name)
         val named = vacancy.copy(name = " ExampleCo (EU) + Mobile ")
         val special =
             useCase(source.copy(name = "main + archive"), named, connection, "Improve")
         assertEquals(
-            "main + archive + ExampleCo (EU) + Mobile (AI 2026-20-10 21:10)",
+            "main + archive + ExampleCo (EU) + Mobile (AI 2026-10-20 21:10)",
             special.name,
         )
         val draft = useCase(source, vacancy.copy(id = 0, name = ""), connection, "Improve")
-        assertEquals("main resume (AI 2026-20-10 21:10)", draft.name)
+        assertEquals("main resume (AI 2026-10-20 21:10)", draft.name)
     }
 
     @Test

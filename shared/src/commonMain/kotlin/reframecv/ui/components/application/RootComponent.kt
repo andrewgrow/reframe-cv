@@ -20,6 +20,8 @@ import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.components.projects.DefaultProjectsComponent
 import reframecv.ui.components.projects.ProjectPathEntry
 import reframecv.ui.components.projects.ProjectsComponent
+import reframecv.ui.components.projects.coverletters.CoverLettersComponent
+import reframecv.ui.components.projects.coverletters.DefaultCoverLettersComponent
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DefaultDashboardComponent
 import reframecv.ui.components.projects.resumes.DefaultResumesComponent
@@ -52,6 +54,9 @@ interface RootComponent {
 
         /** Lets the root render the selected project's resumes. */
         data class Resumes(val component: ResumesComponent) : Child
+
+        /** Lets the root render the selected project's cover letters. */
+        data class CoverLetters(val component: CoverLettersComponent) : Child
 
         /** Lets the root render the selected project's vacancies. */
         data class Vacancies(val component: VacanciesComponent) : Child
@@ -122,7 +127,8 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     ) {
         is RootComponent.Child.Settings -> child.component.isBusy
         is RootComponent.Child.Vacancies -> child.component.isBusy
-        is RootComponent.Child.Resumes -> child.component.editor?.isBusy == true
+        is RootComponent.Child.Resumes -> child.component.isBusy
+        is RootComponent.Child.CoverLetters -> child.component.isBusy
         else -> false
     }
 
@@ -206,12 +212,23 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
                 componentContext,
                 configuration.projectPath.last().id,
                 back = { openParentList(configuration.projectPath) },
+                openCoverLetters = {
+                    navigation.pushNew(Configuration.CoverLetters(configuration.projectPath))
+                },
                 openResumes = {
                     navigation.pushNew(Configuration.Resumes(configuration.projectPath))
                 },
                 openVacancies = {
                     navigation.pushNew(Configuration.Vacancies(configuration.projectPath))
                 },
+            ),
+        )
+
+        is Configuration.CoverLetters -> RootComponent.Child.CoverLetters(
+            DefaultCoverLettersComponent(
+                componentContext,
+                configuration.projectPath.last().id,
+                back = { navigation.pop() },
             ),
         )
 
@@ -250,6 +267,9 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
 
         /** Identifies which project's resumes the destination should show. */
         data class Resumes(override val projectPath: List<ProjectPathEntry>) : Configuration
+
+        /** Identifies which project's cover letters the destination should show. */
+        data class CoverLetters(override val projectPath: List<ProjectPathEntry>) : Configuration
 
         /** Identifies which project's vacancies the destination should show. */
         data class Vacancies(override val projectPath: List<ProjectPathEntry>) : Configuration

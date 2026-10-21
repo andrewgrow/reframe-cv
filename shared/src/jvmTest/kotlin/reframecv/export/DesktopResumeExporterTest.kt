@@ -44,7 +44,7 @@ class DesktopResumeExporterTest {
         val destination = folder.newFile("chosen.json").toPath()
         val exporter = DesktopResumeExporter(
             ExportDestinationPicker { name ->
-                assertEquals("resume-12-20261410-1234-56.json", name)
+                assertEquals("resume-12-20261014-1234-56.json", name)
                 assertReady(temporary)
                 destination.toString()
             },

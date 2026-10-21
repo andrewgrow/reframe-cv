@@ -49,6 +49,23 @@ class GenerateCoverLetterUseCaseTest : ComponentTest() {
     }
 
     @Test
+    fun usesYearMonthDayOrderForGeneratedLetterNames() = runBlocking<Unit> {
+        val connection = setup()
+        val time = java.time.LocalDateTime.of(2026, 10, 20, 21, 10)
+            .atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+        val useCase = GenerateCoverLetterUseCase(
+            reframecv.coverletters.CoverLetterGenerationRepository { _, _, _, _ ->
+                CoverLetterGenerationOutcome.Generated("Dear team")
+            },
+            dependencies.providerSettingsUseCases,
+            dependencies.coverLettersRepository,
+            timestamp = { time },
+        )
+        val result = useCase(resume, vacancy, connection, "Write")
+        assertEquals("Cover letter: Main + ExampleCo (AI 2026-10-20 21:10)", result.name)
+    }
+
+    @Test
     fun savesAndLinksExistingVacancyWithoutOtherDraftChangesAndExcludesPrivateResumeData() =
         runBlocking {
             val id = setup()

@@ -52,6 +52,14 @@ class LocalResumePhotos(
         }
     }
 
+    suspend fun deleteMany(ids: Set<Long>, action: suspend () -> Unit) = mutex.withLock {
+        withContext(NonCancellable) {
+            val paths = ids.mapNotNull { resumes.findById(it)?.entity?.photoPath }.distinct()
+            action()
+            paths.forEach { removeUnused(it) }
+        }
+    }
+
     suspend fun deleteProject(projects: ProjectDao, id: Long, action: suspend () -> Int): Int =
         mutex.withLock {
             withContext(NonCancellable) {

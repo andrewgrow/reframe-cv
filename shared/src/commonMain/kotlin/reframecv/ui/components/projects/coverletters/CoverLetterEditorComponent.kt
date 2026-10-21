@@ -23,10 +23,16 @@ data class CoverLetterEditorState(
     val busy: Boolean = false,
     val confirming: Boolean = false,
     val notice: LetterNotice = LetterNotice.None,
+    val exportVisible: Boolean = false,
 )
 
-/** Lets a vacancy open, revise, and permanently delete a project letter. */
+/** Creates, imports, edits, exports, and deletes a reusable project letter. */
 interface CoverLetterEditorComponent {
+    val importComponent: CoverLetterImportComponent
+    val exportComponent: CoverLetterExportComponent
+    fun onImport()
+    fun onExport()
+    fun onCloseExport()
     val state: Value<CoverLetterEditorState>
     fun onChange(record: CoverLetter)
     fun onSave()
@@ -45,13 +51,39 @@ class DefaultCoverLetterEditorComponent(
     override val state = MutableValue(CoverLetterEditorState(record))
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var notification: Job? = null
+    override val importComponent = DefaultCoverLetterImportComponent(context) { imported ->
+        val current = state.value.record
+        state.value = state.value.copy(
+            record = current.copy(
+                name = imported.name,
+                content = imported.content,
+                keywords = imported.keywords,
+            ),
+            notice = LetterNotice.None,
+        )
+    }
+    override val exportComponent = DefaultCoverLetterExportComponent(
+        context,
+        coverLetter = { state.value.record.takeIf { it.id > 0 } },
+        finished = { onCloseExport() },
+    )
     init {
-        context.lifecycle.doOnDestroy { scope.cancel() }
+        val importing = importComponent.state.subscribe {
+            state.value = state.value.copy(busy = it == CoverLetterImportState.Importing)
+        }
+        val exporting = exportComponent.state.subscribe {
+            state.value = state.value.copy(busy = it == CoverLetterExportState.Exporting)
+        }
+        context.lifecycle.doOnDestroy {
+            importing.cancel()
+            exporting.cancel()
+            scope.cancel()
+        }
     }
     override fun onChange(record: CoverLetter) {
         val old = state.value
         if (!old.busy &&
-            !old.confirming
+            !old.confirming && !old.exportVisible
         ) {
             state.value =
                 old.copy(
@@ -63,20 +95,22 @@ class DefaultCoverLetterEditorComponent(
                 )
         }
     }
-    override fun onSave() {
-        if (state.value.busy || state.value.confirming) return
+    override fun onSave() = save(export = false)
+    private fun save(export: Boolean) {
+        if (state.value.busy || state.value.confirming || state.value.exportVisible) return
         val record = state.value.record
         if (record.name.isBlank()) {
             show(LetterNotice.Validation)
             return
         }
         perform("Save cover letter", LetterNotice.SaveFailed) {
-            context.dependencies.coverLettersUseCases.save(record)
+            val saved = context.dependencies.coverLettersUseCases.save(record)
+            state.value = state.value.copy(record = saved, exportVisible = export)
             show(LetterNotice.Saved)
         }
     }
     override fun onDelete() {
-        if (state.value.busy) return
+        if (state.value.busy || state.value.exportVisible || state.value.record.id == 0L) return
         if (!state.value.confirming) {
             state.value = state.value.copy(confirming = true)
             return
@@ -126,9 +160,32 @@ class DefaultCoverLetterEditorComponent(
                 state.value.copy(confirming = false)
         }
     }
+    override fun onImport() {
+        if (!state.value.busy && !state.value.exportVisible && state.value.record.id == 0L) {
+            importComponent.onImport()
+        }
+    }
+    override fun onExport() {
+        if (state.value.record.id > 0) save(export = true)
+    }
+    override fun onCloseExport() {
+        if (exportComponent.state.value != CoverLetterExportState.Exporting) {
+            state.value = state.value.copy(exportVisible = false)
+            exportComponent.onReset()
+        }
+    }
     override fun onClose() {
         if (!state.value.busy) {
-            if (state.value.confirming) onCancelDelete() else close()
+            when {
+                state.value.exportVisible -> onCloseExport()
+
+                state.value.confirming -> onCancelDelete()
+
+                else -> {
+                    importComponent.onClose()
+                    close()
+                }
+            }
         }
     }
 }

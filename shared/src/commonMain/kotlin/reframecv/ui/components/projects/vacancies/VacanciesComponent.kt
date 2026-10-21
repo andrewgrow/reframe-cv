@@ -48,7 +48,7 @@ interface VacanciesComponent {
     }
     val isBusy: Boolean get() = when (val child = childStack.value.active.instance) {
         is Child.Editor -> child.component.isBusy
-        is Child.LinkedResume -> child.component.editor?.isBusy == true
+        is Child.LinkedResume -> child.component.isBusy
         is Child.LinkedLetter -> child.component.state.value.busy
         Child.List -> false
     }
@@ -64,6 +64,7 @@ class DefaultVacanciesComponent(
     override val projectId: Long,
     private val back: () -> Unit,
     storeFactory: StoreFactory = componentContext.dependencies.storeFactory,
+    initialVacancyId: Long? = null,
 ) : VacanciesComponent,
     AppComponentContext by componentContext {
     private val store = createVacanciesStore(
@@ -145,7 +146,7 @@ class DefaultVacanciesComponent(
                     delete = {
                         editor?.initialVacancy?.let { store.accept(VacanciesIntent.Delete(it.id)) }
                     },
-                    close = { editorNavigation.pop() },
+                    close = { if (initialVacancyId != null) back() else editorNavigation.pop() },
                     openResume = { editorNavigation.pushNew(EditorConfiguration.LinkedResume(it)) },
                     openLetter = { editorNavigation.pushNew(EditorConfiguration.LinkedLetter(it)) },
                 ),
@@ -154,6 +155,16 @@ class DefaultVacanciesComponent(
     }
 
     init {
+        var openedInitialVacancy = false
+        val initialSubscription = uiState.subscribe { state ->
+            if (!openedInitialVacancy && initialVacancyId != null &&
+                state is VacanciesState.Ready
+            ) {
+                openedInitialVacancy = true
+                state.vacancies.find { it.id == initialVacancyId }?.let(::onEdit)
+            }
+        }
+        lifecycle.doOnDestroy { initialSubscription.cancel() }
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
         val stackSubscription = childStack.subscribe {
@@ -172,7 +183,13 @@ class DefaultVacanciesComponent(
                     is VacanciesLabel.Saved ->
                         editor?.onSaveCompleted(VacancySaveState.Idle, label.createdVacancy)
 
-                    VacanciesLabel.Deleted -> editorNavigation.pop()
+                    VacanciesLabel.Deleted -> if (initialVacancyId !=
+                        null
+                    ) {
+                        back()
+                    } else {
+                        editorNavigation.pop()
+                    }
 
                     VacanciesLabel.Deleting ->
                         editor?.deleteState?.value =

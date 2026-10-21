@@ -164,4 +164,29 @@ class RootDashboardTest : ComponentTest() {
             assertEquals(dashboard, root.childStack.value.active.instance)
         }
     }
+
+    @Test
+    fun opensCoverLettersForSelectedProjectAndBackReturnsToDashboard() = runBlocking<Unit> {
+        val project = dependencies.projectsRepository.createProject("Backend")
+        runOnUiThread {
+            lifecycle.resume()
+            val root = DefaultRootComponent(appComponentContext())
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onOpenProject(project)
+            assertIs<RootComponent.Child.Projects>(root.childStack.value.active.instance)
+                .component.onConfigureProject()
+            val dashboard =
+                assertIs<RootComponent.Child.Dashboard>(root.childStack.value.active.instance)
+            dashboard.component.onOpenCoverLetters()
+            val letters =
+                assertIs<RootComponent.Child.CoverLetters>(root.childStack.value.active.instance)
+            assertEquals(project.id, letters.component.projectId)
+            assertEquals(project.id, root.projectTree.state.value.selectedId)
+            letters.component.onBack()
+            assertEquals(dashboard, root.childStack.value.active.instance)
+            dashboard.component.onOpenCoverLetters()
+            (root.backHandler as BackDispatcher).back()
+            assertEquals(dashboard, root.childStack.value.active.instance)
+        }
+    }
 }

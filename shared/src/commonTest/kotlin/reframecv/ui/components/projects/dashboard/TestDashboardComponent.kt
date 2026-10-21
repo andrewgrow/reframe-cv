@@ -6,11 +6,13 @@ class TestDashboardComponent(
     override val projectId: Long = 1,
     initialState: DashboardState = DashboardState.Ready(),
     private val openVacancies: () -> Unit = {},
+    private val openCoverLetters: () -> Unit = {},
     private val openResumes: () -> Unit = {},
     private val retry: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : DashboardComponent {
     override val uiState = MutableValue(initialState)
+    override fun onOpenCoverLetters() = openCoverLetters()
     override fun onOpenResumes() = openResumes()
     override fun onOpenVacancies() = openVacancies()
     override fun onBack() = back()

@@ -46,6 +46,11 @@ class TestCoverLettersRepository(private val vacancies: TestVacanciesRepository?
     override suspend fun update(record: CoverLetter) {
         records.value = records.value.map { if (it.id == record.id) record else it }
     }
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        require(ids.isNotEmpty())
+        require(ids.all { id -> records.value.any { it.id == id && it.projectId == projectId } })
+        ids.forEach { delete(it) }
+    }
     override suspend fun delete(id: Long) {
         records.value = records.value.filterNot { it.id == id }
         vacancies?.records?.let { data ->

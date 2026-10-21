@@ -3,8 +3,10 @@ package reframecv.dependencies
 import com.arkivanov.mvikotlin.core.store.StoreFactory
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.AttachmentStorage
+import reframecv.export.CoverLetterExporter
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
+import reframecv.importing.CoverLetterImporter
 import reframecv.importing.ResumeImporter
 import reframecv.importing.VacancyImporter
 import reframecv.logging.ApplicationLogger
@@ -19,6 +21,7 @@ import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLetterFilesUseCases
 import reframecv.usecase.CoverLettersUseCases
 import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
@@ -43,6 +46,9 @@ interface ApplicationDependencies {
     val attachmentPicker: AttachmentPicker
     val vacancyDocumentReader: VacancyDocumentReader
     val vacancyRecognitionRepository: VacancyRecognitionRepository
+    val coverLetterExporter: CoverLetterExporter
+    val coverLetterImporter: CoverLetterImporter
+    val coverLetterFilesUseCases: CoverLetterFilesUseCases
     val vacancyExporter: VacancyExporter
     val resumeExporter: ResumeExporter
     val vacancyImporter: VacancyImporter

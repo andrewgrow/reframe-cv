@@ -34,19 +34,27 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun ResumesListContent(component: ResumesComponent) {
     val state by component.uiState.subscribeAsState()
+    val selection by component.selection.state.subscribeAsState()
     val timeZone = remember { TimeZone.currentSystemDefault() }
     key(component.projectId) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             Column(
                 Modifier.fillMaxSize().background(
                     MaterialTheme.colorScheme.background,
-                ).safeContentPadding().pageBackHandler(component::onBack),
+                ).safeContentPadding().pageBackHandler(
+                    component::onBack,
+                    enabled = !selection.confirming,
+                ),
             ) {
                 Column(
                     Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
                     verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
                 ) {
-                    PageHeader(stringResource(Res.string.dashboard_resumes), component::onBack)
+                    PageHeader(
+                        stringResource(Res.string.dashboard_resumes),
+                        component::onBack,
+                        enabled = !selection.deleting,
+                    )
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         when (val current = state) {
                             ResumesState.Loading -> LoadingContent()
@@ -60,17 +68,22 @@ internal fun ResumesListContent(component: ResumesComponent) {
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             } else {
-                                ResumesList(current.resumes, timeZone, component::onEdit)
+                                ResumesList(
+                                    current.resumes,
+                                    timeZone,
+                                    component::onEdit,
+                                    component.selection,
+                                    current.linkedVacancies,
+                                    component::onOpenVacancy,
+                                )
                             }
                         }
                     }
                 }
                 HorizontalDivider()
-                ResumesControls(
-                    onAdd = component::onAdd,
-                    onRetry = if (state == ResumesState.LoadFailed) component::onRetry else null,
-                )
+                ResumesListControls(component)
             }
+            ResumeSelectionConfirmation(component)
         }
     }
 }

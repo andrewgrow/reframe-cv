@@ -14,6 +14,7 @@ class TestResumesComponent(
     private val edit: (Resume) -> Unit = {},
     private val add: () -> Unit = {},
     private val back: () -> Unit = {},
+    private val openVacancy: (Long) -> Unit = {},
 ) : ResumesComponent {
     override val childStack = MutableValue(
         ChildStack<Any, ResumesComponent.Child>(
@@ -28,6 +29,8 @@ class TestResumesComponent(
     override fun onEdit(resume: Resume) = edit(resume)
     override fun onAdd() = add()
     override val uiState = MutableValue(initialState)
+    override val selection = TestResumeSelectionComponent { uiState.value }
+    override fun onOpenVacancy(id: Long) = openVacancy(id)
     override fun onRetry() = retry()
     override fun onBack() = back()
 }

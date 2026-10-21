@@ -43,10 +43,11 @@ internal fun CoverLetterFields(component: CoverLetterEditorComponent, modifier: 
         scrollState = scroll,
         verticalArrangement = Arrangement.spacedBy(tokens.spacing.medium),
     ) {
+        CoverLetterImportFeedback(component.importComponent)
         CoverLetterIdentity(component)
         ResizableTextField(
             state.record.content, { component.onChange(state.record.copy(content = it)) },
-            !state.busy && !state.confirming, scroll, viewport,
+            !state.busy && !state.confirming && !state.exportVisible, scroll, viewport,
             stringResource(Res.string.resume_text), stringResource(Res.string.letter_resize),
             "cover_letter.text", tokens.dimensions.resumeTextMinHeight,
             initialHeight = tokens.dimensions.resumeTextMinHeight * 3,
@@ -57,7 +58,7 @@ internal fun CoverLetterFields(component: CoverLetterEditorComponent, modifier: 
 @Composable
 private fun CoverLetterIdentity(component: CoverLetterEditorComponent) {
     val state by component.state.subscribeAsState()
-    val enabled = !state.busy && !state.confirming
+    val enabled = !state.busy && !state.confirming && !state.exportVisible
     OutlinedTextField(
         state.record.name,
         { component.onChange(state.record.copy(name = it)) },

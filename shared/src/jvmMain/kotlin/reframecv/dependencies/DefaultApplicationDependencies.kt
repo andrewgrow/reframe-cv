@@ -9,11 +9,15 @@ import reframecv.database.AppDatabase
 import reframecv.database.buildDatabase
 import reframecv.database.createDatabaseBuilder
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.export.CoverLetterExporter
+import reframecv.export.DesktopCoverLetterExporter
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
 import reframecv.filesystem.applicationDataDirectory
+import reframecv.importing.CoverLetterImporter
+import reframecv.importing.DesktopCoverLetterImporter
 import reframecv.importing.DesktopResumeImporter
 import reframecv.importing.DesktopVacancyImporter
 import reframecv.importing.ResumeImporter
@@ -59,6 +63,7 @@ import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLetterFilesUseCases
 import reframecv.usecase.CoverLettersUseCases
 import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
@@ -81,6 +86,8 @@ class DefaultApplicationDependencies(
         FileAttachmentStorage(applicationDataDirectory()),
     override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
+    override val coverLetterExporter: CoverLetterExporter = DesktopCoverLetterExporter(),
+    override val coverLetterImporter: CoverLetterImporter = DesktopCoverLetterImporter(),
     override val vacancyExporter: VacancyExporter = DesktopVacancyExporter(),
     override val vacancyImporter: VacancyImporter = DesktopVacancyImporter(),
     override val vacancyDocumentReader: VacancyDocumentReader =
@@ -273,6 +280,15 @@ class DefaultApplicationDependencies(
     private val vacancyFilesUseCasesInstance by lazy {
         VacancyFilesUseCases(vacancyImporter, vacancyExporter, attachmentPicker)
     }
+    private val coverLetterFilesUseCasesInstance by lazy {
+        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter)
+    }
+    override val coverLetterFilesUseCases: CoverLetterFilesUseCases
+        get() {
+            check(!closed) { "Application dependencies are closed" }
+            return coverLetterFilesUseCasesInstance
+        }
+
     override val vacancyFilesUseCases: VacancyFilesUseCases
         get() {
             check(!closed) { "Application dependencies are closed" }

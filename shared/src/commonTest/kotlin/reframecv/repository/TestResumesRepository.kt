@@ -1,12 +1,35 @@
 package reframecv.repository
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.ResumeVacancyLink
 import reframecv.domain.models.vacancy.VacancyResume
 
 class TestResumesRepository(private val vacancies: TestVacanciesRepository? = null) :
     ResumesRepository {
+    override fun observeLinkedVacancies(projectId: Long) = combine(
+        records,
+        vacancies?.records ?: MutableStateFlow(emptyList()),
+    ) { resumes, vacancies ->
+        vacancies.filter { it.projectId == projectId }.flatMap { vacancy ->
+            vacancy.resumes.filter { link ->
+                resumes.any {
+                    it.id ==
+                        link.resumeId &&
+                        it.projectId == projectId
+                }
+            }.map { ResumeVacancyLink(it.resumeId, vacancy.id, vacancy.name) }
+        }
+    }
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        require(
+            ids.isNotEmpty() &&
+                ids.all { id -> records.value.any { it.id == id && it.projectId == projectId } },
+        )
+        ids.forEach { delete(it) }
+    }
     val mainResumeIds = MutableStateFlow<Map<Long, Long?>>(emptyMap())
     override fun observeMainResumeId(projectId: Long) = mainResumeIds.map { it[projectId] }
     val records = MutableStateFlow<List<Resume>>(emptyList())
@@ -80,6 +103,17 @@ class TestResumesRepository(private val vacancies: TestVacanciesRepository? = nu
         records.value = records.value.map { if (it.id == record.id) record else it }
     }
     override suspend fun delete(id: Long) {
+        vacancies?.records?.let { data ->
+            data.value =
+                data.value.map { vacancy ->
+                    vacancy.copy(
+                        resumes = vacancy.resumes.filterNot {
+                            it.resumeId ==
+                                id
+                        },
+                    )
+                }
+        }
         records.value = records.value.filterNot { it.id == id }.map {
             if (it.sourceResumeId == id) it.copy(sourceResumeId = null) else it
         }

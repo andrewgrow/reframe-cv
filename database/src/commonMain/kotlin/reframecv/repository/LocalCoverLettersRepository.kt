@@ -31,6 +31,10 @@ class LocalCoverLettersRepository(private val dao: CoverLetterDao) : CoverLetter
         dao.update(record.copy(updatedAt = nowMillis()))
     }
 
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        dao.deleteMany(projectId, ids, nowMillis())
+    }
+
     override suspend fun delete(id: Long) {
         check(dao.delete(id, nowMillis()) == 1) { "Active record does not exist" }
     }

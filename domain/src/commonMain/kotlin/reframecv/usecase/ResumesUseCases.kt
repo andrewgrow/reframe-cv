@@ -2,17 +2,23 @@ package reframecv.usecase
 
 import kotlinx.coroutines.flow.combine
 import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.resume.ResumeVacancyLink
 import reframecv.repository.MainResumeChange
 import reframecv.repository.ResumesRepository
 
 /** Combines resume records with the project's main-resume selection. */
-data class ResumeList(val resumes: List<Resume>, val mainResumeId: Long?)
+data class ResumeList(
+    val resumes: List<Resume>,
+    val mainResumeId: Long?,
+    val linkedVacancies: List<ResumeVacancyLink> = emptyList(),
+)
 
 /** Provides resume list and save/delete actions independently of storage. */
 class ResumesUseCases(private val repository: ResumesRepository) {
     fun observe(projectId: Long) = combine(
         repository.observeResumes(projectId),
         repository.observeMainResumeId(projectId),
+        repository.observeLinkedVacancies(projectId),
         ::ResumeList,
     )
 
@@ -26,6 +32,8 @@ class ResumesUseCases(private val repository: ResumesRepository) {
         }
         return null
     }
+
+    suspend fun deleteMany(projectId: Long, ids: Set<Long>) = repository.deleteMany(projectId, ids)
 
     suspend fun delete(id: Long) = repository.delete(id)
 }

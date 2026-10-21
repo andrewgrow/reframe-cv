@@ -17,12 +17,14 @@ import androidx.compose.ui.unit.Dp
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import reframecv.ui.components.application.RootComponent
+import reframecv.ui.components.projects.coverletters.CoverLettersComponent
 import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.compose.common.LocalDocumentFooterHeight
 import reframecv.ui.compose.common.documentFooterMinHeight
 import reframecv.ui.compose.common.pageBackHandler
 import reframecv.ui.compose.projects.ProjectsContent
+import reframecv.ui.compose.projects.coverletters.CoverLettersContent
 import reframecv.ui.compose.projects.dashboard.DashboardContent
 import reframecv.ui.compose.projects.resumes.ResumesContent
 import reframecv.ui.compose.projects.vacancies.VacanciesContent
@@ -58,6 +60,7 @@ fun RootContent(component: RootComponent) {
                     when (active) {
                         is RootComponent.Child.Settings -> active.component.onBack()
                         is RootComponent.Child.Resumes -> active.component.onBack()
+                        is RootComponent.Child.CoverLetters -> active.component.onBack()
                         is RootComponent.Child.Dashboard -> active.component.onBack()
                         is RootComponent.Child.Vacancies -> active.component.onBack()
                         is RootComponent.Child.Projects -> active.component.onBack()
@@ -90,6 +93,7 @@ private fun RootChildContent(child: RootComponent.Child) {
         is RootComponent.Child.Settings -> SettingsContent(instance.component)
         is RootComponent.Child.Projects -> ProjectsContent(instance.component)
         is RootComponent.Child.Resumes -> ResumesContent(instance.component)
+        is RootComponent.Child.CoverLetters -> CoverLettersContent(instance.component)
         is RootComponent.Child.Dashboard -> DashboardContent(instance.component)
         is RootComponent.Child.Vacancies -> VacanciesContent(instance.component)
     }
@@ -97,9 +101,14 @@ private fun RootChildContent(child: RootComponent.Child) {
 
 @Composable
 private fun hasDocumentEditor(child: RootComponent.Child): Boolean = when (child) {
+    is RootComponent.Child.CoverLetters -> {
+        val stack by child.component.childStack.subscribeAsState()
+        stack.active.instance != CoverLettersComponent.Child.List
+    }
+
     is RootComponent.Child.Resumes -> {
         val stack by child.component.childStack.subscribeAsState()
-        stack.active.instance is ResumesComponent.Child.Editor
+        stack.active.instance != ResumesComponent.Child.List
     }
 
     is RootComponent.Child.Vacancies -> {

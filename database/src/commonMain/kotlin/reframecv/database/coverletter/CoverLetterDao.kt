@@ -6,13 +6,13 @@ import reframecv.database.vacancy.VacancyLetterEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.screenstate.ScreenType
 
 /** Saves, loads, and searches cover letters in the local database. */
 @Dao
 interface CoverLetterDao :
     CoverLetterQueries,
     CoverLetterGenerationQueries,
+    CoverLetterDeletionQueries,
     WorkspaceDao {
     @Transaction
     suspend fun create(record: CoverLetter): Long {
@@ -61,14 +61,4 @@ interface CoverLetterDao :
     @Transaction
     suspend fun search(projectId: Long, keyword: String): List<CoverLetterWithKeywords> =
         searchNormalized(projectId, keyword.trim().lowercase())
-
-    @Transaction
-    suspend fun delete(id: Long, updatedAt: Long): Int {
-        val projectId = findById(id)?.entity?.projectId ?: return 0
-        clearVacancyLetters(id, updatedAt)
-        val changed = deleteEntity(id)
-        if (changed > 0) clearScreenStates(ScreenType.CoverLetter.name, id)
-        if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
-        return changed
-    }
 }

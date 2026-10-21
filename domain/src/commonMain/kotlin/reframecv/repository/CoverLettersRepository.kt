@@ -10,5 +10,6 @@ interface CoverLettersRepository {
     suspend fun create(record: CoverLetter): Long
     suspend fun createAndLink(record: CoverLetter, vacancyId: Long?): CoverLetter
     suspend fun update(record: CoverLetter)
+    suspend fun deleteMany(projectId: Long, ids: Set<Long>)
     suspend fun delete(id: Long)
 }

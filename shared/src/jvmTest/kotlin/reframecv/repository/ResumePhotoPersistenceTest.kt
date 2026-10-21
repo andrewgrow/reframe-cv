@@ -89,6 +89,26 @@ class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
         assertNull(storage.read(path))
     }
 
+    @Test
+    fun bulkDeletionRemovesOnlyUnreferencedPhotosAndPreservesFilesOnFailure() = runBlocking<Unit> {
+        val repository = LocalResumesRepository(database.resumeDao(), photos)
+        val project = project()
+        val shared = prepare("bulk-shared", Color.GREEN)
+        val unique = prepare("bulk-unique", Color.RED)
+        val first = repository.create(resume(project).copy(photoPath = shared))
+        val second = repository.create(resume(project).copy(photoPath = unique))
+        val retained = repository.create(resume(project).copy(photoPath = shared))
+        assertFailsWith<IllegalArgumentException> {
+            repository.deleteMany(project, setOf(first, -1))
+        }
+        assertNotNull(storage.read(shared))
+        repository.deleteMany(project, setOf(first, second))
+        assertNotNull(storage.read(shared))
+        assertNull(storage.read(unique))
+        repository.deleteMany(project, setOf(retained))
+        assertNull(storage.read(shared))
+    }
+
     private suspend fun prepare(name: String, color: Color): String {
         val source = temporaryFolder.newFile("$name.png").toPath()
         val original = photoBytes(color)

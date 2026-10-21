@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:cover-letter-content:1",
+  "title": "Cover letter content document",
+  "description": "Portable cover-letter fields without local identifiers or resume and vacancy links.",
+  "type": "object",
+  "properties": {
+    "formatVersion": { "type": "integer", "const": 1 },
+    "content": { "$ref": "#/$defs/CoverLetterContent" }
+  },
+  "required": ["formatVersion", "content"],
+  "additionalProperties": false,
+  "$defs": {
+    "CoverLetterContent": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "text": { "type": "string" },
+        "keywords": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["name", "text", "keywords"],
+      "additionalProperties": false
+    }
+  }
+}

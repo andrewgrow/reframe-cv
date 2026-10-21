@@ -15,6 +15,8 @@ import reframecv.repository.MainResumeChange
 @Dao
 interface ResumeDao :
     ResumeQueries,
+    ResumeLinkQueries,
+    ResumeDeletionQueries,
     ResumeAdaptationQueries,
     WorkspaceDao {
     @Query("SELECT main_resume_id FROM projects WHERE id = :projectId")
@@ -110,16 +112,4 @@ interface ResumeDao :
     @Transaction
     suspend fun search(projectId: Long, keyword: String): List<ResumeWithKeywords> =
         searchNormalized(projectId, keyword.trim().lowercase())
-
-    @Transaction
-    suspend fun delete(id: Long, updatedAt: Long): Int {
-        val projectId = findById(id)?.entity?.projectId ?: return 0
-        clearMainResume(id, updatedAt)
-        clearSourceResume(id, updatedAt)
-        updateLinkedVacancyTimestamps(id, updatedAt)
-        val changed = deleteEntity(id)
-        if (changed > 0) clearScreenStates(ScreenType.Resume.name, id)
-        if (changed > 0) resetEmptyWorkspace(projectId, updatedAt)
-        return changed
-    }
 }

@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.arkivanov.decompose.extensions.compose.stack.Children
 import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.compose.projects.resumes.editor.ResumeEditorContent
+import reframecv.ui.compose.projects.vacancies.VacanciesContent
 
 @Composable
 fun ResumesContent(component: ResumesComponent) {
@@ -11,6 +12,7 @@ fun ResumesContent(component: ResumesComponent) {
         when (val page = child.instance) {
             ResumesComponent.Child.List -> ResumesListContent(component)
             is ResumesComponent.Child.Editor -> ResumeEditorContent(page.component)
+            is ResumesComponent.Child.LinkedVacancy -> VacanciesContent(page.component)
         }
     }
 }

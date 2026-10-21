@@ -56,7 +56,7 @@ class DashboardContentTest {
         onNodeWithText("Cover letters").performScrollTo().assertIsDisplayed()
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
-        onAllNodes(hasClickAction()).assertCountEquals(3)
+        onAllNodes(hasClickAction()).assertCountEquals(4)
     }
 
     @Test
@@ -137,6 +137,28 @@ class DashboardContentTest {
         onNodeWithText("Resumes").performClick()
         onNodeWithText("Android Developer", useUnmergedTree = true).performMouseInput { click() }
         onNodeWithTag("dashboard.section.Resumes").performMouseInput {
+            click(bottomCenter - androidx.compose.ui.geometry.Offset(0f, 10f))
+        }
+        assertEquals(3, opened)
+    }
+
+    @Test
+    fun entireCoverLettersSectionInvokesNavigation() = runComposeUiTest {
+        var opened = 0
+        val component = TestDashboardComponent(
+            initialState = dashboardSample(),
+            openCoverLetters = { opened++ },
+        )
+        setContent { ReframeTheme { DashboardContent(component) } }
+        onNodeWithText("View all").assertDoesNotExist()
+        onNodeWithText("Cover letters").performClick()
+        onNodeWithText(
+            dashboardSample().coverLetters.first().name,
+            useUnmergedTree = true,
+        ).performMouseInput {
+            click()
+        }
+        onNodeWithTag("dashboard.section.Cover letters").performMouseInput {
             click(bottomCenter - androidx.compose.ui.geometry.Offset(0f, 10f))
         }
         assertEquals(3, opened)

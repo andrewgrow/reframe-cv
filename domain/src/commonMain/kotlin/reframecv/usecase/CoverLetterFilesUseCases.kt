@@ -1,0 +1,14 @@
+package reframecv.usecase
+
+import reframecv.domain.models.coverletter.CoverLetter
+import reframecv.export.CoverLetterExporter
+import reframecv.importing.CoverLetterImporter
+
+/** Provides letter document exchange independently of platform file handling. */
+class CoverLetterFilesUseCases(
+    private val importer: CoverLetterImporter,
+    private val exporter: CoverLetterExporter,
+) {
+    suspend fun importDocument() = importer.pickAndImport()
+    suspend fun export(letter: CoverLetter) = exporter.export(letter)
+}

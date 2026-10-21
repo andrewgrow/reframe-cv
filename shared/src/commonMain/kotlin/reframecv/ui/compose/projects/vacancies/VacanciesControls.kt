@@ -1,30 +1,16 @@
 package reframecv.ui.compose.projects.vacancies
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_retry
 import reframecv.shared.generated.resources.vacancy_add
+import reframecv.ui.compose.common.DocumentListControls
 import reframecv.ui.compose.common.FillButton
-import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun VacanciesControls(onAdd: () -> Unit, onRetry: (() -> Unit)? = null) {
-    val tokens = ReframeTheme.tokens
-    FlowRow(
-        Modifier.fillMaxWidth().padding(tokens.spacing.medium),
-        horizontalArrangement = Arrangement.spacedBy(
-            tokens.spacing.medium,
-            Alignment.CenterHorizontally,
-        ),
-        verticalArrangement = Arrangement.spacedBy(tokens.spacing.small),
-    ) {
+    DocumentListControls {
         FillButton(
             text = stringResource(Res.string.vacancy_add),
             onClick = onAdd,

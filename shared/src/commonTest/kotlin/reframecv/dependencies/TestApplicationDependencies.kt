@@ -14,10 +14,12 @@ import reframecv.domain.models.project.ProjectMode
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.export.CoverLetterExporter
 import reframecv.export.DocumentExportResult
 import reframecv.export.ResumeExportResult
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
+import reframecv.importing.CoverLetterImporter
 import reframecv.importing.ResumeImporter
 import reframecv.importing.VacancyImporter
 import reframecv.improvement.ResumeImprovementOutcome
@@ -45,6 +47,7 @@ import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLetterFilesUseCases
 import reframecv.usecase.CoverLettersUseCases
 import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
@@ -74,6 +77,8 @@ class TestApplicationDependencies : ApplicationDependencies {
             instruction: String,
         ) = RecognitionOutcome.Failed(RecognitionError.NotConfigured)
     }
+    override val coverLetterExporter = CoverLetterExporter { DocumentExportResult.Cancelled }
+    override val coverLetterImporter = CoverLetterImporter { null }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val vacancyImporter = VacancyImporter { null }
@@ -219,6 +224,8 @@ class TestApplicationDependencies : ApplicationDependencies {
         resumeExporter,
         resumePhotos,
     )
+    override val coverLetterFilesUseCases =
+        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter)
     override val vacancyFilesUseCases get() = VacancyFilesUseCases(
         vacancyImporter,
         vacancyExporter,

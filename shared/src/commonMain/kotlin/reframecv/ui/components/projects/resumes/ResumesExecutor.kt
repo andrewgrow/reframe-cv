@@ -98,7 +98,7 @@ internal class ResumesExecutor(
         observation = scope.launch {
             try {
                 useCases.observe(projectId).collect {
-                    dispatch(ResumesState.Ready(it.resumes, it.mainResumeId))
+                    dispatch(ResumesState.Ready(it.resumes, it.mainResumeId, it.linkedVacancies))
                 }
             } catch (exception: CancellationException) {
                 throw exception

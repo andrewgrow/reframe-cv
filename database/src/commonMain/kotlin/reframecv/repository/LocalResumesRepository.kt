@@ -9,7 +9,8 @@ import reframecv.shared.nowMillis
 class LocalResumesRepository(
     private val dao: ResumeDao,
     private val photos: LocalResumePhotos? = null,
-) : ResumesRepository {
+) : ResumesRepository,
+    ResumeLinksRepository by LocalResumeLinksRepository(dao) {
     override fun observeResumes(projectId: Long) = dao.observeActive(projectId).map { records ->
         records.map { it.toDomainModel() }
     }
@@ -46,6 +47,11 @@ class LocalResumesRepository(
     override suspend fun update(record: Resume, mainResumeChange: MainResumeChange) {
         val save = suspend { dao.update(record.copy(updatedAt = nowMillis()), mainResumeChange) }
         if (photos != null) photos.save(record, save) else save()
+    }
+
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        val remove = suspend { dao.deleteMany(projectId, ids, nowMillis()) }
+        if (photos != null) photos.deleteMany(ids, remove) else remove()
     }
 
     override suspend fun delete(id: Long) {

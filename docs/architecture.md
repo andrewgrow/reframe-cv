@@ -250,6 +250,30 @@ summary; a changed resume timestamp or vacancy JSON shows a stale-result warning
 replaces only that link's result. Cascade deletion removes the assessment with its link.
 No default prompt is seeded; users can copy the assessment example from prompt_examples.md.
 
+## Resume list selection and vacancy links
+
+The resume list offers per-row checkboxes and tri-state Select all independently of opening an
+editor. Selection is local to the list component, survives visiting a linked vacancy, and prunes
+identities removed by live updates. Delete selected requires a shared confirmation dialog with
+the selected names, without typed input. Busy deletion blocks dismissal and competing actions;
+failures keep selection and confirmation for retry.
+
+Bulk deletion validates every ID against the project and deletes the set in one database
+transaction. It reuses ordinary deletion cleanup for main-resume selection, source references,
+vacancy links and ScreenState. Vacancies, derived resume content and cover-letter text remain.
+Photo cleanup runs under the shared portrait mutex after commit, removing each unreferenced
+file once and retaining any file still referenced by an unselected resume. Failed transactions
+leave records and photos intact.
+
+Linked appears before Added in the table; compact layouts show the links below the resume name.
+A small live join projection supplies every linked vacancy's current internal name and ID in
+vacancy-ID order. Each link opens that vacancy inside the resume navigation stack; Close/Back
+returns to the same resume list and selection. These changes do not alter the database schema.
+
+Resume list rows preview at most two vacancy links. Additional links are available through
+a count link that opens a scrollable dialog with all linked vacancies. Opening a vacancy
+from the dialog dismisses it first and retains the list selection for Back navigation.
+
 ## AI resume improvement
 
 Each linked resume has an Improve icon beside its match score. It opens the shared AI
@@ -262,7 +286,7 @@ variants, and leaves date invariants to domain validation. Generated content is 
 strictly, without tolerant import repair or legacy consent normalization.
 
 `ImproveResumeUseCase` creates a new resume in the same project with the selected source's
-ID as `sourceResumeId`, a name formed as `<source name> + <vacancy internal name> (AI yyyy-dd-MM HH:mm)` in the device's local time,
+ID as `sourceResumeId`, a name formed as `<source name> + <vacancy internal name> (AI yyyy-MM-dd HH:mm)` in the device's local time,
 and the generated content. Repeated trailing AI timestamps and matching vacancy-name suffixes
 are replaced, so repeated improvement for the same vacancy keeps one vacancy name and one AI timestamp.
 A blank draft vacancy name is omitted; other custom name parts are preserved. Keywords and photo are empty; main-resume selection is unchanged.
@@ -332,7 +356,7 @@ Pending attachments bind to the new vacancy ID and reset to Keep after creation.
 
 Resume and vacancy export share the JSON options dialog and desktop file lifecycle.
 Download shows progress, generates formatted UTF-8 JSON before the native picker, and
-suggests `vacancy-<id>-<yyyyddMM>-<HHmm>-<ss>.json`. Temporary files are deleted on
+suggests `vacancy-<id>-<yyyyMMdd>-<HHmm>-<ss>.json`. Temporary files are deleted on
 success, picker cancellation, write failures, and coroutine cancellation. Generation
 and copying run on IO; errors keep the dialog retryable and include operation context.
 
@@ -599,3 +623,23 @@ navigation footer uses the same minimum while an editor is active and follows it
 measured height if wrapped buttons or additional messages require more room. Returning
 to a list restores the normal navigation footer height. Notification content does not
 shift the divider while it fits the reserved space.
+
+## Cover-letter list
+
+The dashboard opens the project’s cover letters in ascending ID order. Selection is local to
+the list and survives opening a letter or its source resume. Source names update from the
+resume stream; a missing source has no link. Bulk deletion validates the whole selection
+and deletes it in one database transaction, clearing vacancy links and screen states while
+keeping resumes and vacancies. The list can create letters manually or import JSON; AI generation remains available
+from a vacancy.
+
+## Cover-letter JSON exchange
+
+[Cover-letter content schema](schemas/cover-letter-content-v1.schema.json) defines a versioned
+`formatVersion`/`content` document with `name`, `text`, and `keywords`. Local IDs, timestamps,
+source-resume IDs, and vacancy links are excluded. The AI generation schema remains a separate
+response contract. Import ignores unsupported fields and malformed field values, requires a
+supported envelope, and fills a new draft. Save persists it once and keeps the editor open.
+Export saves current edits before opening the shared JSON download dialog. Native file pickers
+use temporary copies; export removes them after completion or cancellation, and import retains
+them until the editor closes. User source files remain unchanged.

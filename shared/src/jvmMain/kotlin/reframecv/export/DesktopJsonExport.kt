@@ -20,7 +20,7 @@ internal class DesktopJsonExport(
         var temporary: Path? = null
         try {
             val filename = withContext(Dispatchers.IO) {
-                val stamp = DateTimeFormatter.ofPattern("yyyyddMM-HHmm-ss")
+                val stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmm-ss")
                     .withZone(clock.zone).format(clock.instant())
                 temporary = if (temporaryDirectory == null) {
                     Files.createTempFile("reframecv-$kind-", ".json")
