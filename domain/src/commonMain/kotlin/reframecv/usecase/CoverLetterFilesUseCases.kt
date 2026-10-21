@@ -8,7 +8,9 @@ import reframecv.importing.CoverLetterImporter
 class CoverLetterFilesUseCases(
     private val importer: CoverLetterImporter,
     private val exporter: CoverLetterExporter,
+    private val pdfExporter: CoverLetterExporter,
 ) {
     suspend fun importDocument() = importer.pickAndImport()
+    suspend fun generatePdf(letter: CoverLetter) = pdfExporter.export(letter)
     suspend fun export(letter: CoverLetter) = exporter.export(letter)
 }

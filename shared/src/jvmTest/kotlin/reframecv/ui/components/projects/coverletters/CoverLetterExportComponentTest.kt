@@ -39,7 +39,10 @@ class CoverLetterExportComponentTest : ComponentTest() {
                 DocumentExportResult.Saved
             },
         ) { finished.complete(Unit) }
-        runOnUiThread { component.onDownload() }
+        runOnUiThread {
+            component.onFormatChange(CoverLetterExportFormat.Json)
+            component.onDownload()
+        }
         withTimeout(10_000) {
             entered.await()
             runOnUiThread {
@@ -67,7 +70,10 @@ class CoverLetterExportComponentTest : ComponentTest() {
                 DocumentExportResult.Cancelled
             },
         ) { finished.complete(Unit) }
-        runOnUiThread { component.onDownload() }
+        runOnUiThread {
+            component.onFormatChange(CoverLetterExportFormat.Json)
+            component.onDownload()
+        }
         withTimeout(10_000) {
             val logged = dependencies.logger.failures.receive()
             assertSame(failure, logged.error)
@@ -84,6 +90,32 @@ class CoverLetterExportComponentTest : ComponentTest() {
         }
     }
 
+    @Test
+    fun blankBodyBlocksPdfButStillAllowsJsonExport() = runBlocking<Unit> {
+        var calls = 0
+        val finished = CompletableDeferred<Unit>()
+        val component = component(
+            CoverLetterExporter {
+                calls++
+                DocumentExportResult.Saved
+            },
+        ) { finished.complete(Unit) }
+        runOnUiThread {
+            assertEquals(CoverLetterExportFormat.Pdf, component.format.value)
+            component.onDownload()
+            assertEquals(CoverLetterExportState.EmptyText, component.state.value)
+            assertEquals(0, calls)
+            component.onFormatChange(CoverLetterExportFormat.Json)
+            component.onDownload()
+        }
+        withTimeout(5000) { finished.await() }
+        assertEquals(1, calls)
+        runOnUiThread {
+            component.onReset()
+            assertEquals(CoverLetterExportFormat.Pdf, component.format.value)
+        }
+    }
+
     private fun component(exporter: CoverLetterExporter, finished: () -> Unit) = runOnUiThread {
         lifecycle.resume()
         DefaultCoverLetterExportComponent(
@@ -93,6 +125,7 @@ class CoverLetterExportComponentTest : ComponentTest() {
                     override val coverLetterFilesUseCases get() = CoverLetterFilesUseCases(
                         coverLetterImporter,
                         coverLetterExporter,
+                        coverLetterPdfExporter,
                     )
                     override val coverLetterExporter = exporter
                 },

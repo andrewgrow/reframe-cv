@@ -6,6 +6,7 @@ A local desktop application for managing resumes, vacancies, and cover letters w
 
 - [Architecture and constraints](docs/architecture.md): current contracts and invariants.
 - [Backlog and open questions](docs/backlog.md): deferred work, without a fixed implementation order.
+- [PDF rendering](docs/pdf-rendering.md): module boundaries, template rules, export checks, and licenses.
 - [Resume JSON Schema](docs/schemas/resume-content-v1.schema.json): the versioned document contract.
 - [Vacancy content schema](docs/schemas/vacancy-content-v1.schema.json): the portable JSON export contract.
 - [Cover letter content schema](docs/schemas/cover-letter-content-v1.schema.json): the portable JSON import/export contract.
@@ -24,6 +25,7 @@ This is a Kotlin Multiplatform project currently targeting Desktop (JVM).
 - `providers`: external repositories, provider clients, response DTOs, and domain mapping.
 - `shared/src/commonMain`: components, navigation, feature services, and Compose UI.
 - `shared/src/jvmMain`: desktop dependency composition, filesystem, native pickers, and image processing.
+- `documents`: Compose print templates and measured desktop PDF rendering.
 - `shared/src/commonTest` and `shared/src/jvmTest`: fixtures, behavior tests, and screenshot tests.
 - `database/schemas`: exported Room schemas.
 - `gradle/libs.versions.toml`: dependency and plugin versions.

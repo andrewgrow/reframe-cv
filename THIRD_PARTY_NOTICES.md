@@ -10,6 +10,9 @@ Third-party software remains subject to its own license terms. The following tab
 | --- | --- | --- | --- |
 | Kotlin, Kotlin Gradle plugins, and Kotlin Test | 2.4.21 | Apache License 2.0 | [Kotlin license](https://github.com/JetBrains/kotlin/blob/master/license/LICENSE.txt) |
 | Compose Multiplatform | 1.12.1 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
+| compose2pdf (desktop PDF rendering) | 1.4.0 | Apache License 2.0 | [compose2pdf license](https://github.com/chrisjenx/compose2pdf/blob/main/LICENSE) |
+| Apache PDFBox | 3.0.7 | Apache License 2.0 | [PDFBox license](https://pdfbox.apache.org/3.0/license.html) |
+| Inter (bundled by compose2pdf) | Bundled font files | SIL Open Font License 1.1 | [Inter license](https://github.com/rsms/inter/blob/master/LICENSE.txt) |
 | Compose Material Icons Extended | 1.7.3 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
 | Compose Material 3 | 1.12.0-alpha03 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
 | AndroidX Lifecycle for Compose | 2.11.0 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
@@ -32,6 +35,19 @@ Third-party software remains subject to its own license terms. The following tab
 | Detekt | 2.0.0-alpha.6 | Apache License 2.0 | [Detekt license](https://github.com/detekt/detekt/blob/main/LICENSE) |
 | ktlint | 1.8.0 | MIT License | [ktlint license](https://github.com/ktlint/ktlint/blob/master/LICENSE) |
 | ktlint Gradle plugin | 14.2.0 | MIT License | [ktlint Gradle plugin license](https://github.com/JLLeitschuh/ktlint-gradle/blob/main/LICENSE.txt) |
+
+## PDF rendering licenses
+
+The desktop distribution includes full PDF-related license texts as application resources:
+
+- [compose2pdf license](desktopApp/src/main/resources/licenses/pdf/compose2pdf-LICENSE.txt)
+- [PDFBox license](desktopApp/src/main/resources/licenses/pdf/PDFBox-LICENSE.txt) and
+  [notice](desktopApp/src/main/resources/licenses/pdf/PDFBox-NOTICE.txt)
+- [Inter font license](desktopApp/src/main/resources/licenses/pdf/Inter-LICENSE.txt)
+
+[Source references](desktopApp/src/main/resources/licenses/pdf/README.md) document where each
+text came from. Keep these resources in the packaged desktop JAR when changing distribution tasks.
+See [PDF rendering](docs/pdf-rendering.md) for the module boundaries and validation workflow.
 
 The license references above are provided for convenience. The license and notice files distributed with each dependency are authoritative. Dependencies may also bring transitive software with additional notices or license terms. Before distributing an application package, the resolved dependency graph must be reviewed and all notices required by the packaged software must be included with the release.
 

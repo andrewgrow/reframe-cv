@@ -33,7 +33,8 @@ linked resume, letter editing and confirmed permanent deletion. Letters remain r
 - [x] Add a project-wide cover-letter list with bulk deletion and source-resume links.
 - [x] Add manual letter creation and JSON import independently of a vacancy.
 - [x] Add versioned JSON export for cover letters.
-- [ ] Decide on letter printing formats.
+- [x] Add A4 PDF generation from the cover-letter editor.
+- [ ] Consider additional letter templates and printing formats.
 
 ## Vacancy sources
 
@@ -43,7 +44,9 @@ linked resume, letter editing and confirmed permanent deletion. Letters remain r
 
 ## Print and PDF export
 
-- [ ] Choose the rendering/template approach and initial output layout.
+- [ ] Extend PDF templates for resumes, including photo and section visibility;
+  follow the [rendering rules](pdf-rendering.md).
+- [ ] Define the initial resume print layout and template options.
 - [ ] Honor section, consent, and photo visibility; use the prepared portrait for printing.
 
 ### Resume reference: adaptation

@@ -9,19 +9,19 @@ import reframecv.shared.generated.resources.vacancy_export_error
 import reframecv.shared.generated.resources.vacancy_export_title
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportComponent
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
-import reframecv.ui.compose.common.JsonExportDialog
-import reframecv.ui.compose.common.JsonExportDialogState
+import reframecv.ui.compose.common.DocumentExportDialog
+import reframecv.ui.compose.common.DocumentExportDialogState
 
 @Composable
 internal fun VacancyExportDialog(component: VacancyExportComponent, onClose: () -> Unit) {
     val state by component.state.subscribeAsState()
-    JsonExportDialog(
+    DocumentExportDialog(
         stringResource(Res.string.vacancy_export_title),
         stringResource(Res.string.vacancy_export_error),
         when (state) {
-            VacancyExportState.Idle -> JsonExportDialogState.Idle
-            VacancyExportState.Exporting -> JsonExportDialogState.Exporting
-            VacancyExportState.Failed -> JsonExportDialogState.Failed
+            VacancyExportState.Idle -> DocumentExportDialogState.Idle
+            VacancyExportState.Exporting -> DocumentExportDialogState.Exporting
+            VacancyExportState.Failed -> DocumentExportDialogState.Failed
         },
         component::onDownload,
         onClose,

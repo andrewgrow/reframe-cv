@@ -1,48 +1,16 @@
 package reframecv.export
 
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.time.Clock
-import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.withContext
 
-/** Owns generated JSON until destination selection finishes, including errors and cancellation. */
+/** Adapts JSON serialization to the shared temporary-document export lifecycle. */
 internal class DesktopJsonExport(
-    private val picker: ExportDestinationPicker,
-    private val clock: Clock,
-    private val temporaryDirectory: Path?,
+    picker: ExportDestinationPicker,
+    clock: Clock,
+    temporaryDirectory: Path?,
 ) {
-    suspend fun export(kind: String, id: Long, content: () -> String): DocumentExportResult {
-        require(id > 0)
-        var temporary: Path? = null
-        try {
-            val filename = withContext(Dispatchers.IO) {
-                val stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmm-ss")
-                    .withZone(clock.zone).format(clock.instant())
-                temporary = if (temporaryDirectory == null) {
-                    Files.createTempFile("reframecv-$kind-", ".json")
-                } else {
-                    Files.createTempFile(temporaryDirectory, "reframecv-$kind-", ".json")
-                }
-                Files.writeString(checkNotNull(temporary), content())
-                "$kind-$id-$stamp.json"
-            }
-            val destination = picker.pick(filename) ?: return DocumentExportResult.Cancelled
-            withContext(Dispatchers.IO) {
-                Files.copy(
-                    checkNotNull(temporary),
-                    Path.of(destination),
-                    StandardCopyOption.REPLACE_EXISTING,
-                )
-            }
-            return DocumentExportResult.Saved
-        } finally {
-            withContext(NonCancellable + Dispatchers.IO) {
-                temporary?.let { Files.deleteIfExists(it) }
-            }
-        }
-    }
+    private val files = DesktopDocumentExport(picker, clock, temporaryDirectory)
+
+    suspend fun export(kind: String, id: Long, content: () -> String): DocumentExportResult =
+        files.export(kind, id, "json") { content().toByteArray(Charsets.UTF_8) }
 }

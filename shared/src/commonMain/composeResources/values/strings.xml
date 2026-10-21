@@ -163,6 +163,7 @@
     <string name="action_export">Export</string>
     <string name="resume_export_title">Export resume</string>
     <string name="export_format">Format</string>
+    <string name="export_pdf">as PDF</string>
     <string name="export_json">as JSON</string>
     <string name="export_download">Download</string>
     <string name="resume_export_error">Could not export the resume. Please try again.</string>
@@ -386,6 +387,8 @@
     <string name="letter_unlink_question">The cover letter itself will be kept. Save the vacancy to apply this change.</string>
     <string name="letter_delete_title">Delete cover letter?</string>
     <string name="letter_delete_warning">This permanently deletes the cover letter and removes its links from all vacancies. This cannot be undone.</string>
+    <string name="letter_pdf_saved">PDF saved successfully</string>
+    <string name="letter_pdf_empty">Add letter text before generating a PDF.</string>
     <string name="letter_save_success">Cover letter saved successfully</string>
     <string name="letter_save_error">Could not save the cover letter. Please try again.</string>
     <string name="letter_delete_error">Could not delete the cover letter. Please try again.</string>

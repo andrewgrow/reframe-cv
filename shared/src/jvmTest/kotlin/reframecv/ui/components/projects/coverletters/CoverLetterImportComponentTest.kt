@@ -46,7 +46,7 @@ class CoverLetterImportComponentTest : ComponentTest() {
             lifecycle.resume()
             val services = object : ApplicationDependencies by dependencies {
                 override val coverLetterFilesUseCases =
-                    CoverLetterFilesUseCases(importer, coverLetterExporter)
+                    CoverLetterFilesUseCases(importer, coverLetterExporter, coverLetterPdfExporter)
             }
             DefaultCoverLetterImportComponent(
                 DefaultAppComponentContext(DefaultComponentContext(lifecycle), services),

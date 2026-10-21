@@ -23,6 +23,8 @@ build and verification commands belong in the [README](../README.md).
 - `database` depends on `domain` and owns Room entities, DAOs, converters, local repositories,
   and the exported schemas in `database/schemas`. Database construction accepts a path;
   desktop application dependencies select the application data directory.
+- `documents` owns Compose print templates and measured desktop PDF pagination; `shared`
+  supplies the platform exporter and temporary-file lifecycle.
 - `network` owns Ktor transport, platform engines, common timeouts, and the JVM rotating
   diagnostic file writer reused by HTTP and application error logging; it has no knowledge
   of concrete AI providers or vacancy recognition DTOs.
@@ -643,3 +645,20 @@ supported envelope, and fills a new draft. Save persists it once and keeps the e
 Export saves current edits before opening the shared JSON download dialog. Native file pickers
 use temporary copies; export removes them after completion or cancellation, and import retains
 them until the editor closes. User source files remain unchanged.
+
+## Cover-letter PDF export
+
+Export saves the current letter and opens a format selector: PDF first and selected by default,
+then JSON. Download invokes the matching file use case with the saved ID. A blank body blocks
+PDF generation with feedback in the dialog; JSON remains available for incomplete letter text.
+Generation and file copying run on a background dispatcher; the native destination picker runs
+on Swing. The page stays open and blocks duplicate actions during the operation. The export
+dialog shows progress and retryable errors; the editor shows PDF-save success. Cancelling the
+destination picker keeps the saved letter without claiming a PDF was saved.
+
+`DesktopCoverLetterPdfExporter` renders body text only: internal name, keywords, and local IDs
+are excluded. `DesktopDocumentExport` owns temporary JSON/PDF files and removes them in a
+non-cancellable cleanup block. Suggested names use `cover-letter-<id>-<yyyyMMdd-HHmm-ss>.pdf`.
+PDFs are exported to user-selected destinations, without persistent attachment records.
+The fixed A4 template uses measured page fragments to avoid compose2pdf's automatic-pagination
+hidden-text duplication; see [PDF rendering](pdf-rendering.md).

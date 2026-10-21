@@ -11,6 +11,7 @@ import reframecv.database.createDatabaseBuilder
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.export.CoverLetterExporter
 import reframecv.export.DesktopCoverLetterExporter
+import reframecv.export.DesktopCoverLetterPdfExporter
 import reframecv.export.DesktopResumeExporter
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
@@ -86,6 +87,7 @@ class DefaultApplicationDependencies(
         FileAttachmentStorage(applicationDataDirectory()),
     override val attachmentPicker: AttachmentPicker = DesktopAttachmentPicker(),
     override val resumeExporter: ResumeExporter = DesktopResumeExporter(),
+    override val coverLetterPdfExporter: CoverLetterExporter = DesktopCoverLetterPdfExporter(),
     override val coverLetterExporter: CoverLetterExporter = DesktopCoverLetterExporter(),
     override val coverLetterImporter: CoverLetterImporter = DesktopCoverLetterImporter(),
     override val vacancyExporter: VacancyExporter = DesktopVacancyExporter(),
@@ -281,7 +283,7 @@ class DefaultApplicationDependencies(
         VacancyFilesUseCases(vacancyImporter, vacancyExporter, attachmentPicker)
     }
     private val coverLetterFilesUseCasesInstance by lazy {
-        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter)
+        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter, coverLetterPdfExporter)
     }
     override val coverLetterFilesUseCases: CoverLetterFilesUseCases
         get() {

@@ -122,6 +122,7 @@ class CoverLetterExchangeWorkflowTest : ComponentTest() {
                 "Current draft",
                 dependencies.coverLettersRepository.records.value.single().content,
             )
+            component.exportComponent.onFormatChange(CoverLetterExportFormat.Json)
             component.exportComponent.onDownload()
             assertTrue(component.state.value.busy)
             component.onClose()
@@ -165,7 +166,8 @@ class CoverLetterExchangeWorkflowTest : ComponentTest() {
     ) = runOnUiThread {
         lifecycle.resume()
         val services = object : ApplicationDependencies by dependencies {
-            override val coverLetterFilesUseCases = CoverLetterFilesUseCases(importer, exporter)
+            override val coverLetterFilesUseCases =
+                CoverLetterFilesUseCases(importer, exporter, coverLetterPdfExporter)
             override val coverLettersUseCases = CoverLettersUseCases(repository)
         }
         DefaultCoverLetterEditorComponent(

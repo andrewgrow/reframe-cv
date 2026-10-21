@@ -1,14 +1,20 @@
 package reframecv.ui.compose.projects.coverletters
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -17,6 +23,7 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.action_delete
 import reframecv.shared.generated.resources.action_export
 import reframecv.shared.generated.resources.letter_delete_error
+import reframecv.shared.generated.resources.letter_pdf_saved
 import reframecv.shared.generated.resources.letter_save_error
 import reframecv.shared.generated.resources.letter_save_success
 import reframecv.shared.generated.resources.letter_validation
@@ -36,7 +43,7 @@ internal fun CoverLetterFooter(component: CoverLetterEditorComponent) {
     val enabled = !state.busy && !state.confirming && !state.exportVisible
     DocumentFooter {
         Column(Modifier.fillMaxWidth().padding(tokens.spacing.medium)) {
-            CoverLetterNotice(state.notice)
+            CoverLetterNotice(state.notice, state.busy)
             FlowRow(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(tokens.spacing.small),
@@ -85,8 +92,22 @@ internal fun CoverLetterFooter(component: CoverLetterEditorComponent) {
 }
 
 @Composable
-private fun CoverLetterNotice(value: LetterNotice) {
+private fun CoverLetterNotice(value: LetterNotice, busy: Boolean) {
+    val size = ReframeTheme.tokens.dimensions.iconSize
+    Row(Modifier.heightIn(min = size), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.weight(1f)) { CoverLetterNoticeText(value) }
+        if (busy) {
+            CircularProgressIndicator(
+                Modifier.size(size).testTag("cover_letter.progress"),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CoverLetterNoticeText(value: LetterNotice) {
     val notice = when (value) {
+        LetterNotice.PdfSaved -> stringResource(Res.string.letter_pdf_saved)
         LetterNotice.None -> ""
         LetterNotice.Saved -> stringResource(Res.string.letter_save_success)
         LetterNotice.SaveFailed -> stringResource(Res.string.letter_save_error)
@@ -96,9 +117,7 @@ private fun CoverLetterNotice(value: LetterNotice) {
     Text(
         notice,
         modifier = Modifier.testTag("cover_letter.notice"),
-        color = if (value ==
-            LetterNotice.Saved
-        ) {
+        color = if (value == LetterNotice.Saved || value == LetterNotice.PdfSaved) {
             ReframeTheme.colorScheme.success
         } else {
             ReframeTheme.colorScheme.critical

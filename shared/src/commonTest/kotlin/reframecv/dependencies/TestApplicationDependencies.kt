@@ -77,6 +77,9 @@ class TestApplicationDependencies : ApplicationDependencies {
             instruction: String,
         ) = RecognitionOutcome.Failed(RecognitionError.NotConfigured)
     }
+    var pdfExport: suspend (reframecv.domain.models.coverletter.CoverLetter) ->
+    DocumentExportResult = { DocumentExportResult.Cancelled }
+    override val coverLetterPdfExporter = CoverLetterExporter { pdfExport(it) }
     override val coverLetterExporter = CoverLetterExporter { DocumentExportResult.Cancelled }
     override val coverLetterImporter = CoverLetterImporter { null }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
@@ -225,7 +228,7 @@ class TestApplicationDependencies : ApplicationDependencies {
         resumePhotos,
     )
     override val coverLetterFilesUseCases =
-        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter)
+        CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter, coverLetterPdfExporter)
     override val vacancyFilesUseCases get() = VacancyFilesUseCases(
         vacancyImporter,
         vacancyExporter,

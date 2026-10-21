@@ -9,19 +9,19 @@ import reframecv.shared.generated.resources.resume_export_error
 import reframecv.shared.generated.resources.resume_export_title
 import reframecv.ui.components.projects.resumes.editor.ResumeExportComponent
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
-import reframecv.ui.compose.common.JsonExportDialog
-import reframecv.ui.compose.common.JsonExportDialogState
+import reframecv.ui.compose.common.DocumentExportDialog
+import reframecv.ui.compose.common.DocumentExportDialogState
 
 @Composable
 internal fun ResumeExportDialog(component: ResumeExportComponent, onClose: () -> Unit) {
     val state by component.state.subscribeAsState()
-    JsonExportDialog(
+    DocumentExportDialog(
         stringResource(Res.string.resume_export_title),
         stringResource(Res.string.resume_export_error),
         when (state) {
-            ResumeExportState.Idle -> JsonExportDialogState.Idle
-            ResumeExportState.Exporting -> JsonExportDialogState.Exporting
-            ResumeExportState.Failed -> JsonExportDialogState.Failed
+            ResumeExportState.Idle -> DocumentExportDialogState.Idle
+            ResumeExportState.Exporting -> DocumentExportDialogState.Exporting
+            ResumeExportState.Failed -> DocumentExportDialogState.Failed
         },
         component::onDownload,
         onClose,

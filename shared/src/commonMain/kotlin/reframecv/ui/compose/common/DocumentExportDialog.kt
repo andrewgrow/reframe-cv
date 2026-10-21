@@ -30,17 +30,20 @@ import reframecv.shared.generated.resources.export_format
 import reframecv.shared.generated.resources.export_json
 import reframecv.ui.theme.ReframeTheme
 
-/** Shows JSON export options, progress, and retryable file errors. */
+/** Shows document formats, progress, and retryable file errors. */
 @Composable
-internal fun JsonExportDialog(
+internal fun DocumentExportDialog(
     title: String,
     failureMessage: String,
-    state: JsonExportDialogState,
+    state: DocumentExportDialogState,
     onDownload: () -> Unit,
     onClose: () -> Unit,
     tagPrefix: String,
+    formats: List<ExportFormatOption> = emptyList(),
+    selectedFormat: String = "json",
+    onFormatChange: (String) -> Unit = {},
 ) {
-    val busy = state == JsonExportDialogState.Exporting
+    val busy = state == DocumentExportDialogState.Exporting
     ResizableDialog(
         onDismissRequest = { if (!busy) onClose() },
         resizingEnabled = !busy,
@@ -48,8 +51,16 @@ internal fun JsonExportDialog(
         title = { Text(title) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium)) {
-                ExportFormatPicker(enabled = !busy, tagPrefix = tagPrefix)
-                if (state == JsonExportDialogState.Failed) {
+                ExportFormatPicker(
+                    enabled = !busy,
+                    tagPrefix = tagPrefix,
+                    formats = formats.ifEmpty {
+                        listOf(ExportFormatOption("json", stringResource(Res.string.export_json)))
+                    },
+                    selectedFormat = selectedFormat,
+                    onFormatChange = onFormatChange,
+                )
+                if (state == DocumentExportDialogState.Failed) {
                     Text(
                         failureMessage,
                         color = ReframeTheme.colorScheme.critical,
@@ -81,12 +92,18 @@ internal fun JsonExportDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ExportFormatPicker(enabled: Boolean, tagPrefix: String) {
+private fun ExportFormatPicker(
+    enabled: Boolean,
+    tagPrefix: String,
+    formats: List<ExportFormatOption>,
+    selectedFormat: String,
+    onFormatChange: (String) -> Unit,
+) {
     var expanded by remember { mutableStateOf(false) }
-    val json = stringResource(Res.string.export_json)
+    val selected = formats.first { it.id == selectedFormat }
     ExposedDropdownMenuBox(expanded && enabled, { if (enabled) expanded = it }) {
         OutlinedTextField(
-            value = json,
+            value = selected.label,
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
@@ -97,14 +114,22 @@ private fun ExportFormatPicker(enabled: Boolean, tagPrefix: String) {
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(expanded && enabled, { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text(json) },
-                onClick = { expanded = false },
-                modifier = Modifier.testTag("$tagPrefix.json"),
-            )
+            formats.forEach { format ->
+                DropdownMenuItem(
+                    text = { Text(format.label) },
+                    onClick = {
+                        onFormatChange(format.id)
+                        expanded = false
+                    },
+                    modifier = Modifier.testTag("$tagPrefix.${format.id}"),
+                )
+            }
         }
     }
 }
 
 /** Describes shared export-dialog progress without owning a feature's operations. */
-internal enum class JsonExportDialogState { Idle, Exporting, Failed }
+internal enum class DocumentExportDialogState { Idle, Exporting, Failed }
+
+/** Supplies a stable selection ID and localized label for an export format. */
+internal data class ExportFormatOption(val id: String, val label: String)

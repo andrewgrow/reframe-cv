@@ -42,6 +42,13 @@ class CoverLetterEditorScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
+    fun pdfSavedMatchesReference() = runDesktopComposeUiTest {
+        val component = TestCoverLetterEditorComponent(record)
+        component.state.value = component.state.value.copy(notice = LetterNotice.PdfSaved)
+        setAndCaptureGolden(this) { CoverLetterEditorContent(component) }
+    }
+
+    @Test
     fun letterDeletionConfirmationMatchesReference() = runDesktopComposeUiTest {
         val component = TestCoverLetterEditorComponent(record)
         component.onDelete()

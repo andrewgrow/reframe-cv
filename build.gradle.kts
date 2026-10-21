@@ -38,6 +38,7 @@ detekt {
         "database/src",
         "network/src",
         "providers/src",
+        "documents/src",
     )
     config.setFrom("config/detekt/detekt.yml")
     buildUponDefaultConfig = true
@@ -50,6 +51,7 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 }
 
 dependencies {
+    kover(project(":documents"))
     kover(project(":domain"))
     kover(project(":database"))
     kover(project(":network"))

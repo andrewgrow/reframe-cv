@@ -6,6 +6,13 @@ class TestCoverLetterExportComponent(
     private val download: () -> Unit = {
     },
 ) : CoverLetterExportComponent {
+    override val format = MutableValue(CoverLetterExportFormat.Pdf)
+    override fun onFormatChange(format: CoverLetterExportFormat) {
+        if (state.value != CoverLetterExportState.Exporting) {
+            this.format.value = format
+            state.value = CoverLetterExportState.Idle
+        }
+    }
     override val state = MutableValue(CoverLetterExportState.Idle)
     override fun onDownload() = download()
     override fun onReset() {
@@ -13,6 +20,7 @@ class TestCoverLetterExportComponent(
             CoverLetterExportState.Exporting
         ) {
             state.value = CoverLetterExportState.Idle
+            format.value = CoverLetterExportFormat.Pdf
         }
     }
 }

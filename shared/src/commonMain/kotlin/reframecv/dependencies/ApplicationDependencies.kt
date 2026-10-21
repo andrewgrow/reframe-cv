@@ -46,6 +46,7 @@ interface ApplicationDependencies {
     val attachmentPicker: AttachmentPicker
     val vacancyDocumentReader: VacancyDocumentReader
     val vacancyRecognitionRepository: VacancyRecognitionRepository
+    val coverLetterPdfExporter: CoverLetterExporter
     val coverLetterExporter: CoverLetterExporter
     val coverLetterImporter: CoverLetterImporter
     val coverLetterFilesUseCases: CoverLetterFilesUseCases

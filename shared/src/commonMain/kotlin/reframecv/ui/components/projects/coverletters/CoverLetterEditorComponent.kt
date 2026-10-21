@@ -6,16 +6,21 @@ import com.arkivanov.essenty.lifecycle.doOnDestroy
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.ui.context.AppComponentContext
 
 /** Distinguishes save feedback from failures in the letter editor. */
-enum class LetterNotice { None, Saved, SaveFailed, DeleteFailed, Validation }
+enum class LetterNotice {
+    None,
+    Saved,
+    SaveFailed,
+    DeleteFailed,
+    Validation,
+    PdfSaved,
+}
 
 /** Keeps letter edits local until Save and reserves feedback without moving actions. */
 data class CoverLetterEditorState(
@@ -50,7 +55,7 @@ class DefaultCoverLetterEditorComponent(
 ) : CoverLetterEditorComponent {
     override val state = MutableValue(CoverLetterEditorState(record))
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-    private var notification: Job? = null
+    private val notices = CoverLetterNotifications(scope, state)
     override val importComponent = DefaultCoverLetterImportComponent(context) { imported ->
         val current = state.value.record
         state.value = state.value.copy(
@@ -66,6 +71,9 @@ class DefaultCoverLetterEditorComponent(
         context,
         coverLetter = { state.value.record.takeIf { it.id > 0 } },
         finished = { onCloseExport() },
+        exported = {
+            if (it == CoverLetterExportFormat.Pdf) notices.show(LetterNotice.PdfSaved)
+        },
     )
     init {
         val importing = importComponent.state.subscribe {
@@ -95,18 +103,25 @@ class DefaultCoverLetterEditorComponent(
                 )
         }
     }
-    override fun onSave() = save(export = false)
-    private fun save(export: Boolean) {
+    override fun onSave() = save(LetterSaveAction.Save)
+    private fun save(action: LetterSaveAction) {
         if (state.value.busy || state.value.confirming || state.value.exportVisible) return
         val record = state.value.record
-        if (record.name.isBlank()) {
-            show(LetterNotice.Validation)
+        val validation = when {
+            record.name.isBlank() -> LetterNotice.Validation
+            else -> LetterNotice.None
+        }
+        if (validation != LetterNotice.None) {
+            notices.show(validation)
             return
         }
         perform("Save cover letter", LetterNotice.SaveFailed) {
             val saved = context.dependencies.coverLettersUseCases.save(record)
-            state.value = state.value.copy(record = saved, exportVisible = export)
-            show(LetterNotice.Saved)
+            state.value = state.value.copy(
+                record = saved,
+                exportVisible = action == LetterSaveAction.Export,
+            )
+            notices.show(LetterNotice.Saved)
         }
     }
     override fun onDelete() {
@@ -138,21 +153,11 @@ class DefaultCoverLetterEditorComponent(
                     error,
                     mapOf("letterId" to state.value.record.id),
                 )
-                show(failure)
+                notices.show(failure)
             } finally {
                 state.value = state.value.copy(busy = false)
             }
         }
-    }
-    private fun show(notice: LetterNotice) {
-        notification?.cancel()
-        state.value = state.value.copy(notice = notice)
-        notification =
-            scope.launch {
-                delay(LETTER_NOTICE_MILLIS)
-                state.value =
-                    state.value.copy(notice = LetterNotice.None)
-            }
     }
     override fun onCancelDelete() {
         if (!state.value.busy) {
@@ -166,7 +171,7 @@ class DefaultCoverLetterEditorComponent(
         }
     }
     override fun onExport() {
-        if (state.value.record.id > 0) save(export = true)
+        if (state.value.record.id > 0) save(LetterSaveAction.Export)
     }
     override fun onCloseExport() {
         if (exportComponent.state.value != CoverLetterExportState.Exporting) {
@@ -189,4 +194,5 @@ class DefaultCoverLetterEditorComponent(
         }
     }
 }
-private const val LETTER_NOTICE_MILLIS = 3000L
+
+private enum class LetterSaveAction { Save, Export }

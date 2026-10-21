@@ -44,6 +44,7 @@ kotlin {
             implementation(libs.kotlin.test)
         }
         jvmMain.dependencies {
+            implementation(project(":documents"))
             implementation(project(":network"))
             implementation(project(":providers"))
             implementation(project(":database"))
@@ -55,6 +56,7 @@ kotlin {
             implementation(project(":database"))
             implementation(project(":network"))
             implementation(project(":providers"))
+            implementation(libs.pdfbox)
             implementation(libs.jsonSchemaValidator)
             implementation(libs.compose.uiTestJunit4)
             implementation(libs.roborazzi.composeDesktop)
