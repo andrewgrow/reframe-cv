@@ -121,7 +121,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
         val child = childStack.value.active.instance
     ) {
         is RootComponent.Child.Settings -> child.component.isBusy
-        is RootComponent.Child.Vacancies -> child.component.editor?.isBusy == true
+        is RootComponent.Child.Vacancies -> child.component.isBusy
         is RootComponent.Child.Resumes -> child.component.editor?.isBusy == true
         else -> false
     }

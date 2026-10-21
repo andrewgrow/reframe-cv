@@ -53,16 +53,19 @@ internal fun VacancyResumesContent(
     enabled: Boolean,
     assessment: VacancyResumeAssessmentComponent? = null,
     improvement: VacancyResumeImprovementComponent? = null,
+    showTitle: Boolean = true,
 ) {
     Column(
         Modifier.fillMaxWidth().testTag("vacancy.resumes"),
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
-        Text(
-            stringResource(Res.string.vacancy_resumes),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
+        if (showTitle) {
+            Text(
+                stringResource(Res.string.vacancy_resumes),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
         links.forEach { link ->
             key(link.resumeId) {
                 val name = state.available.find { it.id == link.resumeId }?.name

@@ -17,6 +17,7 @@ import reframecv.domain.models.vacancy.VacancyResume
 @Dao
 interface VacancyDao :
     VacancyQueries,
+    VacancyLetterQueries,
     WorkspaceDao {
     @Query("UPDATE vacancy_attachments SET parsed_at = :parsedAt WHERE id = :id")
     suspend fun markSnapshotParsed(id: Long, parsedAt: Long): Int
@@ -24,8 +25,8 @@ interface VacancyDao :
     @Transaction
     suspend fun create(record: Vacancy): Long {
         requireWorkspace(record.projectId, record.createdAt)
-        record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
         val id = insertEntity(VacancyEntity.fromDomainModel(record))
+        replaceLetters(id, record)
         replaceResumes(id, record)
         replaceKeywords(id, record.keywords)
         return id
@@ -38,8 +39,8 @@ interface VacancyDao :
             "Cannot move a record to another project"
         }
         requireWorkspace(record.projectId, record.updatedAt)
-        record.coverLetterId?.let { requireActiveLetter(it, record.projectId) }
         check(updateEntity(VacancyEntity.fromDomainModel(record)) == 1)
+        replaceLetters(record.id, record)
         replaceResumes(record.id, record)
         replaceKeywords(record.id, record.keywords)
     }

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:cover-letter-generation:1",
+  "title": "Generated cover letter",
+  "description": "Plain-text cover letter generated from a resume and vacancy. Local identity, ownership, and provenance are assigned by the application.",
+  "type": "object",
+  "properties": { "content": { "type": "string", "minLength": 1 } },
+  "required": ["content"],
+  "additionalProperties": false
+}

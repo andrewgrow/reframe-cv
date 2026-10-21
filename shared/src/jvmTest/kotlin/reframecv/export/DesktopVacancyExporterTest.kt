@@ -36,7 +36,7 @@ class DesktopVacancyExporterTest {
         resumes = listOf(
             VacancyResume(3),
         ),
-        coverLetterId = 4, vacancyAttachmentId = 5,
+        coverLetterIds = listOf(4), vacancyAttachmentId = 5,
     )
 
     @Test

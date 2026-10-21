@@ -104,7 +104,7 @@ private fun hasDocumentEditor(child: RootComponent.Child): Boolean = when (child
 
     is RootComponent.Child.Vacancies -> {
         val stack by child.component.childStack.subscribeAsState()
-        stack.active.instance is VacanciesComponent.Child.Editor
+        stack.active.instance != VacanciesComponent.Child.List
     }
 
     else -> false

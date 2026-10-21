@@ -10,8 +10,11 @@ import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import com.arkivanov.mvikotlin.core.rx.observer
 import com.arkivanov.mvikotlin.core.store.StoreFactory
+import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.vacancy.Vacancy
+import reframecv.ui.components.projects.coverletters.CoverLetterEditorComponent
+import reframecv.ui.components.projects.coverletters.DefaultCoverLetterEditorComponent
 import reframecv.ui.components.projects.resumes.DefaultResumesComponent
 import reframecv.ui.components.projects.resumes.ResumesComponent
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyEditorComponent
@@ -39,6 +42,15 @@ interface VacanciesComponent {
 
         /** Opens a linked resume while retaining the vacancy draft underneath. */
         data class LinkedResume(val component: ResumesComponent) : Child
+
+        /** Displays an attached letter without discarding the vacancy draft. */
+        data class LinkedLetter(val component: CoverLetterEditorComponent) : Child
+    }
+    val isBusy: Boolean get() = when (val child = childStack.value.active.instance) {
+        is Child.Editor -> child.component.isBusy
+        is Child.LinkedResume -> child.component.editor?.isBusy == true
+        is Child.LinkedLetter -> child.component.state.value.busy
+        Child.List -> false
     }
     fun onEdit(vacancy: Vacancy)
     fun onAdd()
@@ -76,6 +88,9 @@ class DefaultVacanciesComponent(
 
         /** Opens a resume linked to the current vacancy. */
         data class LinkedResume(val resume: Resume) : EditorConfiguration
+
+        /** Opens management of a linked cover letter. */
+        data class LinkedLetter(val letter: CoverLetter) : EditorConfiguration
     }
 
     private val editorNavigation = StackNavigation<EditorConfiguration>()
@@ -87,6 +102,20 @@ class DefaultVacanciesComponent(
     ) { configuration, childContext ->
         if (configuration == EditorConfiguration.List) {
             VacanciesComponent.Child.List
+        } else if (configuration is EditorConfiguration.LinkedLetter) {
+            VacanciesComponent.Child.LinkedLetter(
+                DefaultCoverLetterEditorComponent(
+                    childContext,
+                    configuration.letter,
+                    close = { editorNavigation.pop() },
+                    deleted = { id ->
+                        childStack.value.items.mapNotNull {
+                            (it.instance as? VacanciesComponent.Child.Editor)?.component
+                        }.lastOrNull()?.letters?.onDeleted(id)
+                        editorNavigation.pop()
+                    },
+                ),
+            )
         } else if (configuration is EditorConfiguration.LinkedResume) {
             VacanciesComponent.Child.LinkedResume(
                 DefaultResumesComponent(
@@ -118,6 +147,7 @@ class DefaultVacanciesComponent(
                     },
                     close = { editorNavigation.pop() },
                     openResume = { editorNavigation.pushNew(EditorConfiguration.LinkedResume(it)) },
+                    openLetter = { editorNavigation.pushNew(EditorConfiguration.LinkedLetter(it)) },
                 ),
             )
         }
@@ -174,6 +204,7 @@ class DefaultVacanciesComponent(
         when (val child = childStack.value.active.instance) {
             is VacanciesComponent.Child.Editor -> child.component.onClose()
             is VacanciesComponent.Child.LinkedResume -> child.component.onBack()
+            is VacanciesComponent.Child.LinkedLetter -> child.component.onClose()
             VacanciesComponent.Child.List -> back()
         }
     }

@@ -23,7 +23,7 @@ class VacancyImportJsonTest {
             ),
             responsibilities = listOf("Build, ship", "Mentor"),
             requirements = listOf("Experience\nwith Android"), niceToHave = listOf("Deutsch"),
-            resumes = listOf(VacancyResume(4)), coverLetterId = 5, vacancyAttachmentId = 6,
+            resumes = listOf(VacancyResume(4)), coverLetterIds = listOf(5), vacancyAttachmentId = 6,
         )
         val imported = VacancyImportJson.decode(VacancyExportJson.encode(original))
         val expected = original.copy(
@@ -32,7 +32,7 @@ class VacancyImportJsonTest {
             createdAt = 0,
             updatedAt = 0,
             resumes = emptyList(),
-            coverLetterId = null,
+            coverLetterIds = emptyList(),
             vacancyAttachmentId = null,
         )
         assertEquals(expected, imported)

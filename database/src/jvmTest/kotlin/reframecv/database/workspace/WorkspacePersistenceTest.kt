@@ -94,7 +94,7 @@ class WorkspacePersistenceTest : WorkspaceDatabaseTest() {
         val vacancyId = database.vacancyDao().create(
             vacancy(
                 projectId,
-            ).copy(resumes = listOf(VacancyResume(resumeId)), coverLetterId = letterId),
+            ).copy(resumes = listOf(VacancyResume(resumeId)), coverLetterIds = listOf(letterId)),
         )
         assertEquals(1, database.projectDao().setMainResume(projectId, resumeId, 300))
         val beforeResume = database.resumeDao().findById(resumeId)?.toDomainModel()

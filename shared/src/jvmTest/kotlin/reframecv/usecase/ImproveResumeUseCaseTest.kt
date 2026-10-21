@@ -117,11 +117,11 @@ class ImproveResumeUseCaseTest : ComponentTest() {
         val custom = "AI specialist (AI draft)"
         val result = useCase(source.copy(name = custom), vacancy, connection, "Improve")
         assertEquals("$custom + Stored (AI 2026-20-10 21:10)", result.name)
-        val named = vacancy.copy(name = " Kontron (EU) + Mobile ")
+        val named = vacancy.copy(name = " ExampleCo (EU) + Mobile ")
         val special =
             useCase(source.copy(name = "main + archive"), named, connection, "Improve")
         assertEquals(
-            "main + archive + Kontron (EU) + Mobile (AI 2026-20-10 21:10)",
+            "main + archive + ExampleCo (EU) + Mobile (AI 2026-20-10 21:10)",
             special.name,
         )
         val draft = useCase(source, vacancy.copy(id = 0, name = ""), connection, "Improve")

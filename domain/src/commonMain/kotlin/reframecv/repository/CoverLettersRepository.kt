@@ -8,6 +8,7 @@ interface CoverLettersRepository {
     fun observeCoverLetters(projectId: Long): Flow<List<CoverLetter>>
     suspend fun search(projectId: Long, keyword: String): List<CoverLetter>
     suspend fun create(record: CoverLetter): Long
+    suspend fun createAndLink(record: CoverLetter, vacancyId: Long?): CoverLetter
     suspend fun update(record: CoverLetter)
     suspend fun delete(id: Long)
 }

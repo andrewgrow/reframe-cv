@@ -72,8 +72,8 @@ interface WorkspaceDao : ScreenStateCleanupQueries {
     suspend fun updateLinkedVacancyTimestamps(id: Long, updatedAt: Long)
 
     @Query(
-        "UPDATE vacancies SET cover_letter_id = NULL, updated_at = :updatedAt " +
-            "WHERE cover_letter_id = :id",
+        "UPDATE vacancies SET updated_at = :updatedAt WHERE id IN " +
+            "(SELECT vacancy_id FROM vacancies_letters WHERE letter_id = :id)",
     )
     suspend fun clearVacancyLetters(id: Long, updatedAt: Long)
 }

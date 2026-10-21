@@ -33,7 +33,7 @@ class VacancyDeletionTest : WorkspaceDatabaseTest() {
         val record = vacancy(projectId).copy(
             vacancyAttachmentId = sourceId,
             resumes = listOf(VacancyResume(resumeId)),
-            coverLetterId = letterId,
+            coverLetterIds = listOf(letterId),
         )
         val dao = database.vacancyDao()
         val id = dao.create(record)

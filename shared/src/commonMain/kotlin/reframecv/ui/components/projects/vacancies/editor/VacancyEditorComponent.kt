@@ -2,6 +2,7 @@ package reframecv.ui.components.projects.vacancies.editor
 
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
+import reframecv.domain.models.coverletter.CoverLetter
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.screenstate.ScreenStateOwner
 import reframecv.domain.models.screenstate.ScreenType
@@ -25,6 +26,10 @@ enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
 interface VacancyEditorComponent {
     val draft: Value<VacancyDraft>
     fun onDraftChange(draft: VacancyDraft)
+    val resumeSection: CollapsibleSectionComponent
+    val letterSection: CollapsibleSectionComponent
+    val letters: VacancyLettersComponent
+    val letterGeneration: VacancyLetterGenerationComponent
     val details: CollapsibleSectionComponent
     val improvement: VacancyResumeImprovementComponent
     val assessment: VacancyResumeAssessmentComponent
@@ -46,6 +51,8 @@ interface VacancyEditorComponent {
             deleteState.value == VacancyDeleteState.Deleting ||
             exportComponent.state.value == VacancyExportState.Exporting ||
             importComponent.state.value == VacancyImportState.Importing ||
+            letterGeneration.dialog.value.component != null ||
+            letterGeneration.selection.value.visible ||
             improvement.dialog.value.component != null ||
             assessment.dialog.value.component != null ||
             recognition.dialog.value.component != null ||
@@ -64,8 +71,33 @@ class DefaultVacancyEditorComponent(
     private val delete: () -> Unit = {},
     projectId: Long = initialVacancy?.projectId ?: 0,
     openResume: (Resume) -> Unit = {},
+    openLetter: (CoverLetter) -> Unit = {},
 ) : VacancyEditorComponent,
     AppComponentContext by componentContext {
+    override val resumeSection =
+        DefaultCollapsibleSectionComponent(
+            componentContext,
+            "linked_resumes",
+            initialVacancy?.let {
+                ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId)
+            },
+        )
+    override val letterSection =
+        DefaultCollapsibleSectionComponent(
+            componentContext,
+            "linked_letters",
+            initialVacancy?.let {
+                ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId)
+            },
+        )
+    private val letterPrompt =
+        AiPromptPreference(
+            componentContext,
+            "cover_letter_prompt_id",
+            initialVacancy?.let {
+                ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId)
+            },
+        )
     override val details = DefaultCollapsibleSectionComponent(
         componentContext,
         "job_details",
@@ -86,7 +118,7 @@ class DefaultVacancyEditorComponent(
     override val draft =
         MutableValue(initialVacancy?.let(VacancyDraft::fromVacancy) ?: VacancyDraft(""))
     private val modalOpen: Boolean get() = exportVisible.value ||
-        resumes.state.value.unlinkId != null ||
+        resumes.state.value.unlinkId != null || letters.state.value.unlinkId != null ||
         assessment.selection.value.resumeId != null
     override val resumes: DefaultVacancyResumesComponent = DefaultVacancyResumesComponent(
         componentContext,
@@ -98,6 +130,29 @@ class DefaultVacancyEditorComponent(
             !isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle
         },
     )
+    override val letters: VacancyLettersComponent = DefaultVacancyLettersComponent(
+        componentContext,
+        projectId,
+        current = { draft.value.coverLetterIds },
+        changed = { draft.value = draft.value.copy(coverLetterIds = it) },
+        canEdit = {
+            !isBusy && !exportVisible.value && deleteState.value == VacancyDeleteState.Idle
+        },
+        open = openLetter,
+    )
+    override val letterGeneration: VacancyLetterGenerationComponent =
+        DefaultVacancyLetterGenerationComponent(
+            componentContext,
+            vacancy = {
+                draft.value.applyTo(this.initialVacancy ?: draft.value.toVacancy(projectId))
+            },
+            resumes = { resumes.state.value.available },
+            created = letters::onCreated,
+            canEdit = {
+                !isBusy && !modalOpen && deleteState.value == VacancyDeleteState.Idle
+            },
+            promptPreference = letterPrompt,
+        )
     override val assessment: VacancyResumeAssessmentComponent =
         DefaultVacancyResumeAssessmentComponent(
             componentContext,
@@ -163,7 +218,11 @@ class DefaultVacancyEditorComponent(
         draft.value =
             VacancyDraft.fromVacancy(
                 result.applyTo(original),
-            ).copy(keywords = current.keywords, snapshotChange = current.snapshotChange)
+            ).copy(
+                keywords = current.keywords,
+                snapshotChange = current.snapshotChange,
+                coverLetterIds = current.coverLetterIds,
+            )
     }
     override val saveState = MutableValue(VacancySaveState.Idle)
     override val exportVisible = MutableValue(false)
@@ -178,6 +237,7 @@ class DefaultVacancyEditorComponent(
         draft.value = VacancyDraft.fromVacancy(it).copy(
             snapshotChange = draft.value.snapshotChange,
             resumes = draft.value.resumes,
+            coverLetterIds = draft.value.coverLetterIds,
         )
     }
     override fun onImport() {
@@ -226,6 +286,9 @@ class DefaultVacancyEditorComponent(
             assessmentPrompt.onBindOwner(owner)
             improvementPrompt.onBindOwner(owner)
             details.onBindOwner(owner)
+            resumeSection.onBindOwner(owner)
+            letterSection.onBindOwner(owner)
+            letterPrompt.onBindOwner(owner)
         }
         saveState.value = state
         if (state == VacancySaveState.Idle) {
@@ -255,6 +318,11 @@ class DefaultVacancyEditorComponent(
 
     override fun onClose() {
         when {
+            letterGeneration.dialog.value.component != null ||
+                letterGeneration.selection.value.visible -> letterGeneration.onCancel()
+
+            letters.state.value.unlinkId != null -> letters.onCancelUnlink()
+
             improvement.dialog.value.component != null -> improvement.onCancel()
 
             assessment.selection.value.resumeId != null -> assessment.onCloseResult()

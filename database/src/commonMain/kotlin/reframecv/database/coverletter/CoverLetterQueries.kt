@@ -5,6 +5,7 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import reframecv.database.vacancy.VacancyLetterEntity
 
 /** Provides SQL queries for cover letter records and keywords. */
 interface CoverLetterQueries {
@@ -26,7 +27,7 @@ interface CoverLetterQueries {
 
     @Transaction
     @Query(
-        "SELECT * FROM cover_letters WHERE project_id = :projectId ORDER BY updated_at DESC, name ASC, id ASC",
+        "SELECT * FROM cover_letters WHERE project_id = :projectId ORDER BY id ASC",
     )
     fun observeActive(projectId: Long): Flow<List<CoverLetterWithKeywords>>
 
@@ -37,7 +38,7 @@ interface CoverLetterQueries {
     @Query(
         "SELECT * FROM cover_letters WHERE project_id = :projectId AND " +
             "EXISTS (SELECT 1 FROM cover_letters_keywords WHERE record_id = cover_letters.id " +
-            "AND normalized_keyword = :keyword) ORDER BY updated_at DESC, name ASC, id ASC",
+            "AND normalized_keyword = :keyword) ORDER BY id ASC",
     )
     suspend fun searchNormalized(projectId: Long, keyword: String): List<CoverLetterWithKeywords>
 

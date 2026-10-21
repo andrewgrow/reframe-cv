@@ -25,6 +25,7 @@ import reframecv.database.settings.AppSettingsEntity
 import reframecv.database.vacancy.VacancyDao
 import reframecv.database.vacancy.VacancyEntity
 import reframecv.database.vacancy.VacancyKeywordEntity
+import reframecv.database.vacancy.VacancyLetterEntity
 import reframecv.database.vacancy.VacancyResumeEntity
 import reframecv.database.vacancyattachment.VacancyAttachmentDao
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
@@ -40,7 +41,8 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
         VacancyAttachmentEntity::class,
         ResumeEntity::class, ResumeKeywordEntity::class,
         CoverLetterEntity::class, CoverLetterKeywordEntity::class,
-        VacancyEntity::class, VacancyKeywordEntity::class, VacancyResumeEntity::class,
+        VacancyEntity::class, VacancyKeywordEntity::class,
+        VacancyResumeEntity::class, VacancyLetterEntity::class,
     ],
     version = 1,
     exportSchema = true,

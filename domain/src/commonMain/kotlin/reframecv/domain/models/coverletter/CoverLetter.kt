@@ -10,5 +10,6 @@ data class CoverLetter(
     val createdAt: Long,
     val updatedAt: Long,
     val content: String = "",
+    val sourceResumeId: Long? = null,
     val keywords: List<String> = emptyList(),
 ) : DomainModel

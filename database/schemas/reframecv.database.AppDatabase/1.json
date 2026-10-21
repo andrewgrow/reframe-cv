@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "07f88e7f0f23c2ff458d5ce5d4cfcd63",
+    "identityHash": "4e94cc559eba53dfd66ca567eae55f1f",
     "entities": [
       {
         "tableName": "screen_states",
@@ -576,7 +576,7 @@
       },
       {
         "tableName": "cover_letters",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `content` TEXT NOT NULL, `source_resume_id` INTEGER, FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`source_resume_id`) REFERENCES `resumes`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -613,6 +613,11 @@
             "columnName": "content",
             "affinity": "TEXT",
             "notNull": true
+          },
+          {
+            "fieldPath": "sourceResumeId",
+            "columnName": "source_resume_id",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -630,6 +635,15 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_cover_letters_project_id` ON `${TABLE_NAME}` (`project_id`)"
+          },
+          {
+            "name": "index_cover_letters_source_resume_id",
+            "unique": false,
+            "columnNames": [
+              "source_resume_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_cover_letters_source_resume_id` ON `${TABLE_NAME}` (`source_resume_id`)"
           }
         ],
         "foreignKeys": [
@@ -639,6 +653,17 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "resumes",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "source_resume_id"
             ],
             "referencedColumns": [
               "id"
@@ -709,7 +734,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `cover_letter_id` INTEGER, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`cover_letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -758,11 +783,6 @@
             "columnName": "url",
             "affinity": "TEXT",
             "notNull": true
-          },
-          {
-            "fieldPath": "coverLetterId",
-            "columnName": "cover_letter_id",
-            "affinity": "INTEGER"
           },
           {
             "fieldPath": "vacancyAttachmentId",
@@ -822,15 +842,6 @@
             ],
             "orders": [],
             "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_project_id` ON `${TABLE_NAME}` (`project_id`)"
-          },
-          {
-            "name": "index_vacancies_cover_letter_id",
-            "unique": false,
-            "columnNames": [
-              "cover_letter_id"
-            ],
-            "orders": [],
-            "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_cover_letter_id` ON `${TABLE_NAME}` (`cover_letter_id`)"
           }
         ],
         "foreignKeys": [
@@ -851,17 +862,6 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "project_id"
-            ],
-            "referencedColumns": [
-              "id"
-            ]
-          },
-          {
-            "table": "cover_letters",
-            "onDelete": "SET NULL",
-            "onUpdate": "NO ACTION",
-            "columns": [
-              "cover_letter_id"
             ],
             "referencedColumns": [
               "id"
@@ -1006,11 +1006,77 @@
             ]
           }
         ]
+      },
+      {
+        "tableName": "vacancies_letters",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`vacancy_id` INTEGER NOT NULL, `letter_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, PRIMARY KEY(`vacancy_id`, `letter_id`), FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`letter_id`) REFERENCES `cover_letters`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "vacancyId",
+            "columnName": "vacancy_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "letterId",
+            "columnName": "letter_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "vacancy_id",
+            "letter_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_vacancies_letters_letter_id",
+            "unique": false,
+            "columnNames": [
+              "letter_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_vacancies_letters_letter_id` ON `${TABLE_NAME}` (`letter_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "vacancies",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vacancy_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "cover_letters",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "letter_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       }
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '07f88e7f0f23c2ff458d5ce5d4cfcd63')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4e94cc559eba53dfd66ca567eae55f1f')"
     ]
   }
 }

@@ -45,7 +45,7 @@ class ProjectDeletionTest : WorkspaceDatabaseTest() {
         val vacancyId = snapshots.create(
             vacancy(leaf).copy(
                 resumes = listOf(VacancyResume(resumeId)),
-                coverLetterId = letterId,
+                coverLetterIds = listOf(letterId),
             ),
             SnapshotChange.Attach(SelectedAttachment("unused", "source.txt")),
         )

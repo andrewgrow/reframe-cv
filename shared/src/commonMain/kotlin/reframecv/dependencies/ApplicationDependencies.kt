@@ -19,6 +19,8 @@ import reframecv.repository.ResumesRepository
 import reframecv.repository.VacanciesRepository
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLettersUseCases
+import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
@@ -59,6 +61,8 @@ interface ApplicationDependencies {
     val vacanciesUseCases: VacanciesUseCases
     val observeDashboard: ObserveDashboardUseCase
     val recognizeVacancy: RecognizeVacancyUseCase
+    val generateCoverLetter: GenerateCoverLetterUseCase
+    val coverLettersUseCases: CoverLettersUseCases
     val improveResume: ImproveResumeUseCase
     val assessResume: AssessResumeUseCase
     val resumeFilesUseCases: ResumeFilesUseCases

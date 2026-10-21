@@ -7,6 +7,8 @@ import reframecv.assessment.ResumeAssessmentOutcome
 import reframecv.assessment.ResumeAssessmentRepository
 import reframecv.attachments.AttachmentPicker
 import reframecv.attachments.TestAttachmentStorage
+import reframecv.coverletters.CoverLetterGenerationOutcome
+import reframecv.coverletters.CoverLetterGenerationRepository
 import reframecv.domain.models.project.Project
 import reframecv.domain.models.project.ProjectMode
 import reframecv.domain.models.providers.ApiProviderType
@@ -43,6 +45,8 @@ import reframecv.repository.TestVacanciesRepository
 import reframecv.shared.nowMillis
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLettersUseCases
+import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
@@ -152,7 +156,7 @@ class TestApplicationDependencies : ApplicationDependencies {
 
     override val resumesRepository = TestResumesRepository(vacanciesRepository)
 
-    override val coverLettersRepository = TestCoverLettersRepository()
+    override val coverLettersRepository = TestCoverLettersRepository(vacanciesRepository)
 
     override val projectsUseCases get() = ProjectsUseCases(projectsRepository)
     override val resumesUseCases get() = ResumesUseCases(resumesRepository)
@@ -160,6 +164,24 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val observeDashboard get() = ObserveDashboardUseCase(
         resumesRepository,
         vacanciesRepository,
+        coverLettersRepository,
+    )
+    override val coverLettersUseCases get() = CoverLettersUseCases(coverLettersRepository)
+    var letterResponse: suspend () -> CoverLetterGenerationOutcome = {
+        CoverLetterGenerationOutcome.Failed("Generation unavailable")
+    }
+    val letterInputs = mutableListOf<Pair<String, String>>()
+    override val generateCoverLetter get() = GenerateCoverLetterUseCase(
+        CoverLetterGenerationRepository {
+                resume,
+                vacancy,
+                _,
+                _,
+            ->
+            letterInputs += resume to vacancy
+            letterResponse()
+        },
+        providerSettingsUseCases,
         coverLettersRepository,
     )
     val improvementInputs = mutableListOf<Pair<String, String>>()

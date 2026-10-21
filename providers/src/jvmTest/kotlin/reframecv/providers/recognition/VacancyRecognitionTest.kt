@@ -23,7 +23,10 @@ class VacancyRecognitionTest {
             resumes = listOf(
                 VacancyResume(11, 83),
             ),
-            coverLetterId = 12, vacancyAttachmentId = 13, keywords = listOf("Manual", "Remote"),
+            coverLetterIds = listOf(
+                12,
+            ),
+            vacancyAttachmentId = 13, keywords = listOf("Manual", "Remote"),
         )
         val result = VacancyRecognitionJson.decode(recognitionFixture())
         assertEquals(
@@ -118,7 +121,7 @@ class VacancyRecognitionTest {
                 "Old",
             ),
             requirements = listOf("Old"), niceToHave = listOf("Old"),
-            resumes = listOf(VacancyResume(6)), coverLetterId = 7, vacancyAttachmentId = 8,
+            resumes = listOf(VacancyResume(6)), coverLetterIds = listOf(7), vacancyAttachmentId = 8,
         )
         assertEquals(
             original.copy(

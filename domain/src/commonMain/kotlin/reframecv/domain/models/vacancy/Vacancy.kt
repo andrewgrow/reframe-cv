@@ -13,7 +13,7 @@ data class Vacancy(
     val company: String = "",
     val url: String = "",
     val resumes: List<VacancyResume> = emptyList(),
-    val coverLetterId: Long? = null,
+    val coverLetterIds: List<Long> = emptyList(),
     val keywords: List<String> = emptyList(),
     val vacancyAttachmentId: Long? = null,
     val responsibilities: List<String> = emptyList(),

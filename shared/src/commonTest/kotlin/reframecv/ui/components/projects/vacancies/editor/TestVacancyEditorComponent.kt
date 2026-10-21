@@ -5,6 +5,7 @@ import reframecv.domain.models.screenstate.ScreenStateOwner
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.components.common.section.CollapsibleSectionComponent
 import reframecv.ui.components.common.section.CollapsibleSectionState
+import reframecv.ui.components.common.section.TestCollapsibleSectionComponent
 
 class TestVacancyEditorComponent(
     override val initialVacancy: Vacancy? = null,
@@ -13,6 +14,13 @@ class TestVacancyEditorComponent(
     private val delete: () -> Unit = {},
     imported: () -> Unit = {},
 ) : VacancyEditorComponent {
+    override val resumeSection = TestCollapsibleSectionComponent()
+    override val letterSection = TestCollapsibleSectionComponent()
+    override val letterGeneration = TestVacancyLetterGenerationComponent()
+    override val letters = TestVacancyLettersComponent(
+        current = { draft.value.coverLetterIds },
+        changed = { draft.value = draft.value.copy(coverLetterIds = it) },
+    )
     override val improvement = TestVacancyResumeImprovementComponent()
     override val assessment = TestVacancyResumeAssessmentComponent()
     override val details = object : CollapsibleSectionComponent {

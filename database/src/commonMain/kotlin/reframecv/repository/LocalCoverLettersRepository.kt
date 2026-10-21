@@ -21,6 +21,12 @@ class LocalCoverLettersRepository(private val dao: CoverLetterDao) : CoverLetter
         return dao.create(record.copy(createdAt = timestamp, updatedAt = timestamp))
     }
 
+    override suspend fun createAndLink(record: CoverLetter, vacancyId: Long?): CoverLetter {
+        require(record.id == 0L)
+        val time = nowMillis()
+        return dao.createAndLink(record.copy(createdAt = time, updatedAt = time), vacancyId)
+    }
+
     override suspend fun update(record: CoverLetter) {
         dao.update(record.copy(updatedAt = nowMillis()))
     }

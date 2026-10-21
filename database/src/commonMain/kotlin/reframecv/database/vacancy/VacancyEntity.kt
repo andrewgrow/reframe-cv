@@ -8,7 +8,6 @@ import androidx.room3.Index
 import androidx.room3.PrimaryKey
 import reframecv.database.DatabaseModel
 import reframecv.database.DatabaseModelFactory
-import reframecv.database.coverletter.CoverLetterEntity
 import reframecv.database.project.ProjectEntity
 import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 import reframecv.domain.models.vacancy.Vacancy
@@ -29,18 +28,12 @@ import reframecv.domain.models.vacancy.Vacancy
             childColumns = ["project_id"],
             onDelete = ForeignKey.CASCADE,
         ),
-        ForeignKey(
-            entity = CoverLetterEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["cover_letter_id"],
-            onDelete = ForeignKey.SET_NULL,
-        ),
     ],
     indices = [
         Index(value = ["vacancy_attachment_id"]),
         Index(
             value = ["project_id"],
-        ), Index(value = ["cover_letter_id"]),
+        ),
     ],
 )
 @ColumnTypeConverters(VacancyListConverter::class)
@@ -57,8 +50,6 @@ data class VacancyEntity(
     val description: String = "",
     val company: String = "",
     val url: String = "",
-    @ColumnInfo(name = "cover_letter_id")
-    val coverLetterId: Long? = null,
     @ColumnInfo(name = "vacancy_attachment_id")
     val vacancyAttachmentId: Long? = null,
     @ColumnInfo(name = "responsibilities", defaultValue = "'[]'")
@@ -80,7 +71,6 @@ data class VacancyEntity(
         description = description,
         company = company,
         url = url,
-        coverLetterId = coverLetterId,
         vacancyAttachmentId = vacancyAttachmentId,
         responsibilities = responsibilities,
         requirements = requirements,
@@ -98,7 +88,6 @@ data class VacancyEntity(
             description = domainModel.description,
             company = domainModel.company,
             url = domainModel.url,
-            coverLetterId = domainModel.coverLetterId,
             vacancyAttachmentId = domainModel.vacancyAttachmentId,
             responsibilities = domainModel.responsibilities,
             requirements = domainModel.requirements,

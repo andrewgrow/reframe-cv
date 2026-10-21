@@ -13,8 +13,11 @@ data class VacancyWithKeywords(
     val keywords: List<VacancyKeywordEntity>,
     @Relation(parentColumns = ["id"], entityColumns = ["vacancy_id"])
     val resumes: List<VacancyResumeEntity> = emptyList(),
+    @Relation(parentColumns = ["id"], entityColumns = ["vacancy_id"])
+    val letters: List<VacancyLetterEntity> = emptyList(),
 ) : DatabaseModel<Vacancy> {
     override fun toDomainModel() = entity.toDomainModel().copy(
+        coverLetterIds = letters.sortedBy { it.position }.map { it.letterId },
         resumes = resumes.sortedBy { it.position }.map { it.toDomainModel() },
         keywords = keywords.sortedBy { it.position }.map { it.keyword },
     )

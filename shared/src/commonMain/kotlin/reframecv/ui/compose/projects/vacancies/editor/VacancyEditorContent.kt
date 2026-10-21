@@ -21,6 +21,8 @@ import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.letter_generate
+import reframecv.shared.generated.resources.letter_generation_warning
 import reframecv.shared.generated.resources.resume_improvement_warning
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
@@ -45,6 +47,8 @@ internal const val VACANCY_EDITOR_TAG = "vacancies.editor"
 @Composable
 fun VacancyEditorContent(component: VacancyEditorComponent) {
     val resumes by component.resumes.state.subscribeAsState()
+    val letters by component.letters.state.subscribeAsState()
+    val unlinking = resumes.unlinkId != null || letters.unlinkId != null
     val aiModal = component.aiModalVisible()
     val exportVisible by component.exportVisible.subscribeAsState()
     val exportState by component.exportComponent.state.subscribeAsState()
@@ -70,7 +74,7 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 .pageBackHandler(
                     component::onClose,
                     enabled =
-                        (!isBusy || parsing) && !exportVisible && resumes.unlinkId == null &&
+                        (!isBusy || parsing) && !exportVisible && !unlinking &&
                             !aiModal,
                 ),
         ) {
@@ -78,14 +82,14 @@ fun VacancyEditorContent(component: VacancyEditorComponent) {
                 component,
                 saveState,
                 save,
-                enabled = !isBusy && !confirming && resumes.unlinkId == null,
-                backEnabled = (!isBusy || parsing) && resumes.unlinkId == null,
+                enabled = !isBusy && !confirming && !unlinking,
+                backEnabled = (!isBusy || parsing) && !unlinking,
                 editing = component.initialVacancy != null,
             )
             HorizontalDivider()
             VacancyEditorFooter(
                 component,
-                isBusy || resumes.unlinkId != null,
+                isBusy || unlinking,
                 deleteState,
                 save,
                 editing =
@@ -102,11 +106,18 @@ private fun VacancyEditorComponent.aiModalVisible(): Boolean {
     val improvement by this.improvement.dialog.subscribeAsState()
     val assessment by this.assessment.dialog.subscribeAsState()
     val result by this.assessment.selection.subscribeAsState()
-    return listOf(recognition.component, improvement.component, assessment.component).any {
+    val generation by this.letterGeneration.dialog.subscribeAsState()
+    val selection by this.letterGeneration.selection.subscribeAsState()
+    return listOf(
+        recognition.component,
+        improvement.component,
+        assessment.component,
+        generation.component,
+    ).any {
         it !=
             null
     } ||
-        result.resumeId != null
+        result.resumeId != null || selection.visible
 }
 
 @Composable
@@ -129,6 +140,15 @@ private fun VacancyEditorOverlays(component: VacancyEditorComponent) {
             stringResource(Res.string.resume_improvement_warning),
         )
     }
+    val generation by component.letterGeneration.dialog.subscribeAsState()
+    generation.component?.let {
+        AiRequestDialogContent(
+            it,
+            stringResource(Res.string.letter_generate),
+            stringResource(Res.string.letter_generation_warning),
+        )
+    }
+    VacancyLetterDialogs(component)
     VacancyAssessmentContent(component)
     VacancyResumeUnlinkConfirmation(resumes, component.resumes)
     if (exportVisible) VacancyExportDialog(component.exportComponent, component::onCloseExport)
@@ -187,7 +207,6 @@ private fun ColumnScope.VacancyEditorBody(
     backEnabled: Boolean,
     editing: Boolean,
 ) {
-    val resumes by component.resumes.state.subscribeAsState()
     val snapshot by component.snapshot.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     Column(
@@ -211,14 +230,7 @@ private fun ColumnScope.VacancyEditorBody(
                 onRecognize = component::onRecognize,
             )
             Spacer(Modifier.height(ReframeTheme.tokens.spacing.large))
-            VacancyResumesContent(
-                draft.resumes,
-                resumes,
-                component.resumes,
-                enabled,
-                component.assessment,
-                component.improvement,
-            )
+            VacancyDocumentsContent(component, enabled)
         }
     }
 }

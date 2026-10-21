@@ -80,7 +80,7 @@ class ImproveResumeUseCase(
     }
 }
 
-private fun improvementName(source: String, vacancy: String, millis: Long): String {
+internal fun improvementName(source: String, vacancy: String, millis: Long): String {
     var base = source.replace(aiNameSuffix, "").trimEnd()
     if (vacancy.isNotBlank()) {
         val suffix = " + ${vacancy.trim()}"

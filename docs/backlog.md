@@ -27,9 +27,12 @@ Identity, employers, position titles, dates, qualifications, and other fixed fac
 
 ## Cover letters
 
-- [ ] Agree on list columns, editor fields, and validation.
-- [ ] Add project-scoped browsing, editing, creation, and confirmed deletion.
-- [ ] Define selecting/clearing an existing letter for a vacancy.
+Vacancies now support existing-letter selection, draft unlinking, AI generation from a selected
+linked resume, letter editing and confirmed permanent deletion. Letters remain reusable project documents.
+
+- [ ] Add a project-wide cover-letter list accessible from the dashboard.
+- [ ] Add manual letter creation independently of a vacancy.
+- [ ] Decide on letter export and printing formats.
 
 ## Vacancy sources
 
@@ -42,9 +45,9 @@ Identity, employers, position titles, dates, qualifications, and other fixed fac
 - [ ] Choose the rendering/template approach and initial output layout.
 - [ ] Honor section, consent, and photo visibility; use the prepared portrait for printing.
 
-### Resume reference: Kontron adaptation
+### Resume reference: adaptation
 
-Reviewed the two-page `AdoptedKontron_Danil_GAHOV_MobileAppSeniorDeveloper.pdf` supplied
+Reviewed the two-page `Adopted_MobileAppSeniorDeveloper.pdf` supplied
 by the user against the current domain models, JSON schema, and editor. The PDF is a
 visual/content reference, not a new required schema. The reference is outside the repository;
 the findings below should remain understandable without access to the original file.

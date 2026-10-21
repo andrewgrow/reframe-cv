@@ -31,6 +31,8 @@ import reframecv.providers.RemoteProviderAccountRepository
 import reframecv.providers.RemoteProviderModelsRepository
 import reframecv.providers.assessment.RemoteResumeAssessmentRepository
 import reframecv.providers.assessment.resumeAssessmentSchema
+import reframecv.providers.coverletters.RemoteCoverLetterGenerationRepository
+import reframecv.providers.coverletters.coverLetterGenerationSchema
 import reframecv.providers.improvement.RemoteResumeImprovementRepository
 import reframecv.providers.improvement.resumeImprovementSchema
 import reframecv.providers.openrouter.OpenRouterClient
@@ -57,6 +59,8 @@ import reframecv.repository.VacanciesRepository
 import reframecv.repository.VacancySnapshotManager
 import reframecv.ui.components.common.ai.AiRequestBalance
 import reframecv.usecase.AssessResumeUseCase
+import reframecv.usecase.CoverLettersUseCases
+import reframecv.usecase.GenerateCoverLetterUseCase
 import reframecv.usecase.ImproveResumeUseCase
 import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.ProjectsUseCases
@@ -220,6 +224,15 @@ class DefaultApplicationDependencies(
             check(!closed) { "Application dependencies are closed" }
             return recognizeVacancyInstance
         }
+
+    override val coverLettersUseCases by lazy { CoverLettersUseCases(coverLettersRepository) }
+    override val generateCoverLetter by lazy {
+        GenerateCoverLetterUseCase(
+            RemoteCoverLetterGenerationRepository(provider.value, coverLetterGenerationSchema()),
+            providerSettingsUseCases,
+            coverLettersRepository,
+        )
+    }
 
     private val improveResumeInstance by lazy {
         ImproveResumeUseCase(

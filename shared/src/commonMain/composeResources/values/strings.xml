@@ -369,4 +369,26 @@
     <string name="resume_resize_text">Resize resume text</string>
     <string name="vacancy_resume_improve">Improve resume with AI</string>
     <string name="resume_improvement_warning">The resume and vacancy JSON will be sent to the provider. Success immediately saves a new linked resume without photos, keywords, or main status. The source is kept. For a new vacancy, Save persists the link; closing keeps the new resume in the project.</string>
+    <string name="letter_title">Cover letter</string>
+    <string name="letter_list_title">Cover letters (%1$d)</string>
+    <string name="resume_list_title">Resumes (%1$d)</string>
+    <string name="letter_choose">Choose a cover letter</string>
+    <string name="letter_search">Search name or keywords</string>
+    <string name="letter_empty">No matching cover letters</string>
+    <string name="letter_missing">Cover letter #%1$d (unavailable)</string>
+    <string name="letter_open">Open cover letter</string>
+    <string name="letter_load_error">Could not load cover letters. Please retry.</string>
+    <string name="letter_generate">Generate cover letter</string>
+    <string name="letter_generate_hint">Attach a resume to generate a cover letter.</string>
+    <string name="letter_select_resume">Choose the resume for this cover letter</string>
+    <string name="letter_generation_warning">A new cover letter will be saved in this project. For a saved vacancy, it is linked immediately; for a new vacancy, save the vacancy to keep the link. The source resume is unchanged.</string>
+    <string name="letter_unlink_title">Unlink cover letter?</string>
+    <string name="letter_unlink_question">The cover letter itself will be kept. Save the vacancy to apply this change.</string>
+    <string name="letter_delete_title">Delete cover letter?</string>
+    <string name="letter_delete_warning">This permanently deletes the cover letter and removes its links from all vacancies. This cannot be undone.</string>
+    <string name="letter_save_success">Cover letter saved successfully</string>
+    <string name="letter_save_error">Could not save the cover letter. Please try again.</string>
+    <string name="letter_delete_error">Could not delete the cover letter. Please try again.</string>
+    <string name="letter_validation">Check the required fields.</string>
+    <string name="letter_resize">Resize cover letter text</string>
 </resources>

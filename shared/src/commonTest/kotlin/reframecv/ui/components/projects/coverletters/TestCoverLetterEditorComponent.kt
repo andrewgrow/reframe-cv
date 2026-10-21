@@ -1,0 +1,21 @@
+package reframecv.ui.components.projects.coverletters
+
+import com.arkivanov.decompose.value.MutableValue
+import reframecv.domain.models.coverletter.CoverLetter
+
+class TestCoverLetterEditorComponent(record: CoverLetter) : CoverLetterEditorComponent {
+    override val state = MutableValue(CoverLetterEditorState(record))
+    override fun onChange(record: CoverLetter) {
+        state.value = state.value.copy(record = record)
+    }
+    override fun onSave() {
+        state.value = state.value.copy(notice = LetterNotice.Saved)
+    }
+    override fun onDelete() {
+        state.value = state.value.copy(confirming = true)
+    }
+    override fun onCancelDelete() {
+        state.value = state.value.copy(confirming = false)
+    }
+    override fun onClose() = Unit
+}

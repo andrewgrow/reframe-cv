@@ -17,6 +17,7 @@ data class VacancyDraft(
     val niceToHave: List<String> = emptyList(),
     val jobTitle: String = "",
     val resumes: List<VacancyResume> = emptyList(),
+    val coverLetterIds: List<Long> = emptyList(),
 ) {
     fun toVacancy(projectId: Long) = applyTo(
         Vacancy(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),
@@ -24,6 +25,7 @@ data class VacancyDraft(
 
     fun applyTo(vacancy: Vacancy) = vacancy.copy(
         resumes = resumes,
+        coverLetterIds = coverLetterIds,
         name = name.trim(),
         jobTitle = jobTitle.trim(),
         company = company.trim(),
@@ -38,6 +40,7 @@ data class VacancyDraft(
     companion object {
         fun fromVacancy(vacancy: Vacancy) = VacancyDraft(
             resumes = vacancy.resumes,
+            coverLetterIds = vacancy.coverLetterIds,
             name = vacancy.name,
             jobTitle = vacancy.jobTitle,
             company = vacancy.company,

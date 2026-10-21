@@ -66,7 +66,7 @@ operation. See the README for reset and backup instructions.
   a vacancy or letter does not require a resume.
 - `Project.mainResumeId` selects at most one resume from that workspace.
   `Resume.sourceResumeId` records provenance; adaptations are independent documents.
-- A vacancy can link multiple resumes, one cover letter, and one immutable VacancyAttachment.
+- A vacancy can link multiple resumes, multiple reusable cover letters, and one immutable VacancyAttachment.
   `vacancies_resumes` stores ordered, unique vacancy–resume pairs, a match score from
   0 to 100 (default 0), and optional assessment JSON. Resume and vacancy deletion cascade their links;
   unlinking keeps the resume itself. Document and link changes share a save transaction.
@@ -282,6 +282,37 @@ Closing the dialog or destroying its owner cancels work; cancelled remote result
 create an adaptation. HTTP exchanges reuse sanitized provider logging, and unexpected
 failures include the AI operation context and stack in application diagnostics.
 
+## Cover letters in vacancies
+
+The vacancy editor groups resumes and letters into animated collapsible sections. ScreenState
+stores `linked_resumes` and `linked_letters` per vacancy, restoring the initial visibility without
+animation. New drafts bind their current visibility on first Save. Headers include link counts.
+
+`vacancies_letters` stores ordered unique many-to-many links. Only letters in the same project
+can be attached. Manual attaching/unlinking is part of the vacancy draft and is persisted by Save;
+unlinking preserves the letter. Deleting a letter cascades all its vacancy links, while deleting
+a vacancy keeps reusable letters. `CoverLetter.sourceResumeId` records the generating resume;
+resume deletion clears this optional reference without removing the letter text.
+
+Generate cover letter selects one linked resume (automatically when exactly one is available)
+and opens the shared AI Request Dialog. Active Cover Letters/general prompts and active provider
+connections are available. `cover_letter_prompt_id` remembers the last launched prompt per vacancy.
+Only portable resume/vacancy JSON is sent, without resume photos, keywords, local IDs or paths.
+The response contract is [cover-letter-generation-v1.schema.json](schemas/cover-letter-generation-v1.schema.json):
+an object containing only nonblank plain-text `content`. The example prompt is user-managed.
+
+Generation creates a new editable letter in the same project. For a saved vacancy, creation and
+appending its link are atomic and preserve other stored vacancy fields and existing links.
+For a new vacancy, the letter is saved immediately and its draft link waits for vacancy Save;
+closing the vacancy keeps the generated letter. Provider, decoding and persistence errors remain
+in the AI dialog for retry. Cancellation prevents late results from creating letters.
+
+The open icon displays letter management within the vacancy navigation stack. Name, text and
+comma-separated keywords can be edited; Save keeps the page open and shows transient feedback.
+Text supports vertical resizing and shared fast-scroll controls. Close/Escape returns to the
+same vacancy draft. Permanent deletion uses the shared confirmation dialog without typed input,
+clears the current draft link, and returns to the vacancy. Generation never sends an application.
+
 ## Vacancy JSON export
 
 [Vacancy content schema](schemas/vacancy-content-v1.schema.json) defines the portable
@@ -411,7 +442,7 @@ The retained files for both logs total at most 120 MiB. File failures remain dia
 
 ## Current limits
 
-Cover-letter storage/repositories exist, but its editor is not implemented. Resume version
+A project-wide cover-letter list, manual creation, and letter export are not implemented yet. Resume version
 comparison, PDF/print output, URL snapshot fetching, and additional source formats remain deferred. There is no
 photo data in JSON exports. Database migrations and platform targets beyond desktop are not
 implemented. Test/screenshot environments and verification commands are documented in README.

@@ -2,6 +2,7 @@ package reframecv.database.coverletter
 
 import androidx.room3.Dao
 import androidx.room3.Transaction
+import reframecv.database.vacancy.VacancyLetterEntity
 import reframecv.database.workspace.WorkspaceDao
 import reframecv.database.workspace.normalizeKeywords
 import reframecv.domain.models.coverletter.CoverLetter
@@ -11,13 +12,28 @@ import reframecv.domain.models.screenstate.ScreenType
 @Dao
 interface CoverLetterDao :
     CoverLetterQueries,
+    CoverLetterGenerationQueries,
     WorkspaceDao {
     @Transaction
     suspend fun create(record: CoverLetter): Long {
+        record.sourceResumeId?.let { requireActiveResume(it, record.projectId) }
         requireWorkspace(record.projectId, record.createdAt)
         val id = insertEntity(CoverLetterEntity.fromDomainModel(record))
         replaceKeywords(id, record.keywords)
         return id
+    }
+
+    @Transaction
+    suspend fun createAndLink(record: CoverLetter, vacancyId: Long?): CoverLetter {
+        if (vacancyId != null) require(vacancyProject(vacancyId) == record.projectId)
+        val saved = record.copy(id = create(record))
+        if (vacancyId != null) {
+            insertVacancyLetter(
+                VacancyLetterEntity(vacancyId, saved.id, nextLetterPosition(vacancyId)),
+            )
+            check(touchVacancy(vacancyId, record.updatedAt) == 1)
+        }
+        return saved
     }
 
     @Transaction
@@ -26,6 +42,7 @@ interface CoverLetterDao :
         require(existing.entity.projectId == record.projectId) {
             "Cannot move a record to another project"
         }
+        record.sourceResumeId?.let { requireActiveResume(it, record.projectId) }
         requireWorkspace(record.projectId, record.updatedAt)
         check(updateEntity(CoverLetterEntity.fromDomainModel(record)) == 1)
         replaceKeywords(record.id, record.keywords)

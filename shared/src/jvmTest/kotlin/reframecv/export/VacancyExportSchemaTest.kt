@@ -37,7 +37,10 @@ class VacancyExportSchemaTest {
                 company = "Company", description = "One\nTwo", url = "https://example.com/role",
                 keywords = listOf("Kotlin"), responsibilities = listOf("A, B"),
                 requirements = listOf("C"), niceToHave = listOf("D"),
-                resumes = listOf(VacancyResume(2, 83)), coverLetterId = 3, vacancyAttachmentId = 4,
+                resumes = listOf(
+                    VacancyResume(2, 83),
+                ),
+                coverLetterIds = listOf(3), vacancyAttachmentId = 4,
             ),
         ).forEach { record ->
             val exported = VacancyExportJson.encode(record)
