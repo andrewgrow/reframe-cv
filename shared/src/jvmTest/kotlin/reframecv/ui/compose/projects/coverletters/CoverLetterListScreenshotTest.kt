@@ -16,7 +16,7 @@ class CoverLetterListScreenshotTest : GoldenScreenshotTest() {
     }
 
     @Test
-    fun linkedResumesAndSelectionMatchReference() = runComposeUiTest {
+    fun linkedVacanciesAndSelectionMatchReference() = runComposeUiTest {
         setAndCaptureGolden(this) { CoverLettersContent(fixture()) }
     }
 

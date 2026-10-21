@@ -44,7 +44,7 @@ internal fun VacanciesList(
     selection: VacancySelectionComponent,
 ) {
     val selected by selection.state.subscribeAsState()
-    val enabled = !selected.confirming && !selected.deleting
+    val enabled = !selected.confirming && !selected.busy
     val toggleState = when {
         selected.selected.isEmpty() -> ToggleableState.Off
         vacancies.all { it.id in selected.selected } -> ToggleableState.On

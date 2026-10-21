@@ -67,6 +67,10 @@ class LocalVacanciesRepository(
         }
     }
 
+    override suspend fun markApplied(projectId: Long, ids: Set<Long>, timestamp: Long) {
+        dao.markApplied(projectId, ids.toList(), timestamp)
+    }
+
     override suspend fun delete(id: Long) {
         if (snapshots != null) {
             snapshots.delete(id, nowMillis())

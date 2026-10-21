@@ -29,6 +29,31 @@ class VacancyAppliedAndBulkDeleteTest : WorkspaceDatabaseTest() {
     }
 
     @Test
+    fun bulkAppliedPreservesExistingDatesAndOnlyUpdatesSelectedVacanciesInProject() =
+        runBlocking<Unit> {
+            val repository = LocalVacanciesRepository(database.vacancyDao())
+            val project = project()
+            val ids = (1..3).map { repository.create(vacancy(project)) }
+            val existing = repository.create(vacancy(project).copy(appliedAt = 42))
+            val other = project("Other")
+            val foreign = repository.create(vacancy(other))
+            val before = repository.observeVacancies(project).first().associateBy { it.id }
+            val selected = setOf(ids[0], ids[1], existing, foreign)
+            repository.markApplied(project, selected, 123_000)
+            repository.markApplied(project, selected, 456_000)
+            val after = repository.observeVacancies(project).first().associateBy { it.id }
+            ids.take(2).forEach {
+                assertEquals(123_000L, after.getValue(it).appliedAt)
+                assertEquals(123_000L, after.getValue(it).updatedAt)
+            }
+            assertEquals(before.getValue(existing), after.getValue(existing))
+            assertEquals(before.getValue(ids.last()), after.getValue(ids.last()))
+            assertNull(repository.observeVacancies(other).first().single().appliedAt)
+            repository.markApplied(project, emptySet(), 789_000)
+            assertEquals(after, repository.observeVacancies(project).first().associateBy { it.id })
+        }
+
+    @Test
     fun bulkDeleteIsProjectScopedAndPreservesUnselectedDocuments() = runBlocking<Unit> {
         val repository = LocalVacanciesRepository(database.vacancyDao())
         val project = project()

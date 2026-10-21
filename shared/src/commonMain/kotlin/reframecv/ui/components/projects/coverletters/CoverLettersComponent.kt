@@ -9,13 +9,13 @@ import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.backhandler.BackCallback
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.resume.Resume
-import reframecv.ui.components.projects.resumes.DefaultResumesComponent
-import reframecv.ui.components.projects.resumes.ResumesComponent
+import reframecv.domain.models.vacancy.Vacancy
+import reframecv.ui.components.projects.vacancies.DefaultVacanciesComponent
+import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.context.AppComponentContext
 import reframecv.ui.store.bindStoreToLifecycle
 
-/** Browses project letters, manages a selection, and opens letters or their source resumes. */
+/** Browses project letters, manages a selection, and opens letters or their linked vacancies. */
 interface CoverLettersComponent {
     val projectId: Long
     val uiState: Value<CoverLettersState>
@@ -24,18 +24,18 @@ interface CoverLettersComponent {
     val isBusy: Boolean get() = when (val child = childStack.value.active.instance) {
         Child.List -> selection.state.value.deleting
         is Child.Editor -> child.component.state.value.busy
-        is Child.LinkedResume -> child.component.isBusy
+        is Child.LinkedVacancy -> child.component.isBusy
     }
 
     /** Keeps list selection alive while a document is open. */
     sealed interface Child {
         data object List : Child
         data class Editor(val component: CoverLetterEditorComponent) : Child
-        data class LinkedResume(val component: ResumesComponent) : Child
+        data class LinkedVacancy(val component: VacanciesComponent) : Child
     }
     fun onAdd()
     fun onEdit(letter: CoverLetter)
-    fun onOpenResume(id: Long)
+    fun onOpenVacancy(id: Long)
     fun onRetry()
     fun onBack()
 }
@@ -51,7 +51,7 @@ class DefaultCoverLettersComponent(
         dependencies.storeFactory,
         projectId,
         dependencies.coverLettersUseCases,
-        dependencies.resumesUseCases,
+        dependencies.vacanciesUseCases,
         dependencies.logger,
     ).also { it.accept(Unit) }
     override val uiState = bindStoreToLifecycle(store, lifecycle)
@@ -61,7 +61,7 @@ class DefaultCoverLettersComponent(
         data object List : Configuration
         data object Create : Configuration
         data class Edit(val letter: CoverLetter) : Configuration
-        data class Source(val resume: Resume) : Configuration
+        data class LinkedVacancy(val vacancy: Vacancy) : Configuration
     }
     private val navigation = StackNavigation<Configuration>()
     override val childStack: Value<ChildStack<*, CoverLettersComponent.Child>> = childStack(
@@ -87,12 +87,12 @@ class DefaultCoverLettersComponent(
                 ),
             )
 
-            is Configuration.Source -> CoverLettersComponent.Child.LinkedResume(
-                DefaultResumesComponent(
+            is Configuration.LinkedVacancy -> CoverLettersComponent.Child.LinkedVacancy(
+                DefaultVacanciesComponent(
                     childContext,
                     projectId,
                     back = { navigation.pop() },
-                    initialResume = configuration.resume,
+                    initialVacancyId = configuration.vacancy.id,
                 ),
             )
         }
@@ -132,11 +132,11 @@ class DefaultCoverLettersComponent(
             }
         }
     }
-    override fun onOpenResume(id: Long) {
+    override fun onOpenVacancy(id: Long) {
         val ready = uiState.value as? CoverLettersState.Ready ?: return
-        if (canOpen() && ready.linkedResumes.any { it.resumeId == id }) {
-            ready.resumes.find { it.id == id }?.let {
-                navigation.pushNew(Configuration.Source(it))
+        if (canOpen() && ready.linkedVacancies.any { it.vacancyId == id }) {
+            ready.vacancies.find { it.id == id }?.let {
+                navigation.pushNew(Configuration.LinkedVacancy(it))
             }
         }
     }
@@ -145,7 +145,7 @@ class DefaultCoverLettersComponent(
         when (val child = childStack.value.active.instance) {
             is CoverLettersComponent.Child.Editor -> child.component.onClose()
 
-            is CoverLettersComponent.Child.LinkedResume -> child.component.onBack()
+            is CoverLettersComponent.Child.LinkedVacancy -> child.component.onBack()
 
             CoverLettersComponent.Child.List -> {
                 if (selection.state.value.confirming) selection.onCancelDelete() else back()

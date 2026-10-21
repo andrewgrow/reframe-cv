@@ -51,7 +51,7 @@ interface VacanciesComponent {
         is Child.Editor -> child.component.isBusy
         is Child.LinkedResume -> child.component.isBusy
         is Child.LinkedLetter -> child.component.state.value.busy
-        Child.List -> selection.state.value.deleting
+        Child.List -> selection.state.value.busy
     }
     fun onEdit(vacancy: Vacancy)
     fun onAdd()
@@ -227,7 +227,7 @@ class DefaultVacanciesComponent(
 
     private val listEditable: Boolean get() =
         childStack.value.active.instance == VacanciesComponent.Child.List &&
-            !selection.state.value.confirming && !selection.state.value.deleting
+            !selection.state.value.confirming && !selection.state.value.busy
 
     override fun onEdit(vacancy: Vacancy) {
         if (listEditable && vacancy.projectId == projectId) {
@@ -247,7 +247,7 @@ class DefaultVacanciesComponent(
             VacanciesComponent.Child.List -> {
                 if (selection.state.value.confirming) {
                     selection.onCancelDelete()
-                } else if (!selection.state.value.deleting) {
+                } else if (!selection.state.value.busy) {
                     back()
                 }
             }

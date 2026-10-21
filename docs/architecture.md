@@ -468,9 +468,8 @@ The retained files for both logs total at most 120 MiB. File failures remain dia
 
 ## Current limits
 
-A project-wide cover-letter list, manual creation, and letter export are not implemented yet. Resume version
-comparison, PDF/print output, URL snapshot fetching, and additional source formats remain deferred. There is no
-photo data in JSON exports. Database migrations and platform targets beyond desktop are not
+Resume version comparison, URL snapshot fetching, and additional source formats remain deferred.
+There is no photo data in JSON exports. Database migrations and platform targets beyond desktop are not
 implemented. Test/screenshot environments and verification commands are documented in README.
 
 ## Global settings and API connections
@@ -629,8 +628,9 @@ shift the divider while it fits the reserved space.
 ## Cover-letter list
 
 The dashboard opens the project’s cover letters in ascending ID order. Selection is local to
-the list and survives opening a letter or its source resume. Source names update from the
-resume stream; a missing source has no link. Bulk deletion validates the whole selection
+the list and survives opening a letter or a linked vacancy. The Linked vacancies column
+observes current vacancy links and names; removed links disappear immediately. Two links
+are previewed per letter, with the remaining links available in a scrollable dialog. Bulk deletion validates the whole selection
 and deletes it in one database transaction, clearing vacancy links and screen states while
 keeping resumes and vacancies. The list can create letters manually or import JSON; AI generation remains available
 from a vacancy.
@@ -699,3 +699,8 @@ selected identity against its project and deletes the batch in one database tran
 with links, screen states and unused attachment records. Linked resumes and letters are retained.
 The snapshot manager removes unreferenced files only after commit, under the same lock used by
 snapshot updates. Failed transactions leave both records and files intact.
+
+Selected vacancies can be marked applied in one action. The timestamp is captured once at
+the button click, and a single project-scoped SQL update changes only rows with no existing
+application date. Repeated actions preserve previous application dates. This action saves
+immediately; errors retain the selection for retry.

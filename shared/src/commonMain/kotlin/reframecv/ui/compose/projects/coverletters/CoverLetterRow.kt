@@ -13,7 +13,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TriStateCheckbox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -21,11 +24,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.state.ToggleableState
-import androidx.compose.ui.text.style.TextDecoration
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.coverletter.CoverLetterResumeLink
+import reframecv.domain.models.coverletter.CoverLetterVacancyLink
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.cover_letter_name
@@ -43,9 +45,9 @@ internal data class CoverLetterRowSelection(
     val toggle: () -> Unit,
 )
 
-/** Supplies source-resume references and their navigation callback. */
+/** Supplies linked-vacancy references and their navigation callback. */
 internal data class CoverLetterRowLinks(
-    val records: List<CoverLetterResumeLink>,
+    val records: List<CoverLetterVacancyLink>,
     val open: (Long) -> Unit,
 )
 
@@ -58,23 +60,13 @@ internal fun CoverLetterRow(
     links: CoverLetterRowLinks,
     onEdit: () -> Unit,
 ) {
+    var showLinks by remember(letter.id) { mutableStateOf(false) }
     Row(
         Modifier.fillMaxWidth().testTag("coverletters.row.${letter.id}"),
         horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val label = stringResource(Res.string.cover_letters_select, letter.name)
-        Checkbox(
-            selection.checked,
-            { selection.toggle() },
-            enabled = selection.enabled,
-            modifier = Modifier.size(
-                ReframeTheme.tokens.dimensions.iconButtonSize,
-            ).testTag("coverletters.select.${letter.id}").semantics {
-                contentDescription =
-                    label
-            },
-        )
+        CoverLetterRowCheckbox(letter, selection)
         if (table) {
             SelectableText(
                 letter.name,
@@ -82,7 +74,9 @@ internal fun CoverLetterRow(
                 selectionModifier = Modifier.weight(2f),
                 style = MaterialTheme.typography.bodyLarge,
             )
-            CoverLetterResumeLinks(links, selection.enabled, Modifier.weight(1f))
+            CoverLetterVacancyLinks(links, selection.enabled, {
+                showLinks = true
+            }, Modifier.weight(1f))
             SelectableText(
                 documentDate(letter.createdAt, timeZone),
                 modifier = letterTextClick(onEdit),
@@ -101,7 +95,9 @@ internal fun CoverLetterRow(
                     modifier = letterTextClick(onEdit),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                CoverLetterResumeLinks(links, selection.enabled, Modifier.fillMaxWidth())
+                CoverLetterVacancyLinks(links, selection.enabled, {
+                    showLinks = true
+                }, Modifier.fillMaxWidth())
                 SelectableText(
                     documentDate(letter.createdAt, timeZone),
                     modifier = letterTextClick(onEdit),
@@ -111,31 +107,7 @@ internal fun CoverLetterRow(
             }
         }
     }
-}
-
-@Composable
-private fun CoverLetterResumeLinks(
-    links: CoverLetterRowLinks,
-    enabled: Boolean,
-    modifier: Modifier,
-) {
-    Column(
-        modifier,
-        verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
-    ) {
-        if (links.records.isEmpty()) Text("—", color = ReframeTheme.colorScheme.hint)
-        links.records.forEach { link ->
-            Text(
-                link.name,
-                color = MaterialTheme.colorScheme.primary,
-                textDecoration = TextDecoration.Underline,
-                modifier = Modifier.testTag("coverletters.link.${link.letterId}.${link.resumeId}")
-                    .clickable(enabled = enabled, role = Role.Button) {
-                        links.open(link.resumeId)
-                    },
-            )
-        }
-    }
+    if (showLinks) CoverLetterVacanciesDialog(links, letter.name) { showLinks = false }
 }
 
 @Composable
@@ -189,3 +161,19 @@ private fun letterTextClick(onEdit: () -> Unit): Modifier = Modifier.clickable(
     role = Role.Button,
     onClick = onEdit,
 )
+
+@Composable
+private fun CoverLetterRowCheckbox(letter: CoverLetter, selection: CoverLetterRowSelection) {
+    val label = stringResource(Res.string.cover_letters_select, letter.name)
+    Checkbox(
+        selection.checked,
+        { selection.toggle() },
+        enabled = selection.enabled,
+        modifier = Modifier.size(
+            ReframeTheme.tokens.dimensions.iconButtonSize,
+        ).testTag("coverletters.select.${letter.id}").semantics {
+            contentDescription =
+                label
+        },
+    )
+}

@@ -12,6 +12,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.vacancy.Vacancy
 import reframecv.repository.VacanciesRepository
+import reframecv.shared.nowMillis
 import reframecv.testing.ComponentTest
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -101,4 +102,65 @@ class VacancySelectionComponentTest : ComponentTest() {
             withTimeout(5000) { completed.await() }
             assertTrue(dependencies.vacanciesRepository.records.value.isEmpty())
         }
+
+    @Test
+    fun bulkAppliedCapturesClickTimeBlocksRepeatedActionsAndSupportsRetry() = runBlocking<Unit> {
+        dependencies.vacanciesRepository.records.value = records
+        val started = CompletableDeferred<Long>()
+        val release = CompletableDeferred<Unit>()
+        val failed = CompletableDeferred<Unit>()
+        val completed = CompletableDeferred<Unit>()
+        var fail = true
+        var calls = 0
+        val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
+            override suspend fun markApplied(projectId: Long, ids: Set<Long>, timestamp: Long) {
+                calls++
+                assertEquals(setOf(1L, 2L), ids)
+                if (fail) error("Unavailable")
+                started.complete(timestamp)
+                release.await()
+                dependencies.vacanciesRepository.markApplied(projectId, ids, timestamp)
+            }
+        }
+        val before = nowMillis()
+        val component = runOnUiThread {
+            lifecycle.resume()
+            val context = DefaultAppComponentContext(
+                com.arkivanov.decompose.DefaultComponentContext(lifecycle),
+                object : ApplicationDependencies by dependencies {
+                    override val vacanciesUseCases = VacanciesUseCases(repository)
+                },
+            )
+            DefaultVacancySelectionComponent(context, 7, state) { true }.also {
+                it.state.subscribe { value ->
+                    if (value.applicationFailed) failed.complete(Unit)
+                    if (started.isCompleted && !value.busy) completed.complete(Unit)
+                }
+                it.onMarkApplied()
+                assertEquals(0, calls)
+                it.onToggleAll()
+                it.onMarkApplied()
+            }
+        }
+        withTimeout(5000) { failed.await() }
+        runOnUiThread {
+            assertEquals(setOf(1L, 2L), component.state.value.selected)
+            fail = false
+            component.onMarkApplied()
+        }
+        val timestamp = withTimeout(5000) { started.await() }
+        assertTrue(timestamp in before..nowMillis())
+        runOnUiThread {
+            component.onToggleAll()
+            component.onRequestDelete()
+            component.onMarkApplied()
+            assertTrue(component.state.value.busy)
+            assertFalse(component.state.value.confirming)
+            assertEquals(setOf(1L, 2L), component.state.value.selected)
+            assertEquals(2, calls)
+        }
+        release.complete(Unit)
+        withTimeout(5000) { completed.await() }
+        assertTrue(dependencies.vacanciesRepository.records.value.all { it.appliedAt == timestamp })
+    }
 }

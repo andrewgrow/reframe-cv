@@ -9,19 +9,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import reframecv.shared.nowMillis
 import reframecv.ui.context.AppComponentContext
 
-/** Retains selected identities and a retryable bulk-deletion confirmation. */
+/** Retains selection and the progress of bulk vacancy actions. */
 data class VacancySelectionState(
     val selected: Set<Long> = emptySet(),
     val confirming: Boolean = false,
     val deleting: Boolean = false,
     val failed: Boolean = false,
-)
+    val applying: Boolean = false,
+    val applicationFailed: Boolean = false,
+) {
+    val busy: Boolean get() = deleting || applying
+}
 
 /** Lets the list select vacancies independently of opening their editors. */
 interface VacancySelectionComponent {
     val state: Value<VacancySelectionState>
+    fun onMarkApplied()
     fun onToggle(id: Long)
     fun onToggleAll()
     fun onRequestDelete()
@@ -29,7 +35,7 @@ interface VacancySelectionComponent {
     fun onCancelDelete()
 }
 
-/** Keeps selection valid as records change and deletes the confirmed set atomically. */
+/** Applies bulk actions to selected vacancies and keeps failures retryable. */
 class DefaultVacancySelectionComponent(
     private val context: AppComponentContext,
     private val projectId: Long,
@@ -41,7 +47,7 @@ class DefaultVacancySelectionComponent(
     init {
         val subscription = records.subscribe { ready ->
             if (ready is VacanciesState.Ready) {
-                val selected = if (state.value.deleting) {
+                val selected = if (state.value.busy) {
                     state.value.selected
                 } else {
                     state.value.selected.intersect(
@@ -55,7 +61,7 @@ class DefaultVacancySelectionComponent(
                         selected = selected,
                         confirming =
                             state.value.confirming &&
-                                (selected.isNotEmpty() || state.value.deleting),
+                                (selected.isNotEmpty() || state.value.busy),
                     )
             }
         }
@@ -70,7 +76,17 @@ class DefaultVacancySelectionComponent(
         if (ready.vacancies.any { it.id == id && it.projectId == projectId }) {
             val ids = state.value.selected
             state.value =
-                state.value.copy(selected = if (id in ids) ids - id else ids + id, failed = false)
+                state.value.copy(
+                    selected = if (id in
+                        ids
+                    ) {
+                        ids - id
+                    } else {
+                        ids + id
+                    },
+                    failed = false,
+                    applicationFailed = false,
+                )
         }
     }
     override fun onToggleAll() {
@@ -87,6 +103,7 @@ class DefaultVacancySelectionComponent(
                     ids
                 },
                 failed = false,
+                applicationFailed = false,
             )
     }
     override fun onRequestDelete() {
@@ -94,19 +111,19 @@ class DefaultVacancySelectionComponent(
             state.value.selected.isNotEmpty()
         ) {
             state.value =
-                state.value.copy(confirming = true, failed = false)
+                state.value.copy(confirming = true, failed = false, applicationFailed = false)
         }
     }
 
     @Suppress("TooGenericExceptionCaught")
     override fun onConfirmDelete() {
-        if (!canEdit() || state.value.deleting || !state.value.confirming) return
+        if (!canEdit() || state.value.busy || !state.value.confirming) return
         val ids = state.value.selected
         if (ids.isEmpty()) {
             onCancelDelete()
             return
         }
-        state.value = state.value.copy(deleting = true, failed = false)
+        state.value = state.value.copy(deleting = true, failed = false, applicationFailed = false)
         scope.launch {
             try {
                 context.dependencies.vacanciesUseCases.deleteMany(projectId, ids)
@@ -123,11 +140,34 @@ class DefaultVacancySelectionComponent(
             }
         }
     }
-    override fun onCancelDelete() {
-        if (!state.value.deleting) {
-            state.value =
-                state.value.copy(confirming = false, failed = false)
+
+    @Suppress("TooGenericExceptionCaught")
+    override fun onMarkApplied() {
+        if (!editable() || state.value.selected.isEmpty()) return
+        val ids = state.value.selected.toSet()
+        val timestamp = nowMillis()
+        state.value = state.value.copy(applying = true, applicationFailed = false)
+        scope.launch {
+            try {
+                context.dependencies.vacanciesUseCases.markApplied(projectId, ids, timestamp)
+                state.value = state.value.copy(applying = false)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                context.dependencies.logger.error(
+                    "Mark selected vacancies applied",
+                    error,
+                    mapOf("projectId" to projectId, "vacancyIds" to ids.toList()),
+                )
+                state.value = state.value.copy(applying = false, applicationFailed = true)
+            }
         }
     }
-    private fun editable() = canEdit() && !state.value.confirming && !state.value.deleting
+    override fun onCancelDelete() {
+        if (!state.value.busy) {
+            state.value =
+                state.value.copy(confirming = false, failed = false, applicationFailed = false)
+        }
+    }
+    private fun editable() = canEdit() && !state.value.confirming && !state.value.busy
 }

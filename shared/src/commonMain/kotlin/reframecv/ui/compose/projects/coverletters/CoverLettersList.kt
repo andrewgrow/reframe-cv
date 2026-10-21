@@ -19,7 +19,7 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.coverletter.CoverLetterResumeLink
+import reframecv.domain.models.coverletter.CoverLetterVacancyLink
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.cover_letters_select_all
 import reframecv.ui.components.projects.coverletters.CoverLetterSelectionComponent
@@ -33,8 +33,8 @@ internal fun CoverLettersList(
     timeZone: TimeZone,
     onEdit: (CoverLetter) -> Unit,
     selection: CoverLetterSelectionComponent,
-    links: List<CoverLetterResumeLink>,
-    onResume: (Long) -> Unit,
+    links: List<CoverLetterVacancyLink>,
+    onVacancy: (Long) -> Unit,
 ) {
     val selected by selection.state.subscribeAsState()
     val enabled = !selected.confirming && !selected.deleting
@@ -75,7 +75,7 @@ internal fun CoverLettersList(
                                 links.filter {
                                     it.letterId == letter.id
                                 },
-                                onResume,
+                                onVacancy,
                             ),
                         ) { if (enabled) onEdit(letter) }
                         HorizontalDivider()

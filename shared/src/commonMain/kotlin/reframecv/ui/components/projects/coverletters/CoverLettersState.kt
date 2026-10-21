@@ -1,21 +1,22 @@
 package reframecv.ui.components.projects.coverletters
 
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.coverletter.CoverLetterResumeLink
-import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.coverletter.CoverLetterVacancyLink
+import reframecv.domain.models.vacancy.Vacancy
 
-/** Provides loading feedback and the current project's letters with their source resumes. */
+/** Provides letters and the vacancies to which they are attached. */
 sealed interface CoverLettersState {
     data object Loading : CoverLettersState
     data object LoadFailed : CoverLettersState
 
-    /** Retains source records so links always open the latest resume. */
-    data class Ready(val letters: List<CoverLetter>, val resumes: List<Resume> = emptyList()) :
+    /** Retains current vacancies so links follow edits and removals. */
+    data class Ready(val letters: List<CoverLetter>, val vacancies: List<Vacancy> = emptyList()) :
         CoverLettersState {
-        val linkedResumes: List<CoverLetterResumeLink> get() = letters.mapNotNull { letter ->
-            resumes.find { it.id == letter.sourceResumeId }?.let {
-                CoverLetterResumeLink(letter.id, it.id, it.name)
+        val linkedVacancies: List<CoverLetterVacancyLink> get() = vacancies.sortedBy { it.id }
+            .flatMap { vacancy ->
+                letters.filter { it.id in vacancy.coverLetterIds }.map {
+                    CoverLetterVacancyLink(it.id, vacancy.id, vacancy.name)
+                }
             }
-        }
     }
 }

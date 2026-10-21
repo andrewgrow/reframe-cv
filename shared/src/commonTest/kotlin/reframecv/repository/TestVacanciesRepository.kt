@@ -47,6 +47,15 @@ class TestVacanciesRepository : VacanciesRepository {
         require(ids.all { id -> records.value.any { it.id == id && it.projectId == projectId } })
         records.value = records.value.filterNot { it.id in ids }
     }
+    override suspend fun markApplied(projectId: Long, ids: Set<Long>, timestamp: Long) {
+        records.value = records.value.map {
+            if (it.projectId == projectId && it.id in ids && it.appliedAt == null) {
+                it.copy(appliedAt = timestamp, updatedAt = timestamp)
+            } else {
+                it
+            }
+        }
+    }
     override suspend fun delete(id: Long) {
         records.value = records.value.filterNot { it.id == id }
     }

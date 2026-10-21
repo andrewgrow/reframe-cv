@@ -7,6 +7,7 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_retry
 import reframecv.shared.generated.resources.vacancies_delete_selected
+import reframecv.shared.generated.resources.vacancies_mark_applied
 import reframecv.shared.generated.resources.vacancy_add
 import reframecv.ui.compose.common.DocumentListControls
 import reframecv.ui.compose.common.FillButton
@@ -17,6 +18,7 @@ internal fun VacanciesControls(
     onAdd: () -> Unit,
     onRetry: (() -> Unit)? = null,
     onDelete: (() -> Unit)? = null,
+    onApplied: (() -> Unit)? = null,
     selectedCount: Int = 0,
     enabled: Boolean = true,
 ) {
@@ -36,6 +38,15 @@ internal fun VacanciesControls(
             }
         },
     ) {
+        onApplied?.let { apply ->
+            FillButton(
+                stringResource(Res.string.vacancies_mark_applied),
+                apply,
+                Modifier.testTag("vacancies.applied.selected"),
+                enabled = enabled && selectedCount > 0,
+                outlineState = FillButton.OutlineState.Visible,
+            )
+        }
         FillButton(
             text = stringResource(Res.string.vacancy_add),
             onClick = onAdd,

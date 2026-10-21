@@ -403,7 +403,7 @@
     <string name="resumes_delete_warning">This permanently deletes the selected resumes and their stored photos. Their vacancy links will be removed; vacancies and cover letters will be kept. This cannot be undone.</string>
     <string name="resumes_delete_error">Could not delete the selected resumes. No resumes were deleted. Please try again.</string>
     <string name="cover_letters_added">Added</string>
-    <string name="cover_letters_linked">Linked resume</string>
+    <string name="cover_letters_linked">Linked vacancies</string>
     <string name="cover_letters_select">Select %1$s</string>
     <string name="cover_letters_select_all">Select all</string>
     <string name="cover_letters_delete_selected">Delete selected (%1$d)</string>
@@ -446,4 +446,6 @@
     <string name="vacancies_delete_warning">The selected vacancies and their attachments will be permanently deleted. Linked resumes and cover letters will be kept.</string>
     <string name="vacancies_selected">Selected vacancies: %1$d</string>
     <string name="vacancies_delete_error">Could not delete the selected vacancies. Try again.</string>
+    <string name="vacancies_mark_applied">Mark applied</string>
+    <string name="vacancies_applied_error">Could not mark vacancies as applied. Try again.</string>
 </resources>

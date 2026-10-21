@@ -33,6 +33,9 @@ interface VacanciesRepository : VacancySnapshotsRepository {
     suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
         error("Bulk vacancy deletion is not available")
     }
+    suspend fun markApplied(projectId: Long, ids: Set<Long>, timestamp: Long) {
+        error("Bulk application tracking is not available")
+    }
     suspend fun delete(id: Long)
 }
 

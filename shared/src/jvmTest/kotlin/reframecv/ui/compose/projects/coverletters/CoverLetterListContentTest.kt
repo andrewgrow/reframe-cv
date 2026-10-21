@@ -28,7 +28,7 @@ class CoverLetterListContentTest {
         val component = TestCoverLettersComponent(
             initialState = letterListSamples(),
             edit = { edits += it.id },
-            openResume = { sources += it },
+            openVacancy = { sources += it },
         )
         val narrow = mutableStateOf(false)
         setContent {

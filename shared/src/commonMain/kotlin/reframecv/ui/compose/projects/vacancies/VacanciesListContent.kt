@@ -23,6 +23,7 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.SelectableText
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.dashboard_vacancies
+import reframecv.shared.generated.resources.vacancies_applied_error
 import reframecv.shared.generated.resources.vacancies_empty
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesState
@@ -53,7 +54,7 @@ internal fun VacanciesListContent(component: VacanciesComponent) {
                     PageHeader(
                         stringResource(Res.string.dashboard_vacancies),
                         component::onBack,
-                        enabled = !selection.deleting,
+                        enabled = !selection.busy,
                     )
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         when (val current = state) {
@@ -90,7 +91,15 @@ internal fun VacanciesListContent(component: VacanciesComponent) {
 private fun VacanciesListControls(component: VacanciesComponent) {
     val state by component.uiState.subscribeAsState()
     val selection by component.selection.state.subscribeAsState()
+    if (selection.applicationFailed) {
+        SelectableText(
+            stringResource(Res.string.vacancies_applied_error),
+            color = ReframeTheme.colorScheme.critical,
+            selectionModifier = Modifier.padding(ReframeTheme.tokens.spacing.medium),
+        )
+    }
     VacanciesControls(
+        onApplied = if (state is VacanciesState.Ready) component.selection::onMarkApplied else null,
         onAdd = component::onAdd,
         onDelete = if (state is VacanciesState.Ready) {
             component.selection::onRequestDelete
@@ -98,7 +107,7 @@ private fun VacanciesListControls(component: VacanciesComponent) {
             null
         },
         selectedCount = selection.selected.size,
-        enabled = !selection.confirming && !selection.deleting,
+        enabled = !selection.confirming && !selection.busy,
         onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
     )
 }

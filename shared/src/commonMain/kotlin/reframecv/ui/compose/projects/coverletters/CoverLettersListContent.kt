@@ -73,8 +73,8 @@ internal fun CoverLettersListContent(component: CoverLettersComponent) {
                                     timeZone,
                                     component::onEdit,
                                     component.selection,
-                                    current.linkedResumes,
-                                    component::onOpenResume,
+                                    current.linkedVacancies,
+                                    component::onOpenVacancy,
                                 )
                             }
                         }

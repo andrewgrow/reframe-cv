@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.MutableValue
 class TestVacancySelectionComponent(private val records: () -> VacanciesState) :
     VacancySelectionComponent {
     override val state = MutableValue(VacancySelectionState())
+    override fun onMarkApplied() = Unit
     override fun onToggle(id: Long) {
         val ids = state.value.selected
         state.value =

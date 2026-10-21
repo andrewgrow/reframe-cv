@@ -1,7 +1,7 @@
 package reframecv.ui.compose.projects.coverletters
 
 import reframecv.domain.models.coverletter.CoverLetter
-import reframecv.domain.models.resume.Resume
+import reframecv.domain.models.vacancy.Vacancy
 import reframecv.ui.components.projects.coverletters.CoverLettersState
 
 internal fun letterListSamples() = CoverLettersState.Ready(
@@ -24,5 +24,8 @@ internal fun letterListSamples() = CoverLettersState.Ready(
             sourceResumeId = 11,
         ),
     ),
-    listOf(Resume(10, 1, "Main resume", 0, 0), Resume(11, 1, "Backend version", 0, 0)),
+    listOf(
+        Vacancy(10, 1, "Mobile developer", 0, 0, coverLetterIds = listOf(1)),
+        Vacancy(11, 1, "Backend developer", 0, 0, coverLetterIds = listOf(3)),
+    ),
 )

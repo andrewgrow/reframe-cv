@@ -9,7 +9,7 @@ class TestCoverLettersComponent(
     override val projectId: Long = 1,
     initialState: CoverLettersState = CoverLettersState.Ready(emptyList()),
     private val edit: (CoverLetter) -> Unit = {},
-    private val openResume: (Long) -> Unit = {},
+    private val openVacancy: (Long) -> Unit = {},
     private val retry: () -> Unit = {},
     private val back: () -> Unit = {},
 ) : CoverLettersComponent {
@@ -23,7 +23,7 @@ class TestCoverLettersComponent(
     )
     override fun onAdd() = Unit
     override fun onEdit(letter: CoverLetter) = edit(letter)
-    override fun onOpenResume(id: Long) = openResume(id)
+    override fun onOpenVacancy(id: Long) = openVacancy(id)
     override fun onRetry() = retry()
     override fun onBack() = back()
 }

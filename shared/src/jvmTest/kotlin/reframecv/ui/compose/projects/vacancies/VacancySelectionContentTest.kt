@@ -30,8 +30,10 @@ class VacancySelectionContentTest {
         val component =
             TestVacanciesComponent(initialState = VacanciesState.Ready(vacancySamples()))
         setContent { ReframeTheme { VacanciesContent(component) } }
+        onNodeWithTag("vacancies.applied.selected").assertIsNotEnabled()
         onNodeWithTag("vacancies.delete.selected").assertIsNotEnabled()
         onNodeWithTag("vacancies.select.1").performClick().assertIsOn()
+        onNodeWithTag("vacancies.applied.selected").assertIsEnabled().performClick()
         assertNull(component.editor)
         assertEquals(setOf(1L), component.selection.state.value.selected)
         onNodeWithTag("vacancies.delete.selected").assertIsEnabled().performClick()
