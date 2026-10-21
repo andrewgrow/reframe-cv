@@ -1,7 +1,8 @@
 package reframecv.ui.compose.projects.vacancies.editor
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -26,6 +27,7 @@ import reframecv.ui.components.common.confirmation.ConfirmationDialogContent
 import reframecv.ui.components.common.confirmation.ConfirmationDialogState
 import reframecv.ui.components.common.confirmation.ConfirmationDialogTone
 import reframecv.ui.components.projects.vacancies.editor.VacancyEditorComponent
+import reframecv.ui.components.projects.vacancies.editor.VacancyLetterGenerationComponent
 import reframecv.ui.compose.common.ConfirmationDialog
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.compose.common.FillButton
@@ -70,38 +72,64 @@ private fun LetterResumeSelectionDialog(component: VacancyEditorComponent) {
     if (!selection.visible) return
     val resumes by component.resumes.state.subscribeAsState()
     val draft by component.draft.subscribeAsState()
-    ResizableDialog(component.letterGeneration::onCancel, title = {
-        Text(stringResource(Res.string.letter_select_resume))
-    }, text = {
-        FastScrollColumn(
-            Modifier.heightIn(max = ReframeTheme.tokens.dimensions.providerModelMenuMaxHeight),
-        ) {
-            resumes.available.filter { resume ->
-                draft.resumes.any { it.resumeId == resume.id }
-            }.forEach { resume ->
-                Row(
-                    Modifier.fillMaxWidth().testTag(
-                        "vacancy.letters.source.${resume.id}",
-                    ).clickable {
-                        component.letterGeneration.onResume(resume.id)
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    RadioButton(selection.resumeId == resume.id, {
-                        component.letterGeneration.onResume(resume.id)
-                    })
-                    Text(resume.name)
+    ResizableDialog(
+        component.letterGeneration::onCancel,
+        modifier = Modifier.testTag("vacancy.letters.source.dialog"),
+        title = {
+            Text(stringResource(Res.string.letter_select_resume))
+        },
+        text = {
+            FastScrollColumn(
+                Modifier.heightIn(max = ReframeTheme.tokens.dimensions.providerModelMenuMaxHeight),
+            ) {
+                resumes.available.filter { resume ->
+                    draft.resumes.any { it.resumeId == resume.id }
+                }.forEach { resume ->
+                    Row(
+                        Modifier.fillMaxWidth().testTag(
+                            "vacancy.letters.source.${resume.id}",
+                        ).clickable {
+                            component.letterGeneration.onResume(resume.id)
+                        },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(selection.resumeId == resume.id, {
+                            component.letterGeneration.onResume(resume.id)
+                        })
+                        Text(resume.name)
+                    }
                 }
             }
-        }
-    }, actions = {
-        FillButton(stringResource(Res.string.resume_cancel), component.letterGeneration::onCancel)
+        },
+        actions = {
+            LetterResumeSelectionActions(component.letterGeneration, selection.resumeId != null)
+        },
+    )
+}
+
+@Composable
+private fun LetterResumeSelectionActions(
+    component: VacancyLetterGenerationComponent,
+    enabled: Boolean,
+) {
+    FlowRow(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(
+            ReframeTheme.tokens.spacing.small,
+            Alignment.End,
+        ),
+        verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
+    ) {
+        FillButton(
+            stringResource(Res.string.resume_cancel),
+            component::onCancel,
+            modifier = Modifier.testTag("vacancy.letters.source.cancel"),
+        )
         FillButton(
             stringResource(Res.string.letter_generate),
-            component.letterGeneration::onContinue,
-            enabled =
-                selection.resumeId != null,
+            component::onContinue,
+            enabled = enabled,
             modifier = Modifier.testTag("vacancy.letters.continue"),
         )
-    })
+    }
 }

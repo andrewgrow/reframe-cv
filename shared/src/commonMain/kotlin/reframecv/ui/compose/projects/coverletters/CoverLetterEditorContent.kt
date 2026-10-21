@@ -6,8 +6,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -24,38 +26,40 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 fun CoverLetterEditorContent(component: CoverLetterEditorComponent) {
     val state by component.state.subscribeAsState()
-    Column(
-        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
-            .testTag("cover_letter.editor").pageBackHandler(
-                component::onClose,
-                enabled =
-                    !state.busy && !state.confirming && !state.exportVisible,
-            ),
-    ) {
-        Box(Modifier.padding(ReframeTheme.tokens.spacing.medium)) {
-            PageHeader(
-                stringResource(
-                    if (state.record.id ==
-                        0L
-                    ) {
-                        Res.string.letter_create_title
-                    } else {
-                        Res.string.letter_title
-                    },
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+        Column(
+            Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
+                .testTag("cover_letter.editor").pageBackHandler(
+                    component::onClose,
+                    enabled =
+                        !state.busy && !state.confirming && !state.exportVisible,
                 ),
-                component::onClose,
-                enabled = !state.busy,
+        ) {
+            Box(Modifier.padding(ReframeTheme.tokens.spacing.medium)) {
+                PageHeader(
+                    stringResource(
+                        if (state.record.id ==
+                            0L
+                        ) {
+                            Res.string.letter_create_title
+                        } else {
+                            Res.string.letter_title
+                        },
+                    ),
+                    component::onClose,
+                    enabled = !state.busy,
+                )
+            }
+            CoverLetterFields(component, Modifier.weight(1f))
+            HorizontalDivider()
+            CoverLetterFooter(component)
+        }
+        CoverLetterDeleteDialog(component)
+        if (state.exportVisible) {
+            CoverLetterExportDialog(
+                component.exportComponent,
+                component::onCloseExport,
             )
         }
-        CoverLetterFields(component, Modifier.weight(1f))
-        HorizontalDivider()
-        CoverLetterFooter(component)
-    }
-    CoverLetterDeleteDialog(component)
-    if (state.exportVisible) {
-        CoverLetterExportDialog(
-            component.exportComponent,
-            component::onCloseExport,
-        )
     }
 }

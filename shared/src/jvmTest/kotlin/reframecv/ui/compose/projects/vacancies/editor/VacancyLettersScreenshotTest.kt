@@ -47,6 +47,23 @@ class VacancyLettersScreenshotTest : GoldenScreenshotTest() {
             }
         }
     }
+
+    @Test
+    fun resumeSelectionActionsMatchReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this, captureTag = "vacancy.letters.source.dialog") {
+            VacancyLetterDialogs(letterResumeSelectionFixture())
+        }
+    }
+
+    @Test
+    fun resumeSelectionInLightThemeMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(
+            this,
+            themeMode = ReframeTheme.ThemeMode.Light,
+            captureTag = "vacancy.letters.source.dialog",
+        ) { VacancyLetterDialogs(letterResumeSelectionFixture()) }
+    }
+
     private fun fixture() = TestVacancyEditorComponent().also {
         it.resumeSection.onToggle()
         it.draft.value =
