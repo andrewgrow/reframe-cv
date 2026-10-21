@@ -91,7 +91,9 @@ The shared test report is `shared/build/reports/tests/jvmTest/index.html`.
 ## Screenshot references
 
 Roborazzi verifies screenshots during ordinary JVM and IDE test runs. References live
-in `shared/src/jvmTest/screenshots/`. Record changes only after an intentional UI update:
+in `shared/src/jvmTest/screenshots/`. This includes rasterized pages of generated resume and
+cover-letter PDFs under `export/`; see [PDF rendering](docs/pdf-rendering.md) for focused commands.
+Record changes only after an intentional UI or print-template update:
 
 ```shell
 ./gradlew :shared:recordRoborazziJvm --no-parallel

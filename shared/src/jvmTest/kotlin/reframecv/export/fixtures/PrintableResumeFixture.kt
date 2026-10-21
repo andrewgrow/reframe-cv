@@ -141,3 +141,17 @@ private fun profileFixture() = ResumeProfile(
     "Remote or hybrid",
     "Authorized to work in the EU",
 )
+
+internal fun printableTextResumeFixture(): Resume {
+    val original = printableResumeFixture()
+    val sections = original.content.sections.filterNot {
+        it is ResumeTextSection || it is ResumeSoftSkillsSection || it is ResumeSkillsSection
+    }.map { section ->
+        when (section) {
+            is ResumeSummarySection -> section.copy(title = "")
+            is ResumeExperienceSection -> section.copy(entries = section.entries.take(3))
+            else -> section
+        }
+    }
+    return original.copy(photoVisible = false, content = original.content.copy(sections = sections))
+}

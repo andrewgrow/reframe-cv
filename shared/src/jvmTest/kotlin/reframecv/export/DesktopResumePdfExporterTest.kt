@@ -1,14 +1,10 @@
 package reframecv.export
 
-import java.awt.Color
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
-import javax.imageio.ImageIO
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -23,12 +19,11 @@ import org.junit.rules.TemporaryFolder
 import reframecv.documents.resume.DesktopResumePdfRenderer
 import reframecv.domain.models.resume.content.ResumeExperienceSection
 import reframecv.domain.models.resume.content.ResumeLanguagesSection
-import reframecv.domain.models.resume.content.ResumeSkillsSection
-import reframecv.domain.models.resume.content.ResumeSoftSkillsSection
 import reframecv.domain.models.resume.content.ResumeSummarySection
-import reframecv.domain.models.resume.content.ResumeTextSection
 import reframecv.export.fixtures.hiddenResumeSections
 import reframecv.export.fixtures.printableResumeFixture
+import reframecv.export.fixtures.printableResumePortrait
+import reframecv.export.fixtures.printableTextResumeFixture
 import reframecv.photos.PhotoCrop
 import reframecv.photos.ResumePhotos
 
@@ -43,7 +38,7 @@ class DesktopResumePdfExporterTest {
         var reads = 0
         val photos = photos {
             reads++
-            portrait()
+            printableResumePortrait()
         }
         val exporter = DesktopResumePdfExporter(
             photos,
@@ -134,28 +129,13 @@ class DesktopResumePdfExporterTest {
 
     @Test
     fun textOnlyResumeUsesCompactContactsWithoutRepeatingAContactsSection() = runBlocking<Unit> {
-        val original = printableResumeFixture()
-        val sections = original.content.sections.filterNot {
-            it is ResumeTextSection || it is ResumeSoftSkillsSection || it is ResumeSkillsSection
-        }.map { section ->
-            when (section) {
-                is ResumeSummarySection -> section.copy(title = "")
-                is ResumeExperienceSection -> section.copy(entries = section.entries.take(3))
-                else -> section
-            }
-        }
         val destination = folder.newFile("text.pdf").toPath()
         val exporter = DesktopResumePdfExporter(
             photos { error("Hidden photo must not be read") },
             ExportDestinationPicker { destination.toString() },
             clock,
         )
-        exporter.export(
-            original.copy(
-                photoVisible = false,
-                content = original.content.copy(sections = sections),
-            ),
-        )
+        exporter.export(printableTextResumeFixture())
         Loader.loadPDF(destination.toFile()).use { pdf ->
             val text = PDFTextStripper().getText(pdf)
             assertEquals(1, Regex("alex@example.com").findAll(text).count())
@@ -195,7 +175,7 @@ class DesktopResumePdfExporterTest {
                 }
             },
         )
-        val data = original.copy(content = content).toPrintData(portrait())
+        val data = original.copy(content = content).toPrintData(printableResumePortrait())
         Loader.loadPDF(DesktopResumePdfRenderer.render(data)).use { pdf ->
             val positions = mutableListOf<TextPosition>()
             object : PDFTextStripper() {
@@ -228,18 +208,5 @@ class DesktopResumePdfExporterTest {
         override suspend fun render(path: String, crop: PhotoCrop): String = error("Unused")
         override suspend fun read(path: String) = read()
         override suspend fun discard(path: String) = Unit
-    }
-
-    private fun portrait(): ByteArray {
-        val image = BufferedImage(413, 531, BufferedImage.TYPE_INT_RGB)
-        image.createGraphics().apply {
-            color = Color(230, 235, 242)
-            fillRect(0, 0, 413, 531)
-            color = Color(70, 90, 120)
-            fillOval(125, 90, 160, 180)
-            fillOval(60, 280, 290, 320)
-            dispose()
-        }
-        return ByteArrayOutputStream().also { ImageIO.write(image, "png", it) }.toByteArray()
     }
 }

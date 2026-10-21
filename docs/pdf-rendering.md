@@ -110,7 +110,35 @@ Renderer fixtures live in test source sets.
 no missing or repeated content across pages, embedded fonts, Unicode and punctuation, print
 margins, long paragraphs, explicit newlines, and link URI annotations. Shared tests cover saving
 current edits before export, format selection, progress, retry, cancellation, and temporary-file
-cleanup. Use the normal golden-recording workflow from the README for intentional UI changes.
+cleanup.
+
+`ResumePdfScreenshotTest` and `CoverLetterPdfScreenshotTest` also compare the completed PDFs
+visually. `PdfGoldenScreenshotTest` rasterizes every page with PDFBox at a fixed 96 dpi and
+passes the result to Roborazzi. It checks the expected page count before comparing images,
+so adding or losing a page fails the test. References are stored in
+`shared/src/jvmTest/screenshots/export/ResumePdf/` and `export/CoverLetterPdf/`.
+The fixtures cover all resume section types, a synthetic portrait, text-only output, hidden
+sections and consent, an unnamed summary, a long headline beside the portrait, single-page
+letters with Unicode and links, and multipage letters with footers.
+
+Run just these PDF goldens with ordinary verification:
+
+```shell
+./gradlew :shared:jvmTest --tests '*PdfScreenshotTest' --no-parallel
+```
+
+After an intentional template change, record and visually review every affected page:
+
+```shell
+./gradlew :shared:jvmTest --tests '*PdfScreenshotTest' \
+  -Proborazzi.test.record=true -Proborazzi.test.verify=false --no-parallel
+```
+
+Then rerun without the recording properties to verify. Comparison reports use the existing
+`shared/build/outputs/roborazzi-comparison/` directory. The generated PDFs are also available
+under `shared/build/reports/pdf-goldens/` for inspection in a PDF viewer. Record and verify
+on the same OS/font/graphics environment, as with the UI goldens. The tests use bundled fonts
+and fictional data; they require neither external services nor a system PDF rasterizer.
 
 For template changes, also export a short and a multipage letter from the application. Render
 all pages for visual inspection and check selection/copying and links in target PDF viewers.
