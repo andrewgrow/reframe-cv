@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -24,6 +25,7 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.letter_generate
 import reframecv.shared.generated.resources.letter_generation_warning
 import reframecv.shared.generated.resources.resume_improvement_warning
+import reframecv.shared.generated.resources.vacancy_applied_invalid
 import reframecv.shared.generated.resources.vacancy_editor_edit_title
 import reframecv.shared.generated.resources.vacancy_editor_title
 import reframecv.shared.generated.resources.vacancy_name_required
@@ -181,11 +183,18 @@ private fun VacancyEditorFooter(
     editing: Boolean,
 ) {
     val importState by component.importComponent.state.subscribeAsState()
+    val saveState by component.saveState.subscribeAsState()
     val draft by component.draft.subscribeAsState()
     val snapshot by component.snapshot.state.subscribeAsState()
     DocumentFooter {
         Column(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
             VacancyImportFeedback(importState)
+            if (saveState == VacancySaveState.InvalidAppliedAt) {
+                Text(
+                    stringResource(Res.string.vacancy_applied_invalid),
+                    color = ReframeTheme.colorScheme.critical,
+                )
+            }
             VacancyEditorActions(
                 component,
                 draft.name.isNotBlank() && !snapshot.selecting,

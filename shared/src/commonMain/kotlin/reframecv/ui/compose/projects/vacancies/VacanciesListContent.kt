@@ -34,19 +34,27 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun VacanciesListContent(component: VacanciesComponent) {
     val state by component.uiState.subscribeAsState()
+    val selection by component.selection.state.subscribeAsState()
     val timeZone = remember { TimeZone.currentSystemDefault() }
     key(component.projectId) {
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
             Column(
                 Modifier.fillMaxSize().background(
                     MaterialTheme.colorScheme.background,
-                ).safeContentPadding().pageBackHandler(component::onBack),
+                ).safeContentPadding().pageBackHandler(
+                    component::onBack,
+                    enabled = !selection.confirming,
+                ),
             ) {
                 Column(
                     Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
                     verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
                 ) {
-                    PageHeader(stringResource(Res.string.dashboard_vacancies), component::onBack)
+                    PageHeader(
+                        stringResource(Res.string.dashboard_vacancies),
+                        component::onBack,
+                        enabled = !selection.deleting,
+                    )
                     Box(Modifier.weight(1f).fillMaxWidth()) {
                         when (val current = state) {
                             VacanciesState.Loading -> LoadingContent()
@@ -60,17 +68,37 @@ internal fun VacanciesListContent(component: VacanciesComponent) {
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             } else {
-                                VacanciesList(current.vacancies, timeZone, component::onEdit)
+                                VacanciesList(
+                                    current.vacancies,
+                                    timeZone,
+                                    component::onEdit,
+                                    component.selection,
+                                )
                             }
                         }
                     }
                 }
                 HorizontalDivider()
-                VacanciesControls(
-                    onAdd = component::onAdd,
-                    onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
-                )
+                VacanciesListControls(component)
             }
+            VacancySelectionConfirmation(component)
         }
     }
+}
+
+@Composable
+private fun VacanciesListControls(component: VacanciesComponent) {
+    val state by component.uiState.subscribeAsState()
+    val selection by component.selection.state.subscribeAsState()
+    VacanciesControls(
+        onAdd = component::onAdd,
+        onDelete = if (state is VacanciesState.Ready) {
+            component.selection::onRequestDelete
+        } else {
+            null
+        },
+        selectedCount = selection.selected.size,
+        enabled = !selection.confirming && !selection.deleting,
+        onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
+    )
 }

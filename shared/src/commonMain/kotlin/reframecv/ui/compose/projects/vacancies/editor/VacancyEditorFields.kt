@@ -86,6 +86,8 @@ internal fun VacancyEditorFields(
         )
         Spacer(Modifier.height(ReframeTheme.tokens.spacing.large))
         attachment()
+        Spacer(Modifier.height(ReframeTheme.tokens.spacing.large))
+        VacancyAppliedFields(draft, onChange, enabled)
         if (saveState == VacancySaveState.Failed) {
             SelectableText(
                 stringResource(Res.string.vacancy_save_error),
@@ -94,6 +96,9 @@ internal fun VacancyEditorFields(
         }
     }
     LaunchedEffect(Unit) { nameFocus.requestFocus() }
+    LaunchedEffect(saveState) {
+        if (saveState == VacancySaveState.InvalidAppliedAt) scroll.animateScrollTo(scroll.maxValue)
+    }
     LaunchedEffect(nameError) {
         if (nameError != null) {
             scroll.animateScrollTo(0)

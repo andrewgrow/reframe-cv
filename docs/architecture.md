@@ -684,3 +684,18 @@ through `SettingsBackupRepository` in `database`, and native JSON file operation
 Imports add supported records, skip duplicates and never overwrite stored provider credentials.
 Global preferences are restored in the same transaction. API keys require explicit export consent;
 account caches and screen states are excluded. See [Settings backups](settings-backups.md).
+
+## Vacancy application tracking and bulk deletion
+
+Vacancies store an optional `appliedAt` instant as epoch milliseconds. The editor keeps the
+Applied checkbox and local `YYYY-MM-DD HH:MM` text in its draft; only Save writes or clears
+the timestamp. Invalid dates and nonexistent local times are rejected. Set now fills the draft
+at minute precision. The list displays the local applied date before the added date.
+Application tracking is local metadata and is excluded from vacancy content JSON and AI requests.
+Recognition and content import preserve the current application-tracking draft.
+
+Vacancy selection is independent of opening an editor. Confirmed bulk deletion validates every
+selected identity against its project and deletes the batch in one database transaction, along
+with links, screen states and unused attachment records. Linked resumes and letters are retained.
+The snapshot manager removes unreferenced files only after commit, under the same lock used by
+snapshot updates. Failed transactions leave both records and files intact.

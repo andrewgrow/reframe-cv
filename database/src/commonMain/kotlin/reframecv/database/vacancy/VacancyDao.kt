@@ -16,7 +16,7 @@ import reframecv.domain.models.vacancy.VacancyResume
 /** Saves, loads, searches, and permanently deletes vacancies in the local database. */
 @Dao
 interface VacancyDao :
-    VacancyQueries,
+    VacancyDeletionQueries,
     VacancyLetterQueries,
     WorkspaceDao {
     @Query("UPDATE vacancy_attachments SET parsed_at = :parsedAt WHERE id = :id")
@@ -137,17 +137,4 @@ interface VacancyDao :
     @Transaction
     suspend fun search(projectId: Long, keyword: String): List<VacancyWithKeywords> =
         searchNormalized(projectId, keyword.trim().lowercase())
-
-    /** Delete one vacancy and its unused source snapshot atomically. */
-    @Transaction
-    suspend fun delete(id: Long, updatedAt: Long): Int {
-        val existing = findById(id)?.entity ?: return 0
-        val changed = deleteEntity(id)
-        if (changed > 0) clearScreenStates(ScreenType.Vacancy.name, id)
-        if (changed > 0) {
-            existing.vacancyAttachmentId?.let { deleteUnusedVacancyAttachment(it) }
-            resetEmptyWorkspace(existing.projectId, updatedAt)
-        }
-        return changed
-    }
 }

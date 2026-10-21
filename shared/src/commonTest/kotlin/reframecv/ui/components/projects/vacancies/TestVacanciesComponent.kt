@@ -13,6 +13,7 @@ class TestVacanciesComponent(
     private val back: () -> Unit = {},
 ) : VacanciesComponent {
     override val uiState = MutableValue(initialState)
+    override val selection = TestVacancySelectionComponent { uiState.value }
     override val childStack = MutableValue<ChildStack<*, VacanciesComponent.Child>>(
         ChildStack(Unit, VacanciesComponent.Child.List),
     )

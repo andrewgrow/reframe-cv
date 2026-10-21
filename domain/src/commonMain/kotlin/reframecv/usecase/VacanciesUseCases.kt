@@ -19,6 +19,7 @@ class VacanciesUseCases(private val repository: VacanciesRepository) {
         return null
     }
 
+    suspend fun deleteMany(projectId: Long, ids: Set<Long>) = repository.deleteMany(projectId, ids)
     suspend fun delete(id: Long) = repository.delete(id)
     suspend fun loadSnapshot(id: Long) = repository.snapshot(id)
     suspend fun openSnapshot(id: Long) = repository.openSnapshot(id)

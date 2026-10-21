@@ -18,12 +18,15 @@ data class VacancyDraft(
     val jobTitle: String = "",
     val resumes: List<VacancyResume> = emptyList(),
     val coverLetterIds: List<Long> = emptyList(),
+    val applied: Boolean = false,
+    val appliedDate: String = "",
 ) {
     fun toVacancy(projectId: Long) = applyTo(
         Vacancy(projectId = projectId, name = "", createdAt = 0, updatedAt = 0),
     )
 
     fun applyTo(vacancy: Vacancy) = vacancy.copy(
+        appliedAt = if (applied) parseAppliedTime(appliedDate) else null,
         resumes = resumes,
         coverLetterIds = coverLetterIds,
         name = name.trim(),
@@ -39,6 +42,8 @@ data class VacancyDraft(
 
     companion object {
         fun fromVacancy(vacancy: Vacancy) = VacancyDraft(
+            applied = vacancy.appliedAt != null,
+            appliedDate = vacancy.appliedAt?.let { appliedTimeText(it) }.orEmpty(),
             resumes = vacancy.resumes,
             coverLetterIds = vacancy.coverLetterIds,
             name = vacancy.name,

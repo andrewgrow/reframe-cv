@@ -43,6 +43,10 @@ class TestVacanciesRepository : VacanciesRepository {
         }
         update(record.copy(resumes = links))
     }
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        require(ids.all { id -> records.value.any { it.id == id && it.projectId == projectId } })
+        records.value = records.value.filterNot { it.id in ids }
+    }
     override suspend fun delete(id: Long) {
         records.value = records.value.filterNot { it.id == id }
     }

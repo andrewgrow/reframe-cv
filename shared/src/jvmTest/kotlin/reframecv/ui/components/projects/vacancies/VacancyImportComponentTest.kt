@@ -130,13 +130,22 @@ class VacancyImportComponentTest : ComponentTest() {
         val states = states(component)
         val pending = SnapshotChange.Attach(SelectedAttachment("pending", "job.pdf"))
         runOnUiThread {
-            component.onDraftChange(VacancyDraft("Manual", snapshotChange = pending))
+            component.onDraftChange(
+                VacancyDraft(
+                    "Manual",
+                    snapshotChange = pending,
+                    applied = true,
+                    appliedDate = "2026-10-21 18:45",
+                ),
+            )
             component.onImport()
         }
         withTimeout(10_000) {
             while (states.receive() != VacancyImportState.Imported) { /* Await import. */ }
             runOnUiThread {
                 assertEquals(pending, component.draft.value.snapshotChange)
+                assertEquals(true, component.draft.value.applied)
+                assertEquals("2026-10-21 18:45", component.draft.value.appliedDate)
                 component.onSaveCompleted(
                     reframecv.ui.components.projects.vacancies.editor.VacancySaveState.Idle,
                     imported.copy(id = 9, projectId = 7),

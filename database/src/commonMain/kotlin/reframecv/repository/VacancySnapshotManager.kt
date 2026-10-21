@@ -38,12 +38,15 @@ class VacancySnapshotManager(
     }
 
     suspend fun snapshot(vacancyId: Long): SnapshotInfo? = mutex.withLock {
-        val record = source(vacancyId) ?: return@withLock null
+        val record = vacancies.source(vacancyId, attachments) ?: return@withLock null
         SnapshotInfo(record, storage.status(record.storedAttachment()))
     }
 
     suspend fun open(vacancyId: Long) = mutex.withLock {
-        val path = checkNotNull(source(vacancyId)?.filePath) { "Snapshot is missing" }
+        val path =
+            checkNotNull(vacancies.source(vacancyId, attachments)?.filePath) {
+                "Snapshot is missing"
+            }
         storage.open(path)
     }
 
@@ -70,7 +73,7 @@ class VacancySnapshotManager(
 
     suspend fun update(record: Vacancy, change: SnapshotChange) = mutex.withLock {
         withContext(NonCancellable) {
-            val previousPath = source(record.id)?.filePath
+            val previousPath = vacancies.source(record.id, attachments)?.filePath
             withNewFile(record, change) { snapshot ->
                 vacancies.updateWithSnapshot(
                     record,
@@ -85,9 +88,17 @@ class VacancySnapshotManager(
 
     suspend fun delete(id: Long, timestamp: Long) = mutex.withLock {
         withContext(NonCancellable) {
-            val previousPath = source(id)?.filePath
+            val previousPath = vacancies.source(id, attachments)?.filePath
             check(vacancies.delete(id, timestamp) == 1) { "Active record does not exist" }
             previousPath?.let { deleteIfUnreferenced(it) }
+        }
+    }
+
+    suspend fun deleteMany(projectId: Long, ids: Set<Long>, timestamp: Long) = mutex.withLock {
+        withContext(NonCancellable) {
+            val paths = ids.mapNotNull { vacancies.source(it, attachments)?.filePath }.distinct()
+            vacancies.deleteMany(projectId, ids, timestamp)
+            paths.forEach { deleteIfUnreferenced(it) }
         }
     }
 
@@ -100,11 +111,6 @@ class VacancySnapshotManager(
             paths.forEach { deleteIfUnreferenced(it) }
             changed
         }
-    }
-
-    private suspend fun source(vacancyId: Long): VacancyAttachment? {
-        val id = vacancies.findById(vacancyId)?.entity?.vacancyAttachmentId ?: return null
-        return attachments.findById(id)?.toDomainModel()
     }
 
     private suspend fun <T> withNewFile(
@@ -166,3 +172,11 @@ private fun StoredAttachment.toVacancyAttachment(vacancy: Vacancy) =
             sha256 = sha256,
         ),
     )
+
+private suspend fun VacancyDao.source(
+    vacancyId: Long,
+    attachments: VacancyAttachmentDao,
+): VacancyAttachment? {
+    val id = findById(vacancyId)?.entity?.vacancyAttachmentId ?: return null
+    return attachments.findById(id)?.toDomainModel()
+}

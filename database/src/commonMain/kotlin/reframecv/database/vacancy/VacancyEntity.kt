@@ -60,12 +60,15 @@ data class VacancyEntity(
     val niceToHave: List<String> = emptyList(),
     @ColumnInfo(name = "job_title", defaultValue = "''")
     val jobTitle: String = "",
+    @ColumnInfo(name = "applied_at")
+    val appliedAt: Long? = null,
 ) : DatabaseModel<Vacancy> {
     override fun toDomainModel() = Vacancy(
         id = id,
         projectId = projectId,
         name = name,
         jobTitle = jobTitle,
+        appliedAt = appliedAt,
         createdAt = createdAt,
         updatedAt = updatedAt,
         description = description,
@@ -83,6 +86,7 @@ data class VacancyEntity(
             projectId = domainModel.projectId,
             name = domainModel.name,
             jobTitle = domainModel.jobTitle,
+            appliedAt = domainModel.appliedAt,
             createdAt = domainModel.createdAt,
             updatedAt = domainModel.updatedAt,
             description = domainModel.description,

@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
@@ -42,6 +44,11 @@ internal fun VacancyRow(vacancy: Vacancy, timeZone: TimeZone, table: Boolean, on
                 selectionModifier = Modifier.weight(VACANCY_COMPANY_WEIGHT),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            VacancyAppliedDate(
+                vacancy,
+                timeZone,
+                Modifier.width(ReframeTheme.tokens.dimensions.documentDateWidth),
+            )
             SelectableText(
                 date,
                 modifier = vacancyTextClick(onEdit),
@@ -63,6 +70,7 @@ internal fun VacancyRow(vacancy: Vacancy, timeZone: TimeZone, table: Boolean, on
                 modifier = vacancyTextClick(onEdit),
                 style = MaterialTheme.typography.bodyMedium,
             )
+            if (vacancy.appliedAt != null) VacancyAppliedDate(vacancy, timeZone)
             SelectableText(
                 date,
                 modifier = vacancyTextClick(onEdit),
@@ -80,3 +88,17 @@ private fun vacancyTextClick(onEdit: () -> Unit): Modifier = Modifier.clickable(
     role = Role.Button,
     onClick = onEdit,
 )
+
+@Composable
+private fun VacancyAppliedDate(
+    vacancy: Vacancy,
+    timeZone: TimeZone,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        vacancy.appliedAt?.let { "✓ " + documentDate(it, timeZone) }.orEmpty(),
+        modifier.testTag("vacancies.applied.${vacancy.id}"),
+        color = ReframeTheme.colorScheme.success,
+        style = MaterialTheme.typography.bodyMedium,
+    )
+}

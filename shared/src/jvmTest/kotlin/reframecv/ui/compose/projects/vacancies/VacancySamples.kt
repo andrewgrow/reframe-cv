@@ -11,6 +11,7 @@ internal fun vacancySamples() = listOf(
         company = "Example",
         createdAt = Instant.parse("2026-10-10T12:00:00Z").toEpochMilliseconds(),
         updatedAt = 0,
+        appliedAt = Instant.parse("2026-10-21T12:00:00Z").toEpochMilliseconds(),
     ),
     Vacancy(
         id = 2,

@@ -7,7 +7,7 @@ import reframecv.attachments.SnapshotInfo
 import reframecv.domain.models.vacancy.Vacancy
 
 /** Lets features manage and find project vacancies independently of their storage. */
-interface VacanciesRepository {
+interface VacanciesRepository : VacancySnapshotsRepository {
     fun observeVacancies(projectId: Long): Flow<List<Vacancy>>
     suspend fun search(projectId: Long, keyword: String): List<Vacancy>
     suspend fun create(record: Vacancy): Long
@@ -24,13 +24,20 @@ interface VacanciesRepository {
         require(snapshot == SnapshotChange.Keep) { "Snapshot storage is not available" }
         update(record)
     }
-    suspend fun snapshot(vacancyId: Long): SnapshotInfo? = null
-    suspend fun openSnapshot(vacancyId: Long) = Unit
     suspend fun saveResumeAssessment(
         vacancyId: Long,
         projectId: Long,
         resumeId: Long,
         assessment: ResumeAssessment,
     )
+    suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        error("Bulk vacancy deletion is not available")
+    }
     suspend fun delete(id: Long)
+}
+
+/** Provides access to a vacancy's saved source file independently of record editing. */
+interface VacancySnapshotsRepository {
+    suspend fun snapshot(vacancyId: Long): SnapshotInfo? = null
+    suspend fun openSnapshot(vacancyId: Long) = Unit
 }

@@ -17,7 +17,7 @@ import reframecv.ui.components.common.section.DefaultCollapsibleSectionComponent
 import reframecv.ui.context.AppComponentContext
 
 /** Lets the vacancy editor show save progress and failures. */
-enum class VacancySaveState { Idle, Saving, Failed }
+enum class VacancySaveState { Idle, Saving, Failed, InvalidAppliedAt }
 
 /** Controls inline deletion confirmation, progress, and failure feedback. */
 enum class VacancyDeleteState { Idle, Confirming, Deleting, Failed }
@@ -219,6 +219,8 @@ class DefaultVacancyEditorComponent(
             VacancyDraft.fromVacancy(
                 result.applyTo(original),
             ).copy(
+                applied = current.applied,
+                appliedDate = current.appliedDate,
                 keywords = current.keywords,
                 snapshotChange = current.snapshotChange,
                 coverLetterIds = current.coverLetterIds,
@@ -235,6 +237,8 @@ class DefaultVacancyEditorComponent(
     )
     override val importComponent = DefaultVacancyImportComponent(componentContext) {
         draft.value = VacancyDraft.fromVacancy(it).copy(
+            applied = draft.value.applied,
+            appliedDate = draft.value.appliedDate,
             snapshotChange = draft.value.snapshotChange,
             resumes = draft.value.resumes,
             coverLetterIds = draft.value.coverLetterIds,
@@ -256,6 +260,9 @@ class DefaultVacancyEditorComponent(
         ) {
             recognition.onReset()
             this.draft.value = draft
+            if (saveState.value == VacancySaveState.InvalidAppliedAt && draft.validAppliedTime()) {
+                saveState.value = VacancySaveState.Idle
+            }
         }
     }
 
@@ -269,6 +276,10 @@ class DefaultVacancyEditorComponent(
         if (isBusy || modalOpen ||
             snapshot.state.value.selecting
         ) {
+            return
+        }
+        if (!draft.validAppliedTime()) {
+            saveState.value = VacancySaveState.InvalidAppliedAt
             return
         }
         if (draft.name.isNotBlank() && deleteState.value == VacancyDeleteState.Idle) {

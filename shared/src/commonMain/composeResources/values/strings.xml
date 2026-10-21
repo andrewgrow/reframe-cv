@@ -434,4 +434,16 @@
     <string name="settings_transfer_window">Window preferences restored. They apply on the next launch.</string>
     <string name="settings_transfer_import_error">Could not import settings. Choose a supported settings backup (up to 10 MB) and try again. No settings were changed.</string>
     <string name="settings_transfer_export_error">Could not export settings. Try again.</string>
+    <string name="vacancy_applied">Applied</string>
+    <string name="vacancy_applied_at">Applied at</string>
+    <string name="vacancy_applied_format">YYYY-MM-DD HH:MM (local time)</string>
+    <string name="vacancy_applied_invalid">Enter a valid Applied date in YYYY-MM-DD HH:MM format, or uncheck Applied.</string>
+    <string name="vacancy_set_now">Set now</string>
+    <string name="vacancies_select_all">Select all vacancies</string>
+    <string name="vacancies_select">Select vacancy: %1$s</string>
+    <string name="vacancies_delete_selected">Delete (%1$d)</string>
+    <string name="vacancies_delete_title">Delete selected vacancies?</string>
+    <string name="vacancies_delete_warning">The selected vacancies and their attachments will be permanently deleted. Linked resumes and cover letters will be kept.</string>
+    <string name="vacancies_selected">Selected vacancies: %1$d</string>
+    <string name="vacancies_delete_error">Could not delete the selected vacancies. Try again.</string>
 </resources>

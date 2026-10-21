@@ -26,6 +26,7 @@ import reframecv.ui.store.bindStoreToLifecycle
 
 /** Lets the vacancy screen browse opportunities and manage them through a shared editor. */
 interface VacanciesComponent {
+    val selection: VacancySelectionComponent
     val projectId: Long
     val uiState: Value<VacanciesState>
     val childStack: Value<ChildStack<*, Child>>
@@ -50,7 +51,7 @@ interface VacanciesComponent {
         is Child.Editor -> child.component.isBusy
         is Child.LinkedResume -> child.component.isBusy
         is Child.LinkedLetter -> child.component.state.value.busy
-        Child.List -> false
+        Child.List -> selection.state.value.deleting
     }
     fun onEdit(vacancy: Vacancy)
     fun onAdd()
@@ -154,6 +155,13 @@ class DefaultVacanciesComponent(
         }
     }
 
+    override val selection: VacancySelectionComponent = DefaultVacancySelectionComponent(
+        componentContext,
+        projectId,
+        uiState,
+        canEdit = { childStack.value.active.instance == VacanciesComponent.Child.List },
+    )
+
     init {
         var openedInitialVacancy = false
         val initialSubscription = uiState.subscribe { state ->
@@ -168,9 +176,16 @@ class DefaultVacanciesComponent(
         val editorBack = BackCallback(isEnabled = false) { onBack() }
         backHandler.register(editorBack)
         val stackSubscription = childStack.subscribe {
-            editorBack.isEnabled = it.active.instance != VacanciesComponent.Child.List
+            editorBack.isEnabled =
+                it.active.instance != VacanciesComponent.Child.List ||
+                selection.state.value.confirming
+        }
+        val selectionSubscription = selection.state.subscribe {
+            editorBack.isEnabled =
+                childStack.value.active.instance != VacanciesComponent.Child.List || it.confirming
         }
         lifecycle.doOnDestroy {
+            selectionSubscription.cancel()
             stackSubscription.cancel()
             backHandler.unregister(editorBack)
         }
@@ -207,11 +222,15 @@ class DefaultVacanciesComponent(
     }
 
     override fun onAdd() {
-        if (editor == null) editorNavigation.pushNew(EditorConfiguration.Create)
+        if (listEditable) editorNavigation.pushNew(EditorConfiguration.Create)
     }
 
+    private val listEditable: Boolean get() =
+        childStack.value.active.instance == VacanciesComponent.Child.List &&
+            !selection.state.value.confirming && !selection.state.value.deleting
+
     override fun onEdit(vacancy: Vacancy) {
-        if (editor == null && vacancy.projectId == projectId) {
+        if (listEditable && vacancy.projectId == projectId) {
             editorNavigation.pushNew(EditorConfiguration.Edit(vacancy))
         }
     }
@@ -220,9 +239,18 @@ class DefaultVacanciesComponent(
     override fun onBack() {
         when (val child = childStack.value.active.instance) {
             is VacanciesComponent.Child.Editor -> child.component.onClose()
+
             is VacanciesComponent.Child.LinkedResume -> child.component.onBack()
+
             is VacanciesComponent.Child.LinkedLetter -> child.component.onClose()
-            VacanciesComponent.Child.List -> back()
+
+            VacanciesComponent.Child.List -> {
+                if (selection.state.value.confirming) {
+                    selection.onCancelDelete()
+                } else if (!selection.state.value.deleting) {
+                    back()
+                }
+            }
         }
     }
 }

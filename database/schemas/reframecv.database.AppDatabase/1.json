@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "4e94cc559eba53dfd66ca567eae55f1f",
+    "identityHash": "f94ae3f4f7354c33e614c854a8df4bf2",
     "entities": [
       {
         "tableName": "screen_states",
@@ -734,7 +734,7 @@
       },
       {
         "tableName": "vacancies",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `project_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `description` TEXT NOT NULL, `company` TEXT NOT NULL, `url` TEXT NOT NULL, `vacancy_attachment_id` INTEGER, `responsibilities` TEXT NOT NULL DEFAULT '[]', `requirements` TEXT NOT NULL DEFAULT '[]', `nice_to_have` TEXT NOT NULL DEFAULT '[]', `job_title` TEXT NOT NULL DEFAULT '', `applied_at` INTEGER, FOREIGN KEY(`vacancy_attachment_id`) REFERENCES `vacancy_attachments`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN KEY(`project_id`) REFERENCES `projects`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -816,6 +816,11 @@
             "affinity": "TEXT",
             "notNull": true,
             "defaultValue": "''"
+          },
+          {
+            "fieldPath": "appliedAt",
+            "columnName": "applied_at",
+            "affinity": "INTEGER"
           }
         ],
         "primaryKey": {
@@ -1076,7 +1081,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '4e94cc559eba53dfd66ca567eae55f1f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f94ae3f4f7354c33e614c854a8df4bf2')"
     ]
   }
 }

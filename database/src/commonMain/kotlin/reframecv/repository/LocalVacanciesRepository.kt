@@ -13,7 +13,8 @@ import reframecv.shared.nowMillis
 class LocalVacanciesRepository(
     private val dao: VacancyDao,
     private val snapshots: VacancySnapshotManager? = null,
-) : VacanciesRepository {
+) : VacanciesRepository,
+    VacancySnapshotsRepository by LocalVacancySnapshots(snapshots) {
     override fun observeVacancies(projectId: Long) = flow {
         snapshots?.cleanup()
         emitAll(dao.observeActive(projectId).map { records -> records.map { it.toDomainModel() } })
@@ -21,11 +22,6 @@ class LocalVacanciesRepository(
 
     override suspend fun search(projectId: Long, keyword: String) =
         dao.search(projectId, keyword).map { it.toDomainModel() }
-
-    override suspend fun snapshot(vacancyId: Long) = snapshots?.snapshot(vacancyId)
-    override suspend fun openSnapshot(vacancyId: Long) {
-        snapshots?.open(vacancyId)
-    }
 
     override suspend fun create(record: Vacancy): Long = create(record, SnapshotChange.Keep)
 
@@ -63,11 +59,28 @@ class LocalVacanciesRepository(
         assessment: ResumeAssessment,
     ) = dao.saveResumeAssessment(vacancyId, projectId, resumeId, assessment, nowMillis())
 
+    override suspend fun deleteMany(projectId: Long, ids: Set<Long>) {
+        if (snapshots != null) {
+            snapshots.deleteMany(projectId, ids, nowMillis())
+        } else {
+            dao.deleteMany(projectId, ids, nowMillis())
+        }
+    }
+
     override suspend fun delete(id: Long) {
         if (snapshots != null) {
             snapshots.delete(id, nowMillis())
         } else {
             check(dao.delete(id, nowMillis()) == 1) { "Active record does not exist" }
         }
+    }
+}
+
+/** Adapts source-file access to the optional platform snapshot manager. */
+private class LocalVacancySnapshots(private val manager: VacancySnapshotManager?) :
+    VacancySnapshotsRepository {
+    override suspend fun snapshot(vacancyId: Long) = manager?.snapshot(vacancyId)
+    override suspend fun openSnapshot(vacancyId: Long) {
+        manager?.open(vacancyId)
     }
 }

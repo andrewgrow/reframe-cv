@@ -57,6 +57,8 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         "My shortlist",
         jobTitle = "Old",
         keywords = " Personal , Remote, English ",
+        applied = true,
+        appliedDate = "2026-10-21 18:45",
     )
     private val selection = SelectedAttachment("original-file", "job.pdf")
 
@@ -106,6 +108,8 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             assertEquals("Mobile developer", editor.draft.value.jobTitle)
             assertEquals("Company", editor.draft.value.company)
             assertEquals(" Personal , Remote, English ", editor.draft.value.keywords)
+            assertEquals(true, editor.draft.value.applied)
+            assertEquals("2026-10-21 18:45", editor.draft.value.appliedDate)
             val attachment = assertIs<SnapshotChange.Attach>(editor.snapshot.change)
             assertEquals(selection, attachment.selection)
             assertNotNull(attachment.parsedAt)
