@@ -55,6 +55,7 @@ class TestResumeEditorComponent(
         }
     }
     override fun onCloseExport() {
+        exportComponent.onReset()
         exportVisible.value = false
     }
     override fun onRequestDelete() {

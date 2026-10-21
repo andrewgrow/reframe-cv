@@ -3,6 +3,7 @@ package reframecv.ui.compose.projects.resumes.editor
 import androidx.compose.ui.test.ExperimentalTestApi
 import kotlin.test.Test
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.resumes.editor.ResumeExportFormat
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
 import reframecv.ui.components.projects.resumes.editor.TestResumeExportComponent
 import reframecv.ui.theme.ReframeTheme.ThemeMode
@@ -11,16 +12,27 @@ import reframecv.ui.theme.ReframeTheme.ThemeMode
 class ResumeExportDialogScreenshotTest : GoldenScreenshotTest() {
     @Test
     fun jsonExportMatchesReference() = runDesktopComposeUiTest {
-        setGoldenContent(this) { ResumeExportDialog(TestResumeExportComponent()) {} }
+        val component = TestResumeExportComponent()
+        component.onFormatChange(ResumeExportFormat.Json)
+        setGoldenContent(this) { ResumeExportDialog(component) {} }
         captureGolden(this, "resume.export.dialog")
     }
 
     @Test
     fun jsonExportInLightThemeMatchesReference() = runDesktopComposeUiTest {
+        val component = TestResumeExportComponent()
+        component.onFormatChange(ResumeExportFormat.Json)
         setGoldenContent(this, themeMode = ThemeMode.Light) {
-            ResumeExportDialog(TestResumeExportComponent()) {}
+            ResumeExportDialog(component) {}
         }
         captureGolden(this, "resume.export.dialog")
+    }
+
+    @Test
+    fun pdfExportMatchesReference() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this, captureTag = "resume.export.dialog") {
+            ResumeExportDialog(TestResumeExportComponent()) {}
+        }
     }
 
     @Test

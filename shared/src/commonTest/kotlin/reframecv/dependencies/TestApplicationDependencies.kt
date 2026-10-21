@@ -83,6 +83,7 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val coverLetterExporter = CoverLetterExporter { DocumentExportResult.Cancelled }
     override val coverLetterImporter = CoverLetterImporter { null }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
+    override val resumePdfExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val vacancyImporter = VacancyImporter { null }
     override val resumeImporter = ResumeImporter { null }
@@ -226,6 +227,7 @@ class TestApplicationDependencies : ApplicationDependencies {
         resumeImporter,
         resumeExporter,
         resumePhotos,
+        resumePdfExporter,
     )
     override val coverLetterFilesUseCases =
         CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter, coverLetterPdfExporter)

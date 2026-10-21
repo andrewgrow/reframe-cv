@@ -40,7 +40,7 @@ class ResumeExportDialogTest : GoldenScreenshotTest() {
         setGoldenContent(this) { ResumeEditorContent(component) }
         listOf("Cancel", "Download").forEach { action ->
             onNodeWithText("Export").performClick()
-            onNodeWithTag("resume.export.format").assertTextContains("as JSON").performClick()
+            onNodeWithTag("resume.export.format").assertTextContains("as PDF").performClick()
             onNodeWithTag("resume.export.json").performClick()
             onNodeWithTag("resume.export.format").assertTextContains("as JSON")
             // The page also has a Cancel button, so target the dialog's action.

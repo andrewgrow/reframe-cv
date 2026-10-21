@@ -5,17 +5,17 @@ import com.chrisjenx.compose2pdf.PdfMargins
 import com.chrisjenx.compose2pdf.PdfPageConfig
 import com.chrisjenx.compose2pdf.RenderMode
 import com.chrisjenx.compose2pdf.renderToPdf
+import reframecv.documents.PdfRenderLock
 
 private const val PAGE_MARGIN = 56.7f
 
 /** Renders separately paginated Compose pages with searchable text and working links. */
 object DesktopCoverLetterPdfRenderer {
-    private val lock = Any()
     private val page = PdfPageConfig.A4.copy(
         margins = PdfMargins.symmetric(horizontal = PAGE_MARGIN.dp, vertical = PAGE_MARGIN.dp),
     )
 
-    fun render(data: CoverLetterPrintData): ByteArray = synchronized(lock) {
+    fun render(data: CoverLetterPrintData): ByteArray = synchronized(PdfRenderLock) {
         require(data.text.isNotBlank()) { "Cover letter text must not be blank" }
         require(data.links.all { it.label.isNotBlank() && it.url.isNotBlank() })
         val pages = CoverLetterPaginator(page).paginate(data)

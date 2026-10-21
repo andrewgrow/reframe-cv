@@ -13,6 +13,7 @@ import reframecv.export.CoverLetterExporter
 import reframecv.export.DesktopCoverLetterExporter
 import reframecv.export.DesktopCoverLetterPdfExporter
 import reframecv.export.DesktopResumeExporter
+import reframecv.export.DesktopResumePdfExporter
 import reframecv.export.DesktopVacancyExporter
 import reframecv.export.ResumeExporter
 import reframecv.export.VacancyExporter
@@ -131,6 +132,9 @@ class DefaultApplicationDependencies(
         )
     }
     override val resumePhotos: ResumePhotos get() = photoManager
+    override val resumePdfExporter: ResumeExporter by lazy {
+        DesktopResumePdfExporter(resumePhotos)
+    }
     private val snapshotManager by lazy {
         VacancySnapshotManager(
             database.value.vacancyDao(),
@@ -271,7 +275,7 @@ class DefaultApplicationDependencies(
         }
 
     private val resumeFilesUseCasesInstance by lazy {
-        ResumeFilesUseCases(resumeImporter, resumeExporter, resumePhotos)
+        ResumeFilesUseCases(resumeImporter, resumeExporter, resumePhotos, resumePdfExporter)
     }
     override val resumeFilesUseCases: ResumeFilesUseCases
         get() {

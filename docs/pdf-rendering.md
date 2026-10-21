@@ -3,7 +3,8 @@
 ## Module boundaries
 
 - `documents` owns print data, Compose templates, typography, and measured pagination.
-  Cover-letter code lives in `reframecv.documents.coverletter`; `PrintLink` is shared print data.
+  Templates live in `reframecv.documents.coverletter` and `reframecv.documents.resume`;
+  `PrintLink` is shared print data.
   The module does not depend on domain models, the database, screen state, or native file pickers.
 - `shared` maps saved domain content to print data. `DesktopCoverLetterPdfExporter` calls the
   renderer through `CoverLetterFilesUseCases`; `ApplicationDependencies` supplies the implementation.
@@ -24,6 +25,46 @@ Suggested names are `cover-letter-<id>-<yyyyMMdd-HHmm-ss>.pdf`. PDFs are user-se
 not managed attachments or database records. Only letter body text is printed; internal name,
 keywords, local IDs, and source-resume metadata are excluded. Save a newly created letter before
 opening Export.
+
+## Resume export
+
+Resume Export also defaults to PDF, with JSON as the second option. Current changes, including
+portrait changes, are saved before opening the dialog. `ResumeFilesUseCases.generatePdf` uses
+`DesktopResumePdfExporter` and the same destination/temporary-file lifecycle as letters.
+Suggested names are `resume-<id>-<yyyyMMdd-HHmm-ss>.pdf`.
+
+The mapper filters every section's `visible` flag and `consent.visible` before rendering.
+The portrait is read only when `photoVisible` is true and a path exists. A missing photo file
+produces a text-only header; an unreadable file reports an export failure. The saved 35 × 45 mm
+portrait is placed at that physical size in the first-page header, without repeating on later pages.
+Internal resume name, keywords, main-resume selection, and content-language metadata are not printed.
+JSON export retains its existing content contract and does not acquire photograph bytes.
+
+The one-column A4 template uses bundled Tinos 1.340 serif faces, a 28 pt navy name,
+14 pt navy headings, 10.5 pt body text with 12.2 pt line height, and thin navy rules.
+Margins are 85 pt left, 42 pt right, and approximately 57 pt top/bottom. These physical
+print values do not follow application theme or UI scale.
+
+Visible contact methods are collected into a compact, wrapping header strip. Location,
+authorization, and work arrangement share a line, in that order. The professional headline
+follows within the text column of the header, above the first section divider; its width
+excludes the portrait and the gap beside it. Remaining visible sections retain their stored order,
+including custom headings, position descriptions, achievements, project details and links,
+education notes, skill groups, and languages. A summary's opening paragraph is emphasized and separated from following paragraphs;
+custom summary titles remain visible when supplied. Experience links have extra space above
+them, and consent has a larger gap to distinguish it from the final section. Experience prints period/company first,
+then position and italic location. Achievements use hanging bullets; skill category labels are
+emphasized without bolding the whole list. Link captions use their labels with the original
+URI attached. Dates retain year/month precision; ongoing periods
+use `Present`. Consent is printed last when enabled. Print links allow HTTP(S), mailto, and tel;
+other values remain plain text.
+
+`ResumePaginator` measures styled blocks, reserves first-page header and footer space, keeps
+heading chains with the opening body line, and splits oversized text at measured line boundaries.
+All templates share one renderer lock because compose2pdf has process-wide rendering state.
+The template supports semantic inline emphasis, hanging lists, links, and a prepared portrait;
+free-form rich-text editing and arbitrary page
+layouts remain separate work.
 
 ## Templates and pagination
 
@@ -56,13 +97,16 @@ Run renderer tests independently:
 ./gradlew :documents:jvmTest --no-parallel
 ```
 
-Run cover-letter component, export, and screenshot tests:
+Run document component, export, and screenshot tests:
 
 ```shell
-./gradlew :shared:jvmTest --tests '*CoverLetter*' --no-parallel
+./gradlew :shared:jvmTest --tests '*CoverLetter*' --tests '*Resume*' --no-parallel
 ```
 
-Renderer fixtures live only in `documents/src/jvmTest`. Tests check complete text in reading order,
+Renderer fixtures live in test source sets.
+`DesktopResumePdfExporterTest` writes a fictional review PDF to
+`shared/build/reports/pdf/resume.pdf`, including a synthetic portrait, and
+`shared/build/reports/pdf/resume-text.pdf` for a compact text-only layout. Tests check complete text in reading order,
 no missing or repeated content across pages, embedded fonts, Unicode and punctuation, print
 margins, long paragraphs, explicit newlines, and link URI annotations. Shared tests cover saving
 current edits before export, format selection, progress, retry, cancellation, and temporary-file
@@ -75,7 +119,7 @@ Text-extraction tests alone cannot establish visual correctness.
 ## Licenses and packaging
 
 The renderer uses compose2pdf (Apache-2.0), Apache PDFBox (Apache-2.0), and bundled Inter fonts
-(SIL Open Font License 1.1). See [Third-Party Notices](../THIRD_PARTY_NOTICES.md).
+(SIL Open Font License 1.1), plus bundled Tinos faces under the same font license. See [Third-Party Notices](../THIRD_PARTY_NOTICES.md).
 Complete PDF-related license and notice texts are stored under
 [`desktopApp/src/main/resources/licenses/pdf`](../desktopApp/src/main/resources/licenses/pdf/).
 Gradle packages these resources in the desktop application JAR, which is included in native

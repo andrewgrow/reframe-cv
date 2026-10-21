@@ -12,6 +12,7 @@ Third-party software remains subject to its own license terms. The following tab
 | Compose Multiplatform | 1.12.1 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
 | compose2pdf (desktop PDF rendering) | 1.4.0 | Apache License 2.0 | [compose2pdf license](https://github.com/chrisjenx/compose2pdf/blob/main/LICENSE) |
 | Apache PDFBox | 3.0.7 | Apache License 2.0 | [PDFBox license](https://pdfbox.apache.org/3.0/license.html) |
+| Tinos (bundled resume print font) | 1.340 | SIL Open Font License 1.1 | [Tinos license](https://github.com/googlefonts/tinos/blob/main/OFL.txt) |
 | Inter (bundled by compose2pdf) | Bundled font files | SIL Open Font License 1.1 | [Inter license](https://github.com/rsms/inter/blob/master/LICENSE.txt) |
 | Compose Material Icons Extended | 1.7.3 | Apache License 2.0 | [Compose Multiplatform license](https://github.com/JetBrains/compose-multiplatform/blob/master/LICENSE.txt) |
 | Compose Material 3 | 1.12.0-alpha03 | Apache License 2.0 | [AndroidX license](https://github.com/androidx/androidx/blob/androidx-main/LICENSE.txt) |
@@ -43,6 +44,7 @@ The desktop distribution includes full PDF-related license texts as application 
 - [compose2pdf license](desktopApp/src/main/resources/licenses/pdf/compose2pdf-LICENSE.txt)
 - [PDFBox license](desktopApp/src/main/resources/licenses/pdf/PDFBox-LICENSE.txt) and
   [notice](desktopApp/src/main/resources/licenses/pdf/PDFBox-NOTICE.txt)
+- [Tinos font license](desktopApp/src/main/resources/licenses/pdf/Tinos-LICENSE.txt)
 - [Inter font license](desktopApp/src/main/resources/licenses/pdf/Inter-LICENSE.txt)
 
 [Source references](desktopApp/src/main/resources/licenses/pdf/README.md) document where each

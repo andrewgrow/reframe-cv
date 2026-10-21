@@ -11,8 +11,10 @@ class ResumeFilesUseCases(
     private val importer: ResumeImporter,
     private val exporter: ResumeExporter,
     private val photos: ResumePhotos,
+    private val pdfExporter: ResumeExporter,
 ) {
     suspend fun importDocument() = importer.pickAndImport()
+    suspend fun generatePdf(resume: Resume) = pdfExporter.export(resume)
     suspend fun export(resume: Resume) = exporter.export(resume)
     suspend fun choosePhoto() = photos.choose()
     suspend fun copyPhotoSource(path: String) = photos.copySource(path)

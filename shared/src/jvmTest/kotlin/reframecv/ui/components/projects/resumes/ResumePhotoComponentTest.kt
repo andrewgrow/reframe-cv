@@ -141,6 +141,7 @@ class ResumePhotoComponentTest : ComponentTest() {
                             resumeImporter,
                             resumeExporter,
                             resumePhotos,
+                            resumePdfExporter,
                         )
                         override val resumePhotos = photos
                     },
@@ -233,6 +234,7 @@ class ResumePhotoComponentTest : ComponentTest() {
                             resumeImporter,
                             resumeExporter,
                             resumePhotos,
+                            resumePdfExporter,
                         )
                         override val resumePhotos = photos
                     },

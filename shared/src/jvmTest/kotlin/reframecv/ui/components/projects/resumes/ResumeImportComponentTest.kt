@@ -230,6 +230,7 @@ class ResumeImportComponentTest : ComponentTest() {
                         resumeImporter,
                         resumeExporter,
                         resumePhotos,
+                        resumePdfExporter,
                     )
                     override val resumeImporter = importer
                 },

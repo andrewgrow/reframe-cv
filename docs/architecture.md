@@ -662,3 +662,17 @@ non-cancellable cleanup block. Suggested names use `cover-letter-<id>-<yyyyMMdd-
 PDFs are exported to user-selected destinations, without persistent attachment records.
 The fixed A4 template uses measured page fragments to avoid compose2pdf's automatic-pagination
 hidden-text duplication; see [PDF rendering](pdf-rendering.md).
+
+## Resume PDF export
+
+Resume Export saves the current draft, then offers PDF by default and JSON as an alternative.
+The desktop mapper applies section, consent, and portrait visibility before calling the
+independent `documents.resume` renderer. Only an included portrait is read; absent files omit
+the portrait, while invalid images produce a retryable export error. The one-column A4 layout
+uses the saved portrait at 35 × 45 mm on page one, collects visible contacts in a compact
+header, and preserves the order of other visible sections. Bundled Tinos serif faces, navy
+headings/rules, hanging bullets, and semantic inline emphasis define the print appearance.
+Heading chains stay with their opening text, oversized text splits at measured line boundaries,
+and each page contains only its own text. All PDF templates share a renderer lock.
+File selection, temporary-file cleanup, and progress use the existing export lifecycle.
+See [PDF rendering](pdf-rendering.md) for supported fields and development checks.

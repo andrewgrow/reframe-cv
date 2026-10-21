@@ -51,6 +51,7 @@ interface ApplicationDependencies {
     val coverLetterImporter: CoverLetterImporter
     val coverLetterFilesUseCases: CoverLetterFilesUseCases
     val vacancyExporter: VacancyExporter
+    val resumePdfExporter: ResumeExporter
     val resumeExporter: ResumeExporter
     val vacancyImporter: VacancyImporter
     val resumeImporter: ResumeImporter

@@ -15,6 +15,7 @@ import reframecv.export.ResumeExportResult
 import reframecv.export.ResumeExporter
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.resumes.editor.DefaultResumeExportComponent
+import reframecv.ui.components.projects.resumes.editor.ResumeExportFormat
 import reframecv.ui.components.projects.resumes.editor.ResumeExportState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -39,7 +40,10 @@ class ResumeExportComponentTest : ComponentTest() {
                 ResumeExportResult.Saved
             },
         ) { finished.complete(Unit) }
-        runOnUiThread { component.onDownload() }
+        runOnUiThread {
+            component.onFormatChange(ResumeExportFormat.Json)
+            component.onDownload()
+        }
         withTimeout(10_000) {
             entered.await()
             runOnUiThread {
@@ -67,7 +71,10 @@ class ResumeExportComponentTest : ComponentTest() {
                 ResumeExportResult.Cancelled
             },
         ) { finished.complete(Unit) }
-        runOnUiThread { component.onDownload() }
+        runOnUiThread {
+            component.onFormatChange(ResumeExportFormat.Json)
+            component.onDownload()
+        }
         withTimeout(10_000) {
             val logged = dependencies.logger.failures.receive()
             assertSame(failure, logged.error)
@@ -84,7 +91,44 @@ class ResumeExportComponentTest : ComponentTest() {
         }
     }
 
-    private fun component(exporter: ResumeExporter, finished: () -> Unit) = runOnUiThread {
+    @Test
+    fun pdfIsDefaultAndFormatCannotChangeUntilDownloadFinishes() = runBlocking<Unit> {
+        val entered = CompletableDeferred<Unit>()
+        val release = CompletableDeferred<Unit>()
+        val finished = CompletableDeferred<Unit>()
+        val component = component(
+            ResumeExporter { error("JSON must not be called") },
+            ResumeExporter {
+                assertEquals(record, it)
+                entered.complete(Unit)
+                release.await()
+                ResumeExportResult.Saved
+            },
+        ) { finished.complete(Unit) }
+        runOnUiThread {
+            assertEquals(ResumeExportFormat.Pdf, component.format.value)
+            component.onDownload()
+        }
+        withTimeout(5000) { entered.await() }
+        runOnUiThread {
+            component.onFormatChange(ResumeExportFormat.Json)
+            component.onReset()
+            assertEquals(ResumeExportFormat.Pdf, component.format.value)
+        }
+        release.complete(Unit)
+        withTimeout(5000) { finished.await() }
+        runOnUiThread {
+            component.onFormatChange(ResumeExportFormat.Json)
+            component.onReset()
+            assertEquals(ResumeExportFormat.Pdf, component.format.value)
+        }
+    }
+
+    private fun component(
+        exporter: ResumeExporter,
+        pdfExporter: ResumeExporter = ResumeExporter { ResumeExportResult.Cancelled },
+        finished: () -> Unit,
+    ) = runOnUiThread {
         lifecycle.resume()
         DefaultResumeExportComponent(
             DefaultAppComponentContext(
@@ -94,8 +138,10 @@ class ResumeExportComponentTest : ComponentTest() {
                         resumeImporter,
                         resumeExporter,
                         resumePhotos,
+                        resumePdfExporter,
                     )
                     override val resumeExporter = exporter
+                    override val resumePdfExporter = pdfExporter
                 },
             ),
             resume = { record },

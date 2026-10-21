@@ -44,10 +44,8 @@ linked resume, letter editing and confirmed permanent deletion. Letters remain r
 
 ## Print and PDF export
 
-- [ ] Extend PDF templates for resumes, including photo and section visibility;
-  follow the [rendering rules](pdf-rendering.md).
-- [ ] Define the initial resume print layout and template options.
-- [ ] Honor section, consent, and photo visibility; use the prepared portrait for printing.
+- [x] Add resume PDF export with portrait, section visibility, and consent visibility.
+- [ ] Consider additional resume print layouts and template options.
 
 ### Resume reference: adaptation
 
@@ -92,13 +90,13 @@ Remaining presentation work:
 
 - [ ] Use a single-column print template with a compact name/contact/location header,
   a clear target headline, and a short summary near the top.
-- [ ] Structure each position as identity and period, a short context paragraph, then
+- [x] Structure each position as identity and period, a short context paragraph, then
   achievement bullets and relevant project links. Keep quantified outcomes easy to scan.
-- [ ] Render skills in compact labeled groups with emphasis on group labels rather than
+- [x] Render skills in compact labeled groups with emphasis on group labels rather than
   making the entire skills block bold.
 - [ ] Use consistent spacing and restrained separators between sections/positions;
   preserve section order and custom headings from the content model.
-- [ ] Handle pagination deliberately: keep position headings with their opening content,
+- [x] Handle pagination deliberately: keep position headings with their opening content,
   avoid orphan headings, and retain readable font sizes instead of forcing two pages.
 - [ ] Verify the rendered PDF visually and check extracted text order, contacts, links,
   dates, and bullets. Keep template styling separate from editable factual content.
