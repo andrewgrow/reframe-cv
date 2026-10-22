@@ -6,6 +6,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import reframecv.domain.models.providers.normalized
 
 /** Reads vacancy recognition results, including legacy nice-to-have text. */
 object VacancyRecognitionJson {

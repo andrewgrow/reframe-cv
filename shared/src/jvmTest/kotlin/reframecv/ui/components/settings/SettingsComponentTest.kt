@@ -19,6 +19,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderAccountRepository
@@ -58,8 +59,14 @@ class SettingsComponentTest : ComponentTest() {
             info: ProviderAccountInfo,
         ) = Unit
     }
-    private fun connection() =
-        ProviderConnection(type = ApiProviderType.OpenRouter, name = "", apiKey = "", modelId = "")
+    private fun connection() = ProviderConnection(
+        type = ApiProviderType.OpenRouter,
+        name = "",
+        configuration = OpenRouterConfiguration(
+            apiKey = "",
+            modelId = "",
+        ),
+    )
     private fun context(models: ProviderModelsRepository) = DefaultAppComponentContext(
         DefaultComponentContext(lifecycle),
         object : ApplicationDependencies by dependencies {
@@ -136,14 +143,14 @@ class SettingsComponentTest : ComponentTest() {
         runOnUiThread {
             assertTrue(editor.state.value.valid)
             editor.onModel("unknown")
-            assertEquals("", editor.state.value.connection.modelId)
+            assertEquals("", editor.state.value.connection.openRouter.modelId)
             editor.onModel("model-a")
             editor.onSave()
         }
         withTimeout(10_000) { records.firstNonEmpty() }
         runOnUiThread { assertTrue(saved) }
         assertEquals("Work", records.value.single().name)
-        assertEquals("example-key", records.value.single().apiKey)
+        assertEquals("example-key", records.value.single().openRouter.apiKey)
         assertFalse(records.value.single().toString().contains("example-key"))
     }
 
@@ -156,8 +163,10 @@ class SettingsComponentTest : ComponentTest() {
                     connection().copy(
                         id = 7,
                         name = "Keep name",
-                        apiKey = "old",
-                        modelId = "old-model",
+                        configuration = OpenRouterConfiguration(
+                            apiKey = "old",
+                            modelId = "old-model",
+                        ),
                     ),
                 )
             DefaultProviderEditorComponent(
@@ -169,8 +178,7 @@ class SettingsComponentTest : ComponentTest() {
                 connection().copy(
                     id = 7,
                     name = "Keep name",
-                    apiKey = "old",
-                    modelId = "old-model",
+                    configuration = OpenRouterConfiguration(apiKey = "old", modelId = "old-model"),
                 ),
                 {
                 },
@@ -180,20 +188,20 @@ class SettingsComponentTest : ComponentTest() {
         runOnUiThread {
             editor.onKey("new-key")
             assertTrue(editor.state.value.models.isEmpty())
-            assertEquals("old-model", editor.state.value.connection.modelId)
+            assertEquals("old-model", editor.state.value.connection.openRouter.modelId)
             editor.onLoadModels()
         }
         await(editor.state) { it.error == SettingsError.Unauthorized }
         runOnUiThread {
             assertEquals("Keep name", editor.state.value.connection.name)
-            assertEquals("new-key", editor.state.value.connection.apiKey)
+            assertEquals("new-key", editor.state.value.connection.openRouter.apiKey)
             assertTrue(editor.state.value.valid)
-            assertEquals("old", records.value.single().apiKey)
+            assertEquals("old", records.value.single().openRouter.apiKey)
             editor.onSave()
         }
-        withTimeout(10_000) { records.first { it.singleOrNull()?.apiKey == "new-key" } }
-        assertEquals("new-key", records.value.single().apiKey)
-        assertEquals("old-model", records.value.single().modelId)
+        withTimeout(10_000) { records.first { it.singleOrNull()?.openRouter?.apiKey == "new-key" } }
+        assertEquals("new-key", records.value.single().openRouter.apiKey)
+        assertEquals("old-model", records.value.single().openRouter.modelId)
     }
 
     @Test
@@ -213,7 +221,7 @@ class SettingsComponentTest : ComponentTest() {
                         listOf(AiModel("late", "Late"))
                     },
                 ),
-                connection().copy(apiKey = "key"),
+                connection().let { it.copy(configuration = it.openRouter.copy(apiKey = "key")) },
                 {},
                 { closed = true },
             )

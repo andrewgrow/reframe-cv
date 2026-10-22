@@ -11,6 +11,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.logging.ApplicationLogger
 import reframecv.usecase.ProviderSettingsUseCases
@@ -38,15 +39,16 @@ class AiRequestBalance(
         refresh = scope.launch {
             try {
                 val connection = providers.observe().first().find { it.id == connectionId }
-                if (connection == null || !connection.active ||
-                    connection.managementApiKey.isBlank()
+                if (connection?.configuration !is OpenRouterConfiguration) return@launch
+                if (!connection.active ||
+                    connection.openRouter.managementApiKey.isBlank()
                 ) {
                     return@launch
                 }
                 val balance = providers.refreshCreditBalance(connection)
                 val current = providers.observe().first().find { it.id == connectionId }
                 if (current?.active != true ||
-                    current.managementApiKey != connection.managementApiKey ||
+                    current.openRouter.managementApiKey != connection.openRouter.managementApiKey ||
                     current.type != connection.type
                 ) {
                     return@launch

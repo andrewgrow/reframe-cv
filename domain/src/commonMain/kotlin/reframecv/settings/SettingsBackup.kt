@@ -1,6 +1,7 @@
 package reframecv.settings
 
 import reframecv.domain.models.prompts.Prompt
+import reframecv.domain.models.providers.ConnectionRunner
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
 import reframecv.export.DocumentExportResult
@@ -11,6 +12,7 @@ data class SettingsBackup(
     val connections: List<ProviderConnection> = emptyList(),
     val prompts: List<Prompt> = emptyList(),
     val skipped: Int = 0,
+    val runners: List<ConnectionRunner> = emptyList(),
 ) {
     override fun toString() =
         "SettingsBackup(connections=${connections.size}, prompts=${prompts.size})"

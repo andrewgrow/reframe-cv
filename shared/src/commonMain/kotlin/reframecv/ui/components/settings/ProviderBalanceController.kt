@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderSetupException
 import reframecv.usecase.ProviderSettingsUseCases
@@ -24,14 +25,15 @@ internal class ProviderBalanceController(
 
     fun refreshIfStale(saved: ProviderConnection?, now: Long): Long {
         val connection = state.value.connection
-        val matches = saved?.let {
+        val matches = connection.configuration is OpenRouterConfiguration && saved?.let {
             it.id == connection.id && it.type == connection.type &&
-                it.managementApiKey == connection.managementApiKey.trim()
+                it.openRouter.managementApiKey == connection.openRouter.managementApiKey.trim()
         } == true
-        if (!matches || !connection.active || connection.managementApiKey.isBlank()) {
+        val enabled = matches && connection.active
+        if (!enabled || connection.openRouter.managementApiKey.isBlank()) {
             return ACCOUNT_REFRESH_INTERVAL_MILLIS
         }
-        val age = connection.creditBalance?.fetchedAt?.let { now - it }
+        val age = connection.openRouterCache.creditBalance?.fetchedAt?.let { now - it }
         return if (age == null || age < 0 || age >= ACCOUNT_REFRESH_INTERVAL_MILLIS) {
             refresh()
             ACCOUNT_REFRESH_INTERVAL_MILLIS
@@ -50,9 +52,12 @@ internal class ProviderBalanceController(
     @Suppress("TooGenericExceptionCaught")
     fun refresh() {
         val draft = state.value
+        if (draft.connection.configuration !is OpenRouterConfiguration) return
         val canRefresh =
             lifecycle.state == Lifecycle.State.RESUMED && !draft.busy && draft.connection.active
-        if (!canRefresh || draft.refreshingBalance || draft.connection.managementApiKey.isBlank()) {
+        if (!canRefresh || draft.refreshingBalance ||
+            draft.connection.openRouter.managementApiKey.isBlank()
+        ) {
             return
         }
         val version = ++generation
@@ -64,7 +69,11 @@ internal class ProviderBalanceController(
                 currentCoroutineContext().ensureActive()
                 if (version == generation) {
                     state.value = state.value.copy(
-                        connection = state.value.connection.copy(creditBalance = balance),
+                        connection = state.value.connection.copy(
+                            cachedInfo = state.value.connection.openRouterCache.copy(
+                                creditBalance = balance,
+                            ),
+                        ),
                         refreshingBalance = false,
                     )
                 }

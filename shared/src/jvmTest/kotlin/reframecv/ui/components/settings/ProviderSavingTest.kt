@@ -17,6 +17,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderAccountRepository
@@ -83,8 +84,10 @@ class ProviderSavingTest : ComponentTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Offline",
-                apiKey = " example-key ",
-                modelId = modelId,
+                configuration = OpenRouterConfiguration(
+                    apiKey = " example-key ",
+                    modelId = modelId,
+                ),
             ),
             saved = { saved.complete(Unit) },
             back = {},
@@ -140,11 +143,11 @@ class ProviderSavingTest : ComponentTest() {
             editor.onSave()
         }
         withTimeout(10_000) { saved.await() }
-        assertEquals("example-key", records.value.single().apiKey)
-        assertEquals("", records.value.single().modelId)
+        assertEquals("example-key", records.value.single().openRouter.apiKey)
+        assertEquals("", records.value.single().openRouter.modelId)
         assertEquals(0, modelRequests)
         assertEquals(0, accountRequests)
-        assertEquals("management-key", editor.state.value.connection.managementApiKey)
+        assertEquals("management-key", editor.state.value.connection.openRouter.managementApiKey)
     }
 
     @Test
@@ -164,11 +167,11 @@ class ProviderSavingTest : ComponentTest() {
         try {
             withTimeout(10_000) { loaded.await() }
             runOnUiThread {
-                assertEquals("previous", editor.state.value.connection.modelId)
+                assertEquals("previous", editor.state.value.connection.openRouter.modelId)
                 editor.onSave()
             }
             withTimeout(10_000) { saved.await() }
-            assertEquals("previous", records.value.single().modelId)
+            assertEquals("previous", records.value.single().openRouter.modelId)
         } finally {
             runOnUiThread { subscription.cancel() }
         }
@@ -256,7 +259,7 @@ class ProviderSavingTest : ComponentTest() {
         runOnUiThread {
             assertFalse(editor.state.value.loading)
             assertTrue(editor.state.value.models.isEmpty())
-            assertEquals("", records.value.single().modelId)
+            assertEquals("", records.value.single().openRouter.modelId)
             assertEquals(0, accountRequests)
         }
     }

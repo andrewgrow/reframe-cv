@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import reframecv.domain.models.providers.normalized
 import reframecv.domain.models.resume.content.ResumeContent
 
 /** Encodes resume documents for storage and rejects unsupported or invalid formats. */

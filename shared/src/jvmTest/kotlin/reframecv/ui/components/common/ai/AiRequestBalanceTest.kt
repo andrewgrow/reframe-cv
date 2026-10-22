@@ -10,6 +10,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.testing.ComponentTest
@@ -18,15 +19,19 @@ class AiRequestBalanceTest : ComponentTest() {
     private val connection = ProviderConnection(
         type = ApiProviderType.OpenRouter,
         name = "Work",
-        apiKey = "model-key",
-        modelId = "model",
-        managementApiKey = "management-key",
+        configuration = OpenRouterConfiguration(
+            apiKey = "model-key",
+            modelId = "model",
+            managementApiKey = "management-key",
+        ),
     )
 
     @Test
     fun refreshesTheUsedConnectionCachesBalanceAndRestartsNoticeExpiry() = runBlocking {
         val id = dependencies.providerSettingsUseCases.save(connection)
-        dependencies.providerSettingsUseCases.save(connection.copy(managementApiKey = "other"))
+        dependencies.providerSettingsUseCases.save(
+            connection.copy(configuration = connection.openRouter.copy(managementApiKey = "other")),
+        )
         var expiry = CompletableDeferred<Unit>()
         val balance = controller { expiry.await() }
         try {
@@ -36,7 +41,7 @@ class AiRequestBalanceTest : ComponentTest() {
             assertEquals(
                 99.99,
                 dependencies.providerSettingsUseCases.observe().first()
-                    .single { it.id == id }.creditBalance!!.remainingUsd,
+                    .single { it.id == id }.openRouterCache.creditBalance!!.remainingUsd,
             )
             val oldExpiry = expiry
             expiry = CompletableDeferred()
@@ -54,7 +59,7 @@ class AiRequestBalanceTest : ComponentTest() {
     @Test
     fun skipsMissingKeysDisabledAndDeletedConnectionsAndContainsRefreshFailures() = runBlocking {
         val noKey = dependencies.providerSettingsUseCases.save(
-            connection.copy(managementApiKey = ""),
+            connection.copy(configuration = connection.openRouter.copy(managementApiKey = "")),
         )
         val disabled = dependencies.providerSettingsUseCases.save(connection.copy(active = false))
         val id = dependencies.providerSettingsUseCases.save(connection)
@@ -84,11 +89,17 @@ class AiRequestBalanceTest : ComponentTest() {
         val balance = controller { CompletableDeferred<Unit>().await() }
         balance.onRequestFinished(id)
         dependencies.providerSettingsUseCases.save(
-            connection.copy(id = id, managementApiKey = "new"),
+            connection.copy(
+                id = id,
+                configuration = connection.openRouter.copy(managementApiKey = "new"),
+            ),
         )
         response.complete(ProviderCreditBalance(100.0, 1.0, 2))
         assertNull(balance.state.value.balance)
-        assertNull(dependencies.providerSettingsUseCases.observe().first().single().creditBalance)
+        assertNull(
+            dependencies.providerSettingsUseCases.observe().first().single()
+                .openRouterCache.creditBalance,
+        )
         val pending = CompletableDeferred<ProviderCreditBalance>()
         dependencies.balanceResponse = { pending.await() }
         balance.onRequestFinished(id)

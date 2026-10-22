@@ -12,6 +12,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import reframecv.attachments.SelectedAttachment
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.recognition.RecognitionDocument
 import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionFileException
@@ -21,30 +24,30 @@ import reframecv.recognition.VacancyDocumentReader
 import reframecv.recognition.VacancyRecognitionRepository
 
 class RecognizeVacancyUseCaseTest {
-    private val connection = reframecv.domain.models.providers.ProviderConnection(
+    private val connection = ProviderConnection(
         id = 1,
-        type = reframecv.domain.models.providers.ApiProviderType.OpenRouter,
+        type = ApiProviderType.OpenRouter,
         name = "Test",
-        apiKey = "test-key",
-        modelId = "test-model",
+        configuration = OpenRouterConfiguration(
+            apiKey = "test-key",
+            modelId = "test-model",
+        ),
     )
     private val settings = ProviderSettingsUseCases(
         object : reframecv.repository.ProviderConnectionsRepository {
             override fun observe() = kotlinx.coroutines.flow.flowOf(listOf(connection))
             override suspend fun get(id: Long) = connection.takeIf { it.id == id }
-            override suspend fun save(
-                connection: reframecv.domain.models.providers.ProviderConnection,
-            ) = connection.id
+            override suspend fun save(connection: ProviderConnection) = connection.id
             override suspend fun setActive(id: Long, active: Boolean) = Unit
             override suspend fun updateAccountInfo(
                 id: Long,
-                type: reframecv.domain.models.providers.ApiProviderType,
+                type: ApiProviderType,
                 apiKey: String,
                 info: reframecv.domain.models.providers.ProviderAccountInfo,
             ) = Unit
             override suspend fun updateCreditBalance(
                 id: Long,
-                type: reframecv.domain.models.providers.ApiProviderType,
+                type: ApiProviderType,
                 managementApiKey: String,
                 balance: reframecv.domain.models.providers.ProviderCreditBalance,
             ) = Unit
@@ -121,7 +124,7 @@ class RecognizeVacancyUseCaseTest {
         object : VacancyRecognitionRepository {
             override suspend fun recognize(
                 document: RecognitionDocument,
-                connection: reframecv.domain.models.providers.ProviderConnection,
+                connection: ProviderConnection,
                 instruction: String,
             ) = action(document)
         }

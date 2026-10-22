@@ -37,7 +37,7 @@ internal fun ProviderManagementContent(state: ProviderEditorState, onRefresh: ()
                     onRefresh,
                     Modifier.testTag("settings.balance.refresh"),
                     enabled = state.connection.active && !state.busy && !state.refreshingBalance &&
-                        state.connection.managementApiKey.isNotBlank(),
+                        state.connection.openRouter.managementApiKey.isNotBlank(),
                     outlineState = FillButton.OutlineState.Visible,
                 )
             }

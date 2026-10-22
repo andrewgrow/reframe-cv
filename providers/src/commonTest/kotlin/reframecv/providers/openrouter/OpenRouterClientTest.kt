@@ -18,6 +18,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.network.HttpTrafficLogger
 import reframecv.network.createNetworkClient
@@ -32,9 +33,11 @@ class OpenRouterClientTest {
         id = 1,
         type = ApiProviderType.OpenRouter,
         name = "Test",
-        apiKey = "test-secret",
-        modelId = "test-model",
-        managementApiKey = "unused-management-secret",
+        configuration = OpenRouterConfiguration(
+            apiKey = "test-secret",
+            modelId = "test-model",
+            managementApiKey = "unused-management-secret",
+        ),
     )
     private fun request(connection: ProviderConnection = this.connection) = AiRequest(
         "Extract in English",
@@ -172,8 +175,8 @@ class OpenRouterClientTest {
             )
         try {
             listOf(
-                connection.copy(apiKey = ""),
-                connection.copy(modelId = ""),
+                connection.copy(configuration = connection.openRouter.copy(apiKey = "")),
+                connection.copy(configuration = connection.openRouter.copy(modelId = "")),
                 connection.copy(active = false),
             ).forEach {
                 assertEquals(

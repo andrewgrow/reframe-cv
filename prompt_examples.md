@@ -213,6 +213,7 @@ missing values, and null only where the schema allows it. Never add local IDs, p
 photos, keywords, or application metadata.
 
 Systematically identify and close as many gaps as possible between the vacancy and the resume by integrating relevant terminology, skills, and plausible experience into the most appropriate existing positions, projects, and skill groups, while respecting the factual constraints above.
+
 ```
 
 

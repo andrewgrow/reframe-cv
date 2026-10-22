@@ -17,6 +17,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.ui.components.settings.prompts.DefaultPromptsComponent
 import reframecv.ui.components.settings.prompts.PromptsComponent
@@ -116,8 +117,10 @@ class DefaultSettingsComponent(
         ProviderConnection(
             type = ApiProviderType.OpenRouter,
             name = "",
-            apiKey = "",
-            modelId = "",
+            configuration = OpenRouterConfiguration(
+                apiKey = "",
+                modelId = "",
+            ),
         ),
     )
     override fun onEdit(connection: ProviderConnection) {

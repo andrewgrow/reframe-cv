@@ -4,9 +4,11 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.ProviderCreditBalance
+import reframecv.domain.models.providers.normalized
 import reframecv.repository.ProviderAccountRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.ProviderModelsRepository
@@ -24,9 +26,10 @@ class ProviderSettingsUseCases(
     suspend fun setActive(id: Long, active: Boolean) = connections.setActive(id, active)
     suspend fun loadModels(connection: ProviderConnection): List<AiModel> {
         ensureEnabled(connection)
+        require(connection.configuration is OpenRouterConfiguration)
         val result = models.load(
             connection.type,
-            connection.apiKey.trim().also {
+            connection.openRouter.apiKey.trim().also {
                 require(it.isNotEmpty())
             },
         )
@@ -36,13 +39,14 @@ class ProviderSettingsUseCases(
 
     suspend fun refreshAccountInfo(connection: ProviderConnection): ProviderAccountInfo {
         ensureEnabled(connection)
-        return accounts.load(connection.type, connection.apiKey.trim()).also { info ->
+        require(connection.configuration is OpenRouterConfiguration)
+        return accounts.load(connection.type, connection.openRouter.apiKey.trim()).also { info ->
             ensureEnabled(connection)
             if (connection.id != 0L) {
                 connections.updateAccountInfo(
                     connection.id,
                     connection.type,
-                    connection.apiKey.trim(),
+                    connection.openRouter.apiKey.trim(),
                     info,
                 )
             }
@@ -51,7 +55,8 @@ class ProviderSettingsUseCases(
 
     suspend fun refreshCreditBalance(connection: ProviderConnection): ProviderCreditBalance {
         ensureEnabled(connection)
-        val key = connection.managementApiKey.trim()
+        require(connection.configuration is OpenRouterConfiguration)
+        val key = connection.openRouter.managementApiKey.trim()
         require(key.isNotEmpty())
         return accounts.balance(connection.type, key).also { balance ->
             ensureEnabled(connection)
@@ -62,13 +67,11 @@ class ProviderSettingsUseCases(
     }
 
     suspend fun save(connection: ProviderConnection): Long {
-        require(connection.apiKey.isNotBlank())
+        require(connection.usable)
         return connections.save(
             connection.copy(
                 name = connection.name.trim(),
-                apiKey = connection.apiKey.trim(),
-                managementApiKey = connection.managementApiKey.trim(),
-                modelId = connection.modelId.trim(),
+                configuration = connection.configuration.normalized(),
             ),
         )
     }
@@ -77,7 +80,10 @@ class ProviderSettingsUseCases(
         val connection = connections.get(id)
             ?: throw ProviderSetupException(ProviderSetupError.Disabled)
         ensureEnabled(connection)
-        require(connection.apiKey.isNotBlank() && connection.modelId.isNotBlank())
+        require(connection.usable && connection.configuration is OpenRouterConfiguration)
+        require(
+            connection.openRouter.apiKey.isNotBlank() && connection.openRouter.modelId.isNotBlank(),
+        )
         return connection
     }
 

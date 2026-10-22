@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderBudget
 import reframecv.domain.models.providers.ProviderConnection
@@ -23,8 +24,7 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "old",
-                modelId = "model",
+                configuration = OpenRouterConfiguration(apiKey = "old", modelId = "model"),
             ),
         )
         val original = repository.observe().first().single()
@@ -35,27 +35,30 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
                 fetchedAt = 123,
             )
         repository.updateAccountInfo(id, original.type, "wrong", info)
-        assertNull(repository.observe().first().single().accountInfo)
+        assertNull(repository.observe().first().single().openRouterCache.accountInfo)
         repository.updateAccountInfo(id, original.type, "old", info)
         assertEquals(original.updatedAt, repository.observe().first().single().updatedAt)
         repository.save(original.copy(name = "Edited"))
-        assertEquals(info, repository.observe().first().single().accountInfo)
+        assertEquals(info, repository.observe().first().single().openRouterCache.accountInfo)
         database.close()
         openDatabase()
         repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
-        assertEquals(info, repository.observe().first().single().accountInfo)
+        assertEquals(info, repository.observe().first().single().openRouterCache.accountInfo)
 
         repository.setActive(id, false)
         repository.updateAccountInfo(id, original.type, "old", info.copy(fetchedAt = 999))
-        assertEquals(info, repository.get(id)?.accountInfo)
+        assertEquals(info, repository.get(id)?.openRouterCache?.accountInfo)
         repository.setActive(id, true)
         val refreshed = repository.observe().first().single()
-        repository.save(refreshed.copy(apiKey = "new"))
-        assertNull(repository.observe().first().single().accountInfo)
+        repository.save(refreshed.copy(configuration = refreshed.openRouter.copy(apiKey = "new")))
+        assertNull(repository.observe().first().single().openRouterCache.accountInfo)
         repository.updateAccountInfo(id, original.type, "old", info)
-        assertNull(repository.observe().first().single().accountInfo)
+        assertNull(repository.observe().first().single().openRouterCache.accountInfo)
         repository.updateAccountInfo(id, original.type, "new", info.copy(fetchedAt = 456))
-        assertEquals(456L, repository.observe().first().single().accountInfo?.fetchedAt)
+        assertEquals(
+            456L,
+            repository.observe().first().single().openRouterCache.accountInfo?.fetchedAt,
+        )
     }
 
     @Test
@@ -65,23 +68,30 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "",
-                apiKey = "ordinary",
-                modelId = "",
-                managementApiKey = "management",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "ordinary",
+                    modelId = "",
+                    managementApiKey = "management",
+                ),
             ),
         )
         val original = repository.get(id)!!
         val balance = reframecv.domain.models.providers.ProviderCreditBalance(100.0, 25.0, 123)
         repository.updateCreditBalance(id, original.type, "wrong-key", balance)
-        assertNull(repository.get(id)?.creditBalance)
+        assertNull(repository.get(id)?.openRouterCache?.creditBalance)
         repository.updateCreditBalance(id, original.type, "management", balance)
-        repository.save(original.copy(name = "Edited", apiKey = "changed-ordinary"))
-        assertEquals(balance, repository.get(id)?.creditBalance)
+        repository.save(
+            original.copy(
+                name = "Edited",
+                configuration = original.openRouter.copy(apiKey = "changed-ordinary"),
+            ),
+        )
+        assertEquals(balance, repository.get(id)?.openRouterCache?.creditBalance)
         database.close()
         openDatabase()
         repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
-        assertEquals("management", repository.get(id)?.managementApiKey)
-        assertEquals(balance, repository.get(id)?.creditBalance)
+        assertEquals("management", repository.get(id)?.openRouter?.managementApiKey)
+        assertEquals(balance, repository.get(id)?.openRouterCache?.creditBalance)
         repository.setActive(id, false)
         repository.updateCreditBalance(
             id,
@@ -89,14 +99,18 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
             "management",
             balance.copy(fetchedAt = 456),
         )
-        assertEquals(balance, repository.get(id)?.creditBalance)
-        repository.save(repository.get(id)!!.copy(managementApiKey = "new-management"))
-        assertNull(repository.get(id)?.creditBalance)
+        assertEquals(balance, repository.get(id)?.openRouterCache?.creditBalance)
+        repository.save(
+            repository.get(id)!!.let {
+                it.copy(configuration = it.openRouter.copy(managementApiKey = "new-management"))
+            },
+        )
+        assertNull(repository.get(id)?.openRouterCache?.creditBalance)
         repository.setActive(id, true)
         repository.updateCreditBalance(id, original.type, "management", balance)
-        assertNull(repository.get(id)?.creditBalance)
+        assertNull(repository.get(id)?.openRouterCache?.creditBalance)
         repository.updateCreditBalance(id, original.type, "new-management", balance)
-        assertEquals(balance, repository.get(id)?.creditBalance)
+        assertEquals(balance, repository.get(id)?.openRouterCache?.creditBalance)
         assertFalse(repository.get(id).toString().contains("new-management"))
     }
 
@@ -108,11 +122,18 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "example-key",
-                modelId = "model-a",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "example-key",
+                    modelId = "model-a",
+                ),
             )
         val first = repository.save(draft)
-        val second = repository.save(draft.copy(name = "Personal", modelId = "model-b"))
+        val second = repository.save(
+            draft.copy(
+                name = "Personal",
+                configuration = draft.openRouter.copy(modelId = "model-b"),
+            ),
+        )
         assertEquals(
             listOf(first, second),
             repository.observe().first().filter {
@@ -121,7 +142,13 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
         )
         repository.setActive(first, false)
         val created = repository.observe().first().last()
-        repository.save(created.copy(name = "Edited", apiKey = "replacement", active = false))
+        repository.save(
+            created.copy(
+                name = "Edited",
+                active = false,
+                configuration = created.openRouter.copy(apiKey = "replacement"),
+            ),
+        )
         assertFailsWith<IllegalStateException> { repository.setActive(-1, true) }
         database.close()
         openDatabase()
@@ -130,7 +157,7 @@ class ProviderConnectionsTest : WorkspaceDatabaseTest() {
         assertEquals(listOf(first, second), rows.map { it.id })
         assertFalse(rows.first().active)
         assertTrue(rows.last().active)
-        assertEquals("replacement", rows.last().apiKey)
+        assertEquals("replacement", rows.last().openRouter.apiKey)
         assertEquals(created.createdAt, rows.last().createdAt)
         assertFalse(rows.last().toString().contains("replacement"))
     }

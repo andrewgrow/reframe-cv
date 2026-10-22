@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -16,6 +17,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.ui.components.common.ai.AiRequestDialogState
 import reframecv.ui.components.common.ai.TestAiRequestDialogComponent
@@ -65,13 +67,15 @@ class AiRequestDialogContentTest {
 
     @Test
     fun selectsConnectionsAndPromptsEditsTextAndKeepsDialogOpenAfterFailure() = runComposeUiTest {
-        val connections = listOf("First", "Second").mapIndexed { index, name ->
+        val connections = listOf("", "Second").mapIndexed { index, name ->
             ProviderConnection(
                 id = index.toLong() + 1,
                 type = ApiProviderType.OpenRouter,
                 name = name,
-                apiKey = "test",
-                modelId = "model-$index",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "test",
+                    modelId = "model-$index",
+                ),
             )
         }
         val prompts = listOf(
@@ -95,7 +99,9 @@ class AiRequestDialogContentTest {
             }
         }
         onNodeWithTag("ai.request.provider").performClick()
-        onNodeWithTag("ai.request.provider.2").performClick()
+        onNodeWithTag("ai.request.provider.1").assertTextContains("OpenRouter")
+        onNodeWithTag("ai.request.provider.2").assertTextContains("Second").performClick()
+        onNodeWithTag("ai.request.provider").assertTextContains("Second")
         onNodeWithText("Model: model-1").assertExists()
         onNodeWithTag("ai.request.prompt").performClick()
         onNodeWithTag("ai.request.prompt.2").performClick()

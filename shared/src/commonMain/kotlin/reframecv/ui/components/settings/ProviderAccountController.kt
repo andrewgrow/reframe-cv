@@ -10,6 +10,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderSetupException
 import reframecv.shared.nowMillis
@@ -46,18 +47,20 @@ internal class ProviderAccountController(
     }
 
     private fun start() {
+        if (state.value.connection.configuration !is OpenRouterConfiguration) return
         polling?.cancel()
         polling = scope.launch {
             while (isActive) {
                 val draft = state.value
-                val updated = draft.connection.accountInfo?.fetchedAt
-                val age = updated?.let { now() - it }
+                if (draft.connection.configuration !is OpenRouterConfiguration) {
+                    awaitNextRefresh(ACCOUNT_REFRESH_INTERVAL_MILLIS)
+                    continue
+                }
+                val age = draft.connection.openRouterCache.accountInfo?.fetchedAt?.let {
+                    now() - it
+                }
                 val stale = age == null || age < 0 || age >= ACCOUNT_REFRESH_INTERVAL_MILLIS
-                val sameCredentials = savedConnection?.let {
-                    it.id == draft.connection.id && it.type == draft.connection.type &&
-                        it.apiKey == draft.connection.apiKey.trim()
-                } == true
-                if (sameCredentials && stale && draft.connection.active) refreshBudgets()
+                if (sameCredentials(draft) && stale && draft.connection.active) refreshBudgets()
                 val balanceWait = balance.refreshIfStale(savedConnection, now())
                 val wait = if (stale) {
                     ACCOUNT_REFRESH_INTERVAL_MILLIS
@@ -68,6 +71,11 @@ internal class ProviderAccountController(
             }
         }
     }
+
+    private fun sameCredentials(draft: ProviderEditorState) = savedConnection?.let {
+        it.id == draft.connection.id && it.type == draft.connection.type &&
+            it.openRouter.apiKey == draft.connection.openRouter.apiKey.trim()
+    } == true
 
     private fun stop() {
         polling?.cancel()
@@ -93,9 +101,12 @@ internal class ProviderAccountController(
     @Suppress("TooGenericExceptionCaught")
     fun refreshBudgets() {
         val draft = state.value
+        if (draft.connection.configuration !is OpenRouterConfiguration) return
         val canRefresh =
             lifecycle.state == Lifecycle.State.RESUMED && !draft.busy && draft.connection.active
-        if (!canRefresh || draft.refreshingAccount || draft.connection.apiKey.isBlank()) {
+        if (!canRefresh || draft.refreshingAccount ||
+            draft.connection.openRouter.apiKey.isBlank()
+        ) {
             return
         }
         val version = ++generation
@@ -107,7 +118,11 @@ internal class ProviderAccountController(
                 currentCoroutineContext().ensureActive()
                 if (generation == version) {
                     state.value = state.value.copy(
-                        connection = state.value.connection.copy(accountInfo = info),
+                        connection = state.value.connection.copy(
+                            cachedInfo = state.value.connection.openRouterCache.copy(
+                                accountInfo = info,
+                            ),
+                        ),
                         refreshingAccount = false,
                     )
                 }

@@ -10,6 +10,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.export.DocumentExportResult
 import reframecv.settings.SettingsBackup
@@ -35,8 +36,10 @@ class SettingsTransferComponentTest : ComponentTest() {
                         ProviderConnection(
                             type = ApiProviderType.OpenRouter,
                             name = "",
-                            modelId = "model",
-                            apiKey = "PRIVATE_KEY",
+                            configuration = OpenRouterConfiguration(
+                                modelId = "model",
+                                apiKey = "PRIVATE_KEY",
+                            ),
                         ),
                     ),
                 )

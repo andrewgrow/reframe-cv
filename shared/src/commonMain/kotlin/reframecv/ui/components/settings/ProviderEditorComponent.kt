@@ -13,7 +13,12 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.AiModel
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.normalized
 import reframecv.repository.ProviderSetupError
 import reframecv.repository.ProviderSetupException
 import reframecv.ui.context.AppComponentContext
@@ -49,11 +54,12 @@ data class ProviderEditorState(
     val balanceErrorDetails: String? = null,
 ) {
     val busy get() = loading || saving || changingActive
-    val valid get() = connection.apiKey.isNotBlank()
+    val valid get() = connection.usable
 }
 
 /** Lets users configure a provider connection without persisting unfinished input. */
 interface ProviderEditorComponent {
+    fun onType(type: ApiProviderType) {}
     val state: Value<ProviderEditorState>
     fun onName(value: String)
     fun onManagementKey(value: String)
@@ -95,6 +101,22 @@ class DefaultProviderEditorComponent(
         }
     }
 
+    override fun onType(type: ApiProviderType) {
+        if (state.value.busy || state.value.connection.id != 0L) return
+        if (state.value.connection.type == type) return
+        account.cancel()
+        val configuration = when (type) {
+            ApiProviderType.OpenRouter -> OpenRouterConfiguration()
+            ApiProviderType.Apify -> ApifyConfiguration()
+        }
+        state.value = ProviderEditorState(
+            state.value.connection.copy(
+                type = type,
+                configuration = configuration,
+                cachedInfo = null,
+            ),
+        )
+    }
     override fun onName(value: String) {
         if (!state.value.busy) {
             state.value = state.value.copy(
@@ -108,10 +130,20 @@ class DefaultProviderEditorComponent(
         if (!state.value.busy) {
             account.cancel()
             state.value = state.value.copy(
-                connection = state.value.connection.copy(
-                    apiKey = value,
-                    accountInfo = null,
-                ),
+                connection = state.value.connection.let { connection ->
+                    when (val config = connection.configuration) {
+                        is OpenRouterConfiguration -> connection.copy(
+                            configuration = config.copy(apiKey = value),
+                            cachedInfo = connection.openRouterCache.copy(accountInfo = null),
+                        )
+
+                        is ApifyConfiguration -> connection.copy(
+                            configuration = config.copy(apiToken = value),
+                        )
+
+                        is InvalidProviderConfiguration -> connection
+                    }
+                },
                 models = emptyList(),
                 error = null,
                 errorDetails = null,
@@ -121,12 +153,15 @@ class DefaultProviderEditorComponent(
         }
     }
     override fun onManagementKey(value: String) {
+        if (state.value.connection.configuration !is OpenRouterConfiguration) return
         if (!state.value.busy) {
             account.cancel()
             state.value = state.value.copy(
                 connection = state.value.connection.copy(
-                    managementApiKey = value,
-                    creditBalance = null,
+                    configuration = state.value.connection.openRouter.copy(
+                        managementApiKey = value,
+                    ),
+                    cachedInfo = state.value.connection.openRouterCache.copy(creditBalance = null),
                 ),
                 balanceError = false,
                 balanceErrorDetails = null,
@@ -135,16 +170,22 @@ class DefaultProviderEditorComponent(
     }
     override fun onModel(id: String) {
         if (!state.value.busy && state.value.models.any { it.id == id }) {
-            state.value = state.value.copy(connection = state.value.connection.copy(modelId = id))
+            state.value =
+                state.value.copy(
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(modelId = id),
+                    ),
+                )
         }
     }
 
     @Suppress("TooGenericExceptionCaught")
     override fun onLoadModels() {
-        if (state.value.busy || !state.value.connection.active) return
+        val available = !state.value.busy && state.value.connection.active
+        if (!available || state.value.connection.configuration !is OpenRouterConfiguration) return
         account.cancel()
         val draft = state.value
-        if (draft.connection.apiKey.isBlank()) {
+        if (draft.connection.openRouter.apiKey.isBlank()) {
             state.value = draft.copy(error = SettingsError.Validation, errorDetails = null)
             return
         }
@@ -199,9 +240,7 @@ class DefaultProviderEditorComponent(
                 val persisted = draft.connection.copy(
                     id = id,
                     name = draft.connection.name.trim(),
-                    apiKey = draft.connection.apiKey.trim(),
-                    managementApiKey = draft.connection.managementApiKey.trim(),
-                    modelId = draft.connection.modelId.trim(),
+                    configuration = draft.connection.configuration.normalized(),
                 )
                 state.value = state.value.copy(
                     connection = persisted,
@@ -226,7 +265,7 @@ class DefaultProviderEditorComponent(
         }
     }
 
-    private fun cancelModelLoading() {
+    private val cancelModelLoading: () -> Unit = {
         generation++
         job?.cancel()
         state.value = state.value.copy(loading = false)

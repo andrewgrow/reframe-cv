@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f94ae3f4f7354c33e614c854a8df4bf2",
+    "identityHash": "55c4191d2e1128bec9f44857fe8f7f2f",
     "entities": [
       {
         "tableName": "screen_states",
@@ -116,7 +116,7 @@
       },
       {
         "tableName": "provider_connections",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `api_key` TEXT NOT NULL, `model_id` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `account_info` TEXT, `management_api_key` TEXT NOT NULL, `credit_balance` TEXT)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `name` TEXT NOT NULL, `configuration` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, `cached_info` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -137,14 +137,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "apiKey",
-            "columnName": "api_key",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "modelId",
-            "columnName": "model_id",
+            "fieldPath": "configuration",
+            "columnName": "configuration",
             "affinity": "TEXT",
             "notNull": true
           },
@@ -167,19 +161,8 @@
             "notNull": true
           },
           {
-            "fieldPath": "accountInfo",
-            "columnName": "account_info",
-            "affinity": "TEXT"
-          },
-          {
-            "fieldPath": "managementApiKey",
-            "columnName": "management_api_key",
-            "affinity": "TEXT",
-            "notNull": true
-          },
-          {
-            "fieldPath": "creditBalance",
-            "columnName": "credit_balance",
+            "fieldPath": "cachedInfo",
+            "columnName": "cached_info",
             "affinity": "TEXT"
           }
         ],
@@ -189,6 +172,171 @@
             "id"
           ]
         }
+      },
+      {
+        "tableName": "connection_runners",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `connection_id` INTEGER NOT NULL, `name` TEXT NOT NULL, `operation` TEXT NOT NULL, `configuration` TEXT NOT NULL, `active` INTEGER NOT NULL, `created_at` INTEGER NOT NULL, `updated_at` INTEGER NOT NULL, FOREIGN KEY(`connection_id`) REFERENCES `provider_connections`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "connectionId",
+            "columnName": "connection_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "operation",
+            "columnName": "operation",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "configuration",
+            "columnName": "configuration",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "active",
+            "columnName": "active",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_connection_runners_connection_id",
+            "unique": false,
+            "columnNames": [
+              "connection_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_connection_runners_connection_id` ON `${TABLE_NAME}` (`connection_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "provider_connections",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "connection_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "connection_runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `runner_id` INTEGER NOT NULL, `configuration_snapshot` TEXT NOT NULL, `state` TEXT NOT NULL, `external_id` TEXT, `started_at` INTEGER NOT NULL, `finished_at` INTEGER, `error` TEXT, FOREIGN KEY(`runner_id`) REFERENCES `connection_runners`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "runnerId",
+            "columnName": "runner_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "configurationSnapshot",
+            "columnName": "configuration_snapshot",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "externalId",
+            "columnName": "external_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "started_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finishedAt",
+            "columnName": "finished_at",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "error",
+            "columnName": "error",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_connection_runs_runner_id",
+            "unique": false,
+            "columnNames": [
+              "runner_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_connection_runs_runner_id` ON `${TABLE_NAME}` (`runner_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "connection_runners",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "runner_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
       },
       {
         "tableName": "prompts",
@@ -1081,7 +1229,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f94ae3f4f7354c33e614c854a8df4bf2')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55c4191d2e1128bec9f44857fe8f7f2f')"
     ]
   }
 }

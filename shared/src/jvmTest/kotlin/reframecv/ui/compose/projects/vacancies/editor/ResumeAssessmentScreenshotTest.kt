@@ -7,6 +7,7 @@ import reframecv.assessment.ResumeAssessment
 import reframecv.assessment.ResumeAssessmentResult
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_assessment_warning
@@ -57,8 +58,10 @@ class ResumeAssessmentScreenshotTest : GoldenScreenshotTest() {
                 id = 1,
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "key",
-                modelId = "example/model",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "key",
+                    modelId = "example/model",
+                ),
             )
         val prompt =
             Prompt(

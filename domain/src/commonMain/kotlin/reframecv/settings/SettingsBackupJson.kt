@@ -3,11 +3,16 @@ package reframecv.settings
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ConnectionOperation
+import reframecv.domain.models.providers.ConnectionRunner
+import reframecv.domain.models.providers.ProviderConfigurationJson
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
 import reframecv.domain.models.settings.WindowSettings
@@ -34,10 +39,18 @@ object SettingsBackupJson {
                     ConnectionRecord(
                         it.type.name,
                         it.name,
-                        it.modelId,
                         it.active,
-                        it.apiKey.takeIf { includeApiKeys },
-                        it.managementApiKey.takeIf { includeApiKeys },
+                        portableConfiguration(it, includeApiKeys),
+                        backup.runners.filter { runner ->
+                            runner.connectionId == it.id
+                        }.map { runner ->
+                            RunnerRecord(
+                                runner.name,
+                                runner.operation.name,
+                                runner.configuration,
+                                runner.active,
+                            )
+                        },
                     ),
                 )
             },
@@ -52,7 +65,7 @@ object SettingsBackupJson {
     fun decode(text: String): SettingsBackup {
         val document = try {
             json.decodeFromString<BackupDocument>(text).also {
-                require(it.format == "reframecv-settings" && it.schemaVersion == 1)
+                require(it.format == "reframecv-settings" && it.schemaVersion == 2)
             }
         } catch (_: IllegalArgumentException) {
             throw SettingsBackupFormatException()
@@ -70,9 +83,44 @@ object SettingsBackupJson {
                 AppSettings(WindowSettings(window.width, window.height, window.maximized))
             }
         }
-        val connections = document.connections.mapNotNull { value -> record(value, ::connection) }
+        val runners = mutableListOf<ConnectionRunner>()
+        val connections = document.connections.mapIndexedNotNull { index, value ->
+            record(value) { element ->
+                connection(element).copy(id = index + 1L)
+            }?.also { connection ->
+                val source = json.decodeFromJsonElement<ConnectionRecord>(value)
+                source.runners.forEach { runner ->
+                    record(json.encodeToJsonElement(runner)) {
+                        ConnectionRunner(
+                            connectionId = connection.id,
+                            name = runner.name,
+                            operation = ConnectionOperation.valueOf(runner.operation),
+                            configuration = runner.configuration,
+                            active = runner.active,
+                        )
+                    }?.let { runners += it }
+                }
+            }
+        }
         val prompts = document.prompts.mapNotNull { value -> record(value, ::prompt) }
-        return SettingsBackup(settings, connections, prompts, skipped)
+        return SettingsBackup(settings, connections, prompts, skipped, runners)
+    }
+
+    private fun portableConfiguration(
+        connection: ProviderConnection,
+        secrets: Boolean,
+    ): JsonElement {
+        val config = ProviderConfigurationJson.portable(connection.configuration, secrets)
+        val fields = json.parseToJsonElement(ProviderConfigurationJson.encode(config)).jsonObject
+        return if (secrets) {
+            fields
+        } else {
+            JsonObject(
+                fields.filterKeys {
+                    it !in setOf("apiKey", "managementApiKey", "apiToken")
+                },
+            )
+        }
     }
 
     private fun connection(value: JsonElement): ProviderConnection {
@@ -80,10 +128,11 @@ object SettingsBackupJson {
         return ProviderConnection(
             type = ApiProviderType.valueOf(record.type),
             name = record.name,
-            modelId = record.modelId,
             active = record.active,
-            apiKey = record.apiKey.orEmpty(),
-            managementApiKey = record.managementApiKey.orEmpty(),
+            configuration = ProviderConfigurationJson.decode(
+                ApiProviderType.valueOf(record.type),
+                record.configuration.toString(),
+            ),
         )
     }
 
@@ -103,7 +152,7 @@ object SettingsBackupJson {
 @Serializable
 private data class BackupDocument(
     val format: String,
-    val schemaVersion: Int = 1,
+    val schemaVersion: Int = 2,
     val settings: JsonElement? = null,
     val connections: List<JsonElement> = emptyList(),
     val prompts: List<JsonElement> = emptyList(),
@@ -122,10 +171,9 @@ private data class WindowRecord(
 private data class ConnectionRecord(
     val type: String,
     val name: String = "",
-    val modelId: String = "",
     val active: Boolean = true,
-    val apiKey: String? = null,
-    val managementApiKey: String? = null,
+    val configuration: JsonElement,
+    val runners: List<RunnerRecord> = emptyList(),
 )
 
 /** Stores reusable instructions without local record identities. */
@@ -134,5 +182,14 @@ private data class PromptRecord(
     val title: String = "",
     val component: String? = null,
     val text: String,
+    val active: Boolean = true,
+)
+
+/** Stores reusable operations with their owning portable connection. */
+@Serializable
+private data class RunnerRecord(
+    val name: String,
+    val operation: String,
+    val configuration: String,
     val active: Boolean = true,
 )

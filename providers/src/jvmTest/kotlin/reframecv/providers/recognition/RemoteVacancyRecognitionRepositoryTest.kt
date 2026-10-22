@@ -9,6 +9,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.providers.AiProviderClient
 import reframecv.providers.AiProviderError
 import reframecv.providers.AiRequest
@@ -18,12 +21,14 @@ import reframecv.recognition.RecognitionError
 import reframecv.recognition.RecognitionOutcome
 
 class RemoteVacancyRecognitionRepositoryTest {
-    private val connection = reframecv.domain.models.providers.ProviderConnection(
+    private val connection = ProviderConnection(
         id = 1,
-        type = reframecv.domain.models.providers.ApiProviderType.OpenRouter,
+        type = ApiProviderType.OpenRouter,
         name = "Test",
-        apiKey = "test-key",
-        modelId = "test-model",
+        configuration = OpenRouterConfiguration(
+            apiKey = "test-key",
+            modelId = "test-model",
+        ),
     )
     private val document = RecognitionDocument("job.pdf", "%PDF-1.7".encodeToByteArray())
 

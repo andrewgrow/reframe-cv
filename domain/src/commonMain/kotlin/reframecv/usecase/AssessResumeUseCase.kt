@@ -61,7 +61,7 @@ class AssessResumeUseCase(
             resume.updatedAt,
             vacancyJson,
             connection.name.ifBlank { connection.type.name },
-            connection.modelId,
+            connection.openRouter.modelId,
         )
         if (vacancy.id != 0L) persist(vacancy, resume.id, assessment)
         return assessment

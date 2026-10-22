@@ -34,7 +34,7 @@ internal fun AiRequestChoices(component: AiRequestDialogComponent, state: AiRequ
     AiRequestChoice(
         stringResource(Res.string.ai_request_provider),
         state.connection?.let { it.name.ifBlank { it.type.name } }.orEmpty(),
-        state.connections.map { it.id to "${it.type.name} — ${it.name.ifBlank { "#${it.id}" }}" },
+        state.connections.map { it.id to it.name.ifBlank { it.type.name } },
         enabled,
         "ai.request.provider",
         component::onConnection,
@@ -46,8 +46,15 @@ internal fun AiRequestChoices(component: AiRequestDialogComponent, state: AiRequ
         )
     }
     state.connection?.let {
-        SelectableText(stringResource(Res.string.ai_request_model, it.modelId.ifBlank { "—" }))
-        if (it.modelId.isBlank() || it.apiKey.isBlank()) {
+        SelectableText(
+            stringResource(
+                Res.string.ai_request_model,
+                it.openRouter.modelId.ifBlank {
+                    "—"
+                },
+            ),
+        )
+        if (it.openRouter.modelId.isBlank() || it.openRouter.apiKey.isBlank()) {
             SelectableText(
                 stringResource(Res.string.ai_request_incomplete_provider),
                 color = ReframeTheme.colorScheme.critical,

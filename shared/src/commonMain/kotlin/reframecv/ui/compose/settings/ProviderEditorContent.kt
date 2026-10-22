@@ -27,6 +27,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_cancel
 import reframecv.shared.generated.resources.settings_close
@@ -81,11 +85,12 @@ internal fun ProviderEditorContent(component: ProviderEditorComponent) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProviderTypeField(enabled: Boolean) {
+private fun ProviderTypeField(state: ProviderEditorState, component: ProviderEditorComponent) {
+    val enabled = !state.busy && state.connection.id == 0L
     var expanded by remember { mutableStateOf(false) }
     ExposedDropdownMenuBox(expanded && enabled, { if (enabled) expanded = it }) {
         OutlinedTextField(
-            value = "OpenRouter",
+            value = state.connection.type.name,
             onValueChange = {},
             readOnly = true,
             enabled = enabled,
@@ -96,11 +101,16 @@ private fun ProviderTypeField(enabled: Boolean) {
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable),
         )
         ExposedDropdownMenu(expanded && enabled, { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text("OpenRouter") },
-                onClick = { expanded = false },
-                modifier = Modifier.testTag("settings.provider.openrouter"),
-            )
+            ApiProviderType.entries.forEach { type ->
+                DropdownMenuItem(
+                    text = { Text(type.name) },
+                    onClick = {
+                        component.onType(type)
+                        expanded = false
+                    },
+                    modifier = Modifier.testTag("settings.provider.${type.name.lowercase()}"),
+                )
+            }
         }
     }
 }
@@ -110,15 +120,25 @@ private fun ProviderEditorFields(state: ProviderEditorState, component: Provider
     FastScrollColumn(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
-        ProviderTypeField(!state.busy)
+        ProviderTypeField(state, component)
         ProviderNameField(state, component)
         ProviderStatusField(
             state.connection.active,
             !state.saving && !state.changingActive,
             component::onActiveChange,
         )
-        ProviderManagementSection(state, component)
-        ProviderModelsSection(state, component)
+        when (state.connection.configuration) {
+            is OpenRouterConfiguration -> {
+                ProviderManagementSection(state, component)
+                ProviderModelsSection(state, component)
+            }
+
+            is ApifyConfiguration -> ProviderApiKeyField(state, component)
+
+            is InvalidProviderConfiguration -> Text(
+                "Unsupported or damaged provider configuration.",
+            )
+        }
     }
 }
 

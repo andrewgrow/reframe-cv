@@ -25,6 +25,7 @@ import reframecv.dependencies.ApplicationDependencies
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.recognition.RecognitionDocument
 import reframecv.recognition.RecognitionError
@@ -70,7 +71,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
         var saves = 0
         val editor = editor(
             repository { connection, instruction ->
-                assertEquals("model", connection.modelId)
+                assertEquals("model", connection.openRouter.modelId)
                 assertEquals("Edited request", instruction)
                 calls++
                 entered.complete(Unit)
@@ -341,8 +342,10 @@ class VacancyRecognitionComponentTest : ComponentTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Test",
-                apiKey = "test",
-                modelId = "model",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "test",
+                    modelId = "model",
+                ),
             ),
         )
         dependencies.promptsUseCases.save(

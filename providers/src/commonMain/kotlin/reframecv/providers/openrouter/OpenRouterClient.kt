@@ -41,13 +41,13 @@ class OpenRouterClient(
     private suspend fun generate(request: AiRequest): AiResponse {
         val connection = request.connection
         val credentialsReady =
-            connection.apiKey.isNotBlank() && connection.modelId.isNotBlank()
+            connection.openRouter.apiKey.isNotBlank() && connection.openRouter.modelId.isNotBlank()
         if (!connection.active || connection.type != ApiProviderType.OpenRouter ||
             !credentialsReady
         ) {
             return AiResponse.Failed(AiProviderError.NotConfigured)
         }
-        val key = connection.apiKey.trim()
+        val key = connection.openRouter.apiKey.trim()
         return try {
             val body = requestBody(request).toString()
             traffic.request("POST", URL, mapOf("Authorization" to "Bearer $key"), listOf(key), body)
@@ -89,7 +89,7 @@ class OpenRouterClient(
 }
 
 private fun requestBody(request: AiRequest) = buildJsonObject {
-    put("model", request.connection.modelId)
+    put("model", request.connection.openRouter.modelId)
     put("stream", false)
     putJsonObject("provider") { put("require_parameters", true) }
     putJsonObject("response_format") {

@@ -6,8 +6,11 @@ import androidx.room3.Query
 import androidx.room3.Transaction
 import androidx.room3.Update
 import kotlinx.coroutines.flow.Flow
+import reframecv.domain.models.providers.OpenRouterCachedInfo
+import reframecv.domain.models.providers.OpenRouterConfiguration
+import reframecv.domain.models.providers.ProviderConfigurationJson
 
-/** Persists connections and their independent enabled states. */
+/** Persists generic connections while protecting caches against stale credential responses. */
 @Dao
 abstract class ProviderConnectionsDao {
     @Query("SELECT * FROM provider_connections ORDER BY id ASC")
@@ -25,50 +28,71 @@ abstract class ProviderConnectionsDao {
     @Query("UPDATE provider_connections SET active = :active WHERE id = :id")
     abstract suspend fun updateActive(id: Long, active: Boolean): Int
 
-    @Query(
-        "UPDATE provider_connections SET account_info = :info " +
-            "WHERE id = :id AND type = :type AND api_key = :apiKey AND active = 1",
-    )
-    abstract suspend fun updateAccountInfo(id: Long, type: String, apiKey: String, info: String)
-
-    @Query(
-        "UPDATE provider_connections SET credit_balance = :balance " +
-            "WHERE id = :id AND type = :type AND management_api_key = :managementApiKey AND active = 1",
-    )
-    abstract suspend fun updateCreditBalance(
-        id: Long,
-        type: String,
-        managementApiKey: String,
-        balance: String,
-    )
+    @Query("UPDATE provider_connections SET cached_info = :cache WHERE id = :id")
+    abstract suspend fun updateCache(id: Long, cache: String?)
 
     @Transaction
     open suspend fun save(connection: ProviderConnectionEntity): Long {
         if (connection.id == 0L) return insert(connection)
         val previous = checkNotNull(get(connection.id)) { "Connection does not exist" }
+        val current = connection.toDomainModel()
+        val old = previous.toDomainModel()
+        val config = current.configuration as? OpenRouterConfiguration
+        val oldConfig = old.configuration as? OpenRouterConfiguration
+        val cache = if (config != null && oldConfig != null) {
+            val oldCache = old.openRouterCache
+            val newCache = current.openRouterCache
+            OpenRouterCachedInfo(
+                if (config.apiKey == oldConfig.apiKey) {
+                    oldCache.accountInfo ?: newCache.accountInfo
+                } else {
+                    null
+                },
+                if (config.managementApiKey == oldConfig.managementApiKey) {
+                    oldCache.creditBalance ?: newCache.creditBalance
+                } else {
+                    null
+                },
+            )
+        } else {
+            null
+        }
         check(
             update(
                 connection.copy(
                     active = previous.active,
                     createdAt = previous.createdAt,
-                    creditBalance = if (connection.managementApiKey == previous.managementApiKey &&
-                        connection.type == previous.type
-                    ) {
-                        previous.creditBalance ?: connection.creditBalance
-                    } else {
-                        null
-                    },
-                    accountInfo = if (connection.apiKey == previous.apiKey &&
-                        connection.type == previous.type
-                    ) {
-                        previous.accountInfo ?: connection.accountInfo
-                    } else {
-                        null
-                    },
+                    cachedInfo = ProviderConfigurationJson.encodeCache(cache),
                 ),
             ) == 1,
         )
         return connection.id
+    }
+
+    @Transaction
+    open suspend fun updateOpenRouterCache(
+        id: Long,
+        type: String,
+        key: String,
+        info: reframecv.domain.models.providers.ProviderAccountInfo? = null,
+        balance: reframecv.domain.models.providers.ProviderCreditBalance? = null,
+    ) {
+        val connection = get(id)?.toDomainModel()
+        val config = connection?.configuration as? OpenRouterConfiguration
+        if (connection == null || config == null) return
+        val enabled = connection.active && connection.type.name == type
+        val expected = if (info != null) config.apiKey else config.managementApiKey
+        if (!enabled || key != expected) return
+        val cache = connection.openRouterCache
+        updateCache(
+            id,
+            ProviderConfigurationJson.encodeCache(
+                cache.copy(
+                    accountInfo = info ?: cache.accountInfo,
+                    creditBalance = balance ?: cache.creditBalance,
+                ),
+            ),
+        )
     }
 
     @Transaction

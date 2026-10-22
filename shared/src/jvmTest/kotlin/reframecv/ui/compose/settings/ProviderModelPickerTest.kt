@@ -18,6 +18,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.settings.ProviderEditorState
@@ -27,8 +28,10 @@ class ProviderModelPickerTest : GoldenScreenshotTest() {
     private val connection = ProviderConnection(
         type = ApiProviderType.OpenRouter,
         name = "",
-        apiKey = "key",
-        modelId = "alpha",
+        configuration = OpenRouterConfiguration(
+            apiKey = "key",
+            modelId = "alpha",
+        ),
     )
 
     @Test

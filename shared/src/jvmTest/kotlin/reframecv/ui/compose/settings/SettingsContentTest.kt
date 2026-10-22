@@ -23,6 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_close
@@ -77,8 +78,10 @@ class SettingsContentTest : ComponentTest() {
                 ProviderConnection(
                     type = ApiProviderType.OpenRouter,
                     name = "",
-                    apiKey = "key",
-                    modelId = "",
+                    configuration = OpenRouterConfiguration(
+                        apiKey = "key",
+                        modelId = "",
+                    ),
                 ),
                 successfulSaves = 1,
             )
@@ -100,8 +103,10 @@ class SettingsContentTest : ComponentTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "key",
-                modelId = "",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "key",
+                    modelId = "",
+                ),
             ),
             loading = true,
         )
@@ -115,8 +120,10 @@ class SettingsContentTest : ComponentTest() {
             val connection = ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Personal",
-                apiKey = "example-key",
-                modelId = "model",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "example-key",
+                    modelId = "model",
+                ),
             )
             val component =
                 mutableStateOf(TestProviderEditorComponent(ProviderEditorState(connection)))
@@ -127,12 +134,12 @@ class SettingsContentTest : ComponentTest() {
                 key.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(results) }
                 return results.single().layoutInput.text.text
             }
-            val masked = "•".repeat(connection.apiKey.length)
+            val masked = "•".repeat(connection.openRouter.apiKey.length)
             assertEquals(masked, displayedKey())
             onNodeWithContentDescription(getTestString(Res.string.settings_key_show)).performClick()
             waitForIdle()
             onNodeWithContentDescription(getTestString(Res.string.settings_key_hide)).assertExists()
-            assertEquals(connection.apiKey, displayedKey())
+            assertEquals(connection.openRouter.apiKey, displayedKey())
             onNodeWithContentDescription(getTestString(Res.string.settings_key_hide)).performClick()
             waitForIdle()
             assertEquals(masked, displayedKey())
@@ -153,8 +160,10 @@ class SettingsContentTest : ComponentTest() {
                     ProviderConnection(
                         type = ApiProviderType.OpenRouter,
                         name = "",
-                        apiKey = "ordinary",
-                        modelId = "",
+                        configuration = OpenRouterConfiguration(
+                            apiKey = "ordinary",
+                            modelId = "",
+                        ),
                     ),
                 ),
             )
@@ -171,7 +180,7 @@ class SettingsContentTest : ComponentTest() {
             assertEquals("management-secret", displayedKey())
             onNodeWithContentDescription("Hide management API key").performClick()
             assertEquals("•".repeat("management-secret".length), displayedKey())
-            assertEquals("ordinary", component.state.value.connection.apiKey)
+            assertEquals("ordinary", component.state.value.connection.openRouter.apiKey)
             onNodeWithTag("settings.save").assertIsEnabled()
         }
 
@@ -183,8 +192,10 @@ class SettingsContentTest : ComponentTest() {
                     ProviderConnection(
                         type = ApiProviderType.OpenRouter,
                         name = "",
-                        apiKey = "",
-                        modelId = "",
+                        configuration = OpenRouterConfiguration(
+                            apiKey = "",
+                            modelId = "",
+                        ),
                     ),
                 )
             setContent {
@@ -230,8 +241,10 @@ class SettingsContentTest : ComponentTest() {
                     ProviderConnection(
                         type = ApiProviderType.OpenRouter,
                         name = "Work",
-                        apiKey = "key",
-                        modelId = "a",
+                        configuration = OpenRouterConfiguration(
+                            apiKey = "key",
+                            modelId = "a",
+                        ),
                     ),
                     listOf(AiModel("a", "Alpha model"), AiModel("b", "Beta model")),
                 ),
@@ -240,6 +253,6 @@ class SettingsContentTest : ComponentTest() {
             onNodeWithTag("settings.models.select").performScrollTo().performClick()
             onNodeWithTag("settings.models.select").performTextInput("Beta")
             onNodeWithText("Beta model").performClick()
-            runOnUiThread { assertEquals("b", component.state.value.connection.modelId) }
+            runOnUiThread { assertEquals("b", component.state.value.connection.openRouter.modelId) }
         }
 }

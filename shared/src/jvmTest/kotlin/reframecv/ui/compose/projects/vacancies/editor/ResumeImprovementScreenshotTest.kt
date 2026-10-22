@@ -5,6 +5,7 @@ import kotlin.test.Test
 import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.resume_improvement_warning
@@ -23,8 +24,10 @@ class ResumeImprovementScreenshotTest : GoldenScreenshotTest() {
                 id = 1,
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "key",
-                modelId = "example/model",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "key",
+                    modelId = "example/model",
+                ),
             )
         val prompt =
             Prompt(

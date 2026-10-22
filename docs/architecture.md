@@ -704,3 +704,27 @@ Selected vacancies can be marked applied in one action. The timestamp is capture
 the button click, and a single project-scoped SQL update changes only rows with no existing
 application date. Repeated actions preserve previous application dates. This action saves
 immediately; errors retain the selection for retry.
+
+## Generic provider connections and reusable operations
+
+`ProviderConnection` contains common identity, active state, typed configuration and optional
+cached information. Room stores configuration and cache in separate JSON columns. OpenRouter
+credentials/model selection and Apify tokens use separate versioned configuration models.
+Unsupported or malformed configuration remains stored but cannot be used. Credential values
+are excluded from diagnostic `toString` output.
+
+Settings supports OpenRouter and Apify connections. Saved connections cannot change provider
+type. Apify has only a token field; AI dialogs only offer OpenRouter connections. Model discovery,
+account refresh and post-request balance updates remain OpenRouter operations.
+
+`ConnectionRunner` is a reusable operation linked to a connection by foreign key, with its own
+name, active flag, operation type and JSON parameters. `ConnectionRun` is a concrete execution
+with an immutable non-secret parameter snapshot, external run ID, state, timestamps and optional
+error. Deleting a connection cascades to runners and their history; deleting a runner removes
+its history. Use cases validate the provider/operation combination and reject execution for
+disabled connections, disabled runners or invalid configuration.
+
+The initial operation contract is LinkedIn job search through the supported Apify Actor.
+This change provides persistence and preparation of runs; remote Apify execution, polling,
+result review and vacancy creation are not implemented yet. Settings backup version 2 nests
+runners under connections, remaps their ownership on import, and excludes execution history.

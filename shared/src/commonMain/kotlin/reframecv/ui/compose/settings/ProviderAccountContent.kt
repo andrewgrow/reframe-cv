@@ -43,7 +43,7 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () -> Unit) {
     val spacing = ReframeTheme.tokens.spacing
-    val info = state.connection.accountInfo
+    val info = state.connection.openRouterCache.accountInfo
     Surface(
         Modifier.fillMaxWidth().testTag("settings.account"),
         color = MaterialTheme.colorScheme.surfaceContainerLow,
@@ -64,7 +64,7 @@ internal fun ProviderAccountContent(state: ProviderEditorState, onRefresh: () ->
                     Modifier.testTag("settings.account.refresh"),
                     enabled =
                         state.connection.active && !state.busy && !state.refreshingAccount &&
-                            state.connection.apiKey.isNotBlank(),
+                            state.connection.openRouter.apiKey.isNotBlank(),
                     outlineState = FillButton.OutlineState.Visible,
                 )
             }

@@ -19,6 +19,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenRouterConfiguration
+import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_key
 import reframecv.shared.generated.resources.settings_key_hide
@@ -34,7 +38,7 @@ import reframecv.ui.components.settings.SettingsError
 internal fun ProviderApiKeyField(state: ProviderEditorState, component: ProviderEditorComponent) {
     key(component) {
         ProviderSecretField(
-            state.connection.apiKey,
+            providerKey(state.connection),
             component::onKey,
             !state.busy,
             Modifier.fillMaxWidth().testTag("settings.key"),
@@ -42,7 +46,11 @@ internal fun ProviderApiKeyField(state: ProviderEditorState, component: Provider
             stringResource(Res.string.settings_key_show) to
                 stringResource(Res.string.settings_key_hide),
             state.error == SettingsError.Unauthorized ||
-                (state.error == SettingsError.Validation && state.connection.apiKey.isBlank()),
+                (
+                    state.error == SettingsError.Validation && providerKey(
+                        state.connection,
+                    ).isBlank()
+                    ),
         )
     }
 }
@@ -54,7 +62,7 @@ internal fun ProviderManagementKeyField(
 ) {
     key(component) {
         ProviderSecretField(
-            state.connection.managementApiKey,
+            state.connection.openRouter.managementApiKey,
             component::onManagementKey,
             !state.busy,
             Modifier.fillMaxWidth().testTag("settings.management.key"),
@@ -97,3 +105,10 @@ private fun ProviderSecretField(
         isError = isError,
     )
 }
+
+private fun providerKey(connection: ProviderConnection): String =
+    when (val configuration = connection.configuration) {
+        is OpenRouterConfiguration -> configuration.apiKey
+        is ApifyConfiguration -> configuration.apiToken
+        is InvalidProviderConfiguration -> ""
+    }

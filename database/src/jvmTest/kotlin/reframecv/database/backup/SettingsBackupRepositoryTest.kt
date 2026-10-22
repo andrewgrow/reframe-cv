@@ -13,6 +13,7 @@ import reframecv.database.createDatabaseBuilder
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
 import reframecv.domain.models.settings.WindowSettings
@@ -27,10 +28,12 @@ class SettingsBackupRepositoryTest : WorkspaceDatabaseTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Home",
-                apiKey = "api",
-                managementApiKey = "management",
-                modelId = "model",
                 active = false,
+                configuration = OpenRouterConfiguration(
+                    apiKey = "api",
+                    managementApiKey = "management",
+                    modelId = "model",
+                ),
             ),
         ),
         listOf(Prompt(text = "Read", active = false)),
@@ -50,9 +53,9 @@ class SettingsBackupRepositoryTest : WorkspaceDatabaseTest() {
             assertEquals(1, report.prompts)
             assertEquals(backup.settings, target.snapshot().settings)
             val connection = target.snapshot().connections.single()
-            assertEquals("management", connection.managementApiKey)
+            assertEquals("management", connection.openRouter.managementApiKey)
             assertEquals(false, connection.active)
-            assertNull(connection.accountInfo)
+            assertNull(connection.openRouterCache.accountInfo)
             val again = target.restore(SettingsBackupJson.decode(json))
             assertEquals(2, again.duplicates)
             assertEquals(0, again.connections)
@@ -68,7 +71,7 @@ class SettingsBackupRepositoryTest : WorkspaceDatabaseTest() {
         repository.restore(backup)
         val withoutKeys = SettingsBackupJson.decode(SettingsBackupJson.encode(backup, false))
         assertEquals(2, repository.restore(withoutKeys).duplicates)
-        assertEquals("api", repository.snapshot().connections.single().apiKey)
+        assertEquals("api", repository.snapshot().connections.single().openRouter.apiKey)
         val changed = backup.copy(
             connections = listOf(backup.connections.single().copy(name = "Another")),
             prompts = listOf(backup.prompts.single().copy(text = "Different")),

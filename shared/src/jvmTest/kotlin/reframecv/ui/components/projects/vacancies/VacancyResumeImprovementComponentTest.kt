@@ -14,6 +14,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.resume.Resume
 import reframecv.domain.models.resume.content.ResumeContent
@@ -43,8 +44,10 @@ class VacancyResumeImprovementComponentTest : ComponentTest() {
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "key",
-                modelId = "model",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "key",
+                    modelId = "model",
+                ),
             ),
         )
         dependencies.promptsUseCases.save(

@@ -96,7 +96,12 @@ private fun ProviderConnectionRow(
         horizontalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("OpenRouter", Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            connection.type.name,
+            Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
         Text(connection.name, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         ProviderStatusField(
             connection.active,

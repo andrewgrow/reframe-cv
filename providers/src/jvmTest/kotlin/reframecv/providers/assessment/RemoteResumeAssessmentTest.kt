@@ -8,6 +8,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
 import reframecv.assessment.ResumeAssessmentOutcome
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.providers.AiProviderClient
 import reframecv.providers.AiProviderError
@@ -19,8 +20,10 @@ class RemoteResumeAssessmentTest {
         ProviderConnection(
             type = ApiProviderType.OpenRouter,
             name = "Work",
-            apiKey = "key",
-            modelId = "model",
+            configuration = OpenRouterConfiguration(
+                apiKey = "key",
+                modelId = "model",
+            ),
         )
 
     @Test

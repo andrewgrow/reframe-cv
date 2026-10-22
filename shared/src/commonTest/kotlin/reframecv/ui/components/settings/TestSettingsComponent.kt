@@ -42,15 +42,29 @@ class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditor
     }
     override fun onKey(value: String) {
         state.value =
-            state.value.copy(connection = state.value.connection.copy(apiKey = value))
+            state.value.copy(
+                connection = state.value.connection.copy(
+                    configuration = state.value.connection.openRouter.copy(apiKey = value),
+                ),
+            )
     }
     override fun onManagementKey(value: String) {
         state.value =
-            state.value.copy(connection = state.value.connection.copy(managementApiKey = value))
+            state.value.copy(
+                connection = state.value.connection.copy(
+                    configuration = state.value.connection.openRouter.copy(
+                        managementApiKey = value,
+                    ),
+                ),
+            )
     }
     override fun onModel(id: String) {
         state.value =
-            state.value.copy(connection = state.value.connection.copy(modelId = id))
+            state.value.copy(
+                connection = state.value.connection.copy(
+                    configuration = state.value.connection.openRouter.copy(modelId = id),
+                ),
+            )
     }
     override fun onActiveChange(active: Boolean) {
         state.value =

@@ -3,8 +3,8 @@
 Open **Settings → Import / export settings** to save or restore a portable JSON backup.
 This does not change the database schema and does not require deleting the database.
 
-The backup contains every saved API connection (provider type, optional name, selected
-model and active state), every prompt (title, component, instructions and active state),
+The backup contains every saved API connection (provider type, optional name, provider-specific
+configuration and active state), every prompt (title, component, instructions and active state),
 and global application preferences. Global preferences currently consist of window width,
 height and maximized state; restored window preferences apply on the next launch. Subsequent
 window resizing saves the user's newer choice as usual.
@@ -15,7 +15,7 @@ account/balance responses are excluded. Account details can be refreshed after r
 ## Credentials
 
 **Include API keys in export** is off by default. Enabling it includes both model API keys and
-Management API keys as plain text. A warning appears before export. Store these backups privately;
+Management API keys and Apify tokens as plain text. A warning appears before export. Store these backups privately;
 the JSON is not encrypted. The choice resets when leaving the backup page.
 
 With the option off, credential fields are absent. Imported connections then have blank
@@ -38,7 +38,7 @@ Cancelling a file picker changes nothing. JSON input is limited to 10 MiB.
 ## Portable contract
 
 `SettingsBackupJson` in `domain` owns the format independently of Room entities. The envelope
-requires `format: "reframecv-settings"` and supports `schemaVersion: 1`. Export is pretty-printed.
+requires `format: "reframecv-settings"` and supports `schemaVersion: 2`. Export is pretty-printed.
 A future incompatible version is rejected without changing settings. Future database changes
 should adapt the backup mapper rather than expose database columns in the JSON.
 
@@ -52,9 +52,9 @@ A minimal backup without credentials:
 ```json
 {
   "format": "reframecv-settings",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "settings": {"width": 1000, "height": 700, "maximized": false},
-  "connections": [{"type": "OpenRouter", "name": "Personal", "modelId": "example/model", "active": true}],
+  "connections": [{"type": "OpenRouter", "name": "Personal", "configuration": {"version": 1, "modelId": "example/model"}, "active": true}],
   "prompts": [{"title": "Extract vacancy", "component": "Vacancies", "text": "Read the attached vacancy.", "active": true}]
 }
 ```
@@ -62,3 +62,8 @@ A minimal backup without credentials:
 Tests cover own-export round trips into a fresh database, repeated imports, omitted keys,
 unsupported records, transactional rollback, native file cancellation and cleanup, retryable
 component behavior and UI goldens. No test contacts an external provider.
+
+Connection runners are exported inside their owning connection and restored with new local
+identities. Repeated imports do not duplicate identical runners. Execution history is local
+and is not included. Version 1 backups are no longer supported. Provider caches are never
+included, even when credentials are explicitly included.

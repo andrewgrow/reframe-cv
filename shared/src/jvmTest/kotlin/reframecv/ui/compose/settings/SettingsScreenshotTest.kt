@@ -7,6 +7,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.application.TestRootComponent
@@ -24,8 +25,10 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
         ProviderConnection(
             type = ApiProviderType.OpenRouter,
             name = "Personal",
-            apiKey = "example-key",
-            modelId = "example/model",
+            configuration = OpenRouterConfiguration(
+                apiKey = "example-key",
+                modelId = "example/model",
+            ),
         )
 
     @Test
@@ -102,7 +105,7 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
         val component =
             TestSettingsComponent(
                 editor = ProviderEditorState(
-                    connection.copy(modelId = ""),
+                    connection.copy(configuration = connection.openRouter.copy(modelId = "")),
                     error = SettingsError.Unauthorized,
                 ),
             )

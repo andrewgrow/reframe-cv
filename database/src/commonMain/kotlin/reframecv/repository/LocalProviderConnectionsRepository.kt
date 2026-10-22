@@ -1,16 +1,16 @@
 package reframecv.repository
 
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.json.Json
-import reframecv.database.providers.ProviderConnectionEntity
 import reframecv.database.providers.ProviderConnectionsDao
+import reframecv.database.providers.toEntity
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ProviderAccountInfo
+import reframecv.domain.models.providers.ProviderConfigurationJson
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.ProviderCreditBalance
 import reframecv.shared.nowMillis
 
-/** Keeps provider connections available across application launches. */
+/** Keeps generic provider connections available across application launches. */
 class LocalProviderConnectionsRepository(private val dao: ProviderConnectionsDao) :
     ProviderConnectionsRepository {
     override fun observe() = dao.observe().map { rows -> rows.map { it.toDomainModel() } }
@@ -21,29 +21,15 @@ class LocalProviderConnectionsRepository(private val dao: ProviderConnectionsDao
         type: ApiProviderType,
         managementApiKey: String,
         balance: ProviderCreditBalance,
-    ) = dao.updateCreditBalance(id, type.name, managementApiKey, Json.encodeToString(balance))
+    ) = dao.updateOpenRouterCache(id, type.name, managementApiKey, balance = balance)
     override suspend fun updateAccountInfo(
         id: Long,
         type: ApiProviderType,
         apiKey: String,
         info: ProviderAccountInfo,
-    ) = dao.updateAccountInfo(id, type.name, apiKey, Json.encodeToString(info))
+    ) = dao.updateOpenRouterCache(id, type.name, apiKey, info = info)
     override suspend fun save(connection: ProviderConnection): Long {
         val now = nowMillis()
-        return dao.save(
-            ProviderConnectionEntity(
-                connection.id,
-                connection.type.name,
-                connection.name,
-                connection.apiKey,
-                connection.modelId,
-                connection.active,
-                now,
-                now,
-                connection.accountInfo?.let { Json.encodeToString(it) },
-                connection.managementApiKey,
-                connection.creditBalance?.let { Json.encodeToString(it) },
-            ),
-        )
+        return dao.save(connection.copy(createdAt = now, updatedAt = now).toEntity())
     }
 }

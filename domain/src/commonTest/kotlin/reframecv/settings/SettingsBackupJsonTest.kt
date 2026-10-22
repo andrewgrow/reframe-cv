@@ -9,6 +9,8 @@ import kotlin.test.assertTrue
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterCachedInfo
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
@@ -19,11 +21,15 @@ class SettingsBackupJsonTest {
         id = 42,
         type = ApiProviderType.OpenRouter,
         name = "Personal",
-        apiKey = "SECRET_API",
-        managementApiKey = "SECRET_MANAGEMENT",
-        modelId = "example/model",
         active = false,
-        accountInfo = ProviderAccountInfo(fetchedAt = 123),
+        configuration = OpenRouterConfiguration(
+            apiKey = "SECRET_API",
+            managementApiKey = "SECRET_MANAGEMENT",
+            modelId = "example/model",
+        ),
+        cachedInfo = OpenRouterCachedInfo(
+            accountInfo = ProviderAccountInfo(fetchedAt = 123),
+        ),
     )
     private val backup = SettingsBackup(
         AppSettings(WindowSettings(1200f, 900f, true)),
@@ -42,7 +48,13 @@ class SettingsBackupJsonTest {
     fun roundTripRestoresPortableFieldsAndOnlyExplicitlyIncludedCredentials() {
         val decoded = SettingsBackupJson.decode(SettingsBackupJson.encode(backup, true))
         assertEquals(backup.settings, decoded.settings)
-        assertEquals(connection.copy(id = 0, accountInfo = null), decoded.connections.single())
+        assertEquals(
+            connection.copy(
+                id = 1,
+                cachedInfo = null,
+            ),
+            decoded.connections.single(),
+        )
         assertEquals(backup.prompts, decoded.prompts)
         val publicJson = SettingsBackupJson.encode(backup, false)
         listOf(
@@ -54,7 +66,10 @@ class SettingsBackupJsonTest {
             "createdAt",
         )
             .forEach { assertFalse(it in publicJson, it) }
-        assertEquals("", SettingsBackupJson.decode(publicJson).connections.single().apiKey)
+        assertEquals(
+            "",
+            SettingsBackupJson.decode(publicJson).connections.single().openRouter.apiKey,
+        )
         assertFalse("SECRET_API" in backup.toString())
     }
 
@@ -62,7 +77,7 @@ class SettingsBackupJsonTest {
     fun futureFieldsAreIgnoredAndOptionalMissingValuesReceiveDefaults() {
         val decoded = SettingsBackupJson.decode(
             """{"format":"reframecv-settings","future":true,"settings":{"width":950},
-                "connections":[{"type":"OpenRouter","future":"field"}],
+                "connections":[{"type":"OpenRouter","configuration":{},"future":"field"}],
                 "prompts":[{"text":"Instructions","future":{}}]}""",
         )
         assertEquals(WindowSettings(950f, 600f), decoded.settings?.window)
@@ -76,7 +91,7 @@ class SettingsBackupJsonTest {
     fun invalidAndUnsupportedRecordsDoNotDiscardValidNeighbors() {
         val decoded = SettingsBackupJson.decode(
             """{"format":"reframecv-settings","settings":{"width":-1},
-                "connections":[{"type":"Future"},{"type":"OpenRouter","name":42},{"type":"OpenRouter"}],
+                "connections":[{"type":"Future"},{"type":"OpenRouter","name":42},{"type":"OpenRouter","configuration":{}}],
                 "prompts":[{"text":""},{"text":"x","component":"Future"},null,{"text":"Keep"}]}""",
         )
         assertEquals(6, decoded.skipped)
@@ -91,7 +106,7 @@ class SettingsBackupJsonTest {
             "{}",
             "SECRET_API",
             """{"format":"other"}""",
-            """{"format":"reframecv-settings","schemaVersion":2}""",
+            """{"format":"reframecv-settings","schemaVersion":3}""",
             """{"format":"reframecv-settings","connections":{}}""",
         ).forEach {
             val failure =

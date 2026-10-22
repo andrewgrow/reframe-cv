@@ -319,6 +319,14 @@ class DefaultApplicationDependencies(
             return prompts
         }
 
+    override val connectionRunnersUseCases by lazy {
+        reframecv.usecase.ConnectionRunnersUseCases(
+            reframecv.repository.LocalConnectionRunnersRepository(
+                database.value.connectionRunnersDao(),
+            ),
+            LocalProviderConnectionsRepository(database.value.providerConnectionsDao()),
+        )
+    }
     private val providerSettings by lazy {
         val client = OpenRouterSetupClient(
             transport.value,

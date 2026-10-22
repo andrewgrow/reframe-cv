@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.ProviderAccountRepository
@@ -21,9 +22,11 @@ class ProviderSettingsUseCasesTest {
             id = 7,
             type = ApiProviderType.OpenRouter,
             name = "",
-            apiKey = "valid-key",
-            modelId = "model",
-            managementApiKey = "management-key",
+            configuration = OpenRouterConfiguration(
+                apiKey = "valid-key",
+                modelId = "model",
+                managementApiKey = "management-key",
+            ),
         )
     private var stored = connection
     private var writes = 0

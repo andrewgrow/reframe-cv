@@ -14,6 +14,9 @@ import reframecv.database.project.ProjectDao
 import reframecv.database.project.ProjectEntity
 import reframecv.database.prompts.PromptEntity
 import reframecv.database.prompts.PromptsDao
+import reframecv.database.providers.ConnectionRunEntity
+import reframecv.database.providers.ConnectionRunnerEntity
+import reframecv.database.providers.ConnectionRunnersDao
 import reframecv.database.providers.ProviderConnectionEntity
 import reframecv.database.providers.ProviderConnectionsDao
 import reframecv.database.resume.ResumeDao
@@ -36,7 +39,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
     entities = [
         ScreenStateEntity::class,
         AppSettingsEntity::class,
-        ProviderConnectionEntity::class,
+        ProviderConnectionEntity::class, ConnectionRunnerEntity::class, ConnectionRunEntity::class,
         PromptEntity::class,
         ProjectEntity::class,
         VacancyAttachmentEntity::class,
@@ -50,6 +53,7 @@ import reframecv.database.vacancyattachment.VacancyAttachmentEntity
 )
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
+    abstract fun connectionRunnersDao(): ConnectionRunnersDao
     abstract fun settingsBackupDao(): SettingsBackupDao
     abstract fun screenStatesDao(): ScreenStatesDao
     abstract fun promptsDao(): PromptsDao

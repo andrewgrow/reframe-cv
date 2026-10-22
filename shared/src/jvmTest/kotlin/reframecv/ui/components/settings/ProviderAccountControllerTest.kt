@@ -21,6 +21,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterCachedInfo
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderBudget
 import reframecv.domain.models.providers.ProviderConnection
@@ -49,9 +51,13 @@ class ProviderAccountControllerTest : ComponentTest() {
                 id = 7,
                 type = ApiProviderType.OpenRouter,
                 name = "Work",
-                apiKey = "old",
-                modelId = "model",
-                accountInfo = cached,
+                configuration = OpenRouterConfiguration(
+                    apiKey = "old",
+                    modelId = "model",
+                ),
+                cachedInfo = OpenRouterCachedInfo(
+                    accountInfo = cached,
+                ),
             ),
         ),
     )
@@ -112,7 +118,7 @@ class ProviderAccountControllerTest : ComponentTest() {
         runOnUiThread { assertEquals(0, requests) }
         runOnUiThread { clock += ACCOUNT_REFRESH_INTERVAL_MILLIS }
         ticks.send(Unit)
-        await { it.connection.accountInfo?.fetchedAt == clock }
+        await { it.connection.openRouterCache.accountInfo?.fetchedAt == clock }
         runOnUiThread {
             assertEquals(1, requests)
             lifecycle.pause()
@@ -123,7 +129,7 @@ class ProviderAccountControllerTest : ComponentTest() {
             assertEquals(1, requests)
             lifecycle.resume()
         }
-        await { it.connection.accountInfo?.fetchedAt == clock }
+        await { it.connection.openRouterCache.accountInfo?.fetchedAt == clock }
         runOnUiThread {
             assertEquals(2, requests)
             assertEquals(2, writes.size)
@@ -153,7 +159,7 @@ class ProviderAccountControllerTest : ComponentTest() {
             state.value = state.value.copy(connection = state.value.connection.copy(active = true))
         }
         ticks.send(Unit)
-        await { it.connection.accountInfo?.fetchedAt == clock }
+        await { it.connection.openRouterCache.accountInfo?.fetchedAt == clock }
         runOnUiThread { assertEquals(1, requests) }
     }
 
@@ -174,7 +180,7 @@ class ProviderAccountControllerTest : ComponentTest() {
             runOnUiThread { controller.refresh() }
             await { it.accountError != null }
             runOnUiThread {
-                assertEquals(cached, state.value.connection.accountInfo)
+                assertEquals(cached, state.value.connection.openRouterCache.accountInfo)
                 assertFalse(state.value.refreshingAccount)
                 fail = false
                 controller.refresh()
@@ -189,7 +195,10 @@ class ProviderAccountControllerTest : ComponentTest() {
             runOnUiThread {
                 assertEquals("Edited name", state.value.connection.name)
                 assertNull(state.value.accountError)
-                assertEquals(clock + 1, state.value.connection.accountInfo?.fetchedAt)
+                assertEquals(
+                    clock + 1,
+                    state.value.connection.openRouterCache.accountInfo?.fetchedAt,
+                )
                 assertEquals(1, writes.size)
             }
         }
@@ -213,13 +222,18 @@ class ProviderAccountControllerTest : ComponentTest() {
             controller.cancel()
             state.value =
                 state.value.copy(
-                    connection = state.value.connection.copy(apiKey = "new", accountInfo = null),
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(apiKey = "new"),
+                        cachedInfo = state.value.connection.openRouterCache.copy(
+                            accountInfo = null,
+                        ),
+                    ),
                 )
         }
         release.complete(Unit)
         withTimeout(10_000) { returned.await() }
         runOnUiThread {
-            assertNull(state.value.connection.accountInfo)
+            assertNull(state.value.connection.openRouterCache.accountInfo)
             assertTrue(writes.isEmpty())
             assertFalse(state.value.refreshingAccount)
         }
@@ -257,13 +271,17 @@ class ProviderAccountControllerTest : ComponentTest() {
             }
         })
         runOnUiThread { controller.refresh() }
-        await { it.connection.accountInfo?.fetchedAt == clock + 1 }
+        await { it.connection.openRouterCache.accountInfo?.fetchedAt == clock + 1 }
         runOnUiThread {
             assertEquals(1, budgetRequests)
             assertEquals(0, balanceRequests)
             state.value =
                 state.value.copy(
-                    connection = state.value.connection.copy(managementApiKey = "management"),
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(
+                            managementApiKey = "management",
+                        ),
+                    ),
                 )
             controller.refresh()
         }
@@ -276,13 +294,13 @@ class ProviderAccountControllerTest : ComponentTest() {
             failBudgets = true
             controller.refresh()
         }
-        await { it.accountError != null && it.connection.creditBalance != null }
+        await { it.accountError != null && it.connection.openRouterCache.creditBalance != null }
         runOnUiThread {
-            assertEquals(48.0, state.value.connection.creditBalance?.remainingUsd)
+            assertEquals(48.0, state.value.connection.openRouterCache.creditBalance?.remainingUsd)
             assertFalse(state.value.balanceError)
             assertNull(state.value.balanceErrorDetails)
             assertEquals("API key expired.", state.value.accountErrorDetails)
-            assertEquals(clock + 1, state.value.connection.accountInfo?.fetchedAt)
+            assertEquals(clock + 1, state.value.connection.openRouterCache.accountInfo?.fetchedAt)
         }
     }
 
@@ -293,7 +311,11 @@ class ProviderAccountControllerTest : ComponentTest() {
         runOnUiThread {
             state.value =
                 state.value.copy(
-                    connection = state.value.connection.copy(managementApiKey = "management"),
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(
+                            managementApiKey = "management",
+                        ),
+                    ),
                 )
         }
         val controller = controller(object : ProviderAccountRepository {
@@ -309,7 +331,7 @@ class ProviderAccountControllerTest : ComponentTest() {
                 return ProviderCreditBalance(50.0, 2.0, clock)
             }
         })
-        await { it.connection.creditBalance != null }
+        await { it.connection.openRouterCache.creditBalance != null }
         withTimeout(10_000) { waiting.receive() }
         runOnUiThread {
             assertEquals(1, balanceRequests)
@@ -328,7 +350,7 @@ class ProviderAccountControllerTest : ComponentTest() {
             lifecycle.pause()
             lifecycle.resume()
         }
-        await { it.connection.creditBalance?.fetchedAt == clock }
+        await { it.connection.openRouterCache.creditBalance?.fetchedAt == clock }
         runOnUiThread { assertEquals(2, balanceRequests) }
     }
 
@@ -340,7 +362,11 @@ class ProviderAccountControllerTest : ComponentTest() {
         runOnUiThread {
             state.value =
                 state.value.copy(
-                    connection = state.value.connection.copy(managementApiKey = "old-management"),
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(
+                            managementApiKey = "old-management",
+                        ),
+                    ),
                 )
         }
         val controller = controller(object : ProviderAccountRepository {
@@ -360,13 +386,17 @@ class ProviderAccountControllerTest : ComponentTest() {
             controller.cancel()
             state.value =
                 state.value.copy(
-                    connection = state.value.connection.copy(managementApiKey = "new-management"),
+                    connection = state.value.connection.copy(
+                        configuration = state.value.connection.openRouter.copy(
+                            managementApiKey = "new-management",
+                        ),
+                    ),
                 )
         }
         release.complete(Unit)
         withTimeout(10_000) { returned.await() }
         runOnUiThread {
-            assertNull(state.value.connection.creditBalance)
+            assertNull(state.value.connection.openRouterCache.creditBalance)
             assertFalse(state.value.refreshingBalance)
             assertFalse(state.value.balanceError)
         }

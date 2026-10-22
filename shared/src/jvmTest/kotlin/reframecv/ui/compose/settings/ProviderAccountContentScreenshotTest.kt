@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import kotlin.test.Test
 import kotlin.time.Instant
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterCachedInfo
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderBudget
 import reframecv.domain.models.providers.ProviderConnection
@@ -86,19 +88,23 @@ class ProviderAccountContentScreenshotTest : GoldenScreenshotTest() {
                     ProviderConnection(
                         type = ApiProviderType.OpenRouter,
                         name = "Work",
-                        apiKey = "key",
-                        modelId = "model",
-                        accountInfo = info,
-                        managementApiKey = managementKey,
-                        creditBalance = if (managementKey.isEmpty()) {
-                            null
-                        } else {
-                            ProviderCreditBalance(
-                                5.0,
-                                4.84480375,
-                                info.fetchedAt,
-                            )
-                        },
+                        configuration = OpenRouterConfiguration(
+                            apiKey = "key",
+                            modelId = "model",
+                            managementApiKey = managementKey,
+                        ),
+                        cachedInfo = OpenRouterCachedInfo(
+                            accountInfo = info,
+                            creditBalance = if (managementKey.isEmpty()) {
+                                null
+                            } else {
+                                ProviderCreditBalance(
+                                    5.0,
+                                    4.84480375,
+                                    info.fetchedAt,
+                                )
+                            },
+                        ),
                     ),
                     accountError = if (failed) SettingsError.AccountRefresh else null,
                     balanceError = balanceFailed,

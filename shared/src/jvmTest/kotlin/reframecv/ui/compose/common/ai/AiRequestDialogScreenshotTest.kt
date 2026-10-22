@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import kotlin.test.Test
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.common.ai.AiRequestDialogState
@@ -20,8 +21,10 @@ class AiRequestDialogScreenshotTest : GoldenScreenshotTest() {
                 id = 1,
                 type = ApiProviderType.OpenRouter,
                 name = "My OpenRouter",
-                apiKey = "test",
-                modelId = "anthropic/claude-sonnet",
+                configuration = OpenRouterConfiguration(
+                    apiKey = "test",
+                    modelId = "anthropic/claude-sonnet",
+                ),
             ),
         ),
         prompts = listOf(

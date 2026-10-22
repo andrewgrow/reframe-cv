@@ -27,7 +27,7 @@ import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun ProviderBalanceContent(state: ProviderEditorState) {
-    val balance = state.connection.creditBalance
+    val balance = state.connection.openRouterCache.creditBalance
     val tokens = ReframeTheme.tokens
     Surface(
         modifier = Modifier.fillMaxWidth().testTag("settings.balance"),
@@ -43,7 +43,7 @@ internal fun ProviderBalanceContent(state: ProviderEditorState) {
                 style = MaterialTheme.typography.titleSmall,
             )
             when {
-                state.connection.managementApiKey.isBlank() -> Text(
+                state.connection.openRouter.managementApiKey.isBlank() -> Text(
                     stringResource(Res.string.settings_balance_missing),
                 )
 

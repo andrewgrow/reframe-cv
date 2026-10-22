@@ -10,6 +10,7 @@ import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.ComponentTest
 import reframecv.ui.threading.runOnUiThread
@@ -18,7 +19,9 @@ class AiRequestDialogComponentTest : ComponentTest() {
     @Test
     fun finishedRequestsRefreshBalanceWithoutDelayingResultsOrHidingRequestErrors() = runBlocking {
         dependencies.providerSettingsUseCases.save(
-            connection("Work").copy(managementApiKey = "management"),
+            connection("Work").let {
+                it.copy(configuration = it.openRouter.copy(managementApiKey = "management"))
+            },
         )
         dependencies.promptsUseCases.save(Prompt(text = "Assess"))
         val balanceStarted = CompletableDeferred<Unit>()
@@ -34,9 +37,7 @@ class AiRequestDialogComponentTest : ComponentTest() {
                 appComponentContext(),
                 "resume",
                 PromptComponent.Vacancies,
-                execute = { _, _ ->
-                    "result"
-                },
+                execute = { _, _ -> "result" },
                 completed = { completed.complete(Unit) },
                 dismissed = {},
             )
@@ -197,7 +198,11 @@ class AiRequestDialogComponentTest : ComponentTest() {
             dialog.onRun()
             assertFalse(dialog.state.value.canRun)
         }
-        dependencies.providerSettingsUseCases.save(connection("Incomplete").copy(modelId = ""))
+        dependencies.providerSettingsUseCases.save(
+            connection("Incomplete").let {
+                it.copy(configuration = it.openRouter.copy(modelId = ""))
+            },
+        )
         dependencies.promptsUseCases.save(Prompt(text = "Extract"))
         await(dialog) { it.connection != null && it.prompt != null }
         runOnUiThread {
@@ -235,7 +240,9 @@ class AiRequestDialogComponentTest : ComponentTest() {
     private fun connection(name: String) = ProviderConnection(
         type = ApiProviderType.OpenRouter,
         name = name,
-        apiKey = "test-key",
-        modelId = "test-model",
+        configuration = OpenRouterConfiguration(
+            apiKey = "test-key",
+            modelId = "test-model",
+        ),
     )
 }
