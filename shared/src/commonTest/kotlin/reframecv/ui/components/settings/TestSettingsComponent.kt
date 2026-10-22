@@ -35,6 +35,17 @@ class TestSettingsComponent(
 }
 
 class TestProviderEditorComponent(initial: ProviderEditorState) : ProviderEditorComponent {
+    override val runners = MutableValue<
+        ChildSlot<
+            *,
+            reframecv.ui.components.settings.runners.ProviderRunnersComponent,
+            >,
+        >(
+        ChildSlot<
+            Unit,
+            reframecv.ui.components.settings.runners.ProviderRunnersComponent,
+            >(),
+    )
     override val state = MutableValue(initial)
     override fun onName(value: String) {
         state.value =

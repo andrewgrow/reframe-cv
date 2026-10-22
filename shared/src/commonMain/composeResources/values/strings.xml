@@ -448,4 +448,22 @@
     <string name="vacancies_delete_error">Could not delete the selected vacancies. Try again.</string>
     <string name="vacancies_mark_applied">Mark applied</string>
     <string name="vacancies_applied_error">Could not mark vacancies as applied. Try again.</string>
+    <string name="runners_title">Runners</string>
+    <string name="runners_add">Add runner</string>
+    <string name="runners_empty">No runners yet.</string>
+    <string name="runners_save_connection">Save this connection before adding runners.</string>
+    <string name="runners_load_error">Could not load runners. Try again.</string>
+    <string name="runner_title">Runner</string>
+    <string name="runner_operation">Operation</string>
+    <string name="runner_operation_linkedin">LinkedIn Jobs Scraper</string>
+    <string name="runner_name">Runner name (optional)</string>
+    <string name="runner_urls">LinkedIn search URLs</string>
+    <string name="runner_urls_hint">One HTTPS LinkedIn jobs search URL per line.</string>
+    <string name="runner_limit">Max jobs per search</string>
+    <string name="runner_limit_hint">A positive whole number. This limit applies to each search URL.</string>
+    <string name="runner_validation">Check the search URLs and enter a positive job limit.</string>
+    <string name="runner_configuration_error">This configuration is unsupported or damaged. Enter the search settings and save to replace it.</string>
+    <string name="runner_delete_title">Delete runner?</string>
+    <string name="runner_delete_warning">The runner and its local run history will be permanently deleted. Saved vacancies will be kept. Remote runs are not stopped.</string>
+    <string name="runner_delete_error">Could not delete the runner. Try again.</string>
 </resources>

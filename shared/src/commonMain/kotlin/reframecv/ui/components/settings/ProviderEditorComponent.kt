@@ -1,5 +1,9 @@
 package reframecv.ui.components.settings
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -21,6 +25,8 @@ import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.normalized
 import reframecv.repository.ProviderSetupError
 import reframecv.repository.ProviderSetupException
+import reframecv.ui.components.settings.runners.DefaultProviderRunnersComponent
+import reframecv.ui.components.settings.runners.ProviderRunnersComponent
 import reframecv.ui.context.AppComponentContext
 
 /** Identifies safe, localizable connection setup feedback. */
@@ -59,6 +65,8 @@ data class ProviderEditorState(
 
 /** Lets users configure a provider connection without persisting unfinished input. */
 interface ProviderEditorComponent {
+    val runners: Value<ChildSlot<*, ProviderRunnersComponent>>
+    val isBusy: Boolean get() = state.value.busy || runners.value.child?.instance?.isBusy == true
     fun onType(type: ApiProviderType) {}
     val state: Value<ProviderEditorState>
     fun onName(value: String)
@@ -85,6 +93,15 @@ class DefaultProviderEditorComponent(
     private var job: Job? = null
     private var generation = 0L
     override val state = MutableValue(ProviderEditorState(connection))
+    private val runnersNavigation = SlotNavigation<Long>()
+    override val runners = context.childSlot(
+        runnersNavigation,
+        serializer = null,
+        key = "ProviderRunners",
+        handleBackButton = false,
+    ) { id, childContext ->
+        DefaultProviderRunnersComponent(childContext, id) as ProviderRunnersComponent
+    }
     private val account = ProviderAccountController(useCases, context.lifecycle, scope, state)
     private val status = ProviderStatusController(useCases, scope, state) {
         cancelModelLoading()
@@ -95,6 +112,9 @@ class DefaultProviderEditorComponent(
     override fun onRefreshBalance() = account.refreshBalance()
     override fun onActiveChange(active: Boolean) = status.change(active)
     init {
+        if (connection.id != 0L && connection.type == ApiProviderType.Apify) {
+            runnersNavigation.activate(connection.id)
+        }
         context.lifecycle.doOnDestroy {
             generation++
             scope.cancel()
@@ -248,6 +268,9 @@ class DefaultProviderEditorComponent(
                     successfulSaves = state.value.successfulSaves + 1,
                 )
                 account.onSaved(persisted)
+                if (persisted.type == ApiProviderType.Apify && runners.value.child == null) {
+                    runnersNavigation.activate(id)
+                }
                 saved()
             } catch (error: CancellationException) {
                 throw error
@@ -257,11 +280,15 @@ class DefaultProviderEditorComponent(
         }
     }
     override fun onBack() {
-        if (state.value.saving || state.value.changingActive) return
-        if (state.value.loading) {
-            cancelModelLoading()
-        } else {
-            back()
+        val child = runners.value.child?.instance
+        if (child?.editorSlot?.value?.child != null) {
+            child.onBack()
+            return
+        }
+        when {
+            state.value.saving || state.value.changingActive -> Unit
+            state.value.loading -> cancelModelLoading()
+            else -> back()
         }
     }
 

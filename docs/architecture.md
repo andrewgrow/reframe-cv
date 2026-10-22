@@ -728,3 +728,20 @@ The initial operation contract is LinkedIn job search through the supported Apif
 This change provides persistence and preparation of runs; remote Apify execution, polling,
 result review and vacancy creation are not implemented yet. Settings backup version 2 nests
 runners under connections, remaps their ownership on import, and excludes execution history.
+
+## Runner settings UI
+
+Saved Apify connections expose a Runners section. New connections must be saved before
+operations can be attached. Each runner opens a nested page scoped to its connection;
+returning preserves unsaved provider settings. The first operation is LinkedIn Jobs Scraper,
+configured with HTTPS LinkedIn jobs search URLs (one per line) and a positive per-search
+job limit. Duplicate URLs and surrounding whitespace are removed on Save. Runner names
+are optional; unnamed entries use the operation title.
+
+Runner active state is part of the draft and takes effect on Save. Save retains the editor
+and its persisted identity, with temporary success feedback. Closing discards draft changes.
+Deletion requires confirmation without typing a keyword and removes the runner's local
+history. It neither deletes saved vacancies nor stops remote jobs. Storage failures retain
+inputs and selection for retry. Settings does not execute an Actor or create execution
+history when adding or editing a runner. The provider's own Save is independent of runner
+Save; neither operation implicitly commits the other's draft. No schema change is required.

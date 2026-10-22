@@ -45,10 +45,27 @@ import reframecv.ui.components.settings.SettingsError
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.compose.common.FillButton
 import reframecv.ui.compose.common.PageHeader
+import reframecv.ui.compose.settings.runners.ProviderRunnersSection
+import reframecv.ui.compose.settings.runners.RunnerEditorContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun ProviderEditorContent(component: ProviderEditorComponent) {
+    val slot by component.runners.subscribeAsState()
+    val runners = slot.child?.instance
+    if (runners != null) {
+        val editor by runners.editorSlot.subscribeAsState()
+        val child = editor.child?.instance
+        if (child != null) {
+            RunnerEditorContent(child)
+            return
+        }
+    }
+    ProviderConnectionContent(component)
+}
+
+@Composable
+private fun ProviderConnectionContent(component: ProviderEditorComponent) {
     val state by component.state.subscribeAsState()
     val spacing = ReframeTheme.tokens.spacing
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -133,7 +150,10 @@ private fun ProviderEditorFields(state: ProviderEditorState, component: Provider
                 ProviderModelsSection(state, component)
             }
 
-            is ApifyConfiguration -> ProviderApiKeyField(state, component)
+            is ApifyConfiguration -> {
+                ProviderApiKeyField(state, component)
+                ProviderRunnersSection(component)
+            }
 
             is InvalidProviderConfiguration -> Text(
                 "Unsupported or damaged provider configuration.",

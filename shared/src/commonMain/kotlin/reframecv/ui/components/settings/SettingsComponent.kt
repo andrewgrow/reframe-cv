@@ -50,7 +50,7 @@ interface SettingsComponent {
     fun onRetry()
     fun onBack()
     val isBusy: Boolean get() = transfer.state.value.operation != null ||
-        editorSlot.value.child?.instance?.state?.value?.busy == true ||
+        editorSlot.value.child?.instance?.isBusy == true ||
         promptsSlot.value.child?.instance?.isBusy == true
 }
 

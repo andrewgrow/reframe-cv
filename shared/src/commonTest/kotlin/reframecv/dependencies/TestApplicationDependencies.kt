@@ -259,59 +259,65 @@ class TestApplicationDependencies : ApplicationDependencies {
         reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1)
     }
     private val connections = MutableStateFlow<List<ProviderConnection>>(emptyList())
-    override val connectionRunnersUseCases: reframecv.usecase.ConnectionRunnersUseCases
-        get() = error("Runner execution is not installed in this UI test fixture")
+    val connectionRunnersRepository = reframecv.repository.TestConnectionRunnersRepository()
+    override val connectionRunnersUseCases by lazy {
+        reframecv.usecase.ConnectionRunnersUseCases(
+            connectionRunnersRepository,
+            providerConnectionsRepository,
+        )
+    }
+    private val providerConnectionsRepository = object : ProviderConnectionsRepository {
+        override fun observe() = connections
+        override suspend fun get(id: Long) = connections.value.find { it.id == id }
+        override suspend fun save(connection: ProviderConnection): Long {
+            val id = connection.id.takeIf { it != 0L }
+                ?: ((connections.value.maxOfOrNull { it.id } ?: 0) + 1)
+            connections.value = connections.value.filterNot { it.id == id } +
+                connection.copy(
+                    id = id,
+                )
+            return id
+        }
+        override suspend fun updateCreditBalance(
+            id: Long,
+            type: ApiProviderType,
+            managementApiKey: String,
+            balance: reframecv.domain.models.providers.ProviderCreditBalance,
+        ) {
+            connections.value = connections.value.map {
+                val matches =
+                    it.id == id && it.type == type &&
+                        it.openRouter.managementApiKey == managementApiKey
+                if (matches && it.active) {
+                    it.copy(cachedInfo = it.openRouterCache.copy(creditBalance = balance))
+                } else {
+                    it
+                }
+            }
+        }
+        override suspend fun updateAccountInfo(
+            id: Long,
+            type: ApiProviderType,
+            apiKey: String,
+            info: ProviderAccountInfo,
+        ) {
+            connections.value = connections.value.map {
+                if (it.id == id && it.type == type &&
+                    it.openRouter.apiKey == apiKey
+                ) {
+                    it.copy(cachedInfo = it.openRouterCache.copy(accountInfo = info))
+                } else {
+                    it
+                }
+            }
+        }
+        override suspend fun setActive(id: Long, active: Boolean) {
+            connections.value =
+                connections.value.map { if (it.id == id) it.copy(active = active) else it }
+        }
+    }
     override val providerSettingsUseCases = ProviderSettingsUseCases(
-        object : ProviderConnectionsRepository {
-            override fun observe() = connections
-            override suspend fun get(id: Long) = connections.value.find { it.id == id }
-            override suspend fun save(connection: ProviderConnection): Long {
-                val id = connection.id.takeIf { it != 0L }
-                    ?: ((connections.value.maxOfOrNull { it.id } ?: 0) + 1)
-                connections.value = connections.value.filterNot { it.id == id } +
-                    connection.copy(
-                        id = id,
-                    )
-                return id
-            }
-            override suspend fun updateCreditBalance(
-                id: Long,
-                type: ApiProviderType,
-                managementApiKey: String,
-                balance: reframecv.domain.models.providers.ProviderCreditBalance,
-            ) {
-                connections.value = connections.value.map {
-                    val matches =
-                        it.id == id && it.type == type &&
-                            it.openRouter.managementApiKey == managementApiKey
-                    if (matches && it.active) {
-                        it.copy(cachedInfo = it.openRouterCache.copy(creditBalance = balance))
-                    } else {
-                        it
-                    }
-                }
-            }
-            override suspend fun updateAccountInfo(
-                id: Long,
-                type: ApiProviderType,
-                apiKey: String,
-                info: ProviderAccountInfo,
-            ) {
-                connections.value = connections.value.map {
-                    if (it.id == id && it.type == type &&
-                        it.openRouter.apiKey == apiKey
-                    ) {
-                        it.copy(cachedInfo = it.openRouterCache.copy(accountInfo = info))
-                    } else {
-                        it
-                    }
-                }
-            }
-            override suspend fun setActive(id: Long, active: Boolean) {
-                connections.value =
-                    connections.value.map { if (it.id == id) it.copy(active = active) else it }
-            }
-        },
+        providerConnectionsRepository,
         ProviderModelsRepository { _, _ -> emptyList() },
         object : ProviderAccountRepository {
             override suspend fun load(type: ApiProviderType, apiKey: String) =
