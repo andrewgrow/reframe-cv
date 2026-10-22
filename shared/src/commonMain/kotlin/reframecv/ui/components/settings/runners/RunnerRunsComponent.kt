@@ -3,6 +3,8 @@ package reframecv.ui.components.settings.runners
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
+import com.arkivanov.essenty.lifecycle.doOnResume
+import com.arkivanov.essenty.lifecycle.doOnStop
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,11 +37,15 @@ data class RunnerRunsState(
     val importResultId: Long? = null,
     val projects: List<Project> = emptyList(),
     val notice: String? = null,
+    val preferredProjectId: Long? = null,
+    val openingSettings: Boolean = false,
 )
 
 /** Starts explicit paid runs and resumes status/result reads for previously saved IDs. */
 interface RunnerRunsComponent {
     val state: Value<RunnerRunsState>
+    val settings: RunnerSettingsComponent
+    val isBusy: Boolean get() = state.value.starting || state.value.working || settings.isBusy
     fun onLoadMore()
     fun onResultAction(id: Long, action: RunnerResultAction)
     fun onProject(id: Long?)
@@ -57,13 +63,31 @@ class DefaultRunnerRunsComponent(
     runner: ConnectionRunner,
     private val back: () -> Unit,
     private val awaitPoll: suspend () -> Unit = { delay(POLL_INTERVAL_MS) },
+    preferredProjectId: Long? = null,
 ) : RunnerRunsComponent {
     private val useCases = context.dependencies.runnerExecutionUseCases
     private val logger = context.dependencies.logger
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var observation: Job? = null
     private var request: Job? = null
-    override val state = MutableValue(RunnerRunsState(runner))
+    override val state =
+        MutableValue(RunnerRunsState(runner, preferredProjectId = preferredProjectId))
+    override val settings: RunnerSettingsComponent =
+        DefaultRunnerSettingsComponent(
+            context,
+            state,
+            scope,
+            pause = {
+                request?.cancel()
+                state.value = state.value.copy(reading = false)
+            },
+            resume = {
+                val run = state.value.view?.run
+                val pending = run?.state == ConnectionRunState.Pending ||
+                    run?.state == ConnectionRunState.Running
+                if (pending && state.value.runner.active) onRefresh()
+            },
+        )
     private val review = RunnerReviewActions(context, state, scope) {
         val view = state.value.view ?: return@RunnerReviewActions
         state.value = state.value.copy(
@@ -83,6 +107,18 @@ class DefaultRunnerRunsComponent(
     }
     init {
         context.lifecycle.doOnDestroy { scope.cancel() }
+        context.lifecycle.doOnStop {
+            if (!state.value.starting && !state.value.working) {
+                request?.cancel()
+                state.value = state.value.copy(reading = false)
+            }
+        }
+        context.lifecycle.doOnResume {
+            val run = state.value.view?.run
+            val pending =
+                run?.state == ConnectionRunState.Pending || run?.state == ConnectionRunState.Running
+            if (pending && !isBusy && settings.editor.value.child == null) onRefresh()
+        }
         onRetryHistory()
     }
 
@@ -114,7 +150,7 @@ class DefaultRunnerRunsComponent(
 
     @Suppress("TooGenericExceptionCaught")
     override fun onStart() {
-        if (state.value.starting || state.value.working || !state.value.runner.active) return
+        if (isBusy || !state.value.runner.active) return
         request?.cancel()
         state.value = state.value.copy(starting = true, reading = false, error = null, view = null)
         request = scope.launch {
@@ -194,7 +230,7 @@ class DefaultRunnerRunsComponent(
         )
     }
     override fun onBack() {
-        if (state.value.starting || state.value.working) return
+        if (isBusy || settings.onBack()) return
         if (state.value.importResultId != null) {
             review.project(null)
             return

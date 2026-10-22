@@ -481,4 +481,7 @@
     <string name="runner_posted">Posted: %1$s</string>
     <string name="runner_details">Details</string>
     <string name="runner_hide_details">Hide details</string>
+    <string name="dashboard_search_runners">Search runners</string>
+    <string name="dashboard_runners_empty">No saved runners. Add one in Settings → API Providers.</string>
+    <string name="dashboard_runners_error">Could not load runners. Try again.</string>
 </resources>

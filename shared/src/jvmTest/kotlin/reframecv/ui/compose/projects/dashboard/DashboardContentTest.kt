@@ -7,7 +7,6 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.click
-import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -56,7 +55,7 @@ class DashboardContentTest {
         onNodeWithText("Cover letters").performScrollTo().assertIsDisplayed()
         onNodeWithText("Vacancies").performScrollTo().assertIsDisplayed()
         onNodeWithText("Resumes").performScrollTo().assertIsDisplayed()
-        onAllNodes(hasClickAction()).assertCountEquals(4)
+        onNodeWithTag("dashboard.search.runners").assertIsDisplayed()
     }
 
     @Test

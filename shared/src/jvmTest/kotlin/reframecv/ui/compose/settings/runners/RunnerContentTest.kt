@@ -21,6 +21,7 @@ import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.settings.DefaultSettingsComponent
+import reframecv.ui.components.settings.runners.RunnerDraft
 import reframecv.ui.compose.settings.SettingsContent
 import reframecv.ui.theme.ReframeTheme
 import reframecv.ui.threading.runOnUiThread
@@ -84,5 +85,41 @@ class RunnerContentTest : ComponentTest() {
             onNodeWithTag("runner.editor").assertExists()
             onNodeWithTag("runner.close").performClick()
             onNodeWithTag("runners.row.1").performScrollTo().assertExists()
+        }
+
+    @Test
+    fun settingsShortcutReturnsFromProviderSettingsToRunnerHistory() =
+        runDesktopComposeUiTest(width = 800, height = 700) {
+            val connection = ProviderConnection(
+                type = ApiProviderType.Apify,
+                name = "Example source",
+                configuration = ApifyConfiguration("fictional-token"),
+            )
+            val id = runBlocking { dependencies.providerSettingsUseCases.save(connection) }
+            val runnerId = runBlocking {
+                dependencies.connectionRunnersUseCases.save(
+                    RunnerDraft(
+                        searchUrls = "https://www.linkedin.com/jobs/search/?keywords=kotlin",
+                    )
+                        .applyTo(RunnerDraft.newRunner(id)),
+                )
+            }
+            val settings = runOnUiThread {
+                lifecycle.resume()
+                DefaultSettingsComponent(appComponentContext()) {}.also {
+                    it.onEdit(connection.copy(id = id))
+                }
+            }
+            setContent { ReframeTheme { SettingsContent(settings) } }
+            onNodeWithTag("runners.row.$runnerId").performScrollTo().performClick()
+            onNodeWithTag("runner.runs").performClick()
+            onNodeWithTag("runner.run.settings").performClick()
+            waitForIdle()
+            onNodeWithTag("settings.editor").assertExists()
+            onNodeWithTag("runners.row.$runnerId").performScrollTo().assertExists()
+            onRoot().performKeyInput { pressKey(Key.Escape) }
+            waitForIdle()
+            onNodeWithTag("runner.runs.page").assertExists()
+            assertEquals(0, dependencies.runnerExecutionRepository.starts)
         }
 }

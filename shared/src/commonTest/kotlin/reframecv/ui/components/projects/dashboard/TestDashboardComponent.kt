@@ -10,6 +10,7 @@ class TestDashboardComponent(
     private val openResumes: () -> Unit = {},
     private val retry: () -> Unit = {},
     private val back: () -> Unit = {},
+    override val runners: DashboardRunnersComponent = TestDashboardRunnersComponent(),
 ) : DashboardComponent {
     override val uiState = MutableValue(initialState)
     override fun onOpenCoverLetters() = openCoverLetters()

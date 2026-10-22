@@ -25,7 +25,13 @@ import reframecv.ui.theme.ReframeTheme
 @Composable
 internal fun RunnerImportDialog(state: RunnerRunsState, component: RunnerRunsComponent) {
     val result = state.importResultId ?: return
-    var selected by remember(result) { mutableStateOf<Long?>(null) }
+    var selected by remember(result, state.preferredProjectId) {
+        mutableStateOf(
+            state.preferredProjectId?.takeIf { id ->
+                state.projects.any { it.id == id }
+            },
+        )
+    }
     ResizableDialog(
         onDismissRequest = { if (!state.working) component.onProject(null) },
         resizingEnabled = !state.working,

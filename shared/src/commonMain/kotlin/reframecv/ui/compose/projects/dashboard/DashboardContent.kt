@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeContentPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -25,13 +26,17 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.dashboard_cover_letters
 import reframecv.shared.generated.resources.dashboard_resumes
+import reframecv.shared.generated.resources.dashboard_search_runners
 import reframecv.shared.generated.resources.dashboard_title
 import reframecv.shared.generated.resources.dashboard_vacancies
 import reframecv.ui.components.projects.dashboard.DashboardComponent
 import reframecv.ui.components.projects.dashboard.DashboardState
+import reframecv.ui.compose.common.DocumentListControls
+import reframecv.ui.compose.common.FillButton
 import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
+import reframecv.ui.compose.settings.runners.RunnerRunsContent
 import reframecv.ui.theme.ReframeTheme
 
 internal const val DASHBOARD_TAG = "project.dashboard"
@@ -39,12 +44,21 @@ private const val SECTION_COUNT = 3
 
 @Composable
 fun DashboardContent(component: DashboardComponent) {
+    val slot by component.runners.execution.subscribeAsState()
+    val picker by component.runners.state.subscribeAsState()
+    val run = slot.child?.instance
+    if (run != null) {
+        RunnerRunsContent(run)
+        return
+    }
     val state by component.uiState.subscribeAsState()
     key(component.projectId) {
         Column(
             Modifier.fillMaxSize().background(
                 MaterialTheme.colorScheme.background,
-            ).testTag(DASHBOARD_TAG).safeContentPadding().pageBackHandler(component::onBack),
+            ).testTag(
+                DASHBOARD_TAG,
+            ).safeContentPadding().pageBackHandler(component::onBack, enabled = !picker.visible),
         ) {
             Box(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
                 PageHeader(stringResource(Res.string.dashboard_title), component::onBack)
@@ -63,6 +77,16 @@ fun DashboardContent(component: DashboardComponent) {
                     )
                 }
             }
+            HorizontalDivider()
+            DocumentListControls {
+                FillButton(
+                    stringResource(Res.string.dashboard_search_runners),
+                    component.runners::open,
+                    Modifier.testTag("dashboard.search.runners"),
+                    outlineState = FillButton.OutlineState.Visible,
+                )
+            }
+            DashboardRunnerPicker(component.runners)
         }
     }
 }

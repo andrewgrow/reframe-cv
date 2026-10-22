@@ -1,5 +1,6 @@
 package reframecv.ui.compose.settings.runners
 
+import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
@@ -10,10 +11,12 @@ import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.RunnerResult
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.runners.RunnerResultsPage
+import reframecv.ui.components.settings.ProviderEditorComponent
 import reframecv.ui.components.settings.runners.RunnerDraft
 import reframecv.ui.components.settings.runners.RunnerResultAction
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.components.settings.runners.RunnerRunsState
+import reframecv.ui.components.settings.runners.RunnerSettingsComponent
 import reframecv.usecase.RunnerRunView
 
 internal fun runnerTableFixture(): RunnerRunsState {
@@ -118,8 +121,17 @@ private fun fixtureResult(index: Int): RunnerResult {
 }
 
 internal class PreviewRunnerRunsComponent(initial: RunnerRunsState) : RunnerRunsComponent {
+    override val settings = object : RunnerSettingsComponent {
+        override val editor = MutableValue<ChildSlot<*, ProviderEditorComponent>>(
+            ChildSlot<Unit, ProviderEditorComponent>(),
+        )
+        override val isBusy = false
+        override fun open() = Unit
+        override fun onBack() = false
+    }
     override val state = MutableValue(initial)
     var offset: Int? = null
+    var project: Long? = null
     var loads = 0
     var action: Pair<Long, RunnerResultAction>? = null
     override fun onLoadMore() {
@@ -128,7 +140,9 @@ internal class PreviewRunnerRunsComponent(initial: RunnerRunsState) : RunnerRuns
     override fun onResultAction(id: Long, action: RunnerResultAction) {
         this.action = id to action
     }
-    override fun onProject(id: Long?) = Unit
+    override fun onProject(id: Long?) {
+        project = id
+    }
     override fun onStart() = Unit
     override fun onSelect(id: Long) = Unit
     override fun onRefresh() = Unit

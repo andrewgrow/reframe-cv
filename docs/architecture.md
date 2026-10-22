@@ -834,3 +834,25 @@ Parent projects cannot receive workspace documents. Current imported results can
 again or dismissed; previous snapshots and raw JSON stay unchanged.
 
 The first schema includes dataset cursor metadata; no migrations are provided.
+
+
+## Dashboard runner shortcut
+
+The dashboard footer opens Search runners, a live picker of saved runners across connections.
+Each choice shows its runner name (or operation title), connection name (or provider title),
+and availability. Disabled or unconfigured runners remain visible for cached history review;
+starting a new run is disabled. Empty and failed lists explain setup or offer Retry.
+
+Selecting a runner opens its existing Runs and results component as a nested dashboard page,
+without starting remote work or opening its settings. Back/Escape walks from results to run
+history, then back to the same dashboard. Navigation is blocked during paid starts and imports.
+Local reads stop when the page loses its active lifecycle and pending polling resumes on return.
+
+The dashboard project is supplied only as the preferred import destination. The import dialog
+preselects it if it is still eligible, and the user can choose another project. Runner settings,
+execution ownership, and search results remain global. No schema change is required.
+
+Runs and results offers Settings beside Start run. It opens the owning saved provider connection,
+including its runner list, and Close/Back/Escape returns to the retained results or history page.
+Local polling pauses during settings; returning reloads runner availability and resumes pending
+reads when enabled. Paid starts and imports block this shortcut as well as other navigation.

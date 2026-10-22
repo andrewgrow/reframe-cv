@@ -9,6 +9,8 @@ import reframecv.ui.store.bindStoreToLifecycle
 
 /** Lets the dashboard show workspace documents and open their sections. */
 interface DashboardComponent {
+    val runners: DashboardRunnersComponent
+    val isBusy: Boolean get() = runners.isBusy
     val projectId: Long
     val uiState: Value<DashboardState>
     fun onOpenResumes()
@@ -29,6 +31,7 @@ class DefaultDashboardComponent(
     private val back: () -> Unit = {},
 ) : DashboardComponent,
     AppComponentContext by componentContext {
+    override val runners = DefaultDashboardRunnersComponent(componentContext, projectId)
     private val store = createDashboardStore(
         storeFactory,
         projectId,
@@ -43,7 +46,9 @@ class DefaultDashboardComponent(
         lifecycle.doOnDestroy { backHandler.unregister(callback) }
     }
 
-    override fun onBack() = back()
+    override fun onBack() {
+        if (!runners.onBack()) back()
+    }
 
     override fun onOpenCoverLetters() = openCoverLetters()
 

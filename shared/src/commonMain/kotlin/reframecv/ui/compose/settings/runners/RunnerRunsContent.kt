@@ -30,6 +30,7 @@ import reframecv.shared.generated.resources.runner_runs
 import reframecv.shared.generated.resources.runner_runs_notice
 import reframecv.shared.generated.resources.runner_start
 import reframecv.shared.generated.resources.settings_close
+import reframecv.shared.generated.resources.settings_title
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.components.settings.runners.RunnerRunsState
 import reframecv.ui.compose.common.DocumentListControls
@@ -38,10 +39,16 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
+import reframecv.ui.compose.settings.ProviderEditorContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun RunnerRunsContent(component: RunnerRunsComponent) {
+    val settings by component.settings.editor.subscribeAsState()
+    settings.child?.instance?.let {
+        ProviderEditorContent(it)
+        return
+    }
     val state by component.state.subscribeAsState()
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
@@ -57,7 +64,7 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
                 PageHeader(
                     stringResource(Res.string.runner_runs),
                     component::onBack,
-                    enabled = !state.starting && !state.working,
+                    enabled = !component.isBusy,
                 )
                 Text(
                     state.runner.name.ifBlank {
@@ -116,7 +123,7 @@ private fun RunnerHistory(state: RunnerRunsState, component: RunnerRunsComponent
 
         else -> state.runs.forEach { run ->
             Column(
-                Modifier.fillMaxWidth().clickable(enabled = !state.starting) {
+                Modifier.fillMaxWidth().clickable(enabled = !component.isBusy) {
                     component.onSelect(run.id)
                 }
                     .padding(
@@ -148,21 +155,27 @@ private fun RunnerRunControls(state: RunnerRunsState, component: RunnerRunsCompo
                 stringResource(Res.string.runner_refresh),
                 component::onRefresh,
                 Modifier.testTag("runner.run.refresh"),
-                enabled = !state.starting && !state.reading && !state.working,
+                enabled = !component.isBusy && !state.reading,
             )
         }
+        FillButton(
+            stringResource(Res.string.settings_title),
+            component.settings::open,
+            Modifier.testTag("runner.run.settings"),
+            enabled = !component.isBusy,
+        )
         FillButton(
             stringResource(Res.string.runner_start),
             component::onStart,
             Modifier.testTag("runner.run.start"),
-            enabled = !state.starting && !state.working && state.runner.active,
+            enabled = !component.isBusy && state.runner.active,
             outlineState = FillButton.OutlineState.Visible,
         )
         FillButton(
             stringResource(Res.string.settings_close),
             component::onBack,
             Modifier.testTag("runner.runs.close"),
-            enabled = !state.starting && !state.working,
+            enabled = !component.isBusy,
         )
     }
 }

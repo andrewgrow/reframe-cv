@@ -125,6 +125,7 @@ class DefaultRootComponent(componentContext: AppComponentContext) :
     private fun isDocumentEditorBusy(): Boolean = when (
         val child = childStack.value.active.instance
     ) {
+        is RootComponent.Child.Dashboard -> child.component.isBusy
         is RootComponent.Child.Settings -> child.component.isBusy
         is RootComponent.Child.Vacancies -> child.component.isBusy
         is RootComponent.Child.Resumes -> child.component.isBusy

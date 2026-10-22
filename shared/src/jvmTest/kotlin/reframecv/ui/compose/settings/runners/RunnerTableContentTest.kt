@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -113,5 +114,23 @@ class RunnerTableContentTest : GoldenScreenshotTest() {
         onAllNodesWithTag("runner.cell.id")[0].assertWidthIsEqualTo(100.dp)
         onNodeWithTag("runner.header.descriptionText").assertWidthIsEqualTo(320.dp)
         onAllNodesWithTag("runner.cell.descriptionText")[0].assertWidthIsEqualTo(320.dp)
+    }
+
+    @Test
+    fun dashboardProjectIsPreselectedAndCanBeChangedBeforeImport() = runDesktopComposeUiTest {
+        val state = runnerTableFixture()
+        val other = state.projects.single().copy(id = 2, name = "Another project")
+        val component = PreviewRunnerRunsComponent(
+            state.copy(
+                importResultId = 1,
+                preferredProjectId = 1,
+                projects = state.projects + other,
+            ),
+        )
+        setGoldenContent(this) { RunnerRunsContent(component) }
+        onNodeWithTag("runner.import.confirm").assertIsEnabled()
+        onNodeWithTag("runner.import.project.2").performClick()
+        onNodeWithTag("runner.import.confirm").performClick()
+        assertEquals(2L, component.project)
     }
 }
