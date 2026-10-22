@@ -1,5 +1,7 @@
 package reframecv.runners
 
+import reframecv.domain.models.providers.RunnerRawResult
+import reframecv.domain.models.providers.RunnerResult
 import reframecv.domain.models.vacancy.Vacancy
 
 /** Lets each supported operation return its own normalized result type. */
@@ -41,4 +43,7 @@ data class RunnerResultsPage(
     val nextOffset: Int?,
     val total: Int? = null,
     val skipped: Int = 0,
+    val rawResults: List<RunnerRawResult> = emptyList(),
+    val savedResults: List<RunnerResult> = emptyList(),
+    val savedCount: Int = savedResults.size,
 )

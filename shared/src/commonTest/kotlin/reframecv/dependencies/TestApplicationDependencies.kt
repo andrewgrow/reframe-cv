@@ -259,12 +259,31 @@ class TestApplicationDependencies : ApplicationDependencies {
         reframecv.domain.models.providers.ProviderCreditBalance(100.0, 0.01, 1)
     }
     private val connections = MutableStateFlow<List<ProviderConnection>>(emptyList())
+    val runnerResultsRepository = reframecv.repository.TestRunnerResultsRepository(
+        committed = { connectionRunnersRepository.updateRun(it) },
+        createVacancy = { vacanciesRepository.create(it) },
+    )
+    override val runnerResultReviewUseCases by lazy {
+        reframecv.usecase.RunnerResultReviewUseCases(
+            runnerResultsRepository,
+            projectsRepository,
+            reframecv.runners.RunnerResultConverter { result, projectId, timestamp ->
+                reframecv.domain.models.vacancy.Vacancy(
+                    projectId = projectId,
+                    name = result.externalId.orEmpty(),
+                    createdAt = timestamp,
+                    updatedAt = timestamp,
+                )
+            },
+        )
+    }
     val runnerExecutionRepository = reframecv.repository.TestRunnerExecutionRepository()
     override val runnerExecutionUseCases by lazy {
         reframecv.usecase.RunnerExecutionUseCases(
             connectionRunnersRepository,
             providerConnectionsRepository,
             runnerExecutionRepository,
+            runnerResultsRepository,
         )
     }
     val connectionRunnersRepository = reframecv.repository.TestConnectionRunnersRepository()

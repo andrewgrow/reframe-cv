@@ -38,7 +38,7 @@ data class RunnerEditorState(
 interface RunnerEditorComponent {
     val executions: Value<ChildSlot<*, RunnerRunsComponent>>
     val isBusy: Boolean get() = state.value.busy ||
-        executions.value.child?.instance?.state?.value?.starting == true
+        executions.value.child?.instance?.state?.value?.let { it.starting || it.working } == true
     fun onRuns()
     val state: Value<RunnerEditorState>
     fun onDraft(draft: RunnerDraft)

@@ -12,6 +12,12 @@ data class ConnectionRun(
     val startedAt: Long,
     val finishedAt: Long? = null,
     val error: String? = null,
+    val datasetId: String? = null,
+    val nextResultOffset: Int = 0,
+    val resultTotal: Int? = null,
+    val resultsComplete: Boolean = false,
+    val resultColumns: List<String> = emptyList(),
+    val costUsd: Double? = null,
 ) : DomainModel {
     override fun toString() = "ConnectionRun(id=$id, runnerId=$runnerId, state=$state)"
 }

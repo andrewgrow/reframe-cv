@@ -154,6 +154,13 @@ class ApifyExecutionRepositoryTest {
             assertEquals(5, page.nextOffset)
             assertEquals(9, page.total)
             assertEquals(3, page.skipped)
+            assertEquals(5, page.rawResults.size)
+            val raw = Json.parseToJsonElement(page.rawResults.first().rawResultAsJson).jsonObject
+            assertTrue("companyAddress" in raw)
+            assertEquals("LinkedIn", page.rawResults.first().source)
+            assertEquals("101", page.rawResults.first().externalId)
+            assertEquals("null", page.rawResults.last().rawResultAsJson)
+            assertEquals(4, page.rawResults.last().position)
             val first = page.items.first() as VacancySearchResult
             assertEquals("Android & Kotlin", first.title)
             assertEquals("Intro\n\nSkills & tools", first.description)

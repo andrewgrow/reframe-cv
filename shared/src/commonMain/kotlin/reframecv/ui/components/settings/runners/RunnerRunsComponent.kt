@@ -13,6 +13,7 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import reframecv.domain.models.project.Project
 import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.ConnectionRunner
@@ -30,11 +31,18 @@ data class RunnerRunsState(
     val reading: Boolean = false,
     val view: RunnerRunView? = null,
     val error: String? = null,
+    val working: Boolean = false,
+    val importResultId: Long? = null,
+    val projects: List<Project> = emptyList(),
+    val notice: String? = null,
 )
 
 /** Starts explicit paid runs and resumes status/result reads for previously saved IDs. */
 interface RunnerRunsComponent {
     val state: Value<RunnerRunsState>
+    fun onLoadMore()
+    fun onResultAction(id: Long, action: RunnerResultAction)
+    fun onProject(id: Long?)
     fun onStart()
     fun onSelect(id: Long)
     fun onRefresh()
@@ -56,6 +64,23 @@ class DefaultRunnerRunsComponent(
     private var observation: Job? = null
     private var request: Job? = null
     override val state = MutableValue(RunnerRunsState(runner))
+    private val review = RunnerReviewActions(context, state, scope) {
+        val view = state.value.view ?: return@RunnerReviewActions
+        state.value = state.value.copy(
+            view = useCases.dataset.page(
+                state.value.runner.id,
+                view.run.id,
+                view.page?.offset ?: 0,
+            ),
+        )
+    }
+    override fun onResultAction(id: Long, action: RunnerResultAction) = review.act(id, action)
+    override fun onProject(id: Long?) = review.project(id)
+    override fun onLoadMore() {
+        val view = state.value.view ?: return
+        if (state.value.reading || state.value.working) return
+        request = scope.launch { read(view.run.id, view.page?.offset ?: 0, more = true) }
+    }
     init {
         context.lifecycle.doOnDestroy { scope.cancel() }
         onRetryHistory()
@@ -89,7 +114,7 @@ class DefaultRunnerRunsComponent(
 
     @Suppress("TooGenericExceptionCaught")
     override fun onStart() {
-        if (state.value.starting || !state.value.runner.active) return
+        if (state.value.starting || state.value.working || !state.value.runner.active) return
         request?.cancel()
         state.value = state.value.copy(starting = true, reading = false, error = null, view = null)
         request = scope.launch {
@@ -105,32 +130,44 @@ class DefaultRunnerRunsComponent(
         }
     }
     override fun onSelect(id: Long) {
-        if (state.value.starting) return
+        if (state.value.starting || state.value.working) return
         val run = state.value.runs.find { it.id == id } ?: return
         request?.cancel()
         state.value = state.value.copy(view = RunnerRunView(run, null), error = null)
-        request = scope.launch { read(run.id, 0) }
+        request = scope.launch {
+            read(
+                run.id,
+                0,
+                local =
+                    run.state == ConnectionRunState.Succeeded && run.datasetId != null &&
+                        (run.nextResultOffset > 0 || run.resultsComplete),
+            )
+        }
     }
     override fun onRefresh() {
-        if (state.value.starting) return
+        if (state.value.starting || state.value.working) return
         val run = state.value.view?.run ?: return
         request?.cancel()
         request = scope.launch { read(run.id, state.value.view?.page?.offset ?: 0) }
     }
     override fun onPage(offset: Int) {
-        if (!state.value.reading && offset >= 0) {
+        if (!state.value.reading && !state.value.working && offset >= 0) {
             val run = state.value.view?.run ?: return
             request?.cancel()
-            request = scope.launch { read(run.id, offset) }
+            request = scope.launch { read(run.id, offset, local = true) }
         }
     }
 
     @Suppress("TooGenericExceptionCaught")
-    private suspend fun read(id: Long, offset: Int) {
+    private suspend fun read(id: Long, offset: Int, local: Boolean = false, more: Boolean = false) {
         state.value = state.value.copy(reading = true, error = null)
         try {
             while (currentCoroutineContext().isActive) {
-                val view = useCases.inspect(state.value.runner.id, id, offset)
+                val view = when {
+                    more -> useCases.dataset.loadMore(state.value.runner.id, id, offset)
+                    local -> useCases.dataset.page(state.value.runner.id, id, offset)
+                    else -> useCases.inspect(state.value.runner.id, id, offset)
+                }
                 state.value = state.value.copy(view = view, reading = false)
                 val pending =
                     view.run.state == ConnectionRunState.Pending ||
@@ -157,7 +194,11 @@ class DefaultRunnerRunsComponent(
         )
     }
     override fun onBack() {
-        if (state.value.starting) return
+        if (state.value.starting || state.value.working) return
+        if (state.value.importResultId != null) {
+            review.project(null)
+            return
+        }
         request?.cancel()
         if (state.value.view !=
             null

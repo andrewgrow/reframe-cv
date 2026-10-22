@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "55c4191d2e1128bec9f44857fe8f7f2f",
+    "identityHash": "f52e35876e13080e7d95fee4c977a811",
     "entities": [
       {
         "tableName": "screen_states",
@@ -259,7 +259,7 @@
       },
       {
         "tableName": "connection_runs",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `runner_id` INTEGER NOT NULL, `configuration_snapshot` TEXT NOT NULL, `state` TEXT NOT NULL, `external_id` TEXT, `started_at` INTEGER NOT NULL, `finished_at` INTEGER, `error` TEXT, FOREIGN KEY(`runner_id`) REFERENCES `connection_runners`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `runner_id` INTEGER NOT NULL, `configuration_snapshot` TEXT NOT NULL, `state` TEXT NOT NULL, `external_id` TEXT, `started_at` INTEGER NOT NULL, `finished_at` INTEGER, `error` TEXT, `dataset_id` TEXT, `next_result_offset` INTEGER NOT NULL DEFAULT 0, `result_total` INTEGER, `results_complete` INTEGER NOT NULL DEFAULT 0, `result_columns` TEXT NOT NULL DEFAULT '[]', `cost_usd` REAL, FOREIGN KEY(`runner_id`) REFERENCES `connection_runners`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "id",
@@ -305,6 +305,42 @@
             "fieldPath": "error",
             "columnName": "error",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "datasetId",
+            "columnName": "dataset_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nextResultOffset",
+            "columnName": "next_result_offset",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "resultTotal",
+            "columnName": "result_total",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resultsComplete",
+            "columnName": "results_complete",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "resultColumns",
+            "columnName": "result_columns",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "'[]'"
+          },
+          {
+            "fieldPath": "costUsd",
+            "columnName": "cost_usd",
+            "affinity": "REAL"
           }
         ],
         "primaryKey": {
@@ -331,6 +367,136 @@
             "onUpdate": "NO ACTION",
             "columns": [
               "runner_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "runner_results",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `run_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `source` TEXT NOT NULL, `external_id` TEXT, `raw_result_as_json` TEXT NOT NULL, `received_at` INTEGER NOT NULL, `status` TEXT NOT NULL, `vacancy_id` INTEGER, FOREIGN KEY(`run_id`) REFERENCES `connection_runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "runId",
+            "columnName": "run_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "position",
+            "columnName": "position",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "externalId",
+            "columnName": "external_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rawResultAsJson",
+            "columnName": "raw_result_as_json",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receivedAt",
+            "columnName": "received_at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "vacancyId",
+            "columnName": "vacancy_id",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_runner_results_run_id_position",
+            "unique": true,
+            "columnNames": [
+              "run_id",
+              "position"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_runner_results_run_id_position` ON `${TABLE_NAME}` (`run_id`, `position`)"
+          },
+          {
+            "name": "index_runner_results_run_id_source_external_id",
+            "unique": true,
+            "columnNames": [
+              "run_id",
+              "source",
+              "external_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_runner_results_run_id_source_external_id` ON `${TABLE_NAME}` (`run_id`, `source`, `external_id`)"
+          },
+          {
+            "name": "index_runner_results_source_external_id",
+            "unique": false,
+            "columnNames": [
+              "source",
+              "external_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runner_results_source_external_id` ON `${TABLE_NAME}` (`source`, `external_id`)"
+          },
+          {
+            "name": "index_runner_results_vacancy_id",
+            "unique": false,
+            "columnNames": [
+              "vacancy_id"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runner_results_vacancy_id` ON `${TABLE_NAME}` (`vacancy_id`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "connection_runs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "run_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          },
+          {
+            "table": "vacancies",
+            "onDelete": "SET NULL",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "vacancy_id"
             ],
             "referencedColumns": [
               "id"
@@ -1229,7 +1395,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '55c4191d2e1128bec9f44857fe8f7f2f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f52e35876e13080e7d95fee4c977a811')"
     ]
   }
 }

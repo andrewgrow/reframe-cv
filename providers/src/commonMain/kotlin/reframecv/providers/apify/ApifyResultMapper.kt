@@ -4,10 +4,12 @@ import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
 import reframecv.domain.models.providers.ConnectionRunState
+import reframecv.domain.models.providers.RunnerRawResult
 import reframecv.runners.RemoteRunnerRun
 import reframecv.runners.RunnerResultsPage
 import reframecv.runners.VacancySearchResult
@@ -59,10 +61,15 @@ internal fun mapApifyPage(
         },
         total,
         rows.size - mapped.size,
+        rawResults = rows.mapIndexed { index, row ->
+            val identifier = ((row as? JsonObject)?.get("id") as? JsonPrimitive)?.contentOrNull
+                ?.takeIf { it.matches(Regex("[0-9]+")) }
+            RunnerRawResult(offset + index, "LinkedIn", identifier, row.toString())
+        },
     )
 }
 
-private fun ApifyVacancyDto.toDomain(): VacancySearchResult? {
+internal fun ApifyVacancyDto.toDomain(): VacancySearchResult? {
     val identifier = id?.contentOrNull?.takeIf { it.matches(Regex("[0-9]+")) }
     val label = title?.let(::cleanText)?.takeIf { it.isNotEmpty() }
     if (identifier == null || label == null) return null

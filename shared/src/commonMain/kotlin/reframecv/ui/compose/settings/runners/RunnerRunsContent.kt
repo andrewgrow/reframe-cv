@@ -57,7 +57,7 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
                 PageHeader(
                     stringResource(Res.string.runner_runs),
                     component::onBack,
-                    enabled = !state.starting,
+                    enabled = !state.starting && !state.working,
                 )
                 Text(
                     state.runner.name.ifBlank {
@@ -70,26 +70,29 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
                     color = ReframeTheme.colorScheme.hint,
                 )
                 state.error?.let { SelectableText(it, color = ReframeTheme.colorScheme.critical) }
-                FastScrollColumn(
-                    Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
-                ) {
-                    if (state.starting) {
-                        LoadingContent(
-                            Modifier.height(
-                                ReframeTheme.tokens.dimensions.loadingIndicatorSize * 2,
-                            ),
-                        )
-                    }
-                    if (state.view == null) {
+                state.notice?.let { Text(it, color = ReframeTheme.colorScheme.success) }
+                if (state.view != null) {
+                    RunnerRunResults(state, component, Modifier.weight(1f))
+                } else {
+                    FastScrollColumn(
+                        Modifier.weight(1f),
+                        verticalArrangement =
+                            Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
+                    ) {
+                        if (state.starting) {
+                            LoadingContent(
+                                Modifier.height(
+                                    ReframeTheme.tokens.dimensions.loadingIndicatorSize * 2,
+                                ),
+                            )
+                        }
                         RunnerHistory(state, component)
-                    } else {
-                        RunnerRunResults(state, component)
                     }
                 }
             }
             HorizontalDivider()
             RunnerRunControls(state, component)
+            RunnerImportDialog(state, component)
         }
     }
 }
@@ -145,21 +148,21 @@ private fun RunnerRunControls(state: RunnerRunsState, component: RunnerRunsCompo
                 stringResource(Res.string.runner_refresh),
                 component::onRefresh,
                 Modifier.testTag("runner.run.refresh"),
-                enabled = !state.starting && !state.reading,
+                enabled = !state.starting && !state.reading && !state.working,
             )
         }
         FillButton(
             stringResource(Res.string.runner_start),
             component::onStart,
             Modifier.testTag("runner.run.start"),
-            enabled = !state.starting && state.runner.active,
+            enabled = !state.starting && !state.working && state.runner.active,
             outlineState = FillButton.OutlineState.Visible,
         )
         FillButton(
             stringResource(Res.string.settings_close),
             component::onBack,
             Modifier.testTag("runner.runs.close"),
-            enabled = !state.starting,
+            enabled = !state.starting && !state.working,
         )
     }
 }

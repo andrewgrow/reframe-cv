@@ -10,6 +10,7 @@ import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.RunnerConfigurationJson
 import reframecv.repository.ConnectionRunnersRepository
 import reframecv.repository.ProviderConnectionsRepository
+import reframecv.repository.RunnerResultsRepository
 import reframecv.runners.RemoteRunnerRun
 import reframecv.runners.RunnerExecutionError
 import reframecv.runners.RunnerExecutionException
@@ -29,8 +30,10 @@ class RunnerExecutionUseCases(
     private val runners: ConnectionRunnersRepository,
     private val connections: ProviderConnectionsRepository,
     private val remote: RunnerExecutionRepository,
+    private val results: RunnerResultsRepository,
     private val now: () -> Long = ::nowMillis,
 ) {
+    val dataset = RunnerDatasetUseCases(runners, connections, remote, results, now)
     fun observe(runnerId: Long) = runners.runs(runnerId)
 
     @Suppress("TooGenericExceptionCaught")
@@ -102,20 +105,28 @@ class RunnerExecutionUseCases(
         val status = remote.inspect(connection, externalId)
         require(status.id == externalId) { "Unexpected run identity" }
         val saved = persist(local, status)
-        val page = if (status.state == ConnectionRunState.Succeeded) {
-            val dataset = status.datasetId ?: throw RunnerExecutionException(
-                RunnerExecutionError.InvalidResponse,
-                "Apify did not return a dataset ID.",
-            )
-            remote.results(connection(runner.connectionId), dataset, offset, RESULTS_PAGE_SIZE)
+        return if (saved.state == ConnectionRunState.Succeeded) {
+            if (saved.datasetId == null) {
+                throw RunnerExecutionException(
+                    RunnerExecutionError.InvalidResponse,
+                    "Apify did not return a dataset ID.",
+                )
+            }
+            val view = if (saved.nextResultOffset == 0 && !saved.resultsComplete) {
+                dataset.loadMore(runnerId, runId, offset)
+            } else {
+                dataset.page(runnerId, runId, offset)
+            }
+            view.copy(remote = status)
         } else {
-            null
+            RunnerRunView(saved, status)
         }
-        return RunnerRunView(saved, status, page)
     }
     private suspend fun persist(local: ConnectionRun, status: RemoteRunnerRun): ConnectionRun {
         val saved = local.copy(
             externalId = status.id,
+            datasetId = status.datasetId ?: local.datasetId,
+            costUsd = status.costUsd ?: local.costUsd,
             state = status.state,
             finishedAt = status.finishedAt,
             error = status.details.takeIf {
@@ -143,4 +154,3 @@ class RunnerExecutionUseCases(
         return connection
     }
 }
-private const val RESULTS_PAGE_SIZE = 50

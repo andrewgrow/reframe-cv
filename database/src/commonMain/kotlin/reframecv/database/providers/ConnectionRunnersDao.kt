@@ -52,6 +52,13 @@ abstract class ConnectionRunnersDao {
         require(previous.runnerId == run.runnerId)
         require(previous.configurationSnapshot == run.configurationSnapshot)
         require(previous.startedAt == run.startedAt)
-        return writeRun(run)
+        return writeRun(
+            run.copy(
+                nextResultOffset = previous.nextResultOffset,
+                resultTotal = previous.resultTotal,
+                resultsComplete = previous.resultsComplete,
+                resultColumns = previous.resultColumns,
+            ),
+        )
     }
 }

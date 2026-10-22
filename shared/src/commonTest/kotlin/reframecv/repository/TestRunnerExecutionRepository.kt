@@ -10,6 +10,7 @@ import reframecv.runners.RunnerResultsPage
 class TestRunnerExecutionRepository : RunnerExecutionRepository {
     var starts = 0
     var reads = 0
+    var resultError: Exception? = null
     var resultReads = 0
     var requestedOffset = 0
     var readError: Exception? = null
@@ -44,6 +45,7 @@ class TestRunnerExecutionRepository : RunnerExecutionRepository {
     ): RunnerResultsPage {
         resultReads++
         requestedOffset = offset
+        resultError?.let { throw it }
         return page.copy(offset = offset)
     }
 }

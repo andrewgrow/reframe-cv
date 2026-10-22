@@ -726,7 +726,7 @@ disabled connections, disabled runners or invalid configuration.
 
 The initial operation contract is LinkedIn job search through the supported Apify Actor.
 Saved runners support explicit remote execution, status polling and paged result review.
-Adding selected results to a project is not implemented yet. Settings backup version 2 nests
+Supported source results can be explicitly converted into project vacancies. Settings backup version 2 nests
 runners under connections, remaps their ownership on import, and excludes execution history.
 
 ## Runner settings UI
@@ -759,19 +759,78 @@ one POST to the supported Actor. Actor input maps the per-search limit to `limit
 The returned external ID and state are persisted before polling. Failed or cancelled starts
 are never automatically retried: the user must check Apify Console because an ambiguous
 network failure may still have started paid work. A known external ID can be reopened to
-resume GET requests without another POST. Status is polled every five seconds while that
-run is visible. Leaving cancels local requests, not the remote job; local deletion also does
+resume GET requests without another POST. Pending/running status is polled every five seconds while that
+run is visible. Reopening a completed run with cached results reads the local database. Leaving cancels local requests, not the remote job; local deletion also does
 not abort remote work.
 
-Successful runs load dataset pages of 50 raw rows. Pagination uses the raw row count and
-Apify's total header, independently of malformed or duplicate rows skipped by the mapper.
+Successful runs initially load 50 raw dataset rows. Further downloads are explicit and resume
+from the persisted raw offset. The next offset and total follow provider pagination,
+independently of malformed or duplicate rows skipped by the mapper. Local review pages contain
+25 saved snapshots and never contact the provider.
 Normalized candidates retain source IDs, title, company, job description, canonical LinkedIn
 URL, location, posting date, salary, employment type and seniority when available. Missing
 optional values remain empty; malformed records do not discard valid neighbors. Structured
 requirements are not inferred, and the posting date is not used as the local creation date.
-Candidates remain remote preview data until a future explicit project import flow.
+Source snapshots remain separate from workspace vacancies until explicit conversion.
+Original dataset rows are persisted locally as described below.
 
 Apify requests and complete text responses use `apify-http.log` beside the database and the
 `ApifyHttp` console logger. Authentication headers and API tokens are redacted. The same
 rotation policy as the other logs applies. Tests use mocked HTTP and fictional job postings;
-verification never launches paid Actors. No database schema change is required.
+verification never launches paid Actors.
+
+
+## Runner result snapshots and repeat detection
+
+`RunnerResult` / `RunnerResultEntity` stores one immutable source snapshot: run ID, raw dataset
+position, source, optional external ID, original JSON object, receipt timestamp, review status
+(`New`, `Imported`, `Dismissed`) and an optional imported vacancy reference. JSON retains all
+provider fields, including unknown fields; whitespace formatting is not retained. Rows that
+cannot be mapped into a candidate are still saved, even when no source ID can be extracted.
+
+Successful dataset reads persist snapshots before returning the page to the component. Unique
+indexes on `(run_id, position)` and `(run_id, source, external_id)` make repeated reads idempotent.
+The first snapshot, receipt timestamp and review decision remain unchanged. A repeated known
+source ID within one run keeps the first occurrence; rows without IDs use their raw positions.
+Pagination continues to count raw provider rows, independently of stored or mapped row counts.
+
+An index on `(source, external_id)` finds earlier occurrences across runners and connections.
+Source means the original publisher (`LinkedIn`), independently of the execution provider
+(`Apify`). Previous imports take priority over newer unreviewed occurrences; otherwise the
+latest earlier run wins. Different sources and missing external IDs are not matched. The pinned action column shows previous encounters and review state in icon tooltips,
+including an imported vacancy ID when still available.
+Repeat detection does not overwrite vacancies or merge modified descriptions between runs.
+
+Deleting a vacancy or its project sets the snapshot's vacancy reference to null while retaining
+`Imported` as historical information. Deleting a runner or connection cascades through its runs
+and snapshots. Results are excluded from settings backups together with execution history.
+The first database schema now includes `runner_results`; migrations are not provided.
+
+
+## Generic runner dataset table
+
+Runner result columns are the union of top-level JSON keys seen across downloaded pages.
+Column order is retained in the run alongside dataset ID, next raw offset, known total,
+completion flag and cost. Incoming rows and the download cursor are committed atomically;
+failed downloads can be retried without skipping rows. Status refreshes preserve this cursor.
+Settings backups continue to exclude runs and results.
+
+The table renders every saved row, including output that cannot yet be converted into a
+vacancy. Missing keys are blank; nested arrays/objects use compact JSON. Cells show at most
+three lines with ellipsis, and a click opens their complete selectable value. Column widths
+fit measured headers and current-page values within 100–320 dp; headers and cells share the
+same widths. Headers stay
+fixed vertically and the action column stays fixed horizontally. Both axes have draggable
+scrollbars and end buttons. Next/Previous browse saved rows; Load more performs only the
+next dataset GET and does not start a paid Actor run. Cached review and rejection actions work
+with no active provider or network connection.
+
+New rows offer conversion and dismissal; dismissed rows can be restored. Previously seen rows
+are marked but can still be converted because source content may have changed. Conversion
+asks for a leaf project and uses a provider-specific local snapshot converter. The first
+converter supports LinkedIn output. Vacancy creation and the result's Imported state/link are
+one Room transaction, so unsupported data or an invalid project cannot leave an orphan vacancy.
+Parent projects cannot receive workspace documents. Current imported results cannot be imported
+again or dismissed; previous snapshots and raw JSON stay unchanged.
+
+The first schema includes dataset cursor metadata; no migrations are provided.

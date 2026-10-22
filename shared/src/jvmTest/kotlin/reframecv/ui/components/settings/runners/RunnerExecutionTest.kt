@@ -73,7 +73,7 @@ class RunnerExecutionTest : ComponentTest() {
         assertEquals(run, dependencies.connectionRunnersRepository.getRun(run.id))
         val view = useCases.inspect(runner.id, run.id, 50)
         assertEquals(50, view.page?.offset)
-        assertEquals(50, dependencies.runnerExecutionRepository.requestedOffset)
+        assertEquals(0, dependencies.runnerExecutionRepository.requestedOffset)
         assertEquals(1, dependencies.runnerExecutionRepository.starts)
         assertEquals(1, dependencies.runnerExecutionRepository.resultReads)
         assertFailsWith<IllegalArgumentException> { useCases.inspect(runner.id + 1, run.id) }
@@ -220,6 +220,8 @@ class RunnerExecutionTest : ComponentTest() {
         }
         assertEquals(0, remote.resultReads)
         remote.status = remote.status.copy(state = ConnectionRunState.Succeeded, datasetId = null)
+        val stored = dependencies.connectionRunnersRepository.getRun(run.id)!!
+        dependencies.connectionRunnersRepository.updateRun(stored.copy(datasetId = null))
         assertFailsWith<RunnerExecutionException> { useCases.inspect(runner.id, run.id) }
         remote.status = remote.status.copy(datasetId = "dataset1")
         assertNotNull(useCases.inspect(runner.id, run.id).page)
