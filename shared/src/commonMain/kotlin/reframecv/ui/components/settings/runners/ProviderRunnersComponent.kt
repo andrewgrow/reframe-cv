@@ -29,7 +29,7 @@ data class ProviderRunnersState(
 interface ProviderRunnersComponent {
     val state: Value<ProviderRunnersState>
     val editorSlot: Value<ChildSlot<*, RunnerEditorComponent>>
-    val isBusy: Boolean get() = editorSlot.value.child?.instance?.state?.value?.busy == true
+    val isBusy: Boolean get() = editorSlot.value.child?.instance?.isBusy == true
     fun onAdd()
     fun onEdit(id: Long)
     fun onRetry()

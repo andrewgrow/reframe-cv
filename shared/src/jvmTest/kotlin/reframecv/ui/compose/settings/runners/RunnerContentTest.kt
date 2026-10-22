@@ -57,6 +57,20 @@ class RunnerContentTest : ComponentTest() {
             waitForIdle()
             onNodeWithTag("runner.delete").assertExists()
             assertEquals(1, dependencies.connectionRunnersRepository.records.value.size)
+            onNodeWithTag("runner.runs").performClick()
+            onNodeWithTag("runner.runs.page").assertExists()
+            onNodeWithTag("runner.run.start").performClick()
+            waitUntil(timeoutMillis = 5000) {
+                dependencies.runnerExecutionRepository.resultReads ==
+                    1
+            }
+            waitForIdle()
+            onNodeWithTag("runner.run.refresh").assertExists()
+            assertEquals(1, dependencies.runnerExecutionRepository.starts)
+            onRoot().performKeyInput { pressKey(Key.Escape) }
+            onNodeWithTag("runner.run.1").assertExists()
+            onRoot().performKeyInput { pressKey(Key.Escape) }
+            onNodeWithTag("runner.editor").assertExists()
             onRoot().performKeyInput { pressKey(Key.Escape) }
             onNodeWithTag("settings.editor").assertExists()
             onNodeWithTag(

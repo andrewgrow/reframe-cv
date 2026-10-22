@@ -22,6 +22,7 @@ class LocalConnectionRunnersRepository(private val dao: ConnectionRunnersDao) :
     override fun runs(runnerId: Long) = dao.runs(runnerId).map { rows ->
         rows.map { it.toDomainModel() }
     }
+    override suspend fun getRun(id: Long) = dao.getRun(id)?.toDomainModel()
     override suspend fun createRun(run: ConnectionRun): Long {
         require(run.id == 0L)
         return dao.insertRun(run.toEntity())

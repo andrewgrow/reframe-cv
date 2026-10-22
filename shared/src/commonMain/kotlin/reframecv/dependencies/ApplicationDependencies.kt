@@ -39,6 +39,7 @@ import reframecv.usecase.VacancyFilesUseCases
 
 /** Defines the contract each platform implements to provide application dependencies. */
 interface ApplicationDependencies {
+    val runnerExecutionUseCases: reframecv.usecase.RunnerExecutionUseCases
     val connectionRunnersUseCases: reframecv.usecase.ConnectionRunnersUseCases
     val settingsBackupUseCases: SettingsBackupUseCases
     val aiRequestBalance: AiRequestBalance

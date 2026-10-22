@@ -1,5 +1,10 @@
 package reframecv.ui.components.settings.runners
 
+import com.arkivanov.decompose.router.slot.ChildSlot
+import com.arkivanov.decompose.router.slot.SlotNavigation
+import com.arkivanov.decompose.router.slot.activate
+import com.arkivanov.decompose.router.slot.childSlot
+import com.arkivanov.decompose.router.slot.dismiss
 import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
@@ -31,6 +36,10 @@ data class RunnerEditorState(
 
 /** Edits one reusable operation without starting a remote request. */
 interface RunnerEditorComponent {
+    val executions: Value<ChildSlot<*, RunnerRunsComponent>>
+    val isBusy: Boolean get() = state.value.busy ||
+        executions.value.child?.instance?.state?.value?.starting == true
+    fun onRuns()
     val state: Value<RunnerEditorState>
     fun onDraft(draft: RunnerDraft)
     fun onSave()
@@ -59,6 +68,23 @@ class DefaultRunnerEditorComponent(
                 },
         ),
     )
+    private val runNavigation = SlotNavigation<ConnectionRunner>()
+    override val executions = context.childSlot(
+        runNavigation,
+        serializer = null,
+        key = "RunnerRuns",
+        handleBackButton = false,
+    ) { runner, childContext ->
+        DefaultRunnerRunsComponent(childContext, runner, back = {
+            runNavigation.dismiss()
+        }) as RunnerRunsComponent
+    }
+    override fun onRuns() {
+        val current = state.value
+        if (!current.busy && !current.confirming && current.runner.id != 0L) {
+            runNavigation.activate(current.runner)
+        }
+    }
     init {
         context.lifecycle.doOnDestroy { scope.cancel() }
     }
@@ -135,6 +161,11 @@ class DefaultRunnerEditorComponent(
         }
     }
     override fun onBack() {
+        val execution = executions.value.child?.instance
+        if (execution != null) {
+            execution.onBack()
+            return
+        }
         if (state.value.busy) return
         if (state.value.confirming) {
             state.value = state.value.copy(confirming = false, error = null)

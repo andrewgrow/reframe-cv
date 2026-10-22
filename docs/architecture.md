@@ -459,12 +459,12 @@ Errors include operation context and stacks in `stacktrace.txt`, preceded by the
 200 Store/tree events. Event summaries omit document contents and project names.
 Logging must preserve coroutine cancellation. The in-memory event history resets each launch.
 
-Both diagnostic logs use `RotatingLogFile`: a 10 MiB active file plus five archives per log,
+All three diagnostic logs use `RotatingLogFile`: a 10 MiB active file plus five archives per log,
 numbered `.1` (newest) through `.5` (oldest). Rotation removes only the oldest archive and
 does not depend on application restarts. A shared process lock serializes appends and rotation
 across instances. Ordinary entries remain together; oversized entries span files at UTF-8
 character boundaries. Existing oversized files retain their latest 10 MiB before appending.
-The retained files for both logs total at most 120 MiB. File failures remain diagnostic-only.
+The retained files for all three logs total at most 180 MiB. File failures remain diagnostic-only.
 
 ## Current limits
 
@@ -725,8 +725,8 @@ its history. Use cases validate the provider/operation combination and reject ex
 disabled connections, disabled runners or invalid configuration.
 
 The initial operation contract is LinkedIn job search through the supported Apify Actor.
-This change provides persistence and preparation of runs; remote Apify execution, polling,
-result review and vacancy creation are not implemented yet. Settings backup version 2 nests
+Saved runners support explicit remote execution, status polling and paged result review.
+Adding selected results to a project is not implemented yet. Settings backup version 2 nests
 runners under connections, remaps their ownership on import, and excludes execution history.
 
 ## Runner settings UI
@@ -745,3 +745,33 @@ history. It neither deletes saved vacancies nor stops remote jobs. Storage failu
 inputs and selection for retry. Settings does not execute an Actor or create execution
 history when adding or editing a runner. The provider's own Save is independent of runner
 Save; neither operation implicitly commits the other's draft. No schema change is required.
+
+
+## Apify runner execution
+
+The runner editor opens a separate Runs and results page. Starting uses the saved settings,
+not unsaved editor inputs, and requires an active Apify connection and active valid runner.
+`RunnerExecutionUseCases` coordinates local run history with `RunnerExecutionRepository`;
+`ApifyExecutionRepository` adapts that contract through the shared Ktor client.
+
+A local Pending record with an immutable, non-secret configuration snapshot is saved before
+one POST to the supported Actor. Actor input maps the per-search limit to `limitPerSource`.
+The returned external ID and state are persisted before polling. Failed or cancelled starts
+are never automatically retried: the user must check Apify Console because an ambiguous
+network failure may still have started paid work. A known external ID can be reopened to
+resume GET requests without another POST. Status is polled every five seconds while that
+run is visible. Leaving cancels local requests, not the remote job; local deletion also does
+not abort remote work.
+
+Successful runs load dataset pages of 50 raw rows. Pagination uses the raw row count and
+Apify's total header, independently of malformed or duplicate rows skipped by the mapper.
+Normalized candidates retain source IDs, title, company, job description, canonical LinkedIn
+URL, location, posting date, salary, employment type and seniority when available. Missing
+optional values remain empty; malformed records do not discard valid neighbors. Structured
+requirements are not inferred, and the posting date is not used as the local creation date.
+Candidates remain remote preview data until a future explicit project import flow.
+
+Apify requests and complete text responses use `apify-http.log` beside the database and the
+`ApifyHttp` console logger. Authentication headers and API tokens are redacted. The same
+rotation policy as the other logs applies. Tests use mocked HTTP and fictional job postings;
+verification never launches paid Actors. No database schema change is required.

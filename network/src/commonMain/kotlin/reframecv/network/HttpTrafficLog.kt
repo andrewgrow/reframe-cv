@@ -84,7 +84,8 @@ class HttpTrafficLog(private val logger: HttpTrafficLogger) {
 
     private fun sensitive(name: String) = name.lowercase().filter(Char::isLetterOrDigit) in setOf(
         "authorization", "proxyauthorization", "cookie", "setcookie", "xapikey",
-        "filedata", "apikey", "key", "token", "accesstoken", "refreshtoken", "password", "secret",
+        "filedata", "apikey", "apitoken",
+        "key", "token", "accesstoken", "refreshtoken", "password", "secret",
     )
 
     @Suppress("TooGenericExceptionCaught")

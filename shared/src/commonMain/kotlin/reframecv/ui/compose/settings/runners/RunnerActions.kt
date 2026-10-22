@@ -26,6 +26,7 @@ import reframecv.shared.generated.resources.runner_delete_error
 import reframecv.shared.generated.resources.runner_delete_title
 import reframecv.shared.generated.resources.runner_delete_warning
 import reframecv.shared.generated.resources.runner_operation_linkedin
+import reframecv.shared.generated.resources.runner_runs
 import reframecv.shared.generated.resources.runner_validation
 import reframecv.shared.generated.resources.settings_cancel
 import reframecv.shared.generated.resources.settings_close
@@ -58,6 +59,17 @@ internal fun RunnerActions(state: RunnerEditorState, component: RunnerEditorComp
             contentColor = ReframeTheme.colorScheme.critical,
         )
     }) {
+        if (state.runner.id !=
+            0L
+        ) {
+            FillButton(
+                stringResource(Res.string.runner_runs),
+                component::onRuns,
+                Modifier.testTag("runner.runs"),
+                enabled = enabled,
+                outlineState = FillButton.OutlineState.Visible,
+            )
+        }
         FillButton(
             stringResource(Res.string.settings_save),
             component::onSave,

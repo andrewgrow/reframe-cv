@@ -31,6 +31,7 @@ class TestConnectionRunnersRepository : ConnectionRunnersRepository {
     }
     override fun runs(runnerId: Long) =
         history.map { it.filter { run -> run.runnerId == runnerId } }
+    override suspend fun getRun(id: Long) = history.value.find { it.id == id }
     override suspend fun createRun(run: ConnectionRun): Long {
         val id = (history.value.maxOfOrNull { it.id } ?: 0) + 1
         history.value += run.copy(id = id)

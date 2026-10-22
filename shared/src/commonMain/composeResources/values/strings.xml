@@ -466,4 +466,19 @@
     <string name="runner_delete_title">Delete runner?</string>
     <string name="runner_delete_warning">The runner and its local run history will be permanently deleted. Saved vacancies will be kept. Remote runs are not stopped.</string>
     <string name="runner_delete_error">Could not delete the runner. Try again.</string>
+    <string name="runner_runs">Runs and results</string>
+    <string name="runner_runs_notice">Start run launches a paid Apify request using saved runner settings. Leaving this page stops local polling, not the remote run. Results are not added to projects automatically.</string>
+    <string name="runner_history_error">Could not load run history.</string>
+    <string name="runner_history_empty">No runs yet.</string>
+    <string name="runner_start">Start run</string>
+    <string name="runner_refresh">Refresh</string>
+    <string name="runner_cost">Run cost: $%1$s</string>
+    <string name="runner_run_unknown">No remote run ID is available. Check Apify Console before starting another run.</string>
+    <string name="runner_result_count">Loaded: %1$d · Total: %2$d</string>
+    <string name="runner_results_skipped">Skipped invalid or duplicate rows: %1$d</string>
+    <string name="runner_previous">Previous</string>
+    <string name="runner_next">Next</string>
+    <string name="runner_posted">Posted: %1$s</string>
+    <string name="runner_details">Details</string>
+    <string name="runner_hide_details">Hide details</string>
 </resources>

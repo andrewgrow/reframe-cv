@@ -4,6 +4,9 @@ import com.arkivanov.decompose.router.slot.ChildSlot
 import com.arkivanov.decompose.value.MutableValue
 
 class TestRunnerEditorComponent(initial: RunnerEditorState) : RunnerEditorComponent {
+    override val executions =
+        MutableValue<ChildSlot<*, RunnerRunsComponent>>(ChildSlot<Unit, RunnerRunsComponent>())
+    override fun onRuns() = Unit
     override val state = MutableValue(initial)
     var closed = false
     override fun onDraft(draft: RunnerDraft) {

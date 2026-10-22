@@ -319,6 +319,21 @@ class DefaultApplicationDependencies(
             return prompts
         }
 
+    override val runnerExecutionUseCases by lazy {
+        reframecv.usecase.RunnerExecutionUseCases(
+            reframecv.repository.LocalConnectionRunnersRepository(
+                database.value.connectionRunnersDao(),
+            ),
+            LocalProviderConnectionsRepository(database.value.providerConnectionsDao()),
+            reframecv.providers.apify.ApifyExecutionRepository(
+                transport.value,
+                FileHttpTrafficLogger(
+                    applicationDataDirectory().resolve("apify-http.log"),
+                    "ApifyHttp",
+                ),
+            ),
+        )
+    }
     override val connectionRunnersUseCases by lazy {
         reframecv.usecase.ConnectionRunnersUseCases(
             reframecv.repository.LocalConnectionRunnersRepository(

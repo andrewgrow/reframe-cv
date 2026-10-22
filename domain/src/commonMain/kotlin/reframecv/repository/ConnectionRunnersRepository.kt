@@ -11,6 +11,7 @@ interface ConnectionRunnersRepository {
     suspend fun save(runner: ConnectionRunner): Long
     suspend fun delete(id: Long)
     fun runs(runnerId: Long): Flow<List<ConnectionRun>>
+    suspend fun getRun(id: Long): ConnectionRun?
     suspend fun createRun(run: ConnectionRun): Long
     suspend fun updateRun(run: ConnectionRun)
 }

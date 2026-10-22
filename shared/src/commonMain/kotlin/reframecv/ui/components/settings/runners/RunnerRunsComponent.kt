@@ -1,0 +1,171 @@
+package reframecv.ui.components.settings.runners
+
+import com.arkivanov.decompose.value.MutableValue
+import com.arkivanov.decompose.value.Value
+import com.arkivanov.essenty.lifecycle.doOnDestroy
+import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.ConnectionRun
+import reframecv.domain.models.providers.ConnectionRunState
+import reframecv.domain.models.providers.ConnectionRunner
+import reframecv.runners.RunnerExecutionException
+import reframecv.ui.context.AppComponentContext
+import reframecv.usecase.RunnerRunView
+
+/** Keeps history and paged remote results independently of the runner's editable draft. */
+data class RunnerRunsState(
+    val runner: ConnectionRunner,
+    val runs: List<ConnectionRun> = emptyList(),
+    val loadingHistory: Boolean = true,
+    val historyFailed: Boolean = false,
+    val starting: Boolean = false,
+    val reading: Boolean = false,
+    val view: RunnerRunView? = null,
+    val error: String? = null,
+)
+
+/** Starts explicit paid runs and resumes status/result reads for previously saved IDs. */
+interface RunnerRunsComponent {
+    val state: Value<RunnerRunsState>
+    fun onStart()
+    fun onSelect(id: Long)
+    fun onRefresh()
+    fun onPage(offset: Int)
+    fun onRetryHistory()
+    fun onBack()
+}
+
+/** Polls only while visible; leaving cancels local requests without aborting remote work. */
+class DefaultRunnerRunsComponent(
+    context: AppComponentContext,
+    runner: ConnectionRunner,
+    private val back: () -> Unit,
+    private val awaitPoll: suspend () -> Unit = { delay(POLL_INTERVAL_MS) },
+) : RunnerRunsComponent {
+    private val useCases = context.dependencies.runnerExecutionUseCases
+    private val logger = context.dependencies.logger
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    private var observation: Job? = null
+    private var request: Job? = null
+    override val state = MutableValue(RunnerRunsState(runner))
+    init {
+        context.lifecycle.doOnDestroy { scope.cancel() }
+        onRetryHistory()
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    override fun onRetryHistory() {
+        observation?.cancel()
+        state.value = state.value.copy(loadingHistory = true, historyFailed = false)
+        observation = scope.launch {
+            try {
+                useCases.observe(state.value.runner.id).collect { runs ->
+                    state.value = state.value.copy(
+                        runs = runs.sortedByDescending { it.id },
+                        loadingHistory = false,
+                        historyFailed = false,
+                    )
+                }
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                logger.error(
+                    "Load runner history",
+                    error,
+                    mapOf("runnerId" to state.value.runner.id),
+                )
+                state.value = state.value.copy(loadingHistory = false, historyFailed = true)
+            }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    override fun onStart() {
+        if (state.value.starting || !state.value.runner.active) return
+        request?.cancel()
+        state.value = state.value.copy(starting = true, reading = false, error = null, view = null)
+        request = scope.launch {
+            try {
+                val run = useCases.start(state.value.runner.id)
+                state.value = state.value.copy(starting = false, view = RunnerRunView(run, null))
+                read(run.id, 0)
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                failed("Start runner", error, starting = true)
+            }
+        }
+    }
+    override fun onSelect(id: Long) {
+        if (state.value.starting) return
+        val run = state.value.runs.find { it.id == id } ?: return
+        request?.cancel()
+        state.value = state.value.copy(view = RunnerRunView(run, null), error = null)
+        request = scope.launch { read(run.id, 0) }
+    }
+    override fun onRefresh() {
+        if (state.value.starting) return
+        val run = state.value.view?.run ?: return
+        request?.cancel()
+        request = scope.launch { read(run.id, state.value.view?.page?.offset ?: 0) }
+    }
+    override fun onPage(offset: Int) {
+        if (!state.value.reading && offset >= 0) {
+            val run = state.value.view?.run ?: return
+            request?.cancel()
+            request = scope.launch { read(run.id, offset) }
+        }
+    }
+
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun read(id: Long, offset: Int) {
+        state.value = state.value.copy(reading = true, error = null)
+        try {
+            while (currentCoroutineContext().isActive) {
+                val view = useCases.inspect(state.value.runner.id, id, offset)
+                state.value = state.value.copy(view = view, reading = false)
+                val pending =
+                    view.run.state == ConnectionRunState.Pending ||
+                        view.run.state == ConnectionRunState.Running
+                if (!pending || view.run.externalId == null) break
+                awaitPoll()
+            }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            failed("Read runner results", error)
+        }
+    }
+    private fun failed(operation: String, error: Exception, starting: Boolean = false) {
+        logger.error(operation, error, mapOf("runnerId" to state.value.runner.id))
+        state.value = state.value.copy(
+            starting = false,
+            reading = false,
+            error = (error as? RunnerExecutionException)?.details ?: if (starting) {
+                "Could not confirm the start. Check Apify Console before starting another run."
+            } else {
+                "Could not read the run. Try refreshing."
+            },
+        )
+    }
+    override fun onBack() {
+        if (state.value.starting) return
+        request?.cancel()
+        if (state.value.view !=
+            null
+        ) {
+            state.value = state.value.copy(view = null, reading = false, error = null)
+        } else {
+            back()
+        }
+    }
+}
+private const val POLL_INTERVAL_MS = 5_000L

@@ -13,6 +13,7 @@ kotlin {
             implementation(project(":network"))
             implementation(libs.ktor.client.core)
             implementation(libs.kotlinx.serializationJson)
+            implementation(libs.kotlinx.datetime)
         }
         getByName("jvmMain").resources.srcDir(rootProject.file("docs/schemas"))
         commonTest.dependencies {

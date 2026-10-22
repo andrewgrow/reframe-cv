@@ -39,6 +39,17 @@ import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun RunnerEditorContent(component: RunnerEditorComponent) {
+    val slot by component.executions.subscribeAsState()
+    val execution = slot.child?.instance
+    if (execution != null) {
+        RunnerRunsContent(execution)
+        return
+    }
+    RunnerConfigurationContent(component)
+}
+
+@Composable
+private fun RunnerConfigurationContent(component: RunnerEditorComponent) {
     val state by component.state.subscribeAsState()
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(

@@ -143,7 +143,7 @@ Generated Room implementations and Compose resources are excluded.
 ## Local data and diagnostics
 
 The application data directory contains `reframe-cv.db`, managed document files,
-`stacktrace.txt`, and `openrouter-http.log`:
+`stacktrace.txt`, `openrouter-http.log`, and `apify-http.log`:
 
 | Platform | Directory |
 | --- | --- |
@@ -177,10 +177,12 @@ including status, headers, and unknown JSON fields.
 JSON is formatted for inspection. Authorization, cookies, secret JSON fields, and the
 current API key are redacted. Generation requests include prompt text; attached file bytes
 are redacted. The file is created on the first request and survives restarts.
+Apify runner exchanges use `apify-http.log` and the `ApifyHttp` console logger with the same
+credential redaction. Tests mock external services and never launch paid Actors.
 
-Both logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
+All three logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
 `.5` the oldest). The oldest archive is removed on rotation; restarting does not clear logs.
-Together they retain at most 120 MiB. Entries larger than one file span multiple files without
+Together they retain at most 180 MiB. Entries larger than one file span multiple files without
 splitting UTF-8 characters. Existing oversized logs retain their latest 10 MiB on the next write.
 
 ## License

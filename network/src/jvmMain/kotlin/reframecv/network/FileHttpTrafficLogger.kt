@@ -9,8 +9,8 @@ import kotlinx.coroutines.withContext
 import reframecv.logging.RotatingLogFile
 
 /** Writes sanitized HTTP diagnostics to the console and a file without blocking the UI thread. */
-class FileHttpTrafficLogger(file: Path) : HttpTrafficLogger {
-    private val console = noCoLogger("OpenRouterHttp")
+class FileHttpTrafficLogger(file: Path, loggerName: String = "OpenRouterHttp") : HttpTrafficLogger {
+    private val console = noCoLogger(loggerName)
     private val output = RotatingLogFile(file)
 
     override suspend fun write(message: String) = withContext(Dispatchers.IO) {

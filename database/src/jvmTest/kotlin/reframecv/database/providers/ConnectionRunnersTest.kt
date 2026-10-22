@@ -77,6 +77,7 @@ class ConnectionRunnersTest : WorkspaceDatabaseTest() {
                 ),
             )
             assertEquals("remote-id", repository.runs(id).first().single().externalId)
+            assertEquals("remote-id", repository.getRun(runId)?.externalId)
             assertFailsWith<IllegalArgumentException> {
                 repository.updateRun(run.copy(configurationSnapshot = "{}"))
             }
