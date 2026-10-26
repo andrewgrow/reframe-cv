@@ -198,6 +198,7 @@ class VacancyImportComponentTest : ComponentTest() {
                 vacancyImporter,
                 vacancyExporter,
                 attachmentPicker,
+                vacancyPdfExporter,
             )
             override val vacancyImporter = importer
         }

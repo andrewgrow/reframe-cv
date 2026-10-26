@@ -96,6 +96,7 @@ class TestApplicationDependencies : ApplicationDependencies {
     override val coverLetterPdfExporter = CoverLetterExporter { pdfExport(it) }
     override val coverLetterExporter = CoverLetterExporter { DocumentExportResult.Cancelled }
     override val coverLetterImporter = CoverLetterImporter { null }
+    override val vacancyPdfExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val vacancyExporter = VacancyExporter { DocumentExportResult.Cancelled }
     override val resumePdfExporter = ResumeExporter { ResumeExportResult.Cancelled }
     override val resumeExporter = ResumeExporter { ResumeExportResult.Cancelled }
@@ -249,6 +250,7 @@ class TestApplicationDependencies : ApplicationDependencies {
         vacancyImporter,
         vacancyExporter,
         attachmentPicker,
+        vacancyPdfExporter,
     )
 
     val promptsRepository = TestPromptsRepository()

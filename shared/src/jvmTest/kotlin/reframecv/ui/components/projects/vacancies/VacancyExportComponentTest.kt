@@ -15,6 +15,7 @@ import reframecv.export.DocumentExportResult
 import reframecv.export.VacancyExporter
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.projects.vacancies.editor.DefaultVacancyExportComponent
+import reframecv.ui.components.projects.vacancies.editor.VacancyExportFormat
 import reframecv.ui.components.projects.vacancies.editor.VacancyExportState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
@@ -46,6 +47,8 @@ class VacancyExportComponentTest : ComponentTest() {
                 assertEquals(VacancyExportState.Exporting, component.state.value)
                 component.onDownload()
                 component.onReset()
+                component.onFormatChange(VacancyExportFormat.Pdf)
+                assertEquals(VacancyExportFormat.Json, component.format.value)
                 assertEquals(VacancyExportState.Exporting, component.state.value)
                 assertFalse(finished.isCompleted)
             }
@@ -84,7 +87,30 @@ class VacancyExportComponentTest : ComponentTest() {
         }
     }
 
-    private fun component(exporter: VacancyExporter, finished: () -> Unit) = runOnUiThread {
+    @Test
+    fun pdfFailuresRemainRetryableAndResetReturnsToTheDefaultPdfFormat() = runBlocking {
+        val failure = IllegalStateException("PDF rendering failed")
+        val component = component(VacancyExporter { throw failure }, VacancyExportFormat.Pdf) {}
+        runOnUiThread { component.onDownload() }
+        withTimeout(5000) {
+            val logged = dependencies.logger.failures.receive()
+            assertEquals("Export vacancy as PDF", logged.operation)
+            assertSame(failure, logged.error)
+            runOnUiThread {
+                assertEquals(VacancyExportState.Failed, component.state.value)
+                component.onFormatChange(VacancyExportFormat.Json)
+                assertEquals(VacancyExportState.Idle, component.state.value)
+                component.onReset()
+                assertEquals(VacancyExportFormat.Pdf, component.format.value)
+            }
+        }
+    }
+
+    private fun component(
+        exporter: VacancyExporter,
+        format: VacancyExportFormat = VacancyExportFormat.Json,
+        finished: () -> Unit,
+    ) = runOnUiThread {
         lifecycle.resume()
         DefaultVacancyExportComponent(
             DefaultAppComponentContext(
@@ -94,12 +120,14 @@ class VacancyExportComponentTest : ComponentTest() {
                         vacancyImporter,
                         vacancyExporter,
                         attachmentPicker,
+                        vacancyPdfExporter,
                     )
                     override val vacancyExporter = exporter
+                    override val vacancyPdfExporter = exporter
                 },
             ),
             vacancy = { record },
             finished = finished,
-        )
+        ).also { it.onFormatChange(format) }
     }
 }

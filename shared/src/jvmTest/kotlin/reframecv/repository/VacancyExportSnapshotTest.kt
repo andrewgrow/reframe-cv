@@ -197,6 +197,7 @@ class VacancyExportSnapshotTest : WorkspaceDatabaseTest() {
                 vacancyImporter,
                 vacancyExporter,
                 attachmentPicker,
+                vacancyPdfExporter,
             )
             override val vacanciesRepository = repository
             override val attachmentPicker =

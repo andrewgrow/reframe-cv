@@ -685,6 +685,16 @@ Imports add supported records, skip duplicates and never overwrite stored provid
 Global preferences are restored in the same transaction. API keys require explicit export consent;
 account caches and screen states are excluded. See [Settings backups](settings-backups.md).
 
+## Vacancy PDF export
+
+Vacancy Export saves edits before offering PDF by default and JSON as an alternative.
+`VacancyFilesUseCases.generatePdf` uses the platform exporter and `documents.vacancy` template.
+The A4 document prints job title (falling back to internal name), company, source link and
+non-empty description, responsibilities, requirements and nice-to-have sections. Local keywords,
+application tracking and attached/linked documents are excluded. Measured pagination preserves
+searchable text, hanging bullets, section headings and page numbers. The shared export lifecycle
+owns destination selection and temporary-file cleanup. See [PDF rendering](pdf-rendering.md).
+
 ## Vacancy application tracking and bulk deletion
 
 Vacancies store an optional `appliedAt` instant as epoch milliseconds. The editor keeps the

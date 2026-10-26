@@ -366,6 +366,7 @@ class VacancyRecognitionComponentTest : ComponentTest() {
                     vacancyImporter,
                     vacancyExporter,
                     attachmentPicker,
+                    vacancyPdfExporter,
                 )
             }
             DefaultVacancyEditorComponent(

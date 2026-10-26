@@ -41,7 +41,7 @@ class VacancyExportDialogTest : GoldenScreenshotTest() {
             setGoldenContent(this) { VacancyEditorContent(component) }
             listOf("Cancel", "Download").forEach { action ->
                 onNodeWithText("Export").performClick()
-                onNodeWithTag("vacancy.export.format").assertTextContains("as JSON").performClick()
+                onNodeWithTag("vacancy.export.format").assertTextContains("as PDF").performClick()
                 onNodeWithTag("vacancy.export.json").performClick()
                 onNode(
                     hasText(action) and hasAnyAncestor(hasTestTag("vacancy.export.dialog")),

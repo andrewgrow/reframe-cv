@@ -10,8 +10,10 @@ class VacancyFilesUseCases(
     private val importer: VacancyImporter,
     private val exporter: VacancyExporter,
     private val picker: AttachmentPicker,
+    private val pdfExporter: VacancyExporter,
 ) {
     suspend fun importDocument() = importer.pickAndImport()
+    suspend fun generatePdf(vacancy: Vacancy) = pdfExporter.export(vacancy)
     suspend fun export(vacancy: Vacancy) = exporter.export(vacancy)
     suspend fun chooseAttachment() = picker.pick()
 }

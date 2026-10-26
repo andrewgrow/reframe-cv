@@ -17,10 +17,10 @@ import reframecv.export.DocumentExportResult
 import reframecv.export.VacancyExporter
 import reframecv.repository.VacanciesRepository
 import reframecv.testing.ComponentTest
+import reframecv.ui.components.projects.vacancies.editor.VacancyExportFormat
 import reframecv.ui.components.projects.vacancies.editor.VacancySaveState
 import reframecv.ui.context.DefaultAppComponentContext
 import reframecv.ui.threading.runOnUiThread
-import reframecv.usecase.ObserveDashboardUseCase
 import reframecv.usecase.VacanciesUseCases
 import reframecv.usecase.VacancyFilesUseCases
 
@@ -55,15 +55,11 @@ class VacancyExportWorkflowTest : ComponentTest() {
         }
         val services = object : ApplicationDependencies by dependencies {
             override val vacanciesUseCases get() = VacanciesUseCases(vacanciesRepository)
-            override val observeDashboard get() = ObserveDashboardUseCase(
-                resumesRepository,
-                vacanciesRepository,
-                coverLettersRepository,
-            )
             override val vacancyFilesUseCases get() = VacancyFilesUseCases(
                 vacancyImporter,
                 vacancyExporter,
                 attachmentPicker,
+                vacancyPdfExporter,
             )
             override val vacanciesRepository = repository
             override val vacancyExporter = VacancyExporter {
@@ -94,7 +90,10 @@ class VacancyExportWorkflowTest : ComponentTest() {
             assertEquals(2, writes)
             release.complete(Unit)
             visible.await()
-            runOnUiThread { editor.exportComponent.onDownload() }
+            runOnUiThread {
+                editor.exportComponent.onFormatChange(VacancyExportFormat.Json)
+                editor.exportComponent.onDownload()
+            }
             val record = exported.receive()
             assertEquals(dependencies.vacanciesRepository.records.value.single(), record)
             assertEquals(original.requirements, record.requirements)
@@ -102,6 +101,43 @@ class VacancyExportWorkflowTest : ComponentTest() {
                 assertSame(editor, component.editor)
                 assertTrue(editor.draft.value.name == "Updated")
             }
+        }
+    }
+
+    @Test
+    fun defaultPdfExportReceivesTheLatestSavedVacancyAndLeavesTheEditorOpen() = runBlocking {
+        dependencies.vacanciesRepository.records.value = listOf(original)
+        val exported = Channel<Vacancy>(Channel.UNLIMITED)
+        val services = object : ApplicationDependencies by dependencies {
+            override val vacancyPdfExporter = VacancyExporter {
+                exported.send(it)
+                DocumentExportResult.Saved
+            }
+            override val vacancyFilesUseCases get() = VacancyFilesUseCases(
+                vacancyImporter,
+                vacancyExporter,
+                attachmentPicker,
+                vacancyPdfExporter,
+            )
+        }
+        val component = component(services)
+        val editor = checkNotNull(component.editor)
+        val visible = CompletableDeferred<Unit>()
+        runOnUiThread {
+            editor.exportVisible.subscribe { if (it) visible.complete(Unit) }
+            editor.onDraftChange(editor.draft.value.copy(jobTitle = "Updated title"))
+            editor.onExport()
+        }
+        withTimeout(5000) {
+            visible.await()
+            runOnUiThread {
+                assertEquals(VacancyExportFormat.Pdf, editor.exportComponent.format.value)
+                editor.exportComponent.onDownload()
+            }
+            val record = exported.receive()
+            assertEquals("Updated title", record.jobTitle)
+            assertEquals(dependencies.vacanciesRepository.records.value.single(), record)
+            runOnUiThread { assertSame(editor, component.editor) }
         }
     }
     private fun component(services: ApplicationDependencies) = runOnUiThread {

@@ -34,6 +34,7 @@ class VacancySnapshotComponentTest : ComponentTest() {
                 vacancyImporter,
                 vacancyExporter,
                 attachmentPicker,
+                vacancyPdfExporter,
             )
             override val attachmentPicker = AttachmentPicker { pick }
         }

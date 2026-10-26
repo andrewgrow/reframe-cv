@@ -3,7 +3,8 @@
 ## Module boundaries
 
 - `documents` owns print data, Compose templates, typography, and measured pagination.
-  Templates live in `reframecv.documents.coverletter` and `reframecv.documents.resume`;
+  Templates live in `reframecv.documents.coverletter`, `reframecv.documents.resume` and
+  `reframecv.documents.vacancy`;
   `PrintLink` is shared print data.
   The module does not depend on domain models, the database, screen state, or native file pickers.
 - `shared` maps saved domain content to print data. `DesktopCoverLetterPdfExporter` calls the
@@ -66,6 +67,24 @@ The template supports semantic inline emphasis, hanging lists, links, and a prep
 free-form rich-text editing and arbitrary page
 layouts remain separate work.
 
+## Vacancy export
+
+Vacancy Export saves the latest draft, then defaults to PDF with JSON as an alternative.
+`VacancyFilesUseCases.generatePdf` uses `DesktopVacancyPdfExporter` and the shared temporary-file
+and destination-picker lifecycle. Suggested filenames are `vacancy-<id>-<yyyyMMdd-HHmm-ss>.pdf`.
+
+The mapper includes job title (or internal name when job title is blank), company, source URL,
+description, responsibilities, requirements and nice-to-have lists. Blank sections and list
+items are omitted. Application dates, keywords, IDs, assessments, attachments and linked
+resumes or letters remain local metadata and are not printed.
+
+`VacancyPdfTemplate` uses one-column A4 pages with 20 mm margins, embedded Inter, an emphasized
+20 pt title, 12 pt section headings and 11 pt body text with 16 pt line height. Source URLs have
+clickable annotations and lists use hanging bullets. `VacancyPaginator` reserves footer space,
+keeps headings with following text and splits oversized paragraphs and bullets into measured
+fragments. Each page contains only its own text; continuation bullets are not repeated.
+Multipage exports include page numbers. The renderer shares the existing PDF lock.
+
 ## Templates and pagination
 
 `CoverLetterPdfTemplate` uses Compose text blocks and explicit `PdfLink` annotations. The current
@@ -100,7 +119,7 @@ Run renderer tests independently:
 Run document component, export, and screenshot tests:
 
 ```shell
-./gradlew :shared:jvmTest --tests '*CoverLetter*' --tests '*Resume*' --no-parallel
+./gradlew :shared:jvmTest --tests '*CoverLetter*' --tests '*Resume*' --tests '*Vacancy*' --no-parallel
 ```
 
 Renderer fixtures live in test source sets.
@@ -112,14 +131,15 @@ margins, long paragraphs, explicit newlines, and link URI annotations. Shared te
 current edits before export, format selection, progress, retry, cancellation, and temporary-file
 cleanup.
 
-`ResumePdfScreenshotTest` and `CoverLetterPdfScreenshotTest` also compare the completed PDFs
+`ResumePdfScreenshotTest`, `CoverLetterPdfScreenshotTest` and `VacancyPdfScreenshotTest` compare the completed PDFs
 visually. `PdfGoldenScreenshotTest` rasterizes every page with PDFBox at a fixed 96 dpi and
 passes the result to Roborazzi. It checks the expected page count before comparing images,
 so adding or losing a page fails the test. References are stored in
-`shared/src/jvmTest/screenshots/export/ResumePdf/` and `export/CoverLetterPdf/`.
+`shared/src/jvmTest/screenshots/export/ResumePdf/`, `export/CoverLetterPdf/` and `export/VacancyPdf/`.
 The fixtures cover all resume section types, a synthetic portrait, text-only output, hidden
 sections and consent, an unnamed summary, a long headline beside the portrait, single-page
-letters with Unicode and links, and multipage letters with footers.
+letters with Unicode and links, multipage letters with footers, and single/multipage vacancy
+layouts with section headings, bullets and source links.
 
 Run just these PDF goldens with ordinary verification:
 
