@@ -24,7 +24,14 @@ import reframecv.testing.GoldenScreenshotTest
 @OptIn(ExperimentalTestApi::class)
 class RunnerLinkPreviewTest : GoldenScreenshotTest() {
     @Test
-    fun opensRecognizedCellUrlThroughTheBrowserHandler() = runDesktopComposeUiTest {
+    fun opensRecognizedCellUrlThroughTheBrowserHandler() =
+        previewWebsite("https://company1.example.test")
+
+    @Test
+    fun opensWwwCellUrlWithHttpsWithoutChangingTheDisplayedText() =
+        previewWebsite("www.company.example.test")
+
+    private fun previewWebsite(value: String) = runDesktopComposeUiTest {
         val opened = mutableListOf<String>()
         val handler = object : UriHandler {
             override fun openUri(uri: String) {
@@ -33,12 +40,11 @@ class RunnerLinkPreviewTest : GoldenScreenshotTest() {
         }
         setGoldenContent(this) {
             CompositionLocalProvider(LocalUriHandler provides handler) {
-                RunnerRunsContent(PreviewRunnerRunsComponent(runnerTableFixture()))
+                RunnerRunsContent(PreviewRunnerRunsComponent(runnerTableFixture(value)))
             }
         }
         onAllNodesWithTag("runner.cell.companyWebsite")[0].performScrollTo().performClick()
         onNodeWithTag("runner.result.cell.dialog").assertIsDisplayed()
-        val value = "https://company1.example.test"
         val text = onNode(
             hasText(value) and hasAnyAncestor(hasTestTag("runner.result.cell.dialog")),
         ).assertIsDisplayed()
@@ -46,7 +52,7 @@ class RunnerLinkPreviewTest : GoldenScreenshotTest() {
         text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
         text.performMouseInput { click(layouts.single().getBoundingBox(5).center) }
         waitForIdle()
-        assertEquals(listOf(value), opened)
+        assertEquals(listOf(if (value.startsWith("www.")) "https://$value" else value), opened)
         captureGolden(this, "runner.result.cell.dialog")
     }
 }

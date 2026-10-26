@@ -31,9 +31,11 @@ data class DashboardRunnersState(
 
 /** Opens global runner results while retaining the dashboard's project as an import default. */
 interface DashboardRunnersComponent {
+    val creation: DashboardRunnerCreationComponent
     val state: Value<DashboardRunnersState>
     val execution: Value<ChildSlot<*, RunnerRunsComponent>>
-    val isBusy: Boolean get() = execution.value.child?.instance?.isBusy == true
+    val isBusy: Boolean get() = execution.value.child?.instance?.isBusy == true || creation.isBusy
+    fun onAdd()
     fun open()
     fun select(id: Long)
     fun dismiss()
@@ -43,6 +45,7 @@ interface DashboardRunnersComponent {
 /** Owns picker observation and the nested runner page without leaving the project dashboard. */
 class DefaultDashboardRunnersComponent(context: AppComponentContext, private val projectId: Long) :
     DashboardRunnersComponent {
+    override val creation = DefaultDashboardRunnerCreationComponent(context)
     private val useCases = context.dependencies.connectionRunnersUseCases
     private val logger = context.dependencies.logger
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -66,9 +69,15 @@ class DefaultDashboardRunnersComponent(context: AppComponentContext, private val
         context.lifecycle.doOnDestroy { scope.cancel() }
     }
 
+    override fun onAdd() {
+        if (!state.value.visible || isBusy) return
+        dismiss()
+        creation.open()
+    }
+
     @Suppress("TooGenericExceptionCaught")
     override fun open() {
-        if (execution.value.child != null || isBusy) return
+        if (execution.value.child != null || creation.editor.value.child != null || isBusy) return
         observation?.cancel()
         state.value = DashboardRunnersState(visible = true, loading = true)
         observation = scope.launch {
@@ -95,6 +104,7 @@ class DefaultDashboardRunnersComponent(context: AppComponentContext, private val
         state.value = state.value.copy(visible = false)
     }
     override fun onBack(): Boolean {
+        if (creation.onBack()) return true
         val child = execution.value.child?.instance
         val handled = child != null || state.value.visible
         if (child != null) {

@@ -11,21 +11,21 @@ import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.RunnerResult
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.runners.RunnerResultsPage
-import reframecv.ui.components.settings.ProviderEditorComponent
 import reframecv.ui.components.settings.runners.RunnerDraft
+import reframecv.ui.components.settings.runners.RunnerEditorComponent
 import reframecv.ui.components.settings.runners.RunnerResultAction
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.components.settings.runners.RunnerRunsState
 import reframecv.ui.components.settings.runners.RunnerSettingsComponent
 import reframecv.usecase.RunnerRunView
 
-internal fun runnerTableFixture(): RunnerRunsState {
+internal fun runnerTableFixture(website: String? = null): RunnerRunsState {
     val runner = RunnerDraft(
         name = "Example search",
         searchUrls = "https://www.linkedin.com/jobs/search/?keywords=kotlin",
     )
         .applyTo(RunnerDraft.newRunner(1)).copy(id = 1)
-    val rows = (1..5).map(::fixtureResult)
+    val rows = (1..5).map { fixtureResult(it, website) }
     val columns = kotlinx.serialization.json.Json.parseToJsonElement(rows.last().rawResultAsJson)
         .let { it as kotlinx.serialization.json.JsonObject }.keys.toList()
     val run = ConnectionRun(
@@ -55,7 +55,7 @@ internal fun runnerTableFixture(): RunnerRunsState {
     )
 }
 
-private fun fixtureJson(index: Int) = buildJsonObject {
+private fun fixtureJson(index: Int, website: String?) = buildJsonObject {
     put("id", "10$index")
     put(
         "title",
@@ -90,12 +90,12 @@ private fun fixtureJson(index: Int) = buildJsonObject {
             put("city", "Vienna")
         },
     )
-    put("companyWebsite", "https://company$index.example.test")
+    put("companyWebsite", website ?: "https://company$index.example.test")
     if (index == 5) put("additionalField", "Unknown fields are retained")
 }
 
-private fun fixtureResult(index: Int): RunnerResult {
-    val json = fixtureJson(index)
+private fun fixtureResult(index: Int, website: String?): RunnerResult {
+    val json = fixtureJson(index, website)
     return RunnerResult(
         index.toLong(), 1, index - 1, "LinkedIn", "10$index", json.toString(), 100,
         status = when (index) {
@@ -122,8 +122,8 @@ private fun fixtureResult(index: Int): RunnerResult {
 
 internal class PreviewRunnerRunsComponent(initial: RunnerRunsState) : RunnerRunsComponent {
     override val settings = object : RunnerSettingsComponent {
-        override val editor = MutableValue<ChildSlot<*, ProviderEditorComponent>>(
-            ChildSlot<Unit, ProviderEditorComponent>(),
+        override val editor = MutableValue<ChildSlot<*, RunnerEditorComponent>>(
+            ChildSlot<Unit, RunnerEditorComponent>(),
         )
         override val isBusy = false
         override fun open() = Unit

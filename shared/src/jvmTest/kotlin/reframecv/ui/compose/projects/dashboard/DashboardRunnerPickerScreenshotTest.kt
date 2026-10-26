@@ -9,8 +9,10 @@ import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
+import reframecv.ui.components.projects.dashboard.DashboardRunnerCreationState
 import reframecv.ui.components.projects.dashboard.DashboardRunnersState
 import reframecv.ui.components.projects.dashboard.TestDashboardComponent
+import reframecv.ui.components.projects.dashboard.TestDashboardRunnerCreationComponent
 import reframecv.ui.components.projects.dashboard.TestDashboardRunnersComponent
 import reframecv.ui.components.settings.runners.RunnerDraft
 import reframecv.usecase.SavedRunner
@@ -69,6 +71,29 @@ class DashboardRunnerPickerScreenshotTest : GoldenScreenshotTest() {
                     runners = TestDashboardRunnersComponent(
                         DashboardRunnersState(visible = true, failed = true),
                     ),
+                ),
+            )
+        }
+    }
+
+    @Test
+    fun addRunnerReplacesPickerWithConnectionSelection() = runDesktopComposeUiTest {
+        val picker = TestDashboardRunnersComponent(DashboardRunnersState(visible = true))
+        picker.creation.state.value = DashboardRunnerCreationState(connections = listOf(owner))
+        setGoldenContent(this) { DashboardContent(TestDashboardComponent(runners = picker)) }
+        onNodeWithTag("dashboard.runners.add").performClick()
+        captureGolden(this, "dashboard.runner.connections")
+        onNodeWithTag("dashboard.runner.connection.1").performClick()
+        assertEquals(1L, picker.creation.selected)
+        assertEquals(false, picker.state.value.visible)
+    }
+
+    @Test
+    fun newRunnerWithoutConnectionsExplainsSetup() = runDesktopComposeUiTest {
+        setAndCaptureGolden(this, captureTag = "dashboard.runner.connections") {
+            DashboardRunnerCreationDialog(
+                TestDashboardRunnerCreationComponent(
+                    DashboardRunnerCreationState(visible = true),
                 ),
             )
         }

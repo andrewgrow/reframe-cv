@@ -31,6 +31,35 @@ class SelectableLinkTextTest {
     }
 
     @Test
+    fun recognizesWwwAddressesAndNormalizesOnlyTheBrowserDestination() {
+        val text = "Visit (www.example.test/jobs?id=42), or WWW.company.example.test."
+        val annotated = webLinks(text)
+        assertEquals(text, annotated.text)
+        assertEquals(
+            listOf("https://www.example.test/jobs?id=42", "https://WWW.company.example.test"),
+            urls(text),
+        )
+        assertEquals(
+            listOf("www.example.test/jobs?id=42", "WWW.company.example.test"),
+            annotated.getLinkAnnotations(0, text.length).map { text.substring(it.start, it.end) },
+        )
+    }
+
+    @Test
+    fun ignoresWwwInsideEmailsWordsOrOtherSchemes() {
+        assertTrue(
+            urls(
+                "hello@www.example.test notwww.example.test file://www.example.test www. www.example",
+            )
+                .isEmpty(),
+        )
+        assertEquals(
+            listOf("https://www.example.test", "https://www.example.test"),
+            urls("https://www.example.test www.example.test"),
+        )
+    }
+
+    @Test
     fun leavesOtherSchemesAndMissingHostsAsOrdinaryText() {
         val text = "example.test mailto:hello@example.test file:///tmp/document " +
             "javascript:alert(1) https://"

@@ -36,6 +36,7 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
+import reframecv.ui.compose.settings.runners.RunnerEditorContent
 import reframecv.ui.compose.settings.runners.RunnerRunsContent
 import reframecv.ui.theme.ReframeTheme
 
@@ -44,6 +45,12 @@ private const val SECTION_COUNT = 3
 
 @Composable
 fun DashboardContent(component: DashboardComponent) {
+    val creationSlot by component.runners.creation.editor.subscribeAsState()
+    val creation by component.runners.creation.state.subscribeAsState()
+    creationSlot.child?.instance?.let {
+        RunnerEditorContent(it)
+        return
+    }
     val slot by component.runners.execution.subscribeAsState()
     val picker by component.runners.state.subscribeAsState()
     val run = slot.child?.instance
@@ -58,7 +65,11 @@ fun DashboardContent(component: DashboardComponent) {
                 MaterialTheme.colorScheme.background,
             ).testTag(
                 DASHBOARD_TAG,
-            ).safeContentPadding().pageBackHandler(component::onBack, enabled = !picker.visible),
+            ).safeContentPadding().pageBackHandler(
+                component::onBack,
+                enabled =
+                    !picker.visible && !creation.visible,
+            ),
         ) {
             Box(Modifier.fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium)) {
                 PageHeader(stringResource(Res.string.dashboard_title), component::onBack)
@@ -87,6 +98,7 @@ fun DashboardContent(component: DashboardComponent) {
                 )
             }
             DashboardRunnerPicker(component.runners)
+            DashboardRunnerCreationDialog(component.runners.creation)
         }
     }
 }

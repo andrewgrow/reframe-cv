@@ -39,14 +39,13 @@ import reframecv.ui.compose.common.FillButton
 import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.PageHeader
 import reframecv.ui.compose.common.pageBackHandler
-import reframecv.ui.compose.settings.ProviderEditorContent
 import reframecv.ui.theme.ReframeTheme
 
 @Composable
 internal fun RunnerRunsContent(component: RunnerRunsComponent) {
     val settings by component.settings.editor.subscribeAsState()
     settings.child?.instance?.let {
-        ProviderEditorContent(it)
+        RunnerEditorContent(it)
         return
     }
     val state by component.state.subscribeAsState()

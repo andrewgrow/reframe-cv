@@ -40,7 +40,8 @@ internal fun webLinks(
 ): AnnotatedString = buildAnnotatedString {
     append(text)
     WEB_ADDRESS.findAll(text).forEach { match ->
-        val url = trimWebAddress(match.value)
+        val address = trimWebAddress(match.value)
+        val url = if (address.startsWith("www.", ignoreCase = true)) "https://$address" else address
         val authority = url.substringAfter("://").substringBefore('/')
             .substringBefore('?').substringBefore('#')
         if (authority.isNotEmpty()) {
@@ -51,7 +52,7 @@ internal fun webLinks(
                     openUrl?.let { open -> LinkInteractionListener { open(url) } },
                 ),
                 match.range.first,
-                match.range.first + url.length,
+                match.range.first + address.length,
             )
         }
     }
@@ -69,4 +70,7 @@ private fun trimWebAddress(value: String): String {
     return url
 }
 
-private val WEB_ADDRESS = Regex("""\bhttps?://[^\s<>"'\\]+""", RegexOption.IGNORE_CASE)
+private val WEB_ADDRESS = Regex(
+    """(?<![\w@/.-])(?:https?://|www\.(?=[a-z0-9-]+\.))[^\s<>"'\\]+""",
+    RegexOption.IGNORE_CASE,
+)

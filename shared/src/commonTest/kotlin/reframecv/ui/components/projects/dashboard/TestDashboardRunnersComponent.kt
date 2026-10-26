@@ -6,10 +6,15 @@ import reframecv.ui.components.settings.runners.RunnerRunsComponent
 
 class TestDashboardRunnersComponent(initial: DashboardRunnersState = DashboardRunnersState()) :
     DashboardRunnersComponent {
+    override val creation = TestDashboardRunnerCreationComponent()
     override val state = MutableValue(initial)
     override val execution =
         MutableValue<ChildSlot<*, RunnerRunsComponent>>(ChildSlot<Unit, RunnerRunsComponent>())
     var selected: Long? = null
+    override fun onAdd() {
+        dismiss()
+        creation.open()
+    }
     override fun open() {
         state.value = state.value.copy(visible = true)
     }

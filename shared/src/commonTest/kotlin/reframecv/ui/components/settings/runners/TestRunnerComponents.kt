@@ -8,6 +8,7 @@ class TestRunnerEditorComponent(initial: RunnerEditorState) : RunnerEditorCompon
         MutableValue<ChildSlot<*, RunnerRunsComponent>>(ChildSlot<Unit, RunnerRunsComponent>())
     override fun onRuns() = Unit
     override val state = MutableValue(initial)
+    override val copy = TestRunnerCopyComponent { onDraft(it) }
     var closed = false
     override fun onDraft(draft: RunnerDraft) {
         state.value =
@@ -29,7 +30,9 @@ class TestRunnerEditorComponent(initial: RunnerEditorState) : RunnerEditorCompon
             state.value.copy(confirming = false)
     }
     override fun onBack() {
-        if (state.value.confirming) {
+        if (copy.state.value.visible) {
+            copy.dismiss()
+        } else if (state.value.confirming) {
             state.value = state.value.copy(confirming = false)
         } else {
             closed = true

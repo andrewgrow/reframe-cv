@@ -11,6 +11,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -19,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.runner_copy
 import reframecv.shared.generated.resources.runner_limit
 import reframecv.shared.generated.resources.runner_limit_hint
 import reframecv.shared.generated.resources.runner_name
@@ -28,6 +30,7 @@ import reframecv.shared.generated.resources.runner_title
 import reframecv.shared.generated.resources.runner_urls
 import reframecv.shared.generated.resources.runner_urls_hint
 import reframecv.shared.generated.resources.runners_add
+import reframecv.ui.components.settings.runners.RunnerDraft
 import reframecv.ui.components.settings.runners.RunnerEditorComponent
 import reframecv.ui.components.settings.runners.RunnerEditorError
 import reframecv.ui.components.settings.runners.RunnerEditorState
@@ -51,13 +54,14 @@ internal fun RunnerEditorContent(component: RunnerEditorComponent) {
 @Composable
 private fun RunnerConfigurationContent(component: RunnerEditorComponent) {
     val state by component.state.subscribeAsState()
+    val copyState by component.copy.state.subscribeAsState()
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
                 .testTag("runner.editor").pageBackHandler(
                     component::onBack,
                     destination = component,
-                    enabled = !state.confirming,
+                    enabled = !state.confirming && !copyState.visible,
                 ),
         ) {
             Column(
@@ -82,6 +86,7 @@ private fun RunnerConfigurationContent(component: RunnerEditorComponent) {
             RunnerActions(state, component)
         }
         RunnerDeleteConfirmation(state, component)
+        RunnerCopyDialog(component.copy)
     }
 }
 
@@ -92,6 +97,11 @@ private fun RunnerEditorFields(state: RunnerEditorState, component: RunnerEditor
     FastScrollColumn(
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
     ) {
+        if (state.runner.id == 0L) {
+            TextButton(component.copy::open, Modifier.testTag("runner.copy"), enabled = enabled) {
+                Text(stringResource(Res.string.runner_copy))
+            }
+        }
         OutlinedTextField(
             stringResource(Res.string.runner_operation_linkedin),
             {},
@@ -119,22 +129,27 @@ private fun RunnerEditorFields(state: RunnerEditorState, component: RunnerEditor
             singleLine = true,
             label = { Text(stringResource(Res.string.runner_name)) },
         )
-        RunnerSearchFields(state, component, enabled)
+        RunnerSearchFields(
+            draft,
+            component::onDraft,
+            enabled,
+            state.error == RunnerEditorError.Validation,
+        )
     }
 }
 
 @Composable
-private fun RunnerSearchFields(
-    state: RunnerEditorState,
-    component: RunnerEditorComponent,
+internal fun RunnerSearchFields(
+    draft: RunnerDraft,
+    onDraft: (RunnerDraft) -> Unit,
     enabled: Boolean,
+    validation: Boolean = false,
+    tagPrefix: String = "runner",
 ) {
-    val draft = state.draft
-    val validation = state.error == RunnerEditorError.Validation
     OutlinedTextField(
         draft.searchUrls,
-        { component.onDraft(draft.copy(searchUrls = it)) },
-        Modifier.fillMaxWidth().testTag("runner.urls"),
+        { onDraft(draft.copy(searchUrls = it)) },
+        Modifier.fillMaxWidth().testTag("$tagPrefix.urls"),
         enabled = enabled,
         minLines = 4,
         label = { Text(stringResource(Res.string.runner_urls)) },
@@ -143,8 +158,8 @@ private fun RunnerSearchFields(
     )
     OutlinedTextField(
         draft.maxResults,
-        { component.onDraft(draft.copy(maxResults = it)) },
-        Modifier.fillMaxWidth().testTag("runner.limit"),
+        { onDraft(draft.copy(maxResults = it)) },
+        Modifier.fillMaxWidth().testTag("$tagPrefix.limit"),
         enabled = enabled,
         singleLine = true,
         label = { Text(stringResource(Res.string.runner_limit)) },

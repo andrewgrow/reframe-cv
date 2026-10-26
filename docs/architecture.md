@@ -855,8 +855,9 @@ Settings backups continue to exclude runs and results.
 The table renders every saved row, including output that cannot yet be converted into a
 vacancy. Missing keys are blank; nested arrays/objects use compact JSON. Cells show at most
 three lines with ellipsis, and a click opens their complete selectable value. HTTP/HTTPS URLs
-in that preview are underlined clickable links, including URLs embedded in text or JSON. Opening
-a link uses the owning screen's browser handler; the original text stays selectable. Column widths
+and addresses starting with www. are underlined clickable links, including URLs embedded in
+text or JSON. Bare www. addresses open with HTTPS; the displayed source text is unchanged.
+Opening a link uses the owning screen's browser handler; the original text stays selectable. Column widths
 fit measured headers and current-page values within 100–320 dp; headers and cells share the
 same widths. Headers stay
 fixed vertically and the action column stays fixed horizontally. Both axes have draggable
@@ -891,6 +892,18 @@ Each choice shows its runner name (or operation title), connection name (or prov
 and availability. Disabled or unconfigured runners remain visible for cached history review;
 starting a new run is disabled. Empty and failed lists explain setup or offer Retry.
 
+Add runner replaces the picker with a live selection of saved Apify connections, including
+disabled connections that can still own drafts. Selecting one opens the existing runner editor.
+Saving stays in the editor; Close/Back returns to the dashboard. Creating or saving a runner
+never starts a remote run. If no Apify connection exists, the dialog points to API Providers.
+Closing either picker creates no records; an unsaved runner draft is discarded on Back.
+
+New runner editors offer Copy from runner. The dialog lists saved runners with compatible,
+decodable configurations, including disabled runners, and lets the user edit copied name,
+active state, search URLs and result limit before Use settings. Only draft fields are applied;
+the target connection, new identity and empty execution history are preserved. Cancel/Escape
+discards the dialog edits. Save remains the only operation that creates the new runner.
+
 Selecting a runner opens its existing Runs and results component as a nested dashboard page,
 without starting remote work or opening its settings. Back/Escape walks from results to run
 history, then back to the same dashboard. Navigation is blocked during paid starts and imports.
@@ -900,7 +913,8 @@ The dashboard project is supplied only as the preferred import destination. The 
 preselects it if it is still eligible, and the user can choose another project. Runner settings,
 execution ownership, and search results remain global. No schema change is required.
 
-Runs and results offers Settings beside Start run. It opens the owning saved provider connection,
-including its runner list, and Close/Back/Escape returns to the retained results or history page.
-Local polling pauses during settings; returning reloads runner availability and resumes pending
-reads when enabled. Paid starts and imports block this shortcut as well as other navigation.
+Runs and results offers Settings beside Start run. It opens the selected saved runner directly
+in the existing runner editor. Close/Back/Escape returns to the retained results or history page.
+Local polling pauses during settings; returning reloads the runner configuration and availability
+and resumes pending reads when enabled. Paid starts and imports block this shortcut as well as
+other navigation. A deleted runner cannot be reopened; read failures remain retryable.

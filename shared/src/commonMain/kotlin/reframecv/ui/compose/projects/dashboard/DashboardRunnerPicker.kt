@@ -24,6 +24,7 @@ import reframecv.shared.generated.resources.dashboard_runners_error
 import reframecv.shared.generated.resources.dashboard_search_runners
 import reframecv.shared.generated.resources.navigation_retry
 import reframecv.shared.generated.resources.runner_operation_linkedin
+import reframecv.shared.generated.resources.runners_add
 import reframecv.shared.generated.resources.settings_close
 import reframecv.ui.components.projects.dashboard.DashboardRunnersComponent
 import reframecv.ui.compose.common.FastScrollColumn
@@ -69,6 +70,9 @@ internal fun DashboardRunnerPicker(component: DashboardRunnersComponent) {
         },
         actions = {
             Row {
+                TextButton(component::onAdd, Modifier.testTag("dashboard.runners.add")) {
+                    Text(stringResource(Res.string.runners_add))
+                }
                 TextButton(component::dismiss) { Text(stringResource(Res.string.settings_close)) }
             }
         },

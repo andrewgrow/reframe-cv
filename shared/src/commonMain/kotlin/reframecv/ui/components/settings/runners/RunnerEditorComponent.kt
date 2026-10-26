@@ -36,6 +36,7 @@ data class RunnerEditorState(
 
 /** Edits one reusable operation without starting a remote request. */
 interface RunnerEditorComponent {
+    val copy: RunnerCopyComponent
     val executions: Value<ChildSlot<*, RunnerRunsComponent>>
     val isBusy: Boolean get() = state.value.busy ||
         executions.value.child?.instance?.isBusy == true
@@ -68,6 +69,12 @@ class DefaultRunnerEditorComponent(
                 },
         ),
     )
+    override val copy: RunnerCopyComponent = DefaultRunnerCopyComponent(
+        useCases,
+        scope,
+        logger,
+        { state.value },
+    ) { draft -> state.value = state.value.copy(draft = draft, error = null) }
     private val runNavigation = SlotNavigation<ConnectionRunner>()
     override val executions = context.childSlot(
         runNavigation,
@@ -89,7 +96,7 @@ class DefaultRunnerEditorComponent(
         context.lifecycle.doOnDestroy { scope.cancel() }
     }
     override fun onDraft(draft: RunnerDraft) {
-        if (!state.value.busy && !state.value.confirming) {
+        if (!state.value.busy && !state.value.confirming && !copy.state.value.visible) {
             state.value = state.value.copy(draft = draft, error = null)
         }
     }
@@ -97,7 +104,7 @@ class DefaultRunnerEditorComponent(
     @Suppress("TooGenericExceptionCaught")
     override fun onSave() {
         val draft = state.value
-        if (draft.busy || draft.confirming) return
+        if (draft.busy || draft.confirming || copy.state.value.visible) return
         if (!draft.draft.valid) {
             state.value = draft.copy(error = RunnerEditorError.Validation)
             return
@@ -161,16 +168,18 @@ class DefaultRunnerEditorComponent(
         }
     }
     override fun onBack() {
-        val execution = executions.value.child?.instance
-        if (execution != null) {
-            execution.onBack()
-            return
-        }
-        if (state.value.busy) return
-        if (state.value.confirming) {
-            state.value = state.value.copy(confirming = false, error = null)
-        } else {
-            back()
+        when {
+            copy.state.value.visible -> copy.dismiss()
+
+            executions.value.child != null -> executions.value.child?.instance?.onBack()
+
+            state.value.busy -> Unit
+
+            state.value.confirming ->
+                state.value =
+                    state.value.copy(confirming = false, error = null)
+
+            else -> back()
         }
     }
 }

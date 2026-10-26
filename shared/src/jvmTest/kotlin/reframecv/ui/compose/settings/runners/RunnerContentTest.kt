@@ -88,7 +88,7 @@ class RunnerContentTest : ComponentTest() {
         }
 
     @Test
-    fun settingsShortcutReturnsFromProviderSettingsToRunnerHistory() =
+    fun settingsShortcutReturnsFromRunnerSettingsToRunnerHistory() =
         runDesktopComposeUiTest(width = 800, height = 700) {
             val connection = ProviderConnection(
                 type = ApiProviderType.Apify,
@@ -99,6 +99,7 @@ class RunnerContentTest : ComponentTest() {
             val runnerId = runBlocking {
                 dependencies.connectionRunnersUseCases.save(
                     RunnerDraft(
+                        name = "Target search",
                         searchUrls = "https://www.linkedin.com/jobs/search/?keywords=kotlin",
                     )
                         .applyTo(RunnerDraft.newRunner(id)),
@@ -115,8 +116,9 @@ class RunnerContentTest : ComponentTest() {
             onNodeWithTag("runner.runs").performClick()
             onNodeWithTag("runner.run.settings").performClick()
             waitForIdle()
-            onNodeWithTag("settings.editor").assertExists()
-            onNodeWithTag("runners.row.$runnerId").performScrollTo().assertExists()
+            onNodeWithTag("runner.editor").assertExists()
+            onNodeWithTag("runner.name").assertTextContains("Target search")
+            onNodeWithTag("settings.editor").assertDoesNotExist()
             onRoot().performKeyInput { pressKey(Key.Escape) }
             waitForIdle()
             onNodeWithTag("runner.runs.page").assertExists()

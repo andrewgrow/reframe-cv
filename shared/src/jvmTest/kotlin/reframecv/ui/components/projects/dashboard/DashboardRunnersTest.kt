@@ -16,6 +16,7 @@ import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.ComponentTest
 import reframecv.ui.components.settings.runners.RunnerDraft
+import reframecv.ui.components.settings.runners.RunnerEditorComponent
 import reframecv.ui.threading.runOnUiThread
 
 class DashboardRunnersTest : ComponentTest() {
@@ -53,6 +54,21 @@ class DashboardRunnersTest : ComponentTest() {
         } finally {
             runOnUiThread { subscription.cancel() }
         }
+    }
+
+    private suspend fun saveSettings(editor: RunnerEditorComponent) {
+        val saved = CompletableDeferred<Unit>()
+        val saveSubscription = runOnUiThread {
+            editor.state.subscribe { if (it.successfulSaves > 0) saved.complete(Unit) }
+        }
+        runOnUiThread {
+            editor.onDraft(
+                editor.state.value.draft.copy(name = "Updated search", maxResults = "25"),
+            )
+            editor.onSave()
+        }
+        withTimeout(5000) { saved.await() }
+        runOnUiThread { saveSubscription.cancel() }
     }
 
     @Test
@@ -190,7 +206,7 @@ class DashboardRunnersTest : ComponentTest() {
     }
 
     @Test
-    fun runnerSettingsOpenTheOwningConnectionAndReturnToTheSameResults() = runBlocking<Unit> {
+    fun runnerSettingsOpenTheSelectedRunnerAndReturnToTheSameResults() = runBlocking<Unit> {
         runner("Other search")
         val id = runner("Target search")
         val dashboard = dashboard()
@@ -207,8 +223,9 @@ class DashboardRunnersTest : ComponentTest() {
         withTimeout(5000) { opened.await() }
         runOnUiThread { subscription.cancel() }
         val editor = assertNotNull(execution.settings.editor.value.child).instance
-        assertEquals(ownerId, editor.state.value.connection.id)
-        assertNotNull(editor.runners.value.child)
+        assertEquals(id, editor.state.value.runner.id)
+        assertEquals(ownerId, editor.state.value.runner.connectionId)
+        saveSettings(editor)
         dependencies.providerSettingsUseCases.setActive(ownerId, false)
         runOnUiThread {
             dashboard.onBack()
@@ -222,6 +239,8 @@ class DashboardRunnersTest : ComponentTest() {
         withTimeout(5000) { refreshed.await() }
         runOnUiThread { refreshSubscription.cancel() }
         assertFalse(execution.state.value.runner.active)
+        assertEquals("Updated search", execution.state.value.runner.name)
+        assertEquals("25", RunnerDraft.from(execution.state.value.runner).maxResults)
         assertEquals(0, dependencies.runnerExecutionRepository.starts)
     }
 }

@@ -11,20 +11,18 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import reframecv.domain.models.providers.ProviderConnection
-import reframecv.ui.components.settings.DefaultProviderEditorComponent
-import reframecv.ui.components.settings.ProviderEditorComponent
+import reframecv.domain.models.providers.ConnectionRunner
 import reframecv.ui.context.AppComponentContext
 
-/** Opens the runner's owning connection while retaining its results page. */
+/** Opens the selected runner's configuration while retaining its results page. */
 interface RunnerSettingsComponent {
-    val editor: Value<ChildSlot<*, ProviderEditorComponent>>
+    val editor: Value<ChildSlot<*, RunnerEditorComponent>>
     val isBusy: Boolean
     fun open()
     fun onBack(): Boolean
 }
 
-/** Loads saved provider settings independently of the route used to open the runner. */
+/** Loads fresh runner settings and refreshes availability when returning to results. */
 internal class DefaultRunnerSettingsComponent(
     context: AppComponentContext,
     private val state: MutableValue<RunnerRunsState>,
@@ -32,25 +30,23 @@ internal class DefaultRunnerSettingsComponent(
     private val pause: () -> Unit,
     private val resume: () -> Unit,
 ) : RunnerSettingsComponent {
-    private val useCases = context.dependencies.providerSettingsUseCases
     private val runners = context.dependencies.connectionRunnersUseCases
     private val logger = context.dependencies.logger
-    private val navigation = SlotNavigation<ProviderConnection>()
+    private val navigation = SlotNavigation<ConnectionRunner>()
     override val editor = context.childSlot(
         navigation,
         serializer = null,
-        key = "RunnerProviderSettings",
+        key = "RunnerSettings",
         handleBackButton = false,
-    ) { connection, childContext ->
-        DefaultProviderEditorComponent(
+    ) { runner, childContext ->
+        DefaultRunnerEditorComponent(
             childContext,
-            connection,
-            saved = {},
+            runner,
             back = {
                 navigation.dismiss()
                 refreshRunner()
             },
-        ) as ProviderEditorComponent
+        ) as RunnerEditorComponent
     }
     override val isBusy: Boolean get() = state.value.openingSettings ||
         editor.value.child?.instance?.isBusy == true
@@ -63,25 +59,26 @@ internal class DefaultRunnerSettingsComponent(
         state.value = state.value.copy(openingSettings = true, error = null)
         scope.launch {
             try {
-                val connection = useCases.observe().first()
-                    .firstOrNull { it.id == state.value.runner.connectionId }
-                if (connection == null) {
-                    state.value = state.value.copy(error = "Provider connection no longer exists.")
+                val saved = runners.observeSaved().first()
+                    .firstOrNull { it.runner.id == state.value.runner.id }
+                if (saved == null) {
+                    state.value = state.value.copy(error = "Runner no longer exists.")
                 } else {
-                    navigation.activate(connection)
+                    navigation.activate(saved.runner)
                 }
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
                 logger.error(
-                    "Open runner provider settings",
+                    "Open runner settings",
                     error,
-                    mapOf("connectionId" to state.value.runner.connectionId),
+                    mapOf("runnerId" to state.value.runner.id),
                 )
                 state.value =
-                    state.value.copy(error = "Could not open provider settings. Try again.")
+                    state.value.copy(error = "Could not open runner settings. Try again.")
             } finally {
                 state.value = state.value.copy(openingSettings = false)
+                if (editor.value.child == null) resume()
             }
         }
     }
