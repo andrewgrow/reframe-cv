@@ -825,6 +825,15 @@ scrollbars and end buttons. Next/Previous browse saved rows; Load more performs 
 next dataset GET and does not start a paid Actor run. Cached review and rejection actions work
 with no active provider or network connection.
 
+Two independent icon toggles hide dismissed results and imported vacancies. Both categories
+are visible initially. Filtering happens in SQL before local LIMIT/OFFSET pagination and uses
+the same historical-status precedence as duplicate indicators; an explicit current decision
+wins over its previous-run status. Saved/downloaded totals remain separate from visible counts.
+Changing a filter returns to page one; review/import actions clamp the current page when its
+last row disappears. Empty filtered pages retain filters and Load more. Remote download cursors
+never depend on visibility, and toggles do not perform network requests or start paid runs.
+Filter choices remain in the open runner component; no database schema change is needed.
+
 New rows offer conversion and dismissal; dismissed rows can be restored. Previously seen rows
 are marked but can still be converted because source content may have changed. Conversion
 asks for a leaf project and uses a provider-specific local snapshot converter. The first

@@ -20,13 +20,24 @@ abstract class RunnerResultsDao {
     )
     abstract suspend fun page(runId: Long, offset: Int, end: Int): List<RunnerResultEntity>
 
-    @Query("SELECT COUNT(*) FROM runner_results WHERE run_id = :runId")
-    abstract suspend fun count(runId: Long): Int
+    @Query("SELECT COUNT(*) FROM runner_results r WHERE run_id = :runId AND $REVIEW_FILTER")
+    abstract suspend fun count(
+        runId: Long,
+        showDismissed: Boolean = true,
+        showImported: Boolean = true,
+    ): Int
 
     @Query(
-        "SELECT * FROM runner_results WHERE run_id = :runId ORDER BY position LIMIT :limit OFFSET :offset",
+        "SELECT r.* FROM runner_results r WHERE run_id = :runId AND " + REVIEW_FILTER +
+            " ORDER BY position LIMIT :limit OFFSET :offset",
     )
-    abstract suspend fun reviewPage(runId: Long, offset: Int, limit: Int): List<RunnerResultEntity>
+    abstract suspend fun reviewPage(
+        runId: Long,
+        offset: Int,
+        limit: Int,
+        showDismissed: Boolean = true,
+        showImported: Boolean = true,
+    ): List<RunnerResultEntity>
 
     @Query(
         "UPDATE connection_runs SET next_result_offset = :offset, result_total = :total, " +
@@ -79,3 +90,12 @@ abstract class RunnerResultsDao {
         check(writeStatus(id, status, vacancyId) == 1)
     }
 }
+
+private const val REVIEW_STATUS =
+    "CASE WHEN r.status != 'New' THEN r.status ELSE COALESCE(" +
+        "(SELECT p.status FROM runner_results p WHERE p.source = r.source " +
+        "AND p.external_id = r.external_id AND p.run_id < r.run_id " +
+        "ORDER BY (p.status = 'Imported') DESC, p.run_id DESC, p.id DESC LIMIT 1), 'New') END"
+private const val REVIEW_FILTER =
+    "(:showDismissed OR (" + REVIEW_STATUS + ") != 'Dismissed') AND " +
+        "(:showImported OR (" + REVIEW_STATUS + ") != 'Imported')"

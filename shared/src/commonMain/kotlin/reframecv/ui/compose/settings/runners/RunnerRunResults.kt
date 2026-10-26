@@ -12,6 +12,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import org.jetbrains.compose.resources.stringResource
+import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.runner_results_filtered_empty
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.components.settings.runners.RunnerRunsState
 import reframecv.ui.compose.common.FillButton
@@ -44,9 +47,13 @@ internal fun RunnerRunResults(
             page != null -> {
                 Text(
                     "Saved ${page.savedCount} · Read ${view.run.nextResultOffset} " +
-                        "of ${view.run.resultTotal ?: "?"}",
+                        "of ${view.run.resultTotal ?: "?"}" +
+                        " · Visible ${page.visibleCount}",
                 )
-                key(view.run.id, page.offset) {
+                if (page.visibleCount == 0 && page.savedCount > 0) {
+                    Text(stringResource(Res.string.runner_results_filtered_empty))
+                }
+                key(view.run.id, page.offset, state.filter) {
                     RunnerResultsTable(
                         page.savedResults,
                         view.run.resultColumns,
@@ -81,7 +88,7 @@ private fun RunnerResultPagination(state: RunnerRunsState, component: RunnerRuns
             modifier = Modifier.testTag("runner.results.previous"),
         )
         val number = page.offset / size + 1
-        val totalPages = ((page.savedCount + size - 1) / size).coerceAtLeast(1)
+        val totalPages = ((page.visibleCount + size - 1) / size).coerceAtLeast(1)
         Box(
             Modifier.height(ReframeTheme.tokens.dimensions.buttonHeight),
             contentAlignment = Alignment.Center,
@@ -92,6 +99,7 @@ private fun RunnerResultPagination(state: RunnerRunsState, component: RunnerRuns
             enabled = enabled && page.nextOffset != null,
             modifier = Modifier.testTag("runner.results.next"),
         )
+        RunnerResultFilters(state, component)
         FillButton(
             "Load more",
             component::onLoadMore,

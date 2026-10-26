@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import kotlin.test.Test
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.theme.ReframeTheme
 
@@ -53,7 +54,11 @@ class RunnerRunsScreenshotTest : GoldenScreenshotTest() {
                                 resultTotal = 0,
                                 nextResultOffset = 0,
                             ),
-                            page = view.page!!.copy(savedResults = emptyList(), savedCount = 0),
+                            page = view.page!!.copy(
+                                savedResults = emptyList(),
+                                savedCount = 0,
+                                visibleCount = 0,
+                            ),
                         ),
                     ),
                 ),
@@ -89,5 +94,31 @@ class RunnerRunsScreenshotTest : GoldenScreenshotTest() {
                 ),
             )
         }
+    }
+
+    @Test
+    fun hiddenResultsKeepFiltersAndLoadMoreAvailableInNarrowLayout() = runDesktopComposeUiTest(
+        screenSize = ScreenSize(360.dp, 800.dp),
+    ) {
+        val initial = runnerTableFixture()
+        setAndCaptureGolden(this, screenSize = ScreenSize(360.dp, 800.dp)) {
+            RunnerRunsContent(
+                PreviewRunnerRunsComponent(
+                    initial.copy(
+                        filter = RunnerResultFilter(showDismissed = false, showImported = false),
+                        view = initial.view!!.copy(
+                            page = initial.view!!.page!!.copy(
+                                savedResults = emptyList(),
+                                visibleCount = 0,
+                                nextOffset = null,
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        }
+        onNodeWithTag("runner.filter.dismissed").assertIsDisplayed()
+        onNodeWithTag("runner.filter.imported").assertIsDisplayed()
+        onNodeWithTag("runner.results.more").assertIsDisplayed()
     }
 }

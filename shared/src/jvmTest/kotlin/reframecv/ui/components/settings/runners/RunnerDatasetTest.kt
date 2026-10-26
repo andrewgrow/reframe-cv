@@ -15,6 +15,7 @@ import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.RunnerRawResult
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.runners.RunnerResultsPage
 import reframecv.testing.ComponentTest
@@ -166,5 +167,69 @@ class RunnerDatasetTest : ComponentTest() {
         }
         assertNull(imported.importResultId)
         assertNotNull(imported.notice)
+    }
+
+    @Test
+    fun filteredPagesStayOfflineAndDownloadCursorIgnoresHiddenRows() = runBlocking<Unit> {
+        val id = runner()
+        val useCases = dependencies.runnerExecutionUseCases
+        val remote = dependencies.runnerExecutionRepository
+        val run = useCases.start(id)
+        remote.page = response(0, 50, 50)
+        useCases.inspect(id, run.id)
+        val repository = dependencies.runnerResultsRepository
+        repository.records.toList().forEach {
+            repository.setStatus(it.id, RunnerResultStatus.Dismissed)
+        }
+        val filter = RunnerResultFilter(showDismissed = false)
+        val empty = useCases.dataset.page(id, run.id, 25, filter).page!!
+        assertEquals(50, empty.savedCount)
+        assertEquals(0, empty.visibleCount)
+        assertEquals(0, empty.offset)
+        assertNull(empty.nextOffset)
+        assertEquals(1, remote.resultReads)
+        remote.page = response(50, 25, null)
+        val loaded = useCases.dataset.loadMore(id, run.id, filter = filter)
+        assertEquals(50, remote.requestedOffset)
+        assertEquals(75, loaded.run.nextResultOffset)
+        assertEquals(75, loaded.page!!.savedCount)
+        assertEquals(25, loaded.page!!.visibleCount)
+        assertEquals((50..74).toList(), loaded.page!!.savedResults.map { it.position })
+        assertEquals(2, remote.resultReads)
+    }
+
+    @Test
+    fun changingFilterResetsPageAndDismissingTheLastVisibleRowClampsPaging() = runBlocking<Unit> {
+        val id = runner()
+        val run = dependencies.runnerExecutionUseCases.start(id)
+        dependencies.runnerExecutionRepository.page = response(0, 26, null)
+        val component = runOnUiThread {
+            lifecycle.resume()
+            DefaultRunnerRunsComponent(
+                appComponentContext(),
+                dependencies.connectionRunnersRepository.records.value.single(),
+                {},
+            )
+        }
+        await(component) { !it.loadingHistory }
+        runOnUiThread { component.onSelect(run.id) }
+        await(component) { it.view?.page?.visibleCount == 26 }
+        runOnUiThread { component.onPage(25) }
+        await(component) { it.view?.page?.offset == 25 }
+        val filter = RunnerResultFilter(showDismissed = false)
+        runOnUiThread { component.onFilter(filter) }
+        await(component) { !it.reading && it.filter == filter && it.view?.page?.offset == 0 }
+        runOnUiThread { component.onPage(25) }
+        val last = await(component) {
+            it.view?.page?.offset == 25
+        }.view!!.page!!.savedResults.single()
+        runOnUiThread { component.onResultAction(last.id, RunnerResultAction.Dismiss) }
+        val updated = await(component) { !it.working && it.view?.page?.visibleCount == 25 }
+        assertEquals(0, updated.view!!.page!!.offset)
+        assertNull(updated.view!!.page!!.nextOffset)
+        runOnUiThread { component.onFilter(RunnerResultFilter()) }
+        val restored = await(component) { !it.reading && it.view?.page?.visibleCount == 26 }
+        assertEquals(0, restored.view!!.page!!.offset)
+        assertEquals(1, dependencies.runnerExecutionRepository.resultReads)
     }
 }

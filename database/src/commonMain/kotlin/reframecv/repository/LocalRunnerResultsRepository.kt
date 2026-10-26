@@ -5,6 +5,7 @@ import reframecv.database.providers.RunnerResultImportsDao
 import reframecv.database.providers.RunnerResultsDao
 import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.RunnerRawResult
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.domain.models.vacancy.Vacancy
 
@@ -17,9 +18,14 @@ class LocalRunnerResultsRepository(
         dao.insert(entities(runId, rows, receivedAt))
     }
     override suspend fun get(id: Long) = dao.get(id)?.toDomainModel()
-    override suspend fun count(runId: Long) = dao.count(runId)
-    override suspend fun reviewPage(runId: Long, offset: Int, limit: Int) =
-        enrich(dao.reviewPage(runId, offset, limit))
+    override suspend fun count(runId: Long, filter: RunnerResultFilter) =
+        dao.count(runId, filter.showDismissed, filter.showImported)
+    override suspend fun reviewPage(
+        runId: Long,
+        offset: Int,
+        limit: Int,
+        filter: RunnerResultFilter,
+    ) = enrich(dao.reviewPage(runId, offset, limit, filter.showDismissed, filter.showImported))
     override suspend fun commitPage(
         run: ConnectionRun,
         rows: List<RunnerRawResult>,

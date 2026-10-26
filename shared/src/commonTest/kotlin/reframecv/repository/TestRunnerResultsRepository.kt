@@ -3,6 +3,7 @@ package reframecv.repository
 import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.RunnerRawResult
 import reframecv.domain.models.providers.RunnerResult
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.domain.models.vacancy.Vacancy
 
@@ -12,9 +13,15 @@ class TestRunnerResultsRepository(
 ) : RunnerResultsRepository {
     val records = mutableListOf<RunnerResult>()
     override suspend fun get(id: Long) = records.find { it.id == id }
-    override suspend fun count(runId: Long) = records.count { it.runId == runId }
-    override suspend fun reviewPage(runId: Long, offset: Int, limit: Int) =
-        page(runId, 0, Int.MAX_VALUE).sortedBy { it.position }.drop(offset).take(limit)
+    override suspend fun count(runId: Long, filter: RunnerResultFilter) =
+        page(runId, 0, Int.MAX_VALUE).count(filter::includes)
+    override suspend fun reviewPage(
+        runId: Long,
+        offset: Int,
+        limit: Int,
+        filter: RunnerResultFilter,
+    ) = page(runId, 0, Int.MAX_VALUE).filter(filter::includes)
+        .sortedBy { it.position }.drop(offset).take(limit)
     override suspend fun commitPage(
         run: ConnectionRun,
         rows: List<RunnerRawResult>,

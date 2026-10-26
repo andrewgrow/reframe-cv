@@ -17,6 +17,7 @@ import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.ConnectionRunner
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.RunnerRawResult
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.repository.LocalConnectionRunnersRepository
 import reframecv.repository.LocalProviderConnectionsRepository
@@ -50,7 +51,7 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun pageReadsAreIdempotentAndNeverOverwriteOriginalSnapshotsOrReview() = runBlocking<Unit> {
+    fun pageReadsAreIdempotentAndNeverOverwriteOriginalSnapshotsOrReview() = runBlocking {
         val run = run()
         val repository = results()
         repository.savePage(run.id, listOf(raw(), raw(1), raw(2, id = null)), 200)
@@ -119,7 +120,7 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun historyDependsOnRunNotProjectAndRunnerDeletionCascades() = runBlocking<Unit> {
+    fun historyDependsOnRunNotProjectAndRunnerDeletionCascades() = runBlocking {
         val run = run()
         val repository = results()
         repository.savePage(run.id, listOf(raw()), 100)
@@ -154,7 +155,7 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun rawSnapshotsAndReviewSurviveReopeningTheDatabase() = runBlocking<Unit> {
+    fun rawSnapshotsAndReviewSurviveReopeningTheDatabase() = runBlocking {
         val run = run()
         results().savePage(run.id, listOf(raw()), 100)
         val original = results().page(run.id, 0, 1).single()
@@ -170,4 +171,71 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         assertEquals(payload, restored.rawResultAsJson)
         assertEquals(RunnerResultStatus.Dismissed, restored.status)
     }
+
+    @Test
+    fun filtersBeforePagingAndRestoresRowsWithoutChangingSourcePositions() = runBlocking {
+        val run = run()
+        val repository = results()
+        repository.savePage(run.id, (0..59).map { raw(it, id = "$it") }, 200)
+        val rows = repository.reviewPage(run.id, 0, 100)
+        val vacancy = database.vacancyDao().create(vacancy(project()))
+        rows.take(30).forEach { repository.setStatus(it.id, RunnerResultStatus.Dismissed) }
+        rows.drop(30).take(15).forEach {
+            repository.setStatus(it.id, RunnerResultStatus.Imported, vacancy)
+        }
+        val newOnly = RunnerResultFilter(showDismissed = false, showImported = false)
+        assertEquals(15, repository.count(run.id, newOnly))
+        assertEquals(
+            (45..59).toList(),
+            repository.reviewPage(run.id, 0, 25, newOnly).map {
+                it.position
+            },
+        )
+        val noImports = RunnerResultFilter(showImported = false)
+        assertEquals(45, repository.count(run.id, noImports))
+        assertEquals(
+            (0..24).toList(),
+            repository.reviewPage(run.id, 0, 25, noImports).map {
+                it.position
+            },
+        )
+        assertEquals(
+            (25..29).toList() + (45..59).toList(),
+            repository.reviewPage(run.id, 25, 25, noImports).map { it.position },
+        )
+        val noDismissals = RunnerResultFilter(showDismissed = false)
+        assertEquals(30, repository.count(run.id, noDismissals))
+        assertEquals(60, repository.count(run.id))
+        repository.setStatus(rows.first().id, RunnerResultStatus.New)
+        assertEquals(16, repository.count(run.id, newOnly))
+        assertEquals(0, repository.reviewPage(run.id, 0, 25, newOnly).first().position)
+    }
+
+    @Test
+    fun filtersHistoricalDecisionsUsingTheSamePrecedenceAsDuplicateIndicators() =
+        runBlocking {
+            val first = run()
+            val repository = results()
+            repository.savePage(first.id, listOf(raw(), raw(1, id = "102")), 100)
+            val previous = repository.reviewPage(first.id, 0, 25)
+            val vacancy = database.vacancyDao().create(vacancy(project()))
+            repository.setStatus(previous[0].id, RunnerResultStatus.Imported, vacancy)
+            repository.setStatus(previous[1].id, RunnerResultStatus.Dismissed)
+            val second = run()
+            repository.savePage(
+                second.id,
+                listOf(raw(), raw(1, id = "102"), raw(2, id = null)),
+                200,
+            )
+            val filter = RunnerResultFilter(showDismissed = false, showImported = false)
+            assertEquals(1, repository.count(second.id, filter))
+            assertEquals(2, repository.reviewPage(second.id, 0, 25, filter).single().position)
+            val current = repository.reviewPage(second.id, 0, 25)
+            assertEquals(RunnerResultStatus.Imported, current[0].previousStatus)
+            assertEquals(RunnerResultStatus.Dismissed, current[1].previousStatus)
+            repository.setStatus(current[0].id, RunnerResultStatus.Dismissed)
+            assertEquals(3, repository.count(second.id, RunnerResultFilter(showImported = false)))
+            assertEquals(1, repository.count(second.id, filter))
+            assertEquals(3, repository.count(second.id))
+        }
 }

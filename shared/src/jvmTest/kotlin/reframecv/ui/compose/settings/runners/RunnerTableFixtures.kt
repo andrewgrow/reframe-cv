@@ -143,6 +143,9 @@ internal class PreviewRunnerRunsComponent(initial: RunnerRunsState) : RunnerRuns
     override fun onProject(id: Long?) {
         project = id
     }
+    override fun onFilter(filter: reframecv.domain.models.providers.RunnerResultFilter) {
+        state.value = state.value.copy(filter = filter)
+    }
     override fun onStart() = Unit
     override fun onSelect(id: Long) = Unit
     override fun onRefresh() = Unit

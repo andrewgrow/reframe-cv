@@ -19,7 +19,7 @@ import reframecv.domain.models.project.Project
 import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.ConnectionRunner
-import reframecv.runners.RunnerExecutionException
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.ui.context.AppComponentContext
 import reframecv.usecase.RunnerRunView
 
@@ -39,6 +39,7 @@ data class RunnerRunsState(
     val notice: String? = null,
     val preferredProjectId: Long? = null,
     val openingSettings: Boolean = false,
+    val filter: RunnerResultFilter = RunnerResultFilter(),
 )
 
 /** Starts explicit paid runs and resumes status/result reads for previously saved IDs. */
@@ -52,6 +53,7 @@ interface RunnerRunsComponent {
     fun onStart()
     fun onSelect(id: Long)
     fun onRefresh()
+    fun onFilter(filter: RunnerResultFilter)
     fun onPage(offset: Int)
     fun onRetryHistory()
     fun onBack()
@@ -95,6 +97,7 @@ class DefaultRunnerRunsComponent(
                 state.value.runner.id,
                 view.run.id,
                 view.page?.offset ?: 0,
+                state.value.filter,
             ),
         )
     }
@@ -161,7 +164,7 @@ class DefaultRunnerRunsComponent(
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
-                failed("Start runner", error, starting = true)
+                runnerReadFailure(state, logger, "Start runner", error, starting = true)
             }
         }
     }
@@ -186,6 +189,13 @@ class DefaultRunnerRunsComponent(
         request?.cancel()
         request = scope.launch { read(run.id, state.value.view?.page?.offset ?: 0) }
     }
+    override fun onFilter(filter: RunnerResultFilter) {
+        if (isBusy || state.value.reading) return
+        val run = state.value.view?.run ?: return
+        request?.cancel()
+        state.value = state.value.copy(filter = filter)
+        request = scope.launch { read(run.id, 0, local = true) }
+    }
     override fun onPage(offset: Int) {
         if (!state.value.reading && !state.value.working && offset >= 0) {
             val run = state.value.view?.run ?: return
@@ -200,9 +210,21 @@ class DefaultRunnerRunsComponent(
         try {
             while (currentCoroutineContext().isActive) {
                 val view = when {
-                    more -> useCases.dataset.loadMore(state.value.runner.id, id, offset)
-                    local -> useCases.dataset.page(state.value.runner.id, id, offset)
-                    else -> useCases.inspect(state.value.runner.id, id, offset)
+                    more -> useCases.dataset.loadMore(
+                        state.value.runner.id,
+                        id,
+                        offset,
+                        state.value.filter,
+                    )
+
+                    local -> useCases.dataset.page(
+                        state.value.runner.id,
+                        id,
+                        offset,
+                        state.value.filter,
+                    )
+
+                    else -> useCases.inspect(state.value.runner.id, id, offset, state.value.filter)
                 }
                 state.value = state.value.copy(view = view, reading = false)
                 val pending =
@@ -214,20 +236,8 @@ class DefaultRunnerRunsComponent(
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
-            failed("Read runner results", error)
+            runnerReadFailure(state, logger, "Read runner results", error)
         }
-    }
-    private fun failed(operation: String, error: Exception, starting: Boolean = false) {
-        logger.error(operation, error, mapOf("runnerId" to state.value.runner.id))
-        state.value = state.value.copy(
-            starting = false,
-            reading = false,
-            error = (error as? RunnerExecutionException)?.details ?: if (starting) {
-                "Could not confirm the start. Check Apify Console before starting another run."
-            } else {
-                "Could not read the run. Try refreshing."
-            },
-        )
     }
     override fun onBack() {
         if (isBusy || settings.onBack()) return

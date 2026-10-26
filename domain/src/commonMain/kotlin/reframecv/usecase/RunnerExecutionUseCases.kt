@@ -8,6 +8,7 @@ import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.RunnerConfigurationJson
+import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.repository.ConnectionRunnersRepository
 import reframecv.repository.ProviderConnectionsRepository
 import reframecv.repository.RunnerResultsRepository
@@ -95,7 +96,12 @@ class RunnerExecutionUseCases(
         )
     }
 
-    suspend fun inspect(runnerId: Long, runId: Long, offset: Int = 0): RunnerRunView {
+    suspend fun inspect(
+        runnerId: Long,
+        runId: Long,
+        offset: Int = 0,
+        filter: RunnerResultFilter = RunnerResultFilter(),
+    ): RunnerRunView {
         require(offset >= 0)
         val local = checkNotNull(runners.getRun(runId))
         require(local.runnerId == runnerId)
@@ -113,9 +119,9 @@ class RunnerExecutionUseCases(
                 )
             }
             val view = if (saved.nextResultOffset == 0 && !saved.resultsComplete) {
-                dataset.loadMore(runnerId, runId, offset)
+                dataset.loadMore(runnerId, runId, offset, filter)
             } else {
-                dataset.page(runnerId, runId, offset)
+                dataset.page(runnerId, runId, offset, filter)
             }
             view.copy(remote = status)
         } else {

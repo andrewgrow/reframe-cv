@@ -46,4 +46,5 @@ data class RunnerResultsPage(
     val rawResults: List<RunnerRawResult> = emptyList(),
     val savedResults: List<RunnerResult> = emptyList(),
     val savedCount: Int = savedResults.size,
+    val visibleCount: Int = savedCount,
 )

@@ -72,7 +72,7 @@ class RunnerExecutionTest : ComponentTest() {
         assertEquals(ConnectionRunState.Succeeded, run.state)
         assertEquals(run, dependencies.connectionRunnersRepository.getRun(run.id))
         val view = useCases.inspect(runner.id, run.id, 50)
-        assertEquals(50, view.page?.offset)
+        assertEquals(0, view.page?.offset)
         assertEquals(0, dependencies.runnerExecutionRepository.requestedOffset)
         assertEquals(1, dependencies.runnerExecutionRepository.starts)
         assertEquals(1, dependencies.runnerExecutionRepository.resultReads)
@@ -201,7 +201,7 @@ class RunnerExecutionTest : ComponentTest() {
             runOnUiThread { component.onRefresh() }
             await(component) { it.view?.page != null }
             runOnUiThread { component.onPage(50) }
-            await(component) { it.view?.page?.offset == 50 }
+            await(component) { !it.reading && it.view?.page?.offset == 0 }
             assertEquals(1, remote.starts)
             assertFalse(component.state.value.reading)
         }

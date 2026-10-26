@@ -6,6 +6,9 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertWidthIsEqualTo
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -24,6 +27,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.settings.runners.RunnerResultAction
+import reframecv.ui.threading.runOnUiThread
 
 @OptIn(ExperimentalTestApi::class)
 class RunnerTableContentTest : GoldenScreenshotTest() {
@@ -34,7 +38,13 @@ class RunnerTableContentTest : GoldenScreenshotTest() {
         val component =
             PreviewRunnerRunsComponent(
                 initial.copy(
-                    view = view.copy(page = view.page!!.copy(savedCount = 30, nextOffset = 25)),
+                    view = view.copy(
+                        page = view.page!!.copy(
+                            savedCount = 30,
+                            visibleCount = 30,
+                            nextOffset = 25,
+                        ),
+                    ),
                 ),
             )
         setGoldenContent(this) { RunnerRunsContent(component) }
@@ -132,5 +142,23 @@ class RunnerTableContentTest : GoldenScreenshotTest() {
         onNodeWithTag("runner.import.project.2").performClick()
         onNodeWithTag("runner.import.confirm").performClick()
         assertEquals(2L, component.project)
+    }
+
+    @Test
+    fun filterIconsToggleIndependentlyAndCannotChangeWhileProcessing() = runDesktopComposeUiTest {
+        val component = PreviewRunnerRunsComponent(runnerTableFixture())
+        setGoldenContent(this) { RunnerRunsContent(component) }
+        val dismissed = onNodeWithTag("runner.filter.dismissed")
+        val imported = onNodeWithTag("runner.filter.imported")
+        dismissed.assertIsOff().performClick().assertIsOn()
+        assertEquals(false, component.state.value.filter.showDismissed)
+        assertEquals(true, component.state.value.filter.showImported)
+        imported.performClick().assertIsOn()
+        assertEquals(false, component.state.value.filter.showImported)
+        dismissed.performClick().assertIsOff()
+        assertEquals(true, component.state.value.filter.showDismissed)
+        runOnUiThread { component.state.value = component.state.value.copy(working = true) }
+        dismissed.assertIsNotEnabled()
+        imported.assertIsNotEnabled()
     }
 }

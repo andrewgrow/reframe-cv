@@ -484,4 +484,9 @@
     <string name="dashboard_search_runners">Search runners</string>
     <string name="dashboard_runners_empty">No saved runners. Add one in Settings → API Providers.</string>
     <string name="dashboard_runners_error">Could not load runners. Try again.</string>
+    <string name="runner_hide_dismissed">Hide dismissed results</string>
+    <string name="runner_show_dismissed">Show dismissed results</string>
+    <string name="runner_hide_imported">Hide imported vacancies</string>
+    <string name="runner_show_imported">Show imported vacancies</string>
+    <string name="runner_results_filtered_empty">No saved results match the current filters.</string>
 </resources>
