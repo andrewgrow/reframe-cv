@@ -705,6 +705,12 @@ the button click, and a single project-scoped SQL update changes only rows with 
 application date. Repeated actions preserve previous application dates. This action saves
 immediately; errors retain the selection for retry.
 
+The vacancy-list footer reuses the dataset visibility-filter icon to hide or show rows with
+`appliedAt`. All rows are visible initially. Hidden rows are removed from selection, and Select
+all operates on visible rows only. Marking rows applied while filtered clears their selection
+as they disappear. The filter remains available for an empty filtered list and is retained
+while the list component is open, including after bulk deletion. No schema change is required.
+
 ## Generic provider connections and reusable operations
 
 `ProviderConnection` contains common identity, active state, typed configuration and optional
@@ -817,7 +823,9 @@ Settings backups continue to exclude runs and results.
 
 The table renders every saved row, including output that cannot yet be converted into a
 vacancy. Missing keys are blank; nested arrays/objects use compact JSON. Cells show at most
-three lines with ellipsis, and a click opens their complete selectable value. Column widths
+three lines with ellipsis, and a click opens their complete selectable value. HTTP/HTTPS URLs
+in that preview are underlined clickable links, including URLs embedded in text or JSON. Opening
+a link uses the owning screen's browser handler; the original text stays selectable. Column widths
 fit measured headers and current-page values within 100–320 dp; headers and cells share the
 same widths. Headers stay
 fixed vertically and the action column stays fixed horizontally. Both axes have draggable

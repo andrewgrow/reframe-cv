@@ -212,30 +212,29 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
     }
 
     @Test
-    fun filtersHistoricalDecisionsUsingTheSamePrecedenceAsDuplicateIndicators() =
-        runBlocking {
-            val first = run()
-            val repository = results()
-            repository.savePage(first.id, listOf(raw(), raw(1, id = "102")), 100)
-            val previous = repository.reviewPage(first.id, 0, 25)
-            val vacancy = database.vacancyDao().create(vacancy(project()))
-            repository.setStatus(previous[0].id, RunnerResultStatus.Imported, vacancy)
-            repository.setStatus(previous[1].id, RunnerResultStatus.Dismissed)
-            val second = run()
-            repository.savePage(
-                second.id,
-                listOf(raw(), raw(1, id = "102"), raw(2, id = null)),
-                200,
-            )
-            val filter = RunnerResultFilter(showDismissed = false, showImported = false)
-            assertEquals(1, repository.count(second.id, filter))
-            assertEquals(2, repository.reviewPage(second.id, 0, 25, filter).single().position)
-            val current = repository.reviewPage(second.id, 0, 25)
-            assertEquals(RunnerResultStatus.Imported, current[0].previousStatus)
-            assertEquals(RunnerResultStatus.Dismissed, current[1].previousStatus)
-            repository.setStatus(current[0].id, RunnerResultStatus.Dismissed)
-            assertEquals(3, repository.count(second.id, RunnerResultFilter(showImported = false)))
-            assertEquals(1, repository.count(second.id, filter))
-            assertEquals(3, repository.count(second.id))
-        }
+    fun filtersHistoricalDecisionsUsingTheSamePrecedenceAsDuplicateIndicators() = runBlocking {
+        val first = run()
+        val repository = results()
+        repository.savePage(first.id, listOf(raw(), raw(1, id = "102")), 100)
+        val previous = repository.reviewPage(first.id, 0, 25)
+        val vacancy = database.vacancyDao().create(vacancy(project()))
+        repository.setStatus(previous[0].id, RunnerResultStatus.Imported, vacancy)
+        repository.setStatus(previous[1].id, RunnerResultStatus.Dismissed)
+        val second = run()
+        repository.savePage(
+            second.id,
+            listOf(raw(), raw(1, id = "102"), raw(2, id = null)),
+            200,
+        )
+        val filter = RunnerResultFilter(showDismissed = false, showImported = false)
+        assertEquals(1, repository.count(second.id, filter))
+        assertEquals(2, repository.reviewPage(second.id, 0, 25, filter).single().position)
+        val current = repository.reviewPage(second.id, 0, 25)
+        assertEquals(RunnerResultStatus.Imported, current[0].previousStatus)
+        assertEquals(RunnerResultStatus.Dismissed, current[1].previousStatus)
+        repository.setStatus(current[0].id, RunnerResultStatus.Dismissed)
+        assertEquals(3, repository.count(second.id, RunnerResultFilter(showImported = false)))
+        assertEquals(1, repository.count(second.id, filter))
+        assertEquals(3, repository.count(second.id))
+    }
 }

@@ -3,12 +3,14 @@ package reframecv.ui.compose.projects.vacancies
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.v2.runComposeUiTest
 import kotlin.test.Test
@@ -67,5 +69,21 @@ class VacancySelectionContentTest {
             documentDate(checkNotNull(records.first().appliedAt), TimeZone.currentSystemDefault())
         onNodeWithTag("vacancies.applied.1", useUnmergedTree = true).assertTextEquals("✓ $date")
         onNodeWithTag("vacancies.applied.2", useUnmergedTree = true).assertTextEquals("")
+    }
+
+    @Test
+    fun appliedFilterHidesRowsAndCanRestoreAnEntirelyFilteredList() = runComposeUiTest {
+        val component = TestVacanciesComponent(
+            initialState = VacanciesState.Ready(listOf(vacancySamples().first())),
+        )
+        setContent { ReframeTheme { VacanciesContent(component) } }
+        onNodeWithTag("vacancies.select.1").performClick()
+        onNodeWithTag("vacancies.filter.applied").assertIsOff().performClick().assertIsOn()
+        onNodeWithTag("vacancies.select.1").assertDoesNotExist()
+        onNodeWithText("No vacancies match the current filter.").assertExists()
+        onNodeWithTag("vacancies.delete.selected").assertIsNotEnabled()
+        onNodeWithTag("vacancies.applied.selected").assertIsNotEnabled()
+        onNodeWithTag("vacancies.filter.applied").performClick().assertIsOff()
+        onNodeWithTag("vacancies.select.1").assertExists()
     }
 }

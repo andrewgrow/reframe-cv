@@ -25,6 +25,7 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.dashboard_vacancies
 import reframecv.shared.generated.resources.vacancies_applied_error
 import reframecv.shared.generated.resources.vacancies_empty
+import reframecv.shared.generated.resources.vacancies_filter_empty
 import reframecv.ui.components.projects.vacancies.VacanciesComponent
 import reframecv.ui.components.projects.vacancies.VacanciesState
 import reframecv.ui.compose.common.LoadingContent
@@ -62,15 +63,24 @@ internal fun VacanciesListContent(component: VacanciesComponent) {
 
                             VacanciesState.LoadFailed -> VacanciesLoadError()
 
-                            is VacanciesState.Ready -> if (current.vacancies.isEmpty()) {
+                            is VacanciesState.Ready -> if (selection.visible(
+                                    current.vacancies,
+                                ).isEmpty()
+                            ) {
                                 SelectableText(
-                                    stringResource(Res.string.vacancies_empty),
+                                    stringResource(
+                                        if (current.vacancies.isEmpty()) {
+                                            Res.string.vacancies_empty
+                                        } else {
+                                            Res.string.vacancies_filter_empty
+                                        },
+                                    ),
                                     color = ReframeTheme.colorScheme.hint,
                                     style = MaterialTheme.typography.bodyLarge,
                                 )
                             } else {
                                 VacanciesList(
-                                    current.vacancies,
+                                    selection.visible(current.vacancies),
                                     timeZone,
                                     component::onEdit,
                                     component.selection,
@@ -107,6 +117,12 @@ private fun VacanciesListControls(component: VacanciesComponent) {
             null
         },
         selectedCount = selection.selected.size,
+        hideApplied = selection.hideApplied,
+        onToggleAppliedFilter = if (state is VacanciesState.Ready) {
+            component.selection::onToggleAppliedFilter
+        } else {
+            null
+        },
         enabled = !selection.confirming && !selection.busy,
         onRetry = if (state == VacanciesState.LoadFailed) component::onRetry else null,
     )

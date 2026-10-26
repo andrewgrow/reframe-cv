@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,12 +36,12 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import reframecv.domain.models.providers.RunnerResult
-import reframecv.shared.SelectableText
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.compose.common.FastHorizontalScrollRail
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.compose.common.FastScrollRail
 import reframecv.ui.compose.common.ResizableDialog
+import reframecv.ui.compose.common.SelectableLinkText
 
 internal fun runnerCells(result: RunnerResult): Map<String, String> = try {
     when (val json = Json.parseToJsonElement(result.rawResultAsJson)) {
@@ -62,6 +63,7 @@ internal fun RunnerResultsTable(
     enabled: Boolean,
     modifier: Modifier = Modifier,
 ) {
+    val uriHandler = LocalUriHandler.current
     val horizontal = rememberScrollState()
     val vertical = rememberScrollState()
     val rows = remember(results) { results.map(::runnerCells) }
@@ -98,7 +100,11 @@ internal fun RunnerResultsTable(
         ResizableDialog(
             onDismissRequest = { cell = null },
             title = { Text(name) },
-            text = { FastScrollColumn(Modifier.height(300.dp)) { SelectableText(text) } },
+            text = {
+                FastScrollColumn(Modifier.height(300.dp)) {
+                    SelectableLinkText(text, openUrl = uriHandler::openUri)
+                }
+            },
             actions = { androidx.compose.material3.TextButton({ cell = null }) { Text("Close") } },
             modifier = Modifier.testTag("runner.result.cell.dialog"),
         )

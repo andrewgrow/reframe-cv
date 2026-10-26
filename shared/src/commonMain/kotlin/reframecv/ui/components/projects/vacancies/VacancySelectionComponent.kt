@@ -9,6 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import reframecv.domain.models.vacancy.Vacancy
 import reframecv.shared.nowMillis
 import reframecv.ui.context.AppComponentContext
 
@@ -20,13 +21,17 @@ data class VacancySelectionState(
     val failed: Boolean = false,
     val applying: Boolean = false,
     val applicationFailed: Boolean = false,
+    val hideApplied: Boolean = false,
 ) {
     val busy: Boolean get() = deleting || applying
+    fun visible(vacancies: List<Vacancy>): List<Vacancy> =
+        if (hideApplied) vacancies.filter { it.appliedAt == null } else vacancies
 }
 
 /** Lets the list select vacancies independently of opening their editors. */
 interface VacancySelectionComponent {
     val state: Value<VacancySelectionState>
+    fun onToggleAppliedFilter()
     fun onMarkApplied()
     fun onToggle(id: Long)
     fun onToggleAll()
@@ -51,7 +56,7 @@ class DefaultVacancySelectionComponent(
                     state.value.selected
                 } else {
                     state.value.selected.intersect(
-                        ready.vacancies.map {
+                        state.value.visible(ready.vacancies).map {
                             it.id
                         }.toSet(),
                     )
@@ -70,10 +75,18 @@ class DefaultVacancySelectionComponent(
             scope.cancel()
         }
     }
+    override fun onToggleAppliedFilter() {
+        if (!editable()) return
+        state.value = state.value.copy(hideApplied = !state.value.hideApplied)
+        state.value = state.value.copy(selected = state.value.selected.intersect(visibleIds()))
+    }
+    private fun visibleIds(): Set<Long> = state.value.visible(
+        (records.value as? VacanciesState.Ready)?.vacancies.orEmpty(),
+    ).map { it.id }.toSet()
     override fun onToggle(id: Long) {
         if (!editable()) return
         val ready = records.value as? VacanciesState.Ready ?: return
-        if (ready.vacancies.any { it.id == id && it.projectId == projectId }) {
+        if (state.value.visible(ready.vacancies).any { it.id == id && it.projectId == projectId }) {
             val ids = state.value.selected
             state.value =
                 state.value.copy(
@@ -92,7 +105,7 @@ class DefaultVacancySelectionComponent(
     override fun onToggleAll() {
         if (!editable()) return
         val ids =
-            (records.value as? VacanciesState.Ready)?.vacancies?.map { it.id }?.toSet() ?: return
+            visibleIds()
         state.value =
             state.value.copy(
                 selected = if (state.value.selected ==
@@ -127,7 +140,7 @@ class DefaultVacancySelectionComponent(
         scope.launch {
             try {
                 context.dependencies.vacanciesUseCases.deleteMany(projectId, ids)
-                state.value = VacancySelectionState()
+                state.value = VacancySelectionState(hideApplied = state.value.hideApplied)
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {
@@ -150,7 +163,10 @@ class DefaultVacancySelectionComponent(
         scope.launch {
             try {
                 context.dependencies.vacanciesUseCases.markApplied(projectId, ids, timestamp)
-                state.value = state.value.copy(applying = false)
+                state.value = state.value.copy(
+                    applying = false,
+                    selected = state.value.selected.intersect(visibleIds()),
+                )
             } catch (error: CancellationException) {
                 throw error
             } catch (error: Exception) {

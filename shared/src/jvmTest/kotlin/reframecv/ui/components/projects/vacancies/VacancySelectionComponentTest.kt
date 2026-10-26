@@ -163,4 +163,75 @@ class VacancySelectionComponentTest : ComponentTest() {
         withTimeout(5000) { completed.await() }
         assertTrue(dependencies.vacanciesRepository.records.value.all { it.appliedAt == timestamp })
     }
+
+    @Test
+    fun appliedFilterPrunesHiddenSelectionsAndSelectAllUsesOnlyVisibleRows() = runBlocking<Unit> {
+        runOnUiThread {
+            lifecycle.resume()
+            state.value = VacanciesState.Ready(listOf(records[0].copy(appliedAt = 123), records[1]))
+            val component =
+                DefaultVacancySelectionComponent(appComponentContext(), 7, state) { true }
+            component.onToggleAll()
+            component.onToggleAppliedFilter()
+            assertTrue(component.state.value.hideApplied)
+            assertEquals(setOf(2L), component.state.value.selected)
+            component.onToggle(1)
+            assertEquals(setOf(2L), component.state.value.selected)
+            component.onToggleAll()
+            assertTrue(component.state.value.selected.isEmpty())
+            component.onToggleAll()
+            assertEquals(setOf(2L), component.state.value.selected)
+            state.value = VacanciesState.Ready(records.map { it.copy(appliedAt = 456) })
+            assertTrue(component.state.value.selected.isEmpty())
+            component.onToggleAppliedFilter()
+            component.onToggleAll()
+            assertEquals(setOf(1L, 2L), component.state.value.selected)
+            component.onRequestDelete()
+            component.onToggleAppliedFilter()
+            assertFalse(component.state.value.hideApplied)
+        }
+    }
+
+    @Test
+    fun applyingWhileFilteredClearsSelectionEvenWhenObservationUpdatesDuringTheWrite() =
+        runBlocking<Unit> {
+            val completed = CompletableDeferred<Unit>()
+            val repository = object : VacanciesRepository by dependencies.vacanciesRepository {
+                override suspend fun markApplied(projectId: Long, ids: Set<Long>, timestamp: Long) {
+                    state.value =
+                        VacanciesState.Ready(records.map { it.copy(appliedAt = timestamp) })
+                }
+            }
+            val component = runOnUiThread {
+                lifecycle.resume()
+                val context = DefaultAppComponentContext(
+                    com.arkivanov.decompose.DefaultComponentContext(lifecycle),
+                    object : ApplicationDependencies by dependencies {
+                        override val vacanciesUseCases = VacanciesUseCases(repository)
+                    },
+                )
+                DefaultVacancySelectionComponent(context, 7, state) { true }.also {
+                    it.state.subscribe { value ->
+                        if (!value.busy && value.selected.isEmpty() &&
+                            (state.value as VacanciesState.Ready).vacancies.all { v ->
+                                v.appliedAt !=
+                                    null
+                            }
+                        ) {
+                            completed.complete(Unit)
+                        }
+                    }
+                    it.onToggleAppliedFilter()
+                    it.onToggleAll()
+                    it.onMarkApplied()
+                }
+            }
+            withTimeout(5000) { completed.await() }
+            assertTrue(component.state.value.hideApplied)
+            assertTrue(component.state.value.selected.isEmpty())
+            assertTrue(
+                component.state.value.visible((state.value as VacanciesState.Ready).vacancies)
+                    .isEmpty(),
+            )
+        }
 }

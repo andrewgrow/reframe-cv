@@ -34,4 +34,18 @@ class VacancySelectionScreenshotTest : GoldenScreenshotTest() {
             VacanciesContent(component)
         }
     }
+
+    @Test
+    fun appliedFilterShowsOnlyUnappliedVacancies() = runComposeUiTest {
+        val component = fixture().also { it.selection.onToggleAppliedFilter() }
+        setAndCaptureGolden(this) { VacanciesContent(component) }
+    }
+
+    @Test
+    fun appliedFilterKeepsRestoreControlAvailableWhenEverythingIsHidden() = runComposeUiTest {
+        val component = TestVacanciesComponent(
+            initialState = VacanciesState.Ready(listOf(vacancySamples().first())),
+        ).also { it.selection.onToggleAppliedFilter() }
+        setAndCaptureGolden(this, themeMode = ThemeMode.Light) { VacanciesContent(component) }
+    }
 }

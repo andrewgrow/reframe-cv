@@ -489,4 +489,7 @@
     <string name="runner_hide_imported">Hide imported vacancies</string>
     <string name="runner_show_imported">Show imported vacancies</string>
     <string name="runner_results_filtered_empty">No saved results match the current filters.</string>
+    <string name="vacancies_hide_applied">Hide applied vacancies</string>
+    <string name="vacancies_show_applied">Show applied vacancies</string>
+    <string name="vacancies_filter_empty">No vacancies match the current filter.</string>
 </resources>
