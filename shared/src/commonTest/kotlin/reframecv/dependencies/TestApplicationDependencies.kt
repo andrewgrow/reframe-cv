@@ -224,6 +224,19 @@ class TestApplicationDependencies : ApplicationDependencies {
     var assessmentResponse: suspend () -> ResumeAssessmentOutcome = {
         ResumeAssessmentOutcome.Failed("Assessment unavailable")
     }
+    var relevanceResponse: suspend (
+        String,
+        String,
+    ) -> reframecv.relevance.RunnerRelevanceScore = { _, _ ->
+        throw reframecv.relevance.RunnerRelevanceException("Relevance unavailable")
+    }
+    override val assessRunnerResult get() = reframecv.usecase.AssessRunnerResultUseCase(
+        reframecv.relevance.RunnerRelevanceRepository { source, _, instruction ->
+            relevanceResponse(source, instruction)
+        },
+        providerSettingsUseCases,
+        runnerResultsRepository,
+    )
     override val assessResume get() = AssessResumeUseCase(
         ResumeAssessmentRepository { resume, vacancy, _, _ ->
             assessmentInputs += resume to vacancy

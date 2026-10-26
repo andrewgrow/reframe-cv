@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 1,
-    "identityHash": "f52e35876e13080e7d95fee4c977a811",
+    "identityHash": "e2695cca656fa22dc876eb9ec900ab63",
     "entities": [
       {
         "tableName": "screen_states",
@@ -376,7 +376,7 @@
       },
       {
         "tableName": "runner_results",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `run_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `source` TEXT NOT NULL, `external_id` TEXT, `raw_result_as_json` TEXT NOT NULL, `received_at` INTEGER NOT NULL, `status` TEXT NOT NULL, `vacancy_id` INTEGER, FOREIGN KEY(`run_id`) REFERENCES `connection_runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `run_id` INTEGER NOT NULL, `position` INTEGER NOT NULL, `source` TEXT NOT NULL, `external_id` TEXT, `raw_result_as_json` TEXT NOT NULL, `received_at` INTEGER NOT NULL, `status` TEXT NOT NULL, `vacancy_id` INTEGER, `relevance_score` INTEGER, `relevance_prompt` TEXT, FOREIGN KEY(`run_id`) REFERENCES `connection_runs`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`vacancy_id`) REFERENCES `vacancies`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL )",
         "fields": [
           {
             "fieldPath": "id",
@@ -429,6 +429,16 @@
             "fieldPath": "vacancyId",
             "columnName": "vacancy_id",
             "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "relevanceScore",
+            "columnName": "relevance_score",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "relevancePrompt",
+            "columnName": "relevance_prompt",
+            "affinity": "TEXT"
           }
         ],
         "primaryKey": {
@@ -1395,7 +1405,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'f52e35876e13080e7d95fee4c977a811')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'e2695cca656fa22dc876eb9ec900ab63')"
     ]
   }
 }

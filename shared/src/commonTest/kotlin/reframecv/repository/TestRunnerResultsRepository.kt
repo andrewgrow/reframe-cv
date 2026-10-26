@@ -12,6 +12,13 @@ class TestRunnerResultsRepository(
     private val createVacancy: suspend (Vacancy) -> Long = { error("No vacancy writer") },
 ) : RunnerResultsRepository {
     val records = mutableListOf<RunnerResult>()
+    var failRelevanceSave = false
+    override suspend fun setRelevance(id: Long, runId: Long, score: Int, prompt: String) {
+        check(!failRelevanceSave)
+        val index = records.indexOfFirst { it.id == id && it.runId == runId }
+        check(index >= 0)
+        records[index] = records[index].copy(relevanceScore = score, relevancePrompt = prompt)
+    }
     override suspend fun get(id: Long) = records.find { it.id == id }
     override suspend fun count(runId: Long, filter: RunnerResultFilter) =
         page(runId, 0, Int.MAX_VALUE).count(filter::includes)

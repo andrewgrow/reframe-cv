@@ -129,6 +129,9 @@ internal class PreviewRunnerRunsComponent(initial: RunnerRunsState) : RunnerRuns
         override fun open() = Unit
         override fun onBack() = false
     }
+    override val relevance = reframecv.ui.components.settings.runners.TestRunnerRelevanceComponent {
+        state.value.view?.page?.savedResults.orEmpty()
+    }
     override val state = MutableValue(initial)
     var offset: Int? = null
     var project: Long? = null

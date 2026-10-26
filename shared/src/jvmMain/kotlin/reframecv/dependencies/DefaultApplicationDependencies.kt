@@ -271,6 +271,20 @@ class DefaultApplicationDependencies(
             return improveResumeInstance
         }
 
+    override val assessRunnerResult by lazy {
+        reframecv.usecase.AssessRunnerResultUseCase(
+            reframecv.providers.relevance.RemoteRunnerRelevanceRepository(
+                provider.value,
+                reframecv.providers.relevance.runnerRelevanceSchema(),
+            ),
+            providerSettingsUseCases,
+            reframecv.repository.LocalRunnerResultsRepository(
+                database.value.runnerResultsDao(),
+                database.value.runnerResultImportsDao(),
+            ),
+        )
+    }
+
     private val assessResumeInstance by lazy {
         AssessResumeUseCase(
             RemoteResumeAssessmentRepository(provider.value, resumeAssessmentSchema()),

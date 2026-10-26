@@ -860,7 +860,7 @@ text or JSON. Bare www. addresses open with HTTPS; the displayed source text is 
 Opening a link uses the owning screen's browser handler; the original text stays selectable. Column widths
 fit measured headers and current-page values within 100–320 dp; headers and cells share the
 same widths. Headers stay
-fixed vertically and the action column stays fixed horizontally. Both axes have draggable
+fixed vertically and the action and relevance columns stay fixed horizontally. Both axes have draggable
 scrollbars and end buttons. Next/Previous browse saved rows; Load more performs only the
 next dataset GET and does not start a paid Actor run. Cached review and rejection actions work
 with no active provider or network connection.
@@ -884,6 +884,35 @@ again or dismissed; previous snapshots and raw JSON stay unchanged.
 
 The first schema includes dataset cursor metadata; no migrations are provided.
 
+
+## Prompt-based runner relevance
+
+The fixed Relevance column on Runs and results opens the shared AI request dialog for one
+saved dataset row. Active OpenRouter connections and active Vacancies/general prompts are
+available. The original row is sent as a named `runner-result.json` text document; no project,
+resume, cover letter or external source file is required. Provider requests and responses use
+the existing HTTP traffic logger. The global application ScreenState remembers the last
+prompt selected for this operation; request-local edits do not modify saved prompts.
+
+The [runner relevance response schema](schemas/runner-relevance-v1.schema.json) accepts only
+`{"score": <integer 0..100>}`. The score expresses relevance to the chosen prompt criteria,
+not resume suitability, ATS acceptance or a hiring decision. The Android search example in
+`prompt_examples.md` is documentation only and is never inserted automatically.
+
+`AssessRunnerResultUseCase` validates row ownership and the active connection, calls the
+remote relevance repository, and atomically updates only `relevance_score` and
+`relevance_prompt` on that row. The prompt is the exact instruction sent for this assessment,
+including unsaved edits. The original payload, import/rejection status and linked vacancy
+are preserved. Re-fetching a dataset page cannot overwrite these local fields. The first
+Room schema includes both nullable columns; no migration is provided. Settings backups
+continue to exclude runner output and relevance assessments.
+
+Null means unassessed and renders as an em dash; zero is a completed assessment and renders
+as 0%. Clicking a percentage shows the saved prompt. A later successful assessment replaces
+the previous pair, with no history or automatic propagation to duplicate occurrences. Errors
+keep the shared dialog open for retry, and failed writes leave the previous assessment intact.
+Closing cancels the request; cancelled or late responses cannot write scores. Dataset polling
+pauses while the request dialog is open and resumes afterward for pending active runs.
 
 ## Dashboard runner shortcut
 

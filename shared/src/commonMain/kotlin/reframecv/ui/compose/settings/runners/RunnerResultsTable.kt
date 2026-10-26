@@ -35,7 +35,10 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.providers.RunnerResult
+import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.runner_relevance
 import reframecv.ui.components.settings.runners.RunnerRunsComponent
 import reframecv.ui.compose.common.FastHorizontalScrollRail
 import reframecv.ui.compose.common.FastScrollColumn
@@ -81,6 +84,9 @@ internal fun RunnerResultsTable(
                         Box(Modifier.width(ACTION_WIDTH).padding(vertical = 8.dp)) {
                             RunnerResultActions(result, component, enabled)
                         }
+                        Box(Modifier.width(RELEVANCE_WIDTH).padding(vertical = 8.dp)) {
+                            RunnerRelevanceCell(result, component.relevance, enabled)
+                        }
                         TableCells(horizontal, widths, rows[index]) { name, text ->
                             cell =
                                 name to text
@@ -92,7 +98,7 @@ internal fun RunnerResultsTable(
             FastScrollRail(vertical)
         }
         Row {
-            Spacer(Modifier.width(ACTION_WIDTH))
+            Spacer(Modifier.width(ACTION_WIDTH + RELEVANCE_WIDTH))
             FastHorizontalScrollRail(horizontal)
         }
     }
@@ -121,6 +127,11 @@ private fun TableHeader(horizontal: ScrollState, keys: List<String>, widths: Map
         Text(
             "Actions",
             Modifier.width(ACTION_WIDTH).padding(8.dp),
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            stringResource(Res.string.runner_relevance),
+            Modifier.width(RELEVANCE_WIDTH).padding(8.dp),
             fontWeight = FontWeight.Bold,
         )
         Row(Modifier.weight(1f).clipToBounds().horizontalScroll(horizontal)) {
@@ -183,3 +194,4 @@ private fun CellPreview(value: String, width: Dp) {
 }
 
 private val ACTION_WIDTH = 120.dp
+private val RELEVANCE_WIDTH = 140.dp

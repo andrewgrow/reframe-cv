@@ -507,4 +507,7 @@
     <string name="runner_copy_error">Could not load runners. Try again.</string>
     <string name="runner_copy_hint">Copy search settings only. The current connection is kept; run history and results are not copied. Review and edit the settings before applying.</string>
     <string name="runner_copy_other">Choose another runner</string>
+    <string name="runner_relevance">Relevance</string>
+    <string name="runner_relevance_assess">Assess relevance</string>
+    <string name="runner_relevance_warning">Sends this original dataset row as JSON to the selected provider. The prompt defines the search criteria; no resume or project is sent. A successful score and the exact prompt replace the previous assessment immediately.</string>
 </resources>

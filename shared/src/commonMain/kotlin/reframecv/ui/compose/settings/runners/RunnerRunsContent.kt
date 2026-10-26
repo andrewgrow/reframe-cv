@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -48,13 +49,20 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
         RunnerEditorContent(it)
         return
     }
+    val relevanceDialog by component.relevance.dialog.subscribeAsState()
+    val relevanceSelection by component.relevance.selection.subscribeAsState()
     val state by component.state.subscribeAsState()
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Column(
             Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
                 .testTag(
                     "runner.runs.page",
-                ).pageBackHandler(component::onBack, destination = state.view?.run?.id),
+                ).pageBackHandler(
+                    component::onBack,
+                    destination = state.view?.run?.id,
+                    enabled = relevanceDialog.component == null &&
+                        relevanceSelection.result == null,
+                ),
         ) {
             Column(
                 Modifier.weight(1f).fillMaxWidth().padding(ReframeTheme.tokens.spacing.medium),
@@ -77,28 +85,34 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
                 )
                 state.error?.let { SelectableText(it, color = ReframeTheme.colorScheme.critical) }
                 state.notice?.let { Text(it, color = ReframeTheme.colorScheme.success) }
-                if (state.view != null) {
-                    RunnerRunResults(state, component, Modifier.weight(1f))
-                } else {
-                    FastScrollColumn(
-                        Modifier.weight(1f),
-                        verticalArrangement =
-                            Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
-                    ) {
-                        if (state.starting) {
-                            LoadingContent(
-                                Modifier.height(
-                                    ReframeTheme.tokens.dimensions.loadingIndicatorSize * 2,
-                                ),
-                            )
-                        }
-                        RunnerHistory(state, component)
-                    }
-                }
+                RunnerBody(state, component)
             }
             HorizontalDivider()
             RunnerRunControls(state, component)
             RunnerImportDialog(state, component)
+            RunnerRelevanceContent(component.relevance)
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.RunnerBody(state: RunnerRunsState, component: RunnerRunsComponent) {
+    if (state.view != null) {
+        RunnerRunResults(state, component, Modifier.weight(1f))
+    } else {
+        FastScrollColumn(
+            Modifier.weight(1f),
+            verticalArrangement =
+                Arrangement.spacedBy(ReframeTheme.tokens.spacing.medium),
+        ) {
+            if (state.starting) {
+                LoadingContent(
+                    Modifier.height(
+                        ReframeTheme.tokens.dimensions.loadingIndicatorSize * 2,
+                    ),
+                )
+            }
+            RunnerHistory(state, component)
         }
     }
 }

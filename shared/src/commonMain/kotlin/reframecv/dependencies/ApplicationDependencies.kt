@@ -78,6 +78,7 @@ interface ApplicationDependencies {
     val generateCoverLetter: GenerateCoverLetterUseCase
     val coverLettersUseCases: CoverLettersUseCases
     val improveResume: ImproveResumeUseCase
+    val assessRunnerResult: reframecv.usecase.AssessRunnerResultUseCase
     val assessResume: AssessResumeUseCase
     val resumeFilesUseCases: ResumeFilesUseCases
     val vacancyArchiveUseCases: reframecv.usecase.VacancyArchiveUseCases

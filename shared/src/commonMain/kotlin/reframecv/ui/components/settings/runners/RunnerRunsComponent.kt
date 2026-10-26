@@ -45,8 +45,10 @@ data class RunnerRunsState(
 /** Starts explicit paid runs and resumes status/result reads for previously saved IDs. */
 interface RunnerRunsComponent {
     val state: Value<RunnerRunsState>
+    val relevance: RunnerRelevanceComponent
     val settings: RunnerSettingsComponent
-    val isBusy: Boolean get() = state.value.starting || state.value.working || settings.isBusy
+    val isBusy: Boolean get() = state.value.starting || state.value.working || settings.isBusy ||
+        relevance.isBusy
     fun onLoadMore()
     fun onResultAction(id: Long, action: RunnerResultAction)
     fun onProject(id: Long?)
@@ -74,22 +76,31 @@ class DefaultRunnerRunsComponent(
     private var request: Job? = null
     override val state =
         MutableValue(RunnerRunsState(runner, preferredProjectId = preferredProjectId))
-    override val settings: RunnerSettingsComponent =
-        DefaultRunnerSettingsComponent(
-            context,
-            state,
-            scope,
-            pause = {
-                request?.cancel()
-                state.value = state.value.copy(reading = false)
-            },
-            resume = {
-                val run = state.value.view?.run
-                val pending = run?.state == ConnectionRunState.Pending ||
-                    run?.state == ConnectionRunState.Running
-                if (pending && state.value.runner.active) onRefresh()
-            },
-        )
+    private val pauseReads = {
+        request?.cancel()
+        state.value = state.value.copy(reading = false)
+    }
+    private val resumeReads = {
+        val run = state.value.view?.run
+        val pending = run?.state == ConnectionRunState.Pending ||
+            run?.state == ConnectionRunState.Running
+        if (pending && state.value.runner.active) onRefresh()
+    }
+    override val settings: RunnerSettingsComponent = DefaultRunnerSettingsComponent(
+        context,
+        state,
+        scope,
+        pauseReads,
+        resumeReads,
+    )
+    override val relevance: RunnerRelevanceComponent = DefaultRunnerRelevanceComponent(
+        context,
+        state,
+        pauseReads,
+        resumeReads,
+    ) {
+        !state.value.starting && !state.value.working && !settings.isBusy
+    }
     private val review = RunnerReviewActions(context, state, scope) {
         val view = state.value.view ?: return@RunnerReviewActions
         state.value = state.value.copy(
@@ -184,7 +195,11 @@ class DefaultRunnerRunsComponent(
         }
     }
     override fun onRefresh() {
-        if (state.value.starting || state.value.working) return
+        if (isBusy || relevance.dialog.value.component != null ||
+            settings.editor.value.child != null
+        ) {
+            return
+        }
         val run = state.value.view?.run ?: return
         request?.cancel()
         request = scope.launch { read(run.id, state.value.view?.page?.offset ?: 0) }
@@ -240,7 +255,7 @@ class DefaultRunnerRunsComponent(
         }
     }
     override fun onBack() {
-        if (isBusy || settings.onBack()) return
+        if (relevance.onBack() || isBusy || settings.onBack()) return
         if (state.value.importResultId != null) {
             review.project(null)
             return

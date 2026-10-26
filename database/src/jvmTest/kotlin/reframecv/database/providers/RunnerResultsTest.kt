@@ -59,6 +59,14 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         assertEquals(2, saved.size)
         assertEquals(payload, saved.first().rawResultAsJson)
         assertNull(saved.last().externalId)
+        assertNull(saved.first().relevanceScore)
+        repository.setRelevance(saved.first().id, run.id, 0, "Android roles")
+        assertFailsWith<IllegalStateException> {
+            repository.setRelevance(saved.first().id, run.id + 1, 90, "Wrong run")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            repository.setRelevance(saved.first().id, run.id, 101, "Invalid score")
+        }
         repository.setStatus(saved.first().id, RunnerResultStatus.Dismissed)
         repository.savePage(
             run.id,
@@ -69,6 +77,12 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         assertEquals(saved.map { it.id }, reread.map { it.id })
         assertEquals(200, reread.first().receivedAt)
         assertEquals(payload, reread.first().rawResultAsJson)
+        assertEquals(0, reread.first().relevanceScore)
+        assertEquals("Android roles", reread.first().relevancePrompt)
+        assertNull(reread.last().relevanceScore)
+        repository.setRelevance(saved.first().id, run.id, 90, "Revised criteria")
+        assertEquals(90, repository.get(saved.first().id)?.relevanceScore)
+        assertEquals("Revised criteria", repository.get(saved.first().id)?.relevancePrompt)
         assertEquals(RunnerResultStatus.Dismissed, reread.first().status)
         repository.setStatus(saved.first().id, RunnerResultStatus.New)
         assertEquals(RunnerResultStatus.New, repository.page(run.id, 0, 1).single().status)
@@ -160,6 +174,7 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         results().savePage(run.id, listOf(raw()), 100)
         val original = results().page(run.id, 0, 1).single()
         results().setStatus(original.id, RunnerResultStatus.Dismissed)
+        results().setRelevance(original.id, run.id, 83, "Saved relevance criteria")
         database.close()
         database = buildDatabase(
             createDatabaseBuilder(
@@ -168,6 +183,8 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         )
         val restored = results().page(run.id, 0, 1).single()
         assertEquals(original.id, restored.id)
+        assertEquals(83, restored.relevanceScore)
+        assertEquals("Saved relevance criteria", restored.relevancePrompt)
         assertEquals(payload, restored.rawResultAsJson)
         assertEquals(RunnerResultStatus.Dismissed, restored.status)
     }

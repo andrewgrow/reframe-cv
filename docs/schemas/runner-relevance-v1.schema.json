@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:reframecv:runner-relevance:1",
+  "title": "RunnerRelevanceScore",
+  "description": "Relevance of one source vacancy to user-defined prompt criteria, not resume suitability or an ATS prediction.",
+  "type": "object",
+  "properties": {
+    "score": { "type": "integer", "minimum": 0, "maximum": 100 }
+  },
+  "required": ["score"],
+  "additionalProperties": false
+}

@@ -66,6 +66,12 @@ abstract class RunnerResultsDao {
         )
     }
 
+    @Query(
+        "UPDATE runner_results SET relevance_score = :score, relevance_prompt = :prompt " +
+            "WHERE id = :id AND run_id = :runId",
+    )
+    abstract suspend fun setRelevance(id: Long, runId: Long, score: Int, prompt: String): Int
+
     @Query("SELECT * FROM runner_results WHERE id = :id")
     abstract suspend fun get(id: Long): RunnerResultEntity?
 

@@ -44,9 +44,12 @@ data class RunnerResultEntity(
     @ColumnInfo(name = "received_at") val receivedAt: Long,
     val status: String = RunnerResultStatus.New.name,
     @ColumnInfo(name = "vacancy_id") val vacancyId: Long? = null,
+    @ColumnInfo(name = "relevance_score") val relevanceScore: Int? = null,
+    @ColumnInfo(name = "relevance_prompt") val relevancePrompt: String? = null,
 ) : DatabaseModel<RunnerResult> {
     override fun toDomainModel() = RunnerResult(
         id, runId, position, source, externalId, rawResultAsJson, receivedAt,
         RunnerResultStatus.valueOf(status), vacancyId,
+        relevanceScore = relevanceScore, relevancePrompt = relevancePrompt,
     )
 }

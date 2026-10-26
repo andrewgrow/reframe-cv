@@ -19,6 +19,8 @@ data class RunnerResult(
     val previousResultId: Long? = null,
     val previousStatus: RunnerResultStatus? = null,
     val previousVacancyId: Long? = null,
+    val relevanceScore: Int? = null,
+    val relevancePrompt: String? = null,
 ) : DomainModel
 
 /** Carries an untouched dataset row, including rows the current mapper cannot understand. */

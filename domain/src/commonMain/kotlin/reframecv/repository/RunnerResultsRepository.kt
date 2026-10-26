@@ -9,6 +9,7 @@ import reframecv.domain.models.vacancy.Vacancy
 
 /** Stores source snapshots once and finds matching identities from earlier runs. */
 interface RunnerResultsRepository {
+    suspend fun setRelevance(id: Long, runId: Long, score: Int, prompt: String)
     suspend fun get(id: Long): RunnerResult?
     suspend fun count(runId: Long, filter: RunnerResultFilter = RunnerResultFilter()): Int
     suspend fun reviewPage(

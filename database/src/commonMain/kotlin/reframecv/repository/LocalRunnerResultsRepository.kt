@@ -17,6 +17,10 @@ class LocalRunnerResultsRepository(
     override suspend fun savePage(runId: Long, rows: List<RunnerRawResult>, receivedAt: Long) {
         dao.insert(entities(runId, rows, receivedAt))
     }
+    override suspend fun setRelevance(id: Long, runId: Long, score: Int, prompt: String) {
+        require(score in 0..MAX_RELEVANCE_SCORE && prompt.isNotBlank())
+        check(dao.setRelevance(id, runId, score, prompt) == 1)
+    }
     override suspend fun get(id: Long) = dao.get(id)?.toDomainModel()
     override suspend fun count(runId: Long, filter: RunnerResultFilter) =
         dao.count(runId, filter.showDismissed, filter.showImported)
@@ -65,3 +69,5 @@ class LocalRunnerResultsRepository(
         dao.setStatus(id, status.name, vacancyId)
     }
 }
+
+private const val MAX_RELEVANCE_SCORE = 100
