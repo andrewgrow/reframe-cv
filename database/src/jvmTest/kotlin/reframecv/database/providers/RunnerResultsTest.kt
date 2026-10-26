@@ -249,8 +249,10 @@ class RunnerResultsTest : WorkspaceDatabaseTest() {
         val current = repository.reviewPage(second.id, 0, 25)
         assertEquals(RunnerResultStatus.Imported, current[0].previousStatus)
         assertEquals(RunnerResultStatus.Dismissed, current[1].previousStatus)
-        repository.setStatus(current[0].id, RunnerResultStatus.Dismissed)
-        assertEquals(3, repository.count(second.id, RunnerResultFilter(showImported = false)))
+        assertFailsWith<IllegalArgumentException> {
+            repository.setStatus(current[0].id, RunnerResultStatus.Dismissed)
+        }
+        assertEquals(2, repository.count(second.id, RunnerResultFilter(showImported = false)))
         assertEquals(1, repository.count(second.id, filter))
         assertEquals(3, repository.count(second.id))
     }

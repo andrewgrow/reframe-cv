@@ -155,7 +155,7 @@ class RunnerDatasetTest : ComponentTest() {
         runOnUiThread { component.onResultAction(row, RunnerResultAction.Restore) }
         await(component) {
             !it.working &&
-                it.view?.page?.savedResults?.single()?.status == RunnerResultStatus.New
+                it.view?.page?.savedResults?.single()?.reviewStatus == RunnerResultStatus.New
         }
         runOnUiThread { component.onResultAction(row, RunnerResultAction.Convert) }
         val choosing = await(component) { !it.working && it.importResultId == row }

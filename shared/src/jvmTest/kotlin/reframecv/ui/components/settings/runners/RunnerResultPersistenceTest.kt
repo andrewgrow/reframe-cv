@@ -43,10 +43,28 @@ class RunnerResultPersistenceTest : ComponentTest() {
         assertNull(saved.previousResultId)
         assertEquals(saved.id, useCases.inspect(runner, first.id).page!!.savedResults.single().id)
         dependencies.runnerResultsRepository.setStatus(saved.id, RunnerResultStatus.Dismissed)
+        dependencies.runnerResultsRepository.setRelevance(
+            saved.id,
+            first.id,
+            77,
+            "Android criteria",
+        )
         val second = useCases.start(runner)
         val repeated = useCases.inspect(runner, second.id).page!!.savedResults.single()
         assertEquals(saved.id, repeated.previousResultId)
         assertEquals(RunnerResultStatus.Dismissed, repeated.previousStatus)
-        assertEquals(2, dependencies.runnerResultsRepository.records.size)
+        assertEquals(77, repeated.relevanceScore)
+        assertEquals("Android criteria", repeated.relevancePrompt)
+        dependencies.runnerResultReviewUseCases.review(second.id, repeated.id, dismiss = false)
+        assertEquals(
+            RunnerResultStatus.New,
+            useCases.inspect(runner, second.id).page!!.savedResults.single().reviewStatus,
+        )
+        val third = useCases.start(runner)
+        val restored = useCases.inspect(runner, third.id).page!!.savedResults.single()
+        assertEquals(RunnerResultStatus.New, restored.reviewStatus)
+        assertEquals(77, restored.relevanceScore)
+        assertEquals("Android criteria", restored.relevancePrompt)
+        assertEquals(3, dependencies.runnerResultsRepository.records.size)
     }
 }

@@ -821,7 +821,7 @@ verification never launches paid Actors.
 
 `RunnerResult` / `RunnerResultEntity` stores one immutable source snapshot: run ID, raw dataset
 position, source, optional external ID, original JSON object, receipt timestamp, review status
-(`New`, `Imported`, `Dismissed`) and an optional imported vacancy reference. JSON retains all
+(`New`, `Imported`, `Dismissed`, `Restored`) and an optional imported vacancy reference. JSON retains all
 provider fields, including unknown fields; whitespace formatting is not retained. Rows that
 cannot be mapped into a candidate are still saved, even when no source ID can be extracted.
 
@@ -833,8 +833,9 @@ Pagination continues to count raw provider rows, independently of stored or mapp
 
 An index on `(source, external_id)` finds earlier occurrences across runners and connections.
 Source means the original publisher (`LinkedIn`), independently of the execution provider
-(`Apify`). Previous imports take priority over newer unreviewed occurrences; otherwise the
-latest earlier run wins. Different sources and missing external IDs are not matched. The pinned action column shows previous encounters and review state in icon tooltips,
+(`Apify`). A recorded import in any run takes priority, including when reviewing older runs; otherwise the latest explicit earlier review
+decision wins over unreviewed occurrences. Restored is an explicit decision distinct from New,
+so an old dismissal cannot reappear after restoration or another unreviewed run. Different sources and missing external IDs are not matched. The pinned action column shows previous encounters and review state in icon tooltips,
 including an imported vacancy ID when still available.
 Repeat detection does not overwrite vacancies or merge modified descriptions between runs.
 
@@ -867,20 +868,21 @@ with no active provider or network connection.
 
 Two independent icon toggles hide dismissed results and imported vacancies. Both categories
 are visible initially. Filtering happens in SQL before local LIMIT/OFFSET pagination and uses
-the same historical-status precedence as duplicate indicators; an explicit current decision
-wins over its previous-run status. Saved/downloaded totals remain separate from visible counts.
+the same effective review status as action buttons and duplicate indicators. Explicit current
+review decisions override older dismissals; a recorded import remains protected across runs. Saved/downloaded totals remain separate from visible counts.
 Changing a filter returns to page one; review/import actions clamp the current page when its
 last row disappears. Empty filtered pages retain filters and Load more. Remote download cursors
 never depend on visibility, and toggles do not perform network requests or start paid runs.
 Filter choices remain in the open runner component; no database schema change is needed.
 
-New rows offer conversion and dismissal; dismissed rows can be restored. Previously seen rows
-are marked but can still be converted because source content may have changed. Conversion
+Unreviewed or explicitly restored rows offer conversion and dismissal. A remembered dismissal
+offers Restore; a remembered import offers neither conversion nor dismissal. Conversion
 asks for a leaf project and uses a provider-specific local snapshot converter. The first
 converter supports LinkedIn output. Vacancy creation and the result's Imported state/link are
 one Room transaction, so unsupported data or an invalid project cannot leave an orphan vacancy.
 Parent projects cannot receive workspace documents. Current imported results cannot be imported
-again or dismissed; previous snapshots and raw JSON stay unchanged.
+again or dismissed, including repeat occurrences with a remembered import. UI, use cases and
+transactional database writes enforce the same rule; raw JSON stays unchanged.
 
 The first schema includes dataset cursor metadata; no migrations are provided.
 
@@ -908,8 +910,12 @@ Room schema includes both nullable columns; no migration is provided. Settings b
 continue to exclude runner output and relevance assessments.
 
 Null means unassessed and renders as an em dash; zero is a completed assessment and renders
-as 0%. Clicking a percentage shows the saved prompt. A later successful assessment replaces
-the previous pair, with no history or automatic propagation to duplicate occurrences. Errors
+as 0%. For a matching source/external ID without its own assessment, reads reuse the latest
+earlier assessed occurrence and its exact prompt, independently of review-decision priority.
+Zero is retained; unknown IDs and different sources never share assessments. Inherited feedback
+is not copied into the new row and requires no AI request. An assessment on the current row
+always takes precedence. Clicking any percentage shows the matching saved prompt. A successful
+reassessment replaces only the current row's pair. Errors
 keep the shared dialog open for retry, and failed writes leave the previous assessment intact.
 Closing cancels the request; cancelled or late responses cannot write scores. Dataset polling
 pauses while the request dialog is open and resumes afterward for pending active runs.

@@ -15,9 +15,15 @@ interface RunnerResultImportsDao : VacancyDao {
     @Query("UPDATE runner_results SET status = 'Imported', vacancy_id = :vacancyId WHERE id = :id")
     suspend fun linkImport(id: Long, vacancyId: Long): Int
 
+    @Query(
+        "SELECT COUNT(*) FROM runner_results r WHERE id = :id AND (" + REVIEW_STATUS +
+            ") NOT IN ('Imported', 'Dismissed')",
+    )
+    suspend fun importable(id: Long): Int
+
     @Transaction
     suspend fun importResult(id: Long, vacancy: Vacancy): Long {
-        require(checkNotNull(sourceResult(id)).status == "New")
+        require(importable(id) == 1)
         require(vacancy.id == 0L)
         val saved = create(vacancy)
         check(linkImport(id, saved) == 1)

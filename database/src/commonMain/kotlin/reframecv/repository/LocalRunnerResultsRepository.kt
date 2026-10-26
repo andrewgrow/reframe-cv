@@ -21,7 +21,7 @@ class LocalRunnerResultsRepository(
         require(score in 0..MAX_RELEVANCE_SCORE && prompt.isNotBlank())
         check(dao.setRelevance(id, runId, score, prompt) == 1)
     }
-    override suspend fun get(id: Long) = dao.get(id)?.toDomainModel()
+    override suspend fun get(id: Long) = dao.get(id)?.let { enrich(listOf(it)).single() }
     override suspend fun count(runId: Long, filter: RunnerResultFilter) =
         dao.count(runId, filter.showDismissed, filter.showImported)
     override suspend fun reviewPage(
@@ -62,6 +62,14 @@ class LocalRunnerResultsRepository(
             previousResultId = previous?.id,
             previousStatus = previous?.status?.let(RunnerResultStatus::valueOf),
             previousVacancyId = previous?.vacancyId,
+            relevanceScore = row.relevanceScore ?: previous?.relevanceScore,
+            relevancePrompt = if (row.relevanceScore !=
+                null
+            ) {
+                row.relevancePrompt
+            } else {
+                previous?.relevancePrompt
+            },
         )
     }
     override suspend fun setStatus(id: Long, status: RunnerResultStatus, vacancyId: Long?) {

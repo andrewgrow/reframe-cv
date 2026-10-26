@@ -33,25 +33,20 @@ internal fun RunnerResultActions(
     enabled: Boolean,
 ) {
     Row {
-        val imported = result.status == RunnerResultStatus.Imported
-        val dismissed = result.status == RunnerResultStatus.Dismissed
+        val imported = result.reviewStatus == RunnerResultStatus.Imported
+        val dismissed = result.reviewStatus == RunnerResultStatus.Dismissed
         when {
             imported -> ResultIcon(
                 Icons.Default.CheckCircle,
-                result.vacancyId?.let { "Imported into vacancy #$it" }
+                result.reviewVacancyId?.let { "Imported into vacancy #$it" }
                     ?: "Imported (vacancy deleted)",
             )
 
             dismissed -> ResultIcon(Icons.Default.Block, "Dismissed")
 
             result.previousResultId != null -> ResultIcon(
-                if (result.previousStatus == RunnerResultStatus.Dismissed) {
-                    Icons.Default.Block
-                } else {
-                    Icons.Default.ContentCopy
-                },
-                "Seen before · ${result.previousStatus}" +
-                    result.previousVacancyId?.let { " · Vacancy #$it" }.orEmpty(),
+                Icons.Default.ContentCopy,
+                "Seen before",
             )
         }
         if (!imported) {

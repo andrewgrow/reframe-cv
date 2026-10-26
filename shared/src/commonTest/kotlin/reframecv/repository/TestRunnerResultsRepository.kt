@@ -19,7 +19,9 @@ class TestRunnerResultsRepository(
         check(index >= 0)
         records[index] = records[index].copy(relevanceScore = score, relevancePrompt = prompt)
     }
-    override suspend fun get(id: Long) = records.find { it.id == id }
+    override suspend fun get(id: Long) = records.find { it.id == id }?.let {
+        runnerResultWithHistory(it, records)
+    }
     override suspend fun count(runId: Long, filter: RunnerResultFilter) =
         page(runId, 0, Int.MAX_VALUE).count(filter::includes)
     override suspend fun reviewPage(
@@ -38,7 +40,7 @@ class TestRunnerResultsRepository(
         committed(run)
     }
     override suspend fun importVacancy(id: Long, vacancy: Vacancy): Long {
-        require(get(id)?.status == RunnerResultStatus.New)
+        require(get(id)?.reviewStatus == RunnerResultStatus.New)
         val saved = createVacancy(vacancy)
         setStatus(id, RunnerResultStatus.Imported, saved)
         return saved
@@ -69,21 +71,13 @@ class TestRunnerResultsRepository(
     }
     override suspend fun page(runId: Long, offset: Int, limit: Int) = records.filter {
         it.runId == runId && it.position in offset until offset + limit
-    }.map { row ->
-        val previous = records.filter {
-            row.externalId != null && it.source == row.source && it.externalId == row.externalId &&
-                it.runId < row.runId
-        }.sortedWith(
-            compareByDescending<RunnerResult> { it.status == RunnerResultStatus.Imported }
-                .thenByDescending { it.runId },
-        ).firstOrNull()
-        row.copy(
-            previousResultId = previous?.id,
-            previousStatus = previous?.status,
-            previousVacancyId = previous?.vacancyId,
-        )
-    }
+    }.map { runnerResultWithHistory(it, records) }
     override suspend fun setStatus(id: Long, status: RunnerResultStatus, vacancyId: Long?) {
+        val current = checkNotNull(get(id))
+        require(
+            current.reviewStatus != RunnerResultStatus.Imported ||
+                status == RunnerResultStatus.Imported,
+        )
         val index = records.indexOfFirst { it.id == id }
         check(index >= 0)
         records[index] = records[index].copy(status = status, vacancyId = vacancyId)

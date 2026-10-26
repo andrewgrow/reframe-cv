@@ -76,14 +76,18 @@ abstract class RunnerResultsDao {
     abstract suspend fun get(id: Long): RunnerResultEntity?
 
     @Query(
-        "SELECT * FROM runner_results WHERE source = :source AND external_id = :externalId " +
-            "AND run_id < :runId ORDER BY (status = 'Imported') DESC, run_id DESC, id DESC LIMIT 1",
+        "SELECT p.id, p.status, p.vacancy_id, " +
+            "(SELECT a.relevance_score" + LAST_RELEVANCE + ") AS relevance_score, " +
+            "(SELECT a.relevance_prompt" + LAST_RELEVANCE + ") AS relevance_prompt " +
+            "FROM runner_results p WHERE p.source = :source AND p.external_id = :externalId " +
+            "AND p.run_id != :runId AND (p.run_id < :runId OR p.status = 'Imported') " +
+            "ORDER BY " + PREVIOUS_RESULT_ORDER + " LIMIT 1",
     )
     abstract suspend fun previous(
         source: String,
         externalId: String,
         runId: Long,
-    ): RunnerResultEntity?
+    ): RunnerResultHistory?
 
     @Query("UPDATE runner_results SET status = :status, vacancy_id = :vacancyId WHERE id = :id")
     abstract suspend fun writeStatus(id: Long, status: String, vacancyId: Long?): Int
@@ -92,16 +96,9 @@ abstract class RunnerResultsDao {
     open suspend fun setStatus(id: Long, status: String, vacancyId: Long?) {
         val current = checkNotNull(get(id))
         // Imported remains historical even if its vacancy was subsequently removed.
-        require(current.status != "Imported" || status == "Imported")
+        val previous = current.externalId?.let { previous(current.source, it, current.runId) }
+        val imported = current.status == "Imported" || previous?.status == "Imported"
+        require(!imported || status == "Imported")
         check(writeStatus(id, status, vacancyId) == 1)
     }
 }
-
-private const val REVIEW_STATUS =
-    "CASE WHEN r.status != 'New' THEN r.status ELSE COALESCE(" +
-        "(SELECT p.status FROM runner_results p WHERE p.source = r.source " +
-        "AND p.external_id = r.external_id AND p.run_id < r.run_id " +
-        "ORDER BY (p.status = 'Imported') DESC, p.run_id DESC, p.id DESC LIMIT 1), 'New') END"
-private const val REVIEW_FILTER =
-    "(:showDismissed OR (" + REVIEW_STATUS + ") != 'Dismissed') AND " +
-        "(:showImported OR (" + REVIEW_STATUS + ") != 'Imported')"

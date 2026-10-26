@@ -19,12 +19,15 @@ class RunnerResultReviewUseCases(
     }
     suspend fun review(runId: Long, id: Long, dismiss: Boolean) {
         val result = checkNotNull(results.get(id))
-        require(result.runId == runId && result.status != RunnerResultStatus.Imported)
-        results.setStatus(id, if (dismiss) RunnerResultStatus.Dismissed else RunnerResultStatus.New)
+        require(result.runId == runId && result.reviewStatus != RunnerResultStatus.Imported)
+        results.setStatus(
+            id,
+            if (dismiss) RunnerResultStatus.Dismissed else RunnerResultStatus.Restored,
+        )
     }
     suspend fun import(runId: Long, id: Long, projectId: Long): Long {
         val result = checkNotNull(results.get(id))
-        require(result.runId == runId && result.status == RunnerResultStatus.New)
+        require(result.runId == runId && result.reviewStatus == RunnerResultStatus.New)
         return results.importVacancy(id, converter.vacancy(result, projectId, nowMillis()))
     }
 }

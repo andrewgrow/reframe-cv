@@ -5,6 +5,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.ui.context.AppComponentContext
 
 /** Identifies explicit review decisions independently of table presentation. */
@@ -22,14 +23,24 @@ internal class RunnerReviewActions(
     fun act(id: Long, action: RunnerResultAction) {
         if (state.value.working || state.value.reading) return
         val view = state.value.view ?: return
-        require(view.page?.savedResults?.any { it.id == id } == true)
-        perform {
-            if (action == RunnerResultAction.Convert) {
-                state.value =
-                    state.value.copy(importResultId = id, projects = useCases.projects().first())
-            } else {
-                useCases.review(view.run.id, id, action == RunnerResultAction.Dismiss)
-                reload()
+        val result = checkNotNull(view.page?.savedResults?.find { it.id == id })
+        val expected = if (action == RunnerResultAction.Restore) {
+            RunnerResultStatus.Dismissed
+        } else {
+            RunnerResultStatus.New
+        }
+        if (result.reviewStatus == expected) {
+            perform {
+                if (action == RunnerResultAction.Convert) {
+                    state.value =
+                        state.value.copy(
+                            importResultId = id,
+                            projects = useCases.projects().first(),
+                        )
+                } else {
+                    useCases.review(view.run.id, id, action == RunnerResultAction.Dismiss)
+                    reload()
+                }
             }
         }
     }
