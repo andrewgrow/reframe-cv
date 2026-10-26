@@ -695,6 +695,27 @@ application tracking and attached/linked documents are excluded. Measured pagina
 searchable text, hanging bullets, section headings and page numbers. The shared export lifecycle
 owns destination selection and temporary-file cleanup. See [PDF rendering](pdf-rendering.md).
 
+## Vacancy application ZIP export
+
+As Full Source ZIP expands the existing vacancy export dialog with a temporary file-name prefix
+and checkbox lists of linked resumes and cover letters. Available records are scoped to the
+vacancy's project, ordered by ID, and initially selected. The vacancy PDF is always included;
+users may deselect every other document. Cancel/Escape discards the archive draft and closes
+export without generating an archive. The standard save-before-export behavior is unchanged.
+
+`VacancyArchiveUseCases` reloads and validates chosen identities before handing immutable models
+to the platform archive exporter. Removed, unlinked or foreign-project selections fail before
+writing. The name is converted to a bounded safe filename prefix and previewed in the form.
+ZIP entries live at the archive root: `<prefix>-vacancy.pdf`, `<prefix>-resume-1.pdf`, and
+`<prefix>-coverLetter-1.pdf`, with independent contiguous numbering for the selected lists.
+The suggested outer filename is `<prefix>.zip`.
+
+The desktop implementation reuses the individual PDF renderers, including resume visibility
+and portrait rules. The common document-export lifecycle owns the temporary ZIP, native save
+picker and cleanup on success, failure or cancellation. The form retains choices on export
+errors, supports retry after loading errors, and cancels pending reads when closed. Archive
+settings are not persisted and require no database changes.
+
 ## Vacancy application tracking and bulk deletion
 
 Vacancies store an optional `appliedAt` instant as epoch milliseconds. The editor keeps the

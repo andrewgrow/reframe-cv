@@ -492,4 +492,10 @@
     <string name="vacancies_hide_applied">Hide applied vacancies</string>
     <string name="vacancies_show_applied">Show applied vacancies</string>
     <string name="vacancies_filter_empty">No vacancies match the current filter.</string>
+    <string name="export_full_source_zip">As Full Source ZIP</string>
+    <string name="vacancy_zip_name">Vacancy name in archive</string>
+    <string name="vacancy_zip_name_error">Enter a file name.</string>
+    <string name="vacancy_zip_always_included">The vacancy PDF is always included. Select linked documents to add.</string>
+    <string name="vacancy_zip_empty">No linked documents.</string>
+    <string name="vacancy_zip_load_error">Could not load linked documents. Please try again.</string>
 </resources>

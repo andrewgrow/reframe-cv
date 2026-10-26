@@ -42,6 +42,8 @@ internal fun DocumentExportDialog(
     formats: List<ExportFormatOption> = emptyList(),
     selectedFormat: String = "json",
     onFormatChange: (String) -> Unit = {},
+    downloadEnabled: Boolean = true,
+    additionalContent: @Composable () -> Unit = {},
 ) {
     val busy = state == DocumentExportDialogState.Exporting
     ResizableDialog(
@@ -60,6 +62,7 @@ internal fun DocumentExportDialog(
                     selectedFormat = selectedFormat,
                     onFormatChange = onFormatChange,
                 )
+                additionalContent()
                 if (state == DocumentExportDialogState.Failed) {
                     Text(
                         failureMessage,
@@ -79,10 +82,18 @@ internal fun DocumentExportDialog(
                             .testTag("$tagPrefix.progress"),
                     )
                 }
-                TextButton(onClose, enabled = !busy) {
+                TextButton(
+                    onClose,
+                    enabled = !busy,
+                    modifier = Modifier.testTag("$tagPrefix.cancel"),
+                ) {
                     Text(stringResource(Res.string.action_cancel))
                 }
-                TextButton(onDownload, enabled = !busy) {
+                TextButton(
+                    onDownload,
+                    enabled = !busy && downloadEnabled,
+                    modifier = Modifier.testTag("$tagPrefix.download"),
+                ) {
                     Text(stringResource(Res.string.export_download))
                 }
             }

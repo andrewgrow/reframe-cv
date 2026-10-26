@@ -80,6 +80,7 @@ interface ApplicationDependencies {
     val improveResume: ImproveResumeUseCase
     val assessResume: AssessResumeUseCase
     val resumeFilesUseCases: ResumeFilesUseCases
+    val vacancyArchiveUseCases: reframecv.usecase.VacancyArchiveUseCases
     val vacancyFilesUseCases: VacancyFilesUseCases
     fun close()
 }

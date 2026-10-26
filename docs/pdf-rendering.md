@@ -85,6 +85,27 @@ keeps headings with following text and splits oversized paragraphs and bullets i
 fragments. Each page contains only its own text; continuation bullets are not repeated.
 Multipage exports include page numbers. The renderer shares the existing PDF lock.
 
+## Vacancy ZIP export
+
+As Full Source ZIP adds archive naming and linked-document checkbox lists to the existing
+vacancy export dialog. `VacancyArchiveUseCases` resolves the selected records within the
+vacancy project and validates them again immediately before export. Ordering follows record
+IDs, matching the displayed lists. Empty selections produce a ZIP containing the vacancy alone.
+
+`DesktopVacancyArchiveExporter` invokes the same vacancy, resume and cover-letter renderers,
+without opening individual save dialogs. Resume portraits and print visibility flags follow
+the individual export rules. Root entries are named `<prefix>-vacancy.pdf`,
+`<prefix>-resume-<n>.pdf` and `<prefix>-coverLetter-<n>.pdf`. Each selected document category
+starts numbering at one, without gaps. The filename prefix excludes directory separators,
+control characters and other non-portable filename characters. The proposed ZIP filename is
+`<prefix>.zip`. Temporary archive handling uses `DesktopDocumentExport`; cancellation or any
+PDF generation/copy error removes the temporary archive.
+
+Tests inspect ZIP entries as real PDFs, verify names, source selection, Unicode filenames,
+resume visibility/portraits, cross-project isolation, stale selections, cancellation and cleanup.
+Dialog tests cover renaming, checkboxes, disabled actions, load retry and closing the complete
+export flow. ZIP form goldens accompany the existing PDF/JSON export dialog references.
+
 ## Templates and pagination
 
 `CoverLetterPdfTemplate` uses Compose text blocks and explicit `PdfLink` annotations. The current

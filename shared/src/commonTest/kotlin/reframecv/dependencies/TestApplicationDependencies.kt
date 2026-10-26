@@ -246,6 +246,11 @@ class TestApplicationDependencies : ApplicationDependencies {
     )
     override val coverLetterFilesUseCases =
         CoverLetterFilesUseCases(coverLetterImporter, coverLetterExporter, coverLetterPdfExporter)
+    override val vacancyArchiveUseCases get() = reframecv.usecase.VacancyArchiveUseCases(
+        resumesRepository,
+        coverLettersRepository,
+        reframecv.export.VacancyArchiveExporter { DocumentExportResult.Cancelled },
+    )
     override val vacancyFilesUseCases get() = VacancyFilesUseCases(
         vacancyImporter,
         vacancyExporter,

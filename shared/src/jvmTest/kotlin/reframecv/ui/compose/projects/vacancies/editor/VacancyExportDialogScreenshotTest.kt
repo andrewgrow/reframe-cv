@@ -22,6 +22,32 @@ class VacancyExportDialogScreenshotTest : GoldenScreenshotTest() {
     @Test fun failedExportInLightThemeMatchesReference() =
         capture(VacancyExportState.Failed, ThemeMode.Light)
 
+    @Test
+    fun fullSourceZipShowsNamingAndLinkedDocumentChoices() = runDesktopComposeUiTest {
+        val component = archiveExportFixture()
+        setAndCaptureGolden(this, captureTag = "vacancy.export.dialog") {
+            VacancyExportDialog(component) {}
+        }
+    }
+
+    @Test
+    fun fullSourceZipWithoutLinksStillAllowsVacancyOnlyExport() = runDesktopComposeUiTest {
+        val component = archiveExportFixture()
+        component.archive.value = component.archive.value.copy(
+            resumes = emptyList(),
+            letters = emptyList(),
+            resumeIds = emptySet(),
+            letterIds = emptySet(),
+        )
+        setAndCaptureGolden(
+            this,
+            captureTag = "vacancy.export.dialog",
+            themeMode = ThemeMode.Light,
+        ) {
+            VacancyExportDialog(component) {}
+        }
+    }
+
     private fun capture(
         state: VacancyExportState,
         theme: ThemeMode = ThemeMode.Dark,

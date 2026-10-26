@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.export_full_source_zip
 import reframecv.shared.generated.resources.export_json
 import reframecv.shared.generated.resources.export_pdf
 import reframecv.shared.generated.resources.vacancy_export_error
@@ -20,6 +21,7 @@ import reframecv.ui.compose.common.ExportFormatOption
 internal fun VacancyExportDialog(component: VacancyExportComponent, onClose: () -> Unit) {
     val state by component.state.subscribeAsState()
     val format by component.format.subscribeAsState()
+    val archive by component.archive.subscribeAsState()
     DocumentExportDialog(
         stringResource(Res.string.vacancy_export_title),
         stringResource(Res.string.vacancy_export_error),
@@ -34,11 +36,20 @@ internal fun VacancyExportDialog(component: VacancyExportComponent, onClose: () 
         formats = listOf(
             ExportFormatOption("pdf", stringResource(Res.string.export_pdf)),
             ExportFormatOption("json", stringResource(Res.string.export_json)),
+            ExportFormatOption("zip", stringResource(Res.string.export_full_source_zip)),
         ),
-        selectedFormat = if (format == VacancyExportFormat.Pdf) "pdf" else "json",
+        selectedFormat = format.name.lowercase(),
+        downloadEnabled = format != VacancyExportFormat.Zip || archive.ready,
+        additionalContent = {
+            if (format == VacancyExportFormat.Zip) {
+                VacancyArchiveFields(archive, component, state == VacancyExportState.Exporting)
+            }
+        },
         onFormatChange = {
             component.onFormatChange(
-                if (it == "pdf") VacancyExportFormat.Pdf else VacancyExportFormat.Json,
+                VacancyExportFormat.entries.first { format ->
+                    format.name.equals(it, ignoreCase = true)
+                },
             )
         },
     )

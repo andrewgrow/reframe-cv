@@ -19,7 +19,8 @@ internal class DesktopDocumentExport(
         kind: String,
         id: Long?,
         extension: String,
-        content: () -> ByteArray,
+        suggestedName: String? = null,
+        content: suspend () -> ByteArray,
     ): DocumentExportResult {
         require(id == null || id > 0)
         var temporary: Path? = null
@@ -33,7 +34,14 @@ internal class DesktopDocumentExport(
                     Files.createTempFile(temporaryDirectory, "reframecv-$kind-", ".$extension")
                 }
                 Files.write(checkNotNull(temporary), content())
-                listOfNotNull(kind, id?.toString(), stamp).joinToString("-") + ".$extension"
+                suggestedName
+                    ?: (
+                        listOfNotNull(
+                            kind,
+                            id?.toString(),
+                            stamp,
+                        ).joinToString("-") + ".$extension"
+                        )
             }
             val destination = picker.pick(filename) ?: return DocumentExportResult.Cancelled
             withContext(Dispatchers.IO) {

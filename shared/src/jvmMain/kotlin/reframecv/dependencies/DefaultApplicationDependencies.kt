@@ -294,6 +294,13 @@ class DefaultApplicationDependencies(
             return resumeFilesUseCasesInstance
         }
 
+    override val vacancyArchiveUseCases by lazy {
+        reframecv.usecase.VacancyArchiveUseCases(
+            resumesRepository,
+            coverLettersRepository,
+            reframecv.export.DesktopVacancyArchiveExporter(resumePhotos),
+        )
+    }
     private val vacancyFilesUseCasesInstance by lazy {
         VacancyFilesUseCases(vacancyImporter, vacancyExporter, attachmentPicker, vacancyPdfExporter)
     }
