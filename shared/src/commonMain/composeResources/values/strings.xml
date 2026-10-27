@@ -369,7 +369,7 @@
     <string name="resume_remove_link_question">Are you sure you want to remove this link?</string>
     <string name="resume_resize_text">Resize resume text</string>
     <string name="vacancy_resume_improve">Improve resume with AI</string>
-    <string name="resume_improvement_warning">The resume and vacancy JSON will be sent to the provider. Success immediately saves a new linked resume without photos, keywords, or main status. The source is kept. For a new vacancy, Save persists the link; closing keeps the new resume in the project.</string>
+    <string name="resume_improvement_warning">The resume and vacancy JSON will be sent to the provider. Success immediately saves a new linked resume with the source photo and its visibility setting, without keywords or main status. Photos are not sent to the provider. The source is kept. For a new vacancy, Save persists the link; closing keeps the new resume in the project.</string>
     <string name="letter_title">Cover letter</string>
     <string name="letter_list_title">Cover letters (%1$d)</string>
     <string name="resume_list_title">Resumes (%1$d)</string>

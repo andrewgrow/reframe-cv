@@ -8,6 +8,8 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
@@ -77,8 +79,7 @@ class VacancyPromptPreferencesTest : ComponentTest() {
         runOnUiThread { dialog.onClose() }
     }
 
-    @Test
-    fun draftRemembersBothOperationsAndFirstSavePersistsThemForReopenedPage() = runBlocking {
+    private suspend fun setup() {
         dependencies.providerSettingsUseCases.save(
             ProviderConnection(
                 type = ApiProviderType.OpenRouter,
@@ -96,39 +97,77 @@ class VacancyPromptPreferencesTest : ComponentTest() {
             Prompt(text = "Improve", component = PromptComponent.Vacancies),
         )
         dependencies.resumesRepository.records.value = listOf(Resume(1, 7, "Resume", 0, 0))
+    }
+    private fun record(id: Long) = Vacancy(
+        id = id,
+        projectId = 7,
+        name = "Saved",
+        description = "Kotlin",
+        createdAt = 0,
+        updatedAt = 0,
+        resumes = listOf(VacancyResume(1)),
+    )
+    private suspend fun assertChoices(
+        editor: DefaultVacancyEditorComponent,
+        assessment: Long,
+        improvement: Long,
+    ) {
+        val assessmentDialog = open(editor, improvement = false)
+        runOnUiThread {
+            assertEquals(assessment, assessmentDialog.state.value.promptId)
+            assessmentDialog.onClose()
+        }
+        val improvementDialog = open(editor, improvement = true)
+        runOnUiThread {
+            assertEquals(improvement, improvementDialog.state.value.promptId)
+            improvementDialog.onClose()
+        }
+    }
+
+    @Test
+    fun lastUsedPromptsAreSharedAcrossVacanciesDraftsAndFirstSave() = runBlocking {
+        setup()
         val draft = editor()
         use(open(draft, improvement = false), 1)
         use(open(draft, improvement = true), 2)
-        val again = open(draft, improvement = false)
-        runOnUiThread {
-            assertEquals(1L, again.state.value.promptId)
-            again.onClose()
-        }
-        assertTrue(dependencies.screenStatesRepository.states.value.isEmpty())
-        val saved =
-            Vacancy(
-                id = 12,
-                projectId = 7,
-                name = "Saved",
-                description = "Kotlin",
-                createdAt = 0,
-                updatedAt = 0,
-                resumes = listOf(VacancyResume(1)),
-            )
-        runOnUiThread { draft.onSaveCompleted(VacancySaveState.Idle, saved) }
+        assertChoices(draft, 1, 2)
         val stored = dependencies.screenStateUseCases.load(
-            ScreenStateOwner(ScreenType.Vacancy, 12, 7),
+            ScreenStateOwner(ScreenType.Application),
         )!!
         assertEquals(JsonPrimitive(1L), stored.states["resume_assessment_prompt_id"])
         assertEquals(JsonPrimitive(2L), stored.states["resume_improvement_prompt_id"])
-        assertEquals("expanded", stored.text("job_details"))
-        val reopened = editor(saved)
-        val assessment = open(reopened, improvement = false)
-        runOnUiThread {
-            assertEquals(1L, assessment.state.value.promptId)
-            assessment.onClose()
-        }
-        val improvement = open(reopened, improvement = true)
-        runOnUiThread { assertEquals(2L, improvement.state.value.promptId) }
+        assertChoices(editor(record(12)), 1, 2)
+        assertChoices(editor(record(13)), 1, 2)
+        assertChoices(editor(), 1, 2)
+        runOnUiThread { draft.onSaveCompleted(VacancySaveState.Idle, record(14)) }
+        assertChoices(editor(record(14)), 1, 2)
+        val document = dependencies.screenStateUseCases.load(
+            ScreenStateOwner(ScreenType.Vacancy, 14, 7),
+        )!!
+        assertEquals("expanded", document.text("job_details"))
+        assertTrue("resume_assessment_prompt_id" !in document.states)
+    }
+
+    @Test
+    fun legacyVacancyChoicesRemainAFallbackUntilAGlobalChoiceIsUsed() = runBlocking {
+        setup()
+        val oldOwner = ScreenStateOwner(ScreenType.Vacancy, 12, 7)
+        dependencies.screenStateUseCases.update(
+            oldOwner,
+            buildJsonObject {
+                put("resume_assessment_prompt_id", 2)
+                put("resume_improvement_prompt_id", 1)
+                put("job_details", "collapsed")
+            },
+        )
+        val old = editor(record(12))
+        assertChoices(old, 2, 1)
+        use(open(old, improvement = false), 1)
+        use(open(old, improvement = true), 2)
+        assertChoices(editor(record(12)), 1, 2)
+        assertChoices(editor(record(13)), 1, 2)
+        val legacy = dependencies.screenStateUseCases.load(oldOwner)!!
+        assertEquals(JsonPrimitive(2L), legacy.states["resume_assessment_prompt_id"])
+        assertEquals("collapsed", legacy.text("job_details"))
     }
 }

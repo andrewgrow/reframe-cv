@@ -13,6 +13,7 @@ class AiPromptPreference(
     context: AppComponentContext,
     private val key: String,
     private var owner: ScreenStateOwner? = null,
+    private val fallbackOwner: ScreenStateOwner? = null,
 ) {
     private val dependencies = context.dependencies
     private val preferences = dependencies.screenStateUseCases
@@ -20,18 +21,20 @@ class AiPromptPreference(
 
     @Suppress("TooGenericExceptionCaught")
     suspend fun load(): Long? {
-        val screen = owner
-        if (lastUsedId != null || screen == null) return lastUsedId
+        val screen = owner ?: return lastUsedId
         return try {
-            (preferences.load(screen)?.states?.get(key) as? JsonPrimitive)
-                ?.takeIf { !it.isString }?.longOrNull?.takeIf { it > 0 }
+            read(screen) ?: lastUsedId ?: fallbackOwner?.let { read(it) }
         } catch (error: CancellationException) {
             throw error
         } catch (error: Exception) {
             report("Load AI prompt preference", error)
-            null
+            lastUsedId
         }
     }
+
+    private suspend fun read(screen: ScreenStateOwner): Long? =
+        (preferences.load(screen)?.states?.get(key) as? JsonPrimitive)
+            ?.takeIf { !it.isString }?.longOrNull?.takeIf { it > 0 }
 
     fun remember(id: Long) {
         require(id > 0)

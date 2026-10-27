@@ -36,10 +36,12 @@ class LocalResumesRepository(
 
     override suspend fun createAdaptation(record: Resume, vacancyId: Long?): Resume {
         require(record.id == 0L && record.sourceResumeId != null)
-        require(record.photoPath == null && record.keywords.isEmpty())
+        require(record.keywords.isEmpty())
         val timestamp = nowMillis()
         val persisted = record.copy(createdAt = timestamp, updatedAt = timestamp)
-        return persisted.copy(id = dao.createAdaptation(persisted, vacancyId))
+        val save = suspend { dao.createAdaptation(persisted, vacancyId) }
+        val id = photos?.save(record, save) ?: save()
+        return persisted.copy(id = id)
     }
 
     override suspend fun update(record: Resume) = update(record, MainResumeChange.Keep)

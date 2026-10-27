@@ -166,6 +166,25 @@ class AiPromptPreferenceTest : ComponentTest() {
     }
 
     @Test
+    fun globalPreferencesReadNewerChoicesFromOtherInstancesBeforeTheirMemoryCache() = runBlocking {
+        val global = ScreenStateOwner(ScreenType.Application)
+        dependencies.screenStateUseCases.update(owner, buildJsonObject { put("shared", 1) })
+        val first =
+            AiPromptPreference(appComponentContext(), "shared", global, fallbackOwner = owner)
+        assertEquals(1L, first.load())
+        runOnUiThread { first.remember(2) }
+        assertEquals(2L, first.load())
+        val second = AiPromptPreference(appComponentContext(), "shared", global)
+        runOnUiThread { second.remember(1) }
+        assertEquals(1L, first.load())
+        assertEquals(1L, AiPromptPreference(appComponentContext(), "shared", global).load())
+        assertEquals(
+            JsonPrimitive(1L),
+            dependencies.screenStateUseCases.load(owner)!!.states["shared"],
+        )
+    }
+
+    @Test
     fun preferenceStorageFailuresFallBackAndKeepTheUsedSelectionInMemory() = runBlocking {
         val preferences = ScreenStateUseCases(
             object : ScreenStatesRepository {

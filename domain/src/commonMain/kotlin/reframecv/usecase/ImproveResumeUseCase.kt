@@ -63,6 +63,8 @@ class ImproveResumeUseCase(
             updatedAt = time,
             content = content,
             sourceResumeId = source.id,
+            photoPath = source.photoPath,
+            photoVisible = source.photoVisible,
         )
         return persist(record, vacancy.id.takeIf { it != 0L })
     }

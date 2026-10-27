@@ -291,7 +291,10 @@ strictly, without tolerant import repair or legacy consent normalization.
 ID as `sourceResumeId`, a name formed as `<source name> + <vacancy internal name> (AI yyyy-MM-dd HH:mm)` in the device's local time,
 and the generated content. Repeated trailing AI timestamps and matching vacancy-name suffixes
 are replaced, so repeated improvement for the same vacancy keeps one vacancy name and one AI timestamp.
-A blank draft vacancy name is omitted; other custom name parts are preserved. Keywords and photo are empty; main-resume selection is unchanged.
+A blank draft vacancy name is omitted; other custom name parts are preserved. Keywords are empty;
+main-resume selection is unchanged. The source photo path and Include in resume flag are inherited
+locally without sending the photo to the provider. Versions share the immutable photo file;
+replacing or deleting a photo removes its file only after the last resume reference is gone.
 The source resume and its assessment are preserved. The new link starts at zero with no
 assessment. Each version can be assessed and improved again independently.
 
@@ -601,15 +604,19 @@ and closes only the dialog; late results are discarded. A single available choic
 selected automatically; multiple choices require selection unless a valid saved prompt
 preference is available. Provider choices and PDF recognition prompt choices are not persisted.
 
-Vacancy assessment and improvement remember their last used prompt independently in
-ScreenState, scoped to the vacancy rather than the linked resume. A validated request launch
-records the selected prompt ID, including attempts that later fail or are cancelled; selecting
-a prompt and closing without running does not replace the preference. Reopening uses the
-current saved prompt text, not previous request-local edits. Deleted, disabled, wrong-scope,
-or malformed saved choices fall back to the ordinary selection rules. Preference read/write
-failures are diagnostic-only and do not block requests. New vacancy drafts retain used IDs
-in memory and bind them to the saved vacancy on first Save. Preferences share the existing
-screen-state write queue and survive dialog/page destruction and application restarts.
+Vacancy assessment and improvement remember their last launched prompt independently in
+application-scoped ScreenState, shared across vacancies, projects and new drafts. Existing
+per-vacancy choices remain a read-only fallback until an application-wide choice is present.
+A validated request launch records the selected prompt ID, including attempts that later fail
+or are cancelled; selecting a prompt and closing without running does not replace the
+preference. Reopening uses the current saved prompt text, not previous request-local edits.
+Deleted, disabled, wrong-scope or malformed saved choices fall back to ordinary selection
+rules. Reads check persisted state before in-memory choices so retained editors observe
+newer selections from other pages. Preference read/write failures are diagnostic-only and
+retain the last used in-memory selection. Global preferences are saved without waiting for
+vacancy Save; other vacancy view state and cover-letter prompt preferences retain their
+existing document scope. Preferences share the screen-state write queue and survive
+application restarts.
 The database schema is unchanged by AI request handling.
 
 The Settings overview exposes matching text navigation entries for API Providers and Prompts.

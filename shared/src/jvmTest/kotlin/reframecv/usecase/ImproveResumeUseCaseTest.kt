@@ -6,7 +6,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.runBlocking
@@ -64,7 +63,7 @@ class ImproveResumeUseCaseTest : ComponentTest() {
     }
 
     @Test
-    fun adaptationUsesLocalTimestampAndKeepsSourceWithoutCopyingItsPhotoOrKeywords() = runBlocking {
+    fun adaptationKeepsSourceAndInheritsPhotoWithoutCopyingKeywords() = runBlocking {
         val connection = setup()
         val time = LocalDateTime.of(
             2026,
@@ -86,7 +85,8 @@ class ImproveResumeUseCaseTest : ComponentTest() {
         assertEquals(source.id, result.sourceResumeId)
         assertEquals(content, result.content)
         assertEquals(emptyList(), result.keywords)
-        assertNull(result.photoPath)
+        assertEquals(source.photoPath, result.photoPath)
+        assertEquals(source.photoVisible, result.photoVisible)
         assertEquals(source, dependencies.resumesRepository.records.value.first())
         assertEquals(1L, dependencies.resumesRepository.mainResumeIds.value[7])
         val stored = dependencies.vacanciesRepository.records.value.single()
@@ -137,7 +137,14 @@ class ImproveResumeUseCaseTest : ComponentTest() {
     fun draftVacancyKeepsNewResumeInProjectAndSendsOnlyPortableContent() = runBlocking {
         val connection = setup()
         dependencies.vacanciesRepository.records.value = emptyList()
-        val result = dependencies.improveResume(source, vacancy.copy(id = 0), connection, "Improve")
+        val result = dependencies.improveResume(
+            source.copy(photoVisible = false),
+            vacancy.copy(id = 0),
+            connection,
+            "Improve",
+        )
+        assertEquals(source.photoPath, result.photoPath)
+        assertFalse(result.photoVisible)
         assertEquals(2, dependencies.resumesRepository.records.value.size)
         assertEquals(source.id, result.sourceResumeId)
         assertTrue(dependencies.vacanciesRepository.records.value.isEmpty())

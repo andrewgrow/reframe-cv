@@ -119,4 +119,37 @@ class ResumePhotoPersistenceTest : WorkspaceDatabaseTest() {
         assertContentEquals(original, Files.readAllBytes(source))
         return path
     }
+
+    @Test
+    fun adaptationsKeepInheritedPhotosWhenEitherVersionIsDeletedOrReplaced() = runBlocking {
+        val repository = LocalResumesRepository(database.resumeDao(), photos)
+        val project = project()
+        for (deleteSourceFirst in listOf(true, false)) {
+            val path = prepare("inherited-$deleteSourceFirst", Color.GREEN)
+            val source = repository.createSaved(
+                resume(project).copy(photoPath = path, photoVisible = false),
+                MainResumeChange.Keep,
+            )
+            val adaptation = repository.createAdaptation(
+                source.copy(id = 0, sourceResumeId = source.id, keywords = emptyList()),
+                null,
+            )
+            val stored = repository.observeResumes(project).first().single {
+                it.id == adaptation.id
+            }
+            assertEquals(path, stored.photoPath)
+            assertFalse(stored.photoVisible)
+            val removed = if (deleteSourceFirst) source else adaptation
+            val retained = if (deleteSourceFirst) adaptation else source
+            repository.delete(removed.id)
+            assertNotNull(storage.read(path))
+            val current = repository.observeResumes(project).first().single { it.id == retained.id }
+            val replacement = prepare("replacement-$deleteSourceFirst", Color.BLUE)
+            repository.update(current.copy(photoPath = replacement))
+            assertNull(storage.read(path))
+            assertNotNull(storage.read(replacement))
+            repository.delete(retained.id)
+            assertNull(storage.read(replacement))
+        }
+    }
 }

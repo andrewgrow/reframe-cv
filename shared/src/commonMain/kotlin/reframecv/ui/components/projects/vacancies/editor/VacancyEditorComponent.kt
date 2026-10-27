@@ -106,12 +106,18 @@ class DefaultVacancyEditorComponent(
     private val assessmentPrompt = AiPromptPreference(
         componentContext,
         "resume_assessment_prompt_id",
-        initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
+        ScreenStateOwner(ScreenType.Application),
+        fallbackOwner = initialVacancy?.let {
+            ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId)
+        },
     )
     private val improvementPrompt = AiPromptPreference(
         componentContext,
         "resume_improvement_prompt_id",
-        initialVacancy?.let { ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId) },
+        ScreenStateOwner(ScreenType.Application),
+        fallbackOwner = initialVacancy?.let {
+            ScreenStateOwner(ScreenType.Vacancy, it.id, it.projectId)
+        },
     )
     private var persistedVacancy = initialVacancy
     override val initialVacancy: Vacancy? get() = persistedVacancy
@@ -294,8 +300,6 @@ class DefaultVacancyEditorComponent(
             persistedVacancy = createdVacancy
             val owner =
                 ScreenStateOwner(ScreenType.Vacancy, createdVacancy.id, createdVacancy.projectId)
-            assessmentPrompt.onBindOwner(owner)
-            improvementPrompt.onBindOwner(owner)
             details.onBindOwner(owner)
             resumeSection.onBindOwner(owner)
             letterSection.onBindOwner(owner)
