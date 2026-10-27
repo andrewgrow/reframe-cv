@@ -54,7 +54,12 @@ internal class DefaultRunnerCopyComponent(
                     state.value = state.value.copy(
                         loading = false,
                         failed = false,
-                        sources = sources.filter { compatible(it.runner, editor.runner) },
+                        sources = sources.filter {
+                            compatible(
+                                it.runner,
+                                editor.runner.copy(operation = editor.draft.operation),
+                            )
+                        },
                     )
                 }
             } catch (error: CancellationException) {

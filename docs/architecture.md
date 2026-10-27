@@ -777,7 +777,7 @@ runners under connections, remaps their ownership on import, and excludes execut
 
 Saved Apify connections expose a Runners section. New connections must be saved before
 operations can be attached. Each runner opens a nested page scoped to its connection;
-returning preserves unsaved provider settings. The first operation is LinkedIn Jobs Scraper,
+returning preserves unsaved provider settings. Supported operations include LinkedIn Jobs Scraper,
 configured with HTTPS LinkedIn jobs search URLs (one per line) and a positive per-search
 job limit. Duplicate URLs and surrounding whitespace are removed on Save. Runner names
 are optional; unnamed entries use the operation title.
@@ -791,6 +791,31 @@ history when adding or editing a runner. The provider's own Save is independent 
 Save; neither operation implicitly commits the other's draft. No schema change is required.
 
 
+## AMS job search runners
+
+AMS Austria Job Scraper is a second operation on existing Apify connections, using
+`blackfalcondata/ams-austria-job-scraper`. New runners select LinkedIn or AMS; a saved runner's
+operation is fixed so existing run history is interpreted consistently. Copy from runner offers
+only configurations matching the selected operation. Runner names remain optional.
+
+AMS settings include a required search term, location, radius (0/5/10/20/50/75/100 km),
+maximum results (1–10000), inclusion of external portals, and an optional last-week/month
+update filter. A positive radius requires a location. Requests explicitly use full mode,
+newest-first ordering and complete plain-text descriptions, without remote incremental state.
+The raw dataset is displayed with the existing dynamic columns, pagination, review filters,
+AI relevance assessment and explicit project import. Similar postings with different AMS IDs
+remain separate rows; no fuzzy duplicate detection is performed.
+
+Raw AMS rows use source `AMS` and `referenceId` for exact history matching, separately from
+LinkedIn IDs. Unknown fields and malformed rows remain in raw snapshots. Import maps title,
+employer and description, decodes named/numeric HTML entities, and prefers a public HTTP(S)
+external URL over the AMS portal URL. Missing structured requirements are not inferred.
+
+The existing string operation and JSON configuration columns store AMS settings without any
+schema change, migration or database reset. LinkedIn settings and existing history remain intact.
+Settings backups include AMS runners through the same operation/configuration representation.
+
+
 ## Apify runner execution
 
 The runner editor opens a separate Runs and results page. Starting uses the saved settings,
@@ -799,7 +824,7 @@ not unsaved editor inputs, and requires an active Apify connection and active va
 `ApifyExecutionRepository` adapts that contract through the shared Ktor client.
 
 A local Pending record with an immutable, non-secret configuration snapshot is saved before
-one POST to the supported Actor. Actor input maps the per-search limit to `limitPerSource`.
+one POST to the selected supported Actor. LinkedIn input maps the per-search limit to `limitPerSource`.
 The returned external ID and state are persisted before polling. Failed or cancelled starts
 are never automatically retried: the user must check Apify Console because an ambiguous
 network failure may still have started paid work. A known external ID can be reopened to

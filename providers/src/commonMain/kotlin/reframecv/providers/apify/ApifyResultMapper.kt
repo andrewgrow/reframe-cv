@@ -8,6 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.domain.models.providers.ConnectionRunState
 import reframecv.domain.models.providers.RunnerRawResult
 import reframecv.runners.RemoteRunnerRun
@@ -40,11 +41,18 @@ internal fun mapApifyPage(
     offset: Int,
     limit: Int,
     total: Int?,
+    operation: ConnectionOperation = ConnectionOperation.LinkedInJobSearch,
 ): RunnerResultsPage {
     val rows = json.parseToJsonElement(body) as? JsonArray ?: error("Expected dataset array")
     val mapped = rows.mapNotNull { row ->
         try {
-            json.decodeFromJsonElement<ApifyVacancyDto>(row).toDomain()
+            when (operation) {
+                ConnectionOperation.LinkedInJobSearch ->
+                    json.decodeFromJsonElement<ApifyVacancyDto>(row).toDomain()
+
+                ConnectionOperation.AmsJobSearch ->
+                    json.decodeFromJsonElement<AmsVacancyDto>(row).toDomain()
+            }
         } catch (
             _: IllegalArgumentException,
         ) {
@@ -62,9 +70,11 @@ internal fun mapApifyPage(
         total,
         rows.size - mapped.size,
         rawResults = rows.mapIndexed { index, row ->
-            val identifier = ((row as? JsonObject)?.get("id") as? JsonPrimitive)?.contentOrNull
+            val key = if (operation == ConnectionOperation.AmsJobSearch) "referenceId" else "id"
+            val source = if (operation == ConnectionOperation.AmsJobSearch) "AMS" else "LinkedIn"
+            val identifier = ((row as? JsonObject)?.get(key) as? JsonPrimitive)?.contentOrNull
                 ?.takeIf { it.matches(Regex("[0-9]+")) }
-            RunnerRawResult(offset + index, "LinkedIn", identifier, row.toString())
+            RunnerRawResult(offset + index, source, identifier, row.toString())
         },
     )
 }
@@ -91,21 +101,4 @@ internal fun ApifyVacancyDto.toDomain(): VacancySearchResult? {
         employmentType.orEmpty(),
         seniorityLevel.orEmpty(),
     )
-}
-
-private fun htmlText(value: String) = value
-    .replace(Regex("<(script|style)\\b[^>]*>[\\s\\S]*?</\\1>", RegexOption.IGNORE_CASE), "")
-    .replace(Regex("<br\\s*/?>|</(?:p|div|ul|ol|li|h[1-6])>", RegexOption.IGNORE_CASE), "\n")
-    .replace(Regex("<li\\b[^>]*>", RegexOption.IGNORE_CASE), "- ")
-    .replace(Regex("<[^>]*>"), "")
-
-private fun cleanText(value: String): String {
-    val entities = mapOf(
-        "amp" to "&", "lt" to "<", "gt" to ">", "quot" to "\"",
-        "apos" to "'", "nbsp" to " ", "#39" to "'", "#34" to "\"", "#160" to " ",
-    )
-    return value.replace(Regex("&(amp|lt|gt|quot|apos|nbsp|#39|#34|#160);")) {
-        entities.getValue(it.groupValues[1])
-    }.replace("\r\n", "\n").replace("\r", "\n")
-        .lines().joinToString("\n") { it.trim() }.replace(Regex("\n{3,}"), "\n\n").trim()
 }

@@ -1,8 +1,9 @@
 package reframecv.runners
 
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.domain.models.providers.ConnectionRunState
-import reframecv.domain.models.providers.LinkedInJobSearchConfiguration
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.RunnerConfiguration
 
 /** Describes a provider execution without exposing HTTP response types to application features. */
 data class RemoteRunnerRun(
@@ -18,7 +19,7 @@ data class RemoteRunnerRun(
 interface RunnerExecutionRepository {
     suspend fun start(
         connection: ProviderConnection,
-        configuration: LinkedInJobSearchConfiguration,
+        configuration: RunnerConfiguration,
     ): RemoteRunnerRun
     suspend fun inspect(connection: ProviderConnection, externalId: String): RemoteRunnerRun
     suspend fun results(
@@ -26,6 +27,7 @@ interface RunnerExecutionRepository {
         datasetId: String,
         offset: Int,
         limit: Int,
+        operation: ConnectionOperation = ConnectionOperation.LinkedInJobSearch,
     ): RunnerResultsPage
 }
 

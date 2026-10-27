@@ -25,7 +25,6 @@ import reframecv.shared.generated.resources.runner_configuration_error
 import reframecv.shared.generated.resources.runner_delete_error
 import reframecv.shared.generated.resources.runner_delete_title
 import reframecv.shared.generated.resources.runner_delete_warning
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.runner_runs
 import reframecv.shared.generated.resources.runner_validation
 import reframecv.shared.generated.resources.settings_cancel
@@ -143,7 +142,7 @@ internal fun RunnerDeleteConfirmation(state: RunnerEditorState, component: Runne
             Res.string.resume_delete_confirm,
             Res.string.resume_cancel,
             subject = state.runner.name.ifBlank {
-                stringResource(Res.string.runner_operation_linkedin)
+                operationTitle(state.runner.operation)
             },
             tone = ConfirmationDialogTone.Critical,
         ),

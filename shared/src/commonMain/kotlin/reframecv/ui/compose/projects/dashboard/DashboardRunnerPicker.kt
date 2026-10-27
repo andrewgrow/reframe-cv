@@ -23,13 +23,13 @@ import reframecv.shared.generated.resources.dashboard_runners_empty
 import reframecv.shared.generated.resources.dashboard_runners_error
 import reframecv.shared.generated.resources.dashboard_search_runners
 import reframecv.shared.generated.resources.navigation_retry
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.runners_add
 import reframecv.shared.generated.resources.settings_close
 import reframecv.ui.components.projects.dashboard.DashboardRunnersComponent
 import reframecv.ui.compose.common.FastScrollColumn
 import reframecv.ui.compose.common.LoadingContent
 import reframecv.ui.compose.common.ResizableDialog
+import reframecv.ui.compose.settings.runners.operationTitle
 import reframecv.ui.theme.ReframeTheme
 import reframecv.usecase.SavedRunner
 
@@ -88,7 +88,7 @@ private fun RunnerChoice(choice: SavedRunner, open: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(ReframeTheme.tokens.spacing.small),
     ) {
         Text(
-            choice.runner.name.ifBlank { stringResource(Res.string.runner_operation_linkedin) },
+            choice.runner.name.ifBlank { operationTitle(choice.runner.operation) },
             style = MaterialTheme.typography.titleMedium,
         )
         Text(

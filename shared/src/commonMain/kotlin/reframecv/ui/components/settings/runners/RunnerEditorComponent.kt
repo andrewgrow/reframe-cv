@@ -97,7 +97,9 @@ class DefaultRunnerEditorComponent(
     }
     override fun onDraft(draft: RunnerDraft) {
         if (!state.value.busy && !state.value.confirming && !copy.state.value.visible) {
-            state.value = state.value.copy(draft = draft, error = null)
+            if (state.value.runner.id == 0L || draft.operation == state.value.runner.operation) {
+                state.value = state.value.copy(draft = draft, error = null)
+            }
         }
     }
 

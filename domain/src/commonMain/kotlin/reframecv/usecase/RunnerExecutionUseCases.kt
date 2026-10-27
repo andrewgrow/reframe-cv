@@ -81,7 +81,7 @@ class RunnerExecutionUseCases(
     }
     private fun configuration(
         runner: reframecv.domain.models.providers.ConnectionRunner,
-    ): reframecv.domain.models.providers.LinkedInJobSearchConfiguration {
+    ): reframecv.domain.models.providers.RunnerConfiguration {
         if (!runner.active) {
             throw RunnerExecutionException(
                 RunnerExecutionError.Disabled,

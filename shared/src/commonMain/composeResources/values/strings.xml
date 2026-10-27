@@ -461,7 +461,7 @@
     <string name="runner_urls_hint">One HTTPS LinkedIn jobs search URL per line.</string>
     <string name="runner_limit">Max jobs per search</string>
     <string name="runner_limit_hint">A positive whole number. This limit applies to each search URL.</string>
-    <string name="runner_validation">Check the search URLs and enter a positive job limit.</string>
+    <string name="runner_validation">Check the search settings and job limit.</string>
     <string name="runner_configuration_error">This configuration is unsupported or damaged. Enter the search settings and save to replace it.</string>
     <string name="runner_delete_title">Delete runner?</string>
     <string name="runner_delete_warning">The runner and its local run history will be permanently deleted. Saved vacancies will be kept. Remote runs are not stopped.</string>
@@ -510,4 +510,16 @@
     <string name="runner_relevance">Relevance</string>
     <string name="runner_relevance_assess">Assess relevance</string>
     <string name="runner_relevance_warning">Sends this original dataset row as JSON to the selected provider. The prompt defines the search criteria; no resume or project is sent. A successful score and the exact prompt replace the previous assessment immediately.</string>
+    <string name="runner_operation_ams">AMS Austria Job Scraper</string>
+    <string name="runner_ams_query">Search term</string>
+    <string name="runner_ams_location">Location (optional with radius 0)</string>
+    <string name="runner_ams_radius">Search radius (km)</string>
+    <string name="runner_ams_external">Include jobs from external portals</string>
+    <string name="runner_ams_period">Updated within</string>
+    <string name="runner_ams_any_time">Any time</string>
+    <string name="runner_ams_week">Last week</string>
+    <string name="runner_ams_month">Last month</string>
+    <string name="runner_ams_hint">Results are ordered newest first and include full descriptions where available. Review and import jobs manually.</string>
+    <string name="runner_ams_limit">Max jobs</string>
+    <string name="runner_ams_limit_hint">A whole number from 1 to 10000. Limits the total results for this search.</string>
 </resources>

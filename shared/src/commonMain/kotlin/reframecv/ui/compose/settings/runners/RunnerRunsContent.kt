@@ -25,7 +25,6 @@ import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_retry
 import reframecv.shared.generated.resources.runner_history_empty
 import reframecv.shared.generated.resources.runner_history_error
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.runner_refresh
 import reframecv.shared.generated.resources.runner_runs
 import reframecv.shared.generated.resources.runner_runs_notice
@@ -75,7 +74,7 @@ internal fun RunnerRunsContent(component: RunnerRunsComponent) {
                 )
                 Text(
                     state.runner.name.ifBlank {
-                        stringResource(Res.string.runner_operation_linkedin)
+                        operationTitle(state.runner.operation)
                     },
                     style = MaterialTheme.typography.titleMedium,
                 )

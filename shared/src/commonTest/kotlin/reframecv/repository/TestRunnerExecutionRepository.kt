@@ -1,8 +1,9 @@
 package reframecv.repository
 
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.domain.models.providers.ConnectionRunState
-import reframecv.domain.models.providers.LinkedInJobSearchConfiguration
 import reframecv.domain.models.providers.ProviderConnection
+import reframecv.domain.models.providers.RunnerConfiguration
 import reframecv.runners.RemoteRunnerRun
 import reframecv.runners.RunnerExecutionRepository
 import reframecv.runners.RunnerResultsPage
@@ -13,6 +14,8 @@ class TestRunnerExecutionRepository : RunnerExecutionRepository {
     var resultError: Exception? = null
     var resultReads = 0
     var requestedOffset = 0
+    var requestedOperation: ConnectionOperation? = null
+    var startedConfiguration: RunnerConfiguration? = null
     var readError: Exception? = null
     var beforeRead: suspend () -> Unit = {}
     var status = RemoteRunnerRun("remoteRun1", ConnectionRunState.Succeeded, "dataset1", 123)
@@ -21,9 +24,10 @@ class TestRunnerExecutionRepository : RunnerExecutionRepository {
     var beforeStart: suspend () -> Unit = {}
     override suspend fun start(
         connection: ProviderConnection,
-        configuration: LinkedInJobSearchConfiguration,
+        configuration: RunnerConfiguration,
     ): RemoteRunnerRun {
         starts++
+        startedConfiguration = configuration
         beforeStart()
         startError?.let { throw it }
         return status
@@ -42,8 +46,10 @@ class TestRunnerExecutionRepository : RunnerExecutionRepository {
         datasetId: String,
         offset: Int,
         limit: Int,
+        operation: ConnectionOperation,
     ): RunnerResultsPage {
         resultReads++
+        requestedOperation = operation
         requestedOffset = offset
         resultError?.let { throw it }
         return page.copy(offset = offset)

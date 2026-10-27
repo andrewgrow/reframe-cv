@@ -67,7 +67,13 @@ class RunnerManagementTest : ComponentTest() {
         val first = await(editor) { it.successfulSaves == 1L }
         assertTrue(first.runner.id > 0)
         assertEquals("Android", first.draft.name)
-        assertEquals(listOf(url), RunnerConfigurationJson.decode(first.runner)?.searchUrls)
+        assertEquals(
+            listOf(url),
+            (
+                RunnerConfigurationJson.decode(first.runner) as?
+                    reframecv.domain.models.providers.LinkedInJobSearchConfiguration
+                )?.searchUrls,
+        )
         runOnUiThread {
             editor.onDraft(first.draft.copy(active = false, maxResults = "50"))
             editor.onSave()

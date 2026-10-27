@@ -70,6 +70,7 @@ class RunnerDatasetUseCases(
                 checkNotNull(run.datasetId),
                 run.nextResultOffset,
                 DOWNLOAD_PAGE_SIZE,
+                runner.operation,
             )
             require(response.offset == run.nextResultOffset)
             val consumed = response.rawResults.size

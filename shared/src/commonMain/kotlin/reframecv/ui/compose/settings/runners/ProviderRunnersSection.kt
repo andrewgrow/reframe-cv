@@ -18,7 +18,6 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.navigation_retry
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.runners_add
 import reframecv.shared.generated.resources.runners_empty
 import reframecv.shared.generated.resources.runners_load_error
@@ -110,12 +109,12 @@ private fun RunnerListRow(
         Column(Modifier.weight(1f)) {
             Text(
                 runner.name.ifBlank {
-                    stringResource(Res.string.runner_operation_linkedin)
+                    operationTitle(runner.operation)
                 },
             )
             if (runner.name.isNotBlank()) {
                 Text(
-                    stringResource(Res.string.runner_operation_linkedin),
+                    operationTitle(runner.operation),
                     style = MaterialTheme.typography.bodySmall,
                     color = ReframeTheme.colorScheme.hint,
                 )

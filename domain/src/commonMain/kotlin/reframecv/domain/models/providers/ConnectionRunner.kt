@@ -5,7 +5,7 @@ import kotlinx.serialization.json.Json
 import reframecv.domain.DomainModel
 
 /** Identifies the adapter responsible for interpreting an operation's inputs and outputs. */
-enum class ConnectionOperation { LinkedInJobSearch, }
+enum class ConnectionOperation { LinkedInJobSearch, AmsJobSearch, }
 
 /** Stores a reusable operation independently of individual executions. */
 data class ConnectionRunner(
@@ -21,15 +21,22 @@ data class ConnectionRunner(
     override fun toString() = "ConnectionRunner(id=$id, connectionId=$connectionId)"
 }
 
+/** Keeps operation settings typed while preserving the existing per-operation JSON format. */
+sealed interface RunnerConfiguration {
+    val actorId: String
+    val maxResults: Int
+    val valid: Boolean
+}
+
 /** Defines the first supported Apify operation without embedding connection credentials. */
 @Serializable
 data class LinkedInJobSearchConfiguration(
-    val actorId: String = "curious_coder/linkedin-jobs-scraper",
+    override val actorId: String = "curious_coder/linkedin-jobs-scraper",
     val searchUrls: List<String> = emptyList(),
-    val maxResults: Int = 100,
+    override val maxResults: Int = 100,
     val version: Int = 1,
-) {
-    val valid get() = version == 1 && actorId == "curious_coder/linkedin-jobs-scraper" &&
+) : RunnerConfiguration {
+    override val valid get() = version == 1 && actorId == "curious_coder/linkedin-jobs-scraper" &&
         maxResults > 0 && searchUrls.isNotEmpty() && searchUrls.all { it.isNotBlank() }
 }
 
@@ -39,11 +46,18 @@ object RunnerConfigurationJson {
         ignoreUnknownKeys = true
         encodeDefaults = true
     }
-    fun encode(value: LinkedInJobSearchConfiguration) = json.encodeToString(value)
-    fun decode(runner: ConnectionRunner): LinkedInJobSearchConfiguration? = try {
+    fun encode(value: RunnerConfiguration): String = when (value) {
+        is LinkedInJobSearchConfiguration -> json.encodeToString(value)
+        is AmsJobSearchConfiguration -> json.encodeToString(value)
+    }
+    fun decode(runner: ConnectionRunner): RunnerConfiguration? = try {
         when (runner.operation) {
             ConnectionOperation.LinkedInJobSearch ->
                 json.decodeFromString<LinkedInJobSearchConfiguration>(runner.configuration)
+                    .takeIf { it.valid }
+
+            ConnectionOperation.AmsJobSearch ->
+                json.decodeFromString<AmsJobSearchConfiguration>(runner.configuration)
                     .takeIf { it.valid }
         }
     } catch (_: IllegalArgumentException) {

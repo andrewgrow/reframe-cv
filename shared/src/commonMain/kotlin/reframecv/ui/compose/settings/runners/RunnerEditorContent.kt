@@ -19,13 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.shared.generated.resources.Res
+import reframecv.shared.generated.resources.runner_ams_limit
+import reframecv.shared.generated.resources.runner_ams_limit_hint
 import reframecv.shared.generated.resources.runner_copy
 import reframecv.shared.generated.resources.runner_limit
 import reframecv.shared.generated.resources.runner_limit_hint
 import reframecv.shared.generated.resources.runner_name
-import reframecv.shared.generated.resources.runner_operation
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.runner_title
 import reframecv.shared.generated.resources.runner_urls
 import reframecv.shared.generated.resources.runner_urls_hint
@@ -102,16 +103,13 @@ private fun RunnerEditorFields(state: RunnerEditorState, component: RunnerEditor
                 Text(stringResource(Res.string.runner_copy))
             }
         }
-        OutlinedTextField(
-            stringResource(Res.string.runner_operation_linkedin),
-            {},
-            Modifier.fillMaxWidth().testTag("runner.operation"),
-            readOnly = true,
-            label = { Text(stringResource(Res.string.runner_operation)) },
-            singleLine = true,
-        )
+        RunnerOperationField(draft, enabled && state.runner.id == 0L, component::onDraft)
         Text(
-            "curious_coder/linkedin-jobs-scraper",
+            if (draft.operation == ConnectionOperation.AmsJobSearch) {
+                "blackfalcondata/ams-austria-job-scraper"
+            } else {
+                "curious_coder/linkedin-jobs-scraper"
+            },
             color = ReframeTheme.colorScheme.hint,
             style = MaterialTheme.typography.bodySmall,
         )
@@ -146,6 +144,22 @@ internal fun RunnerSearchFields(
     validation: Boolean = false,
     tagPrefix: String = "runner",
 ) {
+    if (draft.operation == ConnectionOperation.AmsJobSearch) {
+        AmsSearchFields(draft, onDraft, enabled, validation, tagPrefix)
+    } else {
+        LinkedInSearchField(draft, onDraft, enabled, validation, tagPrefix)
+    }
+    RunnerLimitField(draft, onDraft, enabled, validation, tagPrefix)
+}
+
+@Composable
+private fun LinkedInSearchField(
+    draft: RunnerDraft,
+    onDraft: (RunnerDraft) -> Unit,
+    enabled: Boolean,
+    validation: Boolean,
+    tagPrefix: String,
+) {
     OutlinedTextField(
         draft.searchUrls,
         { onDraft(draft.copy(searchUrls = it)) },
@@ -156,14 +170,46 @@ internal fun RunnerSearchFields(
         supportingText = { Text(stringResource(Res.string.runner_urls_hint)) },
         isError = validation && !draft.validUrls,
     )
+}
+
+@Composable
+private fun RunnerLimitField(
+    draft: RunnerDraft,
+    onDraft: (RunnerDraft) -> Unit,
+    enabled: Boolean,
+    validation: Boolean,
+    tagPrefix: String,
+) {
     OutlinedTextField(
         draft.maxResults,
         { onDraft(draft.copy(maxResults = it)) },
         Modifier.fillMaxWidth().testTag("$tagPrefix.limit"),
         enabled = enabled,
         singleLine = true,
-        label = { Text(stringResource(Res.string.runner_limit)) },
-        supportingText = { Text(stringResource(Res.string.runner_limit_hint)) },
+        label = {
+            Text(
+                stringResource(
+                    if (draft.operation == ConnectionOperation.AmsJobSearch) {
+                        Res.string.runner_ams_limit
+                    } else {
+                        Res.string.runner_limit
+                    },
+                ),
+            )
+        },
+        supportingText = {
+            Text(
+                stringResource(
+                    if (draft.operation ==
+                        ConnectionOperation.AmsJobSearch
+                    ) {
+                        Res.string.runner_ams_limit_hint
+                    } else {
+                        Res.string.runner_limit_hint
+                    },
+                ),
+            )
+        },
         isError = validation && !draft.validLimit,
     )
 }

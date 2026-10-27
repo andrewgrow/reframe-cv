@@ -27,7 +27,6 @@ import reframecv.shared.generated.resources.runner_copy_error
 import reframecv.shared.generated.resources.runner_copy_hint
 import reframecv.shared.generated.resources.runner_copy_other
 import reframecv.shared.generated.resources.runner_name
-import reframecv.shared.generated.resources.runner_operation_linkedin
 import reframecv.shared.generated.resources.settings_cancel
 import reframecv.ui.components.settings.runners.RunnerCopyComponent
 import reframecv.ui.components.settings.runners.RunnerCopyState
@@ -96,7 +95,7 @@ private fun RunnerCopySources(state: RunnerCopyState, component: RunnerCopyCompo
             ) {
                 Text(
                     source.runner.name.ifBlank {
-                        stringResource(Res.string.runner_operation_linkedin)
+                        operationTitle(source.runner.operation)
                     },
                 )
                 Text(
