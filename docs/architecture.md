@@ -796,7 +796,7 @@ Save; neither operation implicitly commits the other's draft. No schema change i
 AMS Austria Job Scraper is a second operation on existing Apify connections, using
 `blackfalcondata/ams-austria-job-scraper`. New runners select LinkedIn or AMS; a saved runner's
 operation is fixed so existing run history is interpreted consistently. Copy from runner offers
-only configurations matching the selected operation. Runner names remain optional.
+all supported, decodable operations and copies the selected source operation into the new draft. Runner names remain optional.
 
 AMS settings include a required search term, location, radius (0/5/10/20/50/75/100 km),
 maximum results (1–10000), inclusion of external portals, and an optional last-week/month
@@ -965,9 +965,10 @@ Saving stays in the editor; Close/Back returns to the dashboard. Creating or sav
 never starts a remote run. If no Apify connection exists, the dialog points to API Providers.
 Closing either picker creates no records; an unsaved runner draft is discarded on Back.
 
-New runner editors offer Copy from runner. The dialog lists saved runners with compatible,
-decodable configurations, including disabled runners, and lets the user edit copied name,
-active state, search URLs and result limit before Use settings. Only draft fields are applied;
+New runner editors offer Copy from runner. The dialog lists saved Apify runners with supported,
+decodable configurations across all operation types, including disabled runners. The source
+operation is copied along with its search settings. The user can edit the copied name, active
+state, operation-specific search fields and result limit before Use settings. Only draft fields are applied;
 the target connection, new identity and empty execution history are preserved. Cancel/Escape
 discards the dialog edits. Save remains the only operation that creates the new runner.
 

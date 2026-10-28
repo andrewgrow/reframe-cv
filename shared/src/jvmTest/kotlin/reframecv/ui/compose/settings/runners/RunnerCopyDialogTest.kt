@@ -9,6 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
 import reframecv.ui.components.settings.runners.RunnerCopyState
@@ -64,6 +65,31 @@ class RunnerCopyDialogTest : GoldenScreenshotTest() {
         assertEquals("Edited search", editor.state.value.draft.name)
         assertEquals("50", editor.state.value.draft.maxResults)
         assertEquals(0L, editor.state.value.runner.id)
+    }
+
+    @Test
+    fun copyingAnotherOperationShowsItsFieldsAndUpdatesTheEditorType() = runDesktopComposeUiTest {
+        val editor = editor()
+        val original = editor.copy.state.value.sources.single()
+        val ams = RunnerDraft(
+            operation = ConnectionOperation.AmsJobSearch,
+            name = "Regional search",
+            query = "Kotlin",
+            location = "Wien",
+        )
+            .applyTo(RunnerDraft.newRunner(2)).copy(id = 6)
+        editor.copy.state.value = editor.copy.state.value.copy(
+            sources = listOf(original, original.copy(runner = ams)),
+        )
+        setGoldenContent(this) { RunnerEditorContent(editor) }
+        onNodeWithTag("runner.copy").performClick()
+        onNodeWithTag("runner.copy.source.6").performScrollTo().performClick()
+        onNodeWithTag("runner.copy.query").performScrollTo()
+            .performTextReplacement("Android")
+        onNodeWithTag("runner.copy.apply").performClick()
+        assertEquals(ConnectionOperation.AmsJobSearch, editor.state.value.draft.operation)
+        assertEquals("Android", editor.state.value.draft.query)
+        onNodeWithTag("runner.query").assertExists()
     }
 
     @Test

@@ -503,7 +503,7 @@
     <string name="dashboard_runner_connections_error">Could not load provider connections. Try again.</string>
     <string name="runner_copy">Copy from runner</string>
     <string name="runner_copy_apply">Use settings</string>
-    <string name="runner_copy_empty">No compatible saved runners to copy.</string>
+    <string name="runner_copy_empty">No supported saved runners to copy.</string>
     <string name="runner_copy_error">Could not load runners. Try again.</string>
     <string name="runner_copy_hint">Copy search settings only. The current connection is kept; run history and results are not copied. Review and edit the settings before applying.</string>
     <string name="runner_copy_other">Choose another runner</string>

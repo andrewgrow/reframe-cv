@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.ConnectionOperation
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.ComponentTest
 import reframecv.ui.threading.runOnUiThread
@@ -105,6 +106,55 @@ class RunnerCopyTest : ComponentTest() {
             assertEquals(original, editor.state.value.draft)
         }
         assertEquals(1, dependencies.connectionRunnersRepository.records.value.size)
+    }
+
+    @Test
+    fun allFourSourcesAreVisibleAndCopyingAnotherOperationChangesTheDraftType() = runBlocking {
+        val sourceOwner = owner()
+        val linkedIn = (1..3).map { source(sourceOwner) }
+        val amsDraft = RunnerDraft(
+            name = "Regional search",
+            operation = ConnectionOperation.AmsJobSearch,
+            query = "Kotlin",
+            location = "Wien",
+            radiusKm = "20",
+            maxResults = "50",
+            includeExternalJobs = false,
+            postedWithin = "LAST_WEEK",
+        )
+        val amsId = dependencies.connectionRunnersUseCases.save(
+            amsDraft.applyTo(RunnerDraft.newRunner(sourceOwner)),
+        )
+        val targetOwner = owner()
+        val target = editor(targetOwner)
+        runOnUiThread { target.copy.open() }
+        val loaded = await(target.copy.state) { !it.loading }
+        assertEquals(linkedIn + amsId, loaded.sources.map { it.runner.id })
+        runOnUiThread {
+            target.copy.select(amsId)
+            target.copy.apply()
+            assertEquals(amsDraft.copy(name = "Regional search (copy)"), target.state.value.draft)
+            assertEquals(0L, target.state.value.runner.id)
+            assertEquals(targetOwner, target.state.value.runner.connectionId)
+            target.onSave()
+        }
+        val saved = await(target.state) { it.successfulSaves > 0 }
+        assertEquals(ConnectionOperation.AmsJobSearch, saved.runner.operation)
+        assertTrue(saved.runner.id != amsId)
+        runOnUiThread { target.copy.dismiss() }
+        val another = editor(targetOwner)
+        runOnUiThread {
+            another.onDraft(amsDraft)
+            another.copy.open()
+        }
+        await(another.copy.state) { !it.loading && it.sources.size == 5 }
+        runOnUiThread {
+            another.copy.select(linkedIn.first())
+            another.copy.apply()
+            assertEquals(ConnectionOperation.LinkedInJobSearch, another.state.value.draft.operation)
+        }
+        assertTrue(dependencies.connectionRunnersRepository.history.value.isEmpty())
+        assertEquals(0, dependencies.runnerExecutionRepository.starts)
     }
 
     @Test

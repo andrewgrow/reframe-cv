@@ -6,7 +6,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import reframecv.domain.models.providers.ConnectionRunner
+import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.RunnerConfigurationJson
 import reframecv.logging.ApplicationLogger
 import reframecv.usecase.ConnectionRunnersUseCases
@@ -31,7 +31,7 @@ interface RunnerCopyComponent {
     fun dismiss()
 }
 
-/** Copies compatible search settings into a new draft while preserving its owning connection. */
+/** Copies supported operations into a new draft while preserving its owning connection. */
 internal class DefaultRunnerCopyComponent(
     private val useCases: ConnectionRunnersUseCases,
     private val scope: CoroutineScope,
@@ -55,10 +55,8 @@ internal class DefaultRunnerCopyComponent(
                         loading = false,
                         failed = false,
                         sources = sources.filter {
-                            compatible(
-                                it.runner,
-                                editor.runner.copy(operation = editor.draft.operation),
-                            )
+                            it.connection.type == ApiProviderType.Apify &&
+                                RunnerConfigurationJson.decode(it.runner) != null
                         },
                     )
                 }
@@ -99,6 +97,3 @@ internal class DefaultRunnerCopyComponent(
         state.value = RunnerCopyState()
     }
 }
-
-private fun compatible(source: ConnectionRunner, target: ConnectionRunner) =
-    source.operation == target.operation && RunnerConfigurationJson.decode(source) != null
