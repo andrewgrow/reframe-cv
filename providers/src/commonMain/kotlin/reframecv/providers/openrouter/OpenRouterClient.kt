@@ -18,6 +18,7 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.network.HttpTrafficLog
 import reframecv.network.HttpTrafficLogger
 import reframecv.providers.AiProviderClient
@@ -40,8 +41,8 @@ class OpenRouterClient(
     @Suppress("TooGenericExceptionCaught")
     private suspend fun generate(request: AiRequest): AiResponse {
         val connection = request.connection
-        val credentialsReady =
-            connection.openRouter.apiKey.isNotBlank() && connection.openRouter.modelId.isNotBlank()
+        val credentialsReady = connection.configuration is OpenRouterConfiguration &&
+            connection.usable && connection.openRouter.modelId.isNotBlank()
         if (!connection.active || connection.type != ApiProviderType.OpenRouter ||
             !credentialsReady
         ) {

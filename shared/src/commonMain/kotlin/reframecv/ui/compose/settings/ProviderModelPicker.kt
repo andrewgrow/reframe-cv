@@ -46,8 +46,8 @@ internal fun ProviderModelPicker(
     var search by remember(state.models) { mutableStateOf("") }
     val enabled = state.connection.active && !state.busy && state.models.isNotEmpty()
     val label =
-        state.models.find { it.id == state.connection.openRouter.modelId }?.name
-            ?: state.connection.openRouter.modelId
+        state.models.find { it.id == state.connection.ai.modelId }?.name
+            ?: state.connection.ai.modelId
     ExposedDropdownMenuBox(expanded && enabled, {
         if (enabled) {
             if (it) search = ""

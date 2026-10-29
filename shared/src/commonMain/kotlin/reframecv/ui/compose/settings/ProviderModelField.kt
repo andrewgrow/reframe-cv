@@ -39,7 +39,7 @@ internal fun ProviderModelField(state: ProviderEditorState, component: ProviderE
             component::onLoadModels,
             Modifier.testTag("settings.models.load"),
             enabled = state.connection.active && !state.busy &&
-                state.connection.openRouter.apiKey.isNotBlank(),
+                state.connection.ai.apiKey.isNotBlank(),
             outlineState = FillButton.OutlineState.Visible,
         )
     }

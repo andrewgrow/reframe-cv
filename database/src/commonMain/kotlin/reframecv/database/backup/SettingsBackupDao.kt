@@ -13,6 +13,7 @@ import reframecv.database.settings.AppSettingsEntity
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConfigurationJson
 import reframecv.domain.models.providers.ProviderConnection
@@ -130,6 +131,9 @@ private fun sameConnection(a: ProviderConnectionEntity, b: ProviderConnectionEnt
                     config.managementApiKey.isEmpty() ||
                         config.managementApiKey == first.openRouter.managementApiKey
                     )
+
+        is OpenAiConfiguration -> config.apiKey.isEmpty() ||
+            config.apiKey == first.ai.apiKey
 
         is ApifyConfiguration -> config.apiToken.isEmpty() ||
             config.apiToken == (first.configuration as? ApifyConfiguration)?.apiToken

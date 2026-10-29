@@ -3,6 +3,7 @@ package reframecv.usecase
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import reframecv.domain.models.providers.AiModel
+import reframecv.domain.models.providers.AiProviderConfiguration
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
@@ -26,10 +27,10 @@ class ProviderSettingsUseCases(
     suspend fun setActive(id: Long, active: Boolean) = connections.setActive(id, active)
     suspend fun loadModels(connection: ProviderConnection): List<AiModel> {
         ensureEnabled(connection)
-        require(connection.configuration is OpenRouterConfiguration)
+        require(connection.configuration is AiProviderConfiguration)
         val result = models.load(
             connection.type,
-            connection.openRouter.apiKey.trim().also {
+            connection.ai.apiKey.trim().also {
                 require(it.isNotEmpty())
             },
         )
@@ -80,9 +81,9 @@ class ProviderSettingsUseCases(
         val connection = connections.get(id)
             ?: throw ProviderSetupException(ProviderSetupError.Disabled)
         ensureEnabled(connection)
-        require(connection.usable && connection.configuration is OpenRouterConfiguration)
+        require(connection.usable && connection.configuration is AiProviderConfiguration)
         require(
-            connection.openRouter.apiKey.isNotBlank() && connection.openRouter.modelId.isNotBlank(),
+            connection.ai.apiKey.isNotBlank() && connection.ai.modelId.isNotBlank(),
         )
         return connection
     }

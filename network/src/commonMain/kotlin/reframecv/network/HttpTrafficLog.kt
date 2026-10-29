@@ -79,7 +79,11 @@ class HttpTrafficLog(private val logger: HttpTrafficLogger) {
 
         is JsonArray -> JsonArray(value.map(::redact))
 
-        else -> value
+        is JsonPrimitive -> if (value.isString && value.content.startsWith("data:")) {
+            JsonPrimitive(REDACTED)
+        } else {
+            value
+        }
     }
 
     private fun sensitive(name: String) = name.lowercase().filter(Char::isLetterOrDigit) in setOf(

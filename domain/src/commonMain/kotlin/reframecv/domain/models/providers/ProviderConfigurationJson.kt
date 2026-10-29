@@ -13,6 +13,9 @@ object ProviderConfigurationJson {
             ApiProviderType.OpenRouter -> json.decodeFromString<OpenRouterConfiguration>(raw)
                 .also { require(it.version == 1) }
 
+            ApiProviderType.OpenAI -> json.decodeFromString<OpenAiConfiguration>(raw)
+                .also { require(it.version == 1) }
+
             ApiProviderType.Apify -> json.decodeFromString<ApifyConfiguration>(raw)
                 .also { require(it.version == 1) }
         }
@@ -21,6 +24,7 @@ object ProviderConfigurationJson {
     }
     fun encode(configuration: ProviderConfiguration): String = when (configuration) {
         is OpenRouterConfiguration -> json.encodeToString(configuration)
+        is OpenAiConfiguration -> json.encodeToString(configuration)
         is ApifyConfiguration -> json.encodeToString(configuration)
         is InvalidProviderConfiguration -> configuration.raw
     }
@@ -30,6 +34,14 @@ object ProviderConfigurationJson {
                 configuration
             } else {
                 configuration.copy(apiKey = "", managementApiKey = "")
+            }
+
+            is OpenAiConfiguration -> if (secrets) {
+                configuration
+            } else {
+                configuration.copy(
+                    apiKey = "",
+                )
             }
 
             is ApifyConfiguration -> if (secrets) {

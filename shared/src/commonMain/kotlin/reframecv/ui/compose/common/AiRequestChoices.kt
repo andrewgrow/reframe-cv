@@ -49,12 +49,12 @@ internal fun AiRequestChoices(component: AiRequestDialogComponent, state: AiRequ
         SelectableText(
             stringResource(
                 Res.string.ai_request_model,
-                it.openRouter.modelId.ifBlank {
+                it.ai.modelId.ifBlank {
                     "—"
                 },
             ),
         )
-        if (it.openRouter.modelId.isBlank() || it.openRouter.apiKey.isBlank()) {
+        if (it.ai.modelId.isBlank() || it.ai.apiKey.isBlank()) {
             SelectableText(
                 stringResource(Res.string.ai_request_incomplete_provider),
                 color = ReframeTheme.colorScheme.critical,

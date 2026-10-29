@@ -4,6 +4,7 @@ import androidx.compose.ui.test.ExperimentalTestApi
 import kotlin.test.Test
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
@@ -38,6 +39,18 @@ class AiRequestDialogScreenshotTest : GoldenScreenshotTest() {
         promptId = 1,
         text = "Extract the job posting. Return all extracted content in English.",
         loading = false,
+    )
+
+    @Test fun directAiSelectionMatchesReference() = capture(
+        selected.copy(
+            connections = listOf(
+                selected.connections.single().copy(
+                    type = ApiProviderType.OpenAI,
+                    name = "Direct OpenAI",
+                    configuration = OpenAiConfiguration("example-key", "example-model"),
+                ),
+            ),
+        ),
     )
 
     @Test fun selectedRequestMatchesReference() = capture(selected)

@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderConnection
@@ -52,6 +53,33 @@ class ProviderSettingsUseCasesTest {
         ) {
             writes++
         }
+    }
+
+    @Test
+    fun directAiLoadsOwnCatalogAndRequiresSavedSelectedModelForGeneration() = runBlocking {
+        stored = connection.copy(
+            type = ApiProviderType.OpenAI,
+            configuration = OpenAiConfiguration(" direct-key ", ""),
+        )
+        val useCases = ProviderSettingsUseCases(
+            repository,
+            ProviderModelsRepository { type, key ->
+                assertEquals(ApiProviderType.OpenAI, type)
+                assertEquals("direct-key", key)
+                listOf(AiModel("example-model", "example-model"))
+            },
+            ProviderAccountRepository { _, _ -> error("No account call expected") },
+        )
+        assertEquals("example-model", useCases.loadModels(stored).single().id)
+        assertFailsWith<IllegalArgumentException> { useCases.requireUsableConnection(stored.id) }
+        stored = stored.copy(configuration = stored.ai.withModel("example-model"))
+        assertEquals(stored, useCases.requireUsableConnection(stored.id))
+        assertEquals(stored.id, useCases.save(stored))
+        assertFailsWith<IllegalArgumentException> { useCases.refreshAccountInfo(stored) }
+        assertFailsWith<IllegalArgumentException> { useCases.refreshCreditBalance(stored) }
+        stored = stored.copy(active = false)
+        assertFailsWith<ProviderSetupException> { useCases.loadModels(stored) }
+        Unit
     }
 
     @Test

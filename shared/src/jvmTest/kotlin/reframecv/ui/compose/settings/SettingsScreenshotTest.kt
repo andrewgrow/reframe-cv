@@ -7,6 +7,7 @@ import androidx.compose.ui.test.runComposeUiTest
 import kotlin.test.Test
 import reframecv.domain.models.providers.AiModel
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.GoldenScreenshotTest
@@ -30,6 +31,25 @@ class SettingsScreenshotTest : GoldenScreenshotTest() {
                 modelId = "example/model",
             ),
         )
+
+    @Test
+    fun directAiEditorWithModelsMatchesReference() = runComposeUiTest {
+        val direct = connection.copy(
+            type = ApiProviderType.OpenAI,
+            configuration = OpenAiConfiguration("example-key", "example-model"),
+        )
+        val component = TestSettingsComponent(
+            editor = ProviderEditorState(
+                direct,
+                listOf(AiModel("example-model", "example-model")),
+            ),
+        )
+        setGoldenContent(this) { RootContent(TestRootComponent(settingsComponent = component)) }
+        onNodeWithTag("settings.models.select").performScrollTo()
+        onNodeWithTag("settings.management.section").assertDoesNotExist()
+        onNodeWithTag("settings.account").assertDoesNotExist()
+        captureGolden(this)
+    }
 
     @Test
     fun emptySettingsMatchesReference() = runComposeUiTest {

@@ -19,9 +19,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.AiProviderConfiguration
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.InvalidProviderConfiguration
-import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_key
@@ -108,7 +108,7 @@ private fun ProviderSecretField(
 
 private fun providerKey(connection: ProviderConnection): String =
     when (val configuration = connection.configuration) {
-        is OpenRouterConfiguration -> configuration.apiKey
+        is AiProviderConfiguration -> configuration.apiKey
         is ApifyConfiguration -> configuration.apiToken
         is InvalidProviderConfiguration -> ""
     }

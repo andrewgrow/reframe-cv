@@ -8,17 +8,38 @@ sealed interface ProviderConfiguration {
     fun matches(type: ApiProviderType): Boolean
 }
 
+/** Describes credentials shared by AI connections independently of their HTTP protocol. */
+sealed interface AiProviderConfiguration : ProviderConfiguration {
+    val apiKey: String
+    val modelId: String
+    fun withModel(id: String): AiProviderConfiguration
+}
+
 /** Holds OpenRouter credentials and the selected AI model. */
 @Serializable
 data class OpenRouterConfiguration(
-    val apiKey: String = "",
-    val modelId: String = "",
+    override val apiKey: String = "",
+    override val modelId: String = "",
     val managementApiKey: String = "",
     val version: Int = 1,
-) : ProviderConfiguration {
+) : AiProviderConfiguration {
     override val valid get() = version == 1 && apiKey.isNotBlank()
+    override fun withModel(id: String) = copy(modelId = id)
     override fun matches(type: ApiProviderType) = type == ApiProviderType.OpenRouter
     override fun toString() = "OpenRouterConfiguration(version=$version)"
+}
+
+/** Holds direct OpenAI credentials without any OpenRouter management settings. */
+@Serializable
+data class OpenAiConfiguration(
+    override val apiKey: String = "",
+    override val modelId: String = "",
+    val version: Int = 1,
+) : AiProviderConfiguration {
+    override val valid get() = version == 1 && apiKey.isNotBlank()
+    override fun withModel(id: String) = copy(modelId = id)
+    override fun matches(type: ApiProviderType) = type == ApiProviderType.OpenAI
+    override fun toString() = "OpenAiConfiguration(version=$version)"
 }
 
 /** Holds the credentials shared by Apify operations. */
@@ -43,6 +64,8 @@ fun ProviderConfiguration.normalized(): ProviderConfiguration = when (this) {
         modelId = modelId.trim(),
         managementApiKey = managementApiKey.trim(),
     )
+
+    is OpenAiConfiguration -> copy(apiKey = apiKey.trim(), modelId = modelId.trim())
 
     is ApifyConfiguration -> copy(apiToken = apiToken.trim())
 

@@ -17,9 +17,11 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.providers.AiModel
+import reframecv.domain.models.providers.AiProviderConfiguration
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.providers.normalized
@@ -128,6 +130,7 @@ class DefaultProviderEditorComponent(
         val configuration = when (type) {
             ApiProviderType.OpenRouter -> OpenRouterConfiguration()
             ApiProviderType.Apify -> ApifyConfiguration()
+            ApiProviderType.OpenAI -> OpenAiConfiguration()
         }
         state.value = ProviderEditorState(
             state.value.connection.copy(
@@ -155,6 +158,10 @@ class DefaultProviderEditorComponent(
                         is OpenRouterConfiguration -> connection.copy(
                             configuration = config.copy(apiKey = value),
                             cachedInfo = connection.openRouterCache.copy(accountInfo = null),
+                        )
+
+                        is OpenAiConfiguration -> connection.copy(
+                            configuration = config.copy(apiKey = value),
                         )
 
                         is ApifyConfiguration -> connection.copy(
@@ -193,7 +200,7 @@ class DefaultProviderEditorComponent(
             state.value =
                 state.value.copy(
                     connection = state.value.connection.copy(
-                        configuration = state.value.connection.openRouter.copy(modelId = id),
+                        configuration = state.value.connection.ai.withModel(id),
                     ),
                 )
         }
@@ -202,10 +209,10 @@ class DefaultProviderEditorComponent(
     @Suppress("TooGenericExceptionCaught")
     override fun onLoadModels() {
         val available = !state.value.busy && state.value.connection.active
-        if (!available || state.value.connection.configuration !is OpenRouterConfiguration) return
+        if (!available || state.value.connection.configuration !is AiProviderConfiguration) return
         account.cancel()
         val draft = state.value
-        if (draft.connection.openRouter.apiKey.isBlank()) {
+        if (draft.connection.ai.apiKey.isBlank()) {
             state.value = draft.copy(error = SettingsError.Validation, errorDetails = null)
             return
         }

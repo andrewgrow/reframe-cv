@@ -10,12 +10,67 @@ import kotlinx.coroutines.withTimeout
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.testing.ComponentTest
 import reframecv.ui.threading.runOnUiThread
 
 class AiRequestDialogComponentTest : ComponentTest() {
+    @Test
+    fun switchingToDirectAiKeepsPromptAndUsesSelectedModelWithoutRefreshingRouterBalance() =
+        runBlocking {
+            val routed = dependencies.providerSettingsUseCases.save(connection("Router"))
+            val direct = dependencies.providerSettingsUseCases.save(
+                connection("Direct").copy(
+                    type = ApiProviderType.OpenAI,
+                    configuration = OpenAiConfiguration("direct-key", "direct-model"),
+                ),
+            )
+            dependencies.providerSettingsUseCases.save(
+                connection("Scraper").copy(
+                    type = ApiProviderType.Apify,
+                    configuration = ApifyConfiguration("token"),
+                ),
+            )
+            dependencies.providerSettingsUseCases.save(
+                connection("Disabled").copy(
+                    type = ApiProviderType.OpenAI,
+                    configuration = OpenAiConfiguration("key", "model"),
+                    active = false,
+                ),
+            )
+            dependencies.promptsUseCases.save(Prompt(text = "Shared prompt"))
+            val completed = CompletableDeferred<ProviderConnection>()
+            val dialog = runOnUiThread {
+                DefaultAiRequestDialogComponent(
+                    appComponentContext(),
+                    "resume.json + vacancy.json",
+                    PromptComponent.Vacancies,
+                    execute = { connection, prompt ->
+                        assertEquals("Edited shared prompt", prompt)
+                        connection
+                    },
+                    completed = { completed.complete(it) },
+                    dismissed = {},
+                )
+            }
+            await(dialog) { !it.loading }
+            runOnUiThread {
+                assertEquals(listOf(routed, direct), dialog.state.value.connections.map { it.id })
+                dialog.onConnection(routed)
+                dialog.onText("Edited shared prompt")
+                dialog.onConnection(direct)
+                assertTrue(dialog.state.value.canRun)
+                dialog.onRun()
+            }
+            val sent = withTimeout(5000) { completed.await() }
+            assertEquals(ApiProviderType.OpenAI, sent.type)
+            assertEquals("direct-model", sent.ai.modelId)
+            assertTrue(dependencies.balanceRequests.isEmpty())
+        }
+
     @Test
     fun finishedRequestsRefreshBalanceWithoutDelayingResultsOrHidingRequestErrors() = runBlocking {
         dependencies.providerSettingsUseCases.save(

@@ -9,9 +9,12 @@ import kotlin.test.assertTrue
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterCachedInfo
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
+import reframecv.domain.models.providers.ProviderConfigurationJson
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
 import reframecv.domain.models.settings.WindowSettings
@@ -43,6 +46,42 @@ class SettingsBackupJsonTest {
             ),
         ),
     )
+
+    @Test
+    fun directAiConfigurationRoundTripsAndCredentialsRemainOptIn() {
+        val config = OpenAiConfiguration("DIRECT_SECRET", "example-model")
+        val source = backup.copy(
+            connections = listOf(
+                connection.copy(
+                    type = ApiProviderType.OpenAI,
+                    configuration = config,
+                    cachedInfo = null,
+                ),
+            ),
+        )
+        val full = SettingsBackupJson.decode(SettingsBackupJson.encode(source, true))
+        assertEquals(config, full.connections.single().configuration)
+        val publicJson = SettingsBackupJson.encode(source, false)
+        assertFalse("DIRECT_SECRET" in publicJson)
+        assertFalse("apiKey" in publicJson)
+        assertEquals(
+            config.copy(apiKey = ""),
+            SettingsBackupJson.decode(publicJson).connections.single().configuration,
+        )
+        assertFalse("DIRECT_SECRET" in config.toString())
+        assertTrue(
+            ProviderConfigurationJson.decode(
+                ApiProviderType.OpenAI,
+                """{"version":2}""",
+            ) is InvalidProviderConfiguration,
+        )
+        assertTrue(
+            ProviderConfigurationJson.decode(
+                ApiProviderType.OpenAI,
+                "broken",
+            ) is InvalidProviderConfiguration,
+        )
+    }
 
     @Test
     fun roundTripRestoresPortableFieldsAndOnlyExplicitlyIncludedCredentials() {

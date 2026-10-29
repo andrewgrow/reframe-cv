@@ -3,7 +3,7 @@ package reframecv.domain.models.providers
 import reframecv.domain.DomainModel
 
 /** Identifies provider implementations installed in the application. */
-enum class ApiProviderType { OpenRouter, Apify }
+enum class ApiProviderType { OpenRouter, Apify, OpenAI }
 
 /** Represents access to a service independently of its provider-specific configuration. */
 data class ProviderConnection(
@@ -17,6 +17,7 @@ data class ProviderConnection(
     val cachedInfo: ProviderCachedInfo? = null,
 ) : DomainModel {
     val usable: Boolean get() = configuration.matches(type) && configuration.valid
+    val ai: AiProviderConfiguration get() = configuration as AiProviderConfiguration
     val openRouter: OpenRouterConfiguration get() = configuration as OpenRouterConfiguration
     val openRouterCache: OpenRouterCachedInfo get() =
         cachedInfo as? OpenRouterCachedInfo ?: OpenRouterCachedInfo()

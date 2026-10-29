@@ -140,10 +140,24 @@ Generated Room implementations and Compose resources are excluded.
 - HTML: `build/reports/kover/html/index.html`.
 - XML: `build/reports/kover/report.xml`.
 
+## AI connections
+
+In **Settings → API Providers**, choose **OpenRouter** or **OpenAI**, enter an API key,
+load the models and select a model. Prompts and response schemas are shared; each AI request
+uses the provider and saved model of the connection selected in its dialog. OpenAI uses the
+Responses API directly with `store: false`. Choose a model that supports structured outputs
+and, when sending PDFs or images, the corresponding input types. The model catalog does not
+report all capabilities; unsupported combinations display the provider's error in the dialog.
+OpenAI API billing is separate from ChatGPT subscriptions. Management keys, account information
+and automatic balance refresh are available for OpenRouter connections only.
+
+Adding OpenAI requires no database reset or migration. Settings JSON backups include its
+connection and model; API keys are included only with the explicit export option.
+
 ## Local data and diagnostics
 
 The application data directory contains `reframe-cv.db`, managed document files,
-`stacktrace.txt`, `openrouter-http.log`, and `apify-http.log`:
+`stacktrace.txt`, `openrouter-http.log`, `openai-http.log`, and `apify-http.log`:
 
 | Platform | Directory |
 | --- | --- |
@@ -177,12 +191,14 @@ including status, headers, and unknown JSON fields.
 JSON is formatted for inspection. Authorization, cookies, secret JSON fields, and the
 current API key are redacted. Generation requests include prompt text; attached file bytes
 are redacted. The file is created on the first request and survives restarts.
+Direct OpenAI model discovery and AI operations use `openai-http.log` and the `OpenAiHttp`
+console logger with the same redaction, including PDF and image data.
 Apify runner exchanges use `apify-http.log` and the `ApifyHttp` console logger with the same
 credential redaction. Tests mock external services and never launch paid Actors.
 
-All three logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
+All four logs rotate at 10 MiB per file, retaining five numbered archives (`.1` is the newest,
 `.5` the oldest). The oldest archive is removed on rotation; restarting does not clear logs.
-Together they retain at most 180 MiB. Entries larger than one file span multiple files without
+Together they retain at most 240 MiB. Entries larger than one file span multiple files without
 splitting UTF-8 characters. Existing oversized logs retain their latest 10 MiB on the next write.
 
 ## License

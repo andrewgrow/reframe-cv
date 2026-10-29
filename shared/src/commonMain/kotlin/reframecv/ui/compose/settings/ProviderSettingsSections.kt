@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import org.jetbrains.compose.resources.stringResource
+import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_management_section
 import reframecv.shared.generated.resources.settings_models_section
@@ -47,7 +48,9 @@ internal fun ProviderModelsSection(state: ProviderEditorState, component: Provid
         }?.let {
             SettingsErrorText(it, state.errorDetails)
         }
-        ProviderAccountContent(state, component::onRefreshAccount)
+        if (state.connection.configuration is OpenRouterConfiguration) {
+            ProviderAccountContent(state, component::onRefreshAccount)
+        }
     }
 }
 

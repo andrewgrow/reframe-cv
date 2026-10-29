@@ -17,7 +17,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.prompts.PromptComponent
-import reframecv.domain.models.providers.OpenRouterConfiguration
+import reframecv.domain.models.providers.AiProviderConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.ui.context.AppComponentContext
 
@@ -41,8 +41,8 @@ data class AiRequestDialogState(
     val canRun get() = !loading && !running && !savingPrompt && prompt != null &&
         text.isNotBlank() && connection?.let {
             it.usable &&
-                it.configuration is OpenRouterConfiguration &&
-                it.openRouter.modelId.isNotBlank()
+                it.configuration is AiProviderConfiguration &&
+                it.ai.modelId.isNotBlank()
         } == true
 }
 
@@ -105,7 +105,7 @@ class DefaultAiRequestDialogComponent<Result>(
                 ) { connections, prompts ->
                     connections.filter {
                         it.active &&
-                            it.configuration is OpenRouterConfiguration
+                            it.configuration is AiProviderConfiguration
                     } to
                         prompts
                 }

@@ -522,4 +522,5 @@
     <string name="runner_ams_hint">Results are ordered newest first and include full descriptions where available. Review and import jobs manually.</string>
     <string name="runner_ams_limit">Max jobs</string>
     <string name="runner_ams_limit_hint">A whole number from 1 to 10000. Limits the total results for this search.</string>
+    <string name="settings_openai_hint">Uses the OpenAI API directly. Choose a model that supports structured outputs and your document types. API billing is separate from ChatGPT subscriptions.</string>
 </resources>

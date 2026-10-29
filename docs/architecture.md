@@ -186,13 +186,26 @@ then calls `VacancyRecognitionRepository`. The external repository constructs a 
 `AiProviderClient` returns JSON or a typed provider error; the repository validates/decodes JSON
 and maps it to recognition outcomes. It neither saves drafts nor selects a concrete provider.
 
-Desktop application dependencies compose the reader, repository, and lazy `OpenRouterClient`
+Desktop application dependencies compose the reader, repository, and lazy `AiProviderRouter`
 with Ktor transport from `network`. Closing application dependencies releases the initialized
 provider client, HTTP client, and engine; repositories do not own the shared transport.
 
 OpenRouter generation uses POST `/api/v1/chat/completions` with the selected
 connection's ordinary API key and saved model. PDF bytes are Base64 file input;
 response_format supplies a strict JSON schema and routing requires parameter support.
+`AiProviderRouter` selects the transport for all AI repositories without changing their prompts
+or operation schemas. `OpenAiClient` sends POST `https://api.openai.com/v1/responses` with
+`store: false`, `stream: false`, strict `text.format` JSON schema and user `input` content.
+Named JSON documents use `input_text`; PDFs use Base64 `input_file`, images use data-URI
+`input_image`. No separate remote file upload is needed. The decoder skips reasoning items,
+accepts a completed message's output text and rejects incomplete, refused or empty output.
+OpenAI `/v1/models` discovery returns accessible IDs without inferred capability badges.
+The UI advises selecting a model supporting structured outputs and the supplied document types.
+Safe `error.message` feedback is retained, keys are redacted, and cancellation propagates.
+OpenAI traffic uses `openai-http.log` / `OpenAiHttp` with the same redaction and rotation.
+Protocol references: [Responses structured outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+and [PDF input](https://developers.openai.com/api/docs/guides/file-inputs).
+
 Management keys are never used for generation. HTTP/provider failures, malformed JSON,
 truncation, refusal, and empty posting content remain errors in the AI dialog.
 The network client has 15-second connection and 120-second request/socket timeouts.
@@ -462,12 +475,12 @@ Errors include operation context and stacks in `stacktrace.txt`, preceded by the
 200 Store/tree events. Event summaries omit document contents and project names.
 Logging must preserve coroutine cancellation. The in-memory event history resets each launch.
 
-All three diagnostic logs use `RotatingLogFile`: a 10 MiB active file plus five archives per log,
+All four diagnostic logs use `RotatingLogFile`: a 10 MiB active file plus five archives per log,
 numbered `.1` (newest) through `.5` (oldest). Rotation removes only the oldest archive and
 does not depend on application restarts. A shared process lock serializes appends and rotation
 across instances. Ordinary entries remain together; oversized entries span files at UTF-8
 character boundaries. Existing oversized files retain their latest 10 MiB before appending.
-The retained files for all three logs total at most 180 MiB. File failures remain diagnostic-only.
+The retained files for all four logs total at most 240 MiB. File failures remain diagnostic-only.
 
 ## Current limits
 
@@ -482,7 +495,7 @@ It opens in the main content area. Back/Escape closes the connection editor befo
 Settings and returns to the previous destination. Back during model loading cancels the request
 without discarding the draft; saves cannot be interrupted through navigation.
 
-`provider_connections` starts empty. Users create OpenRouter connections with an optional
+`provider_connections` starts empty. Users create OpenRouter or direct OpenAI connections with an optional
 connection name, an API key, and an optional model ID. Each connection has an independent
 Active/Disabled state; new connections default to Active. Status switches persist immediately
 for saved connections and never affect other connections. Disabling cancels pending requests.
@@ -757,9 +770,12 @@ credentials/model selection and Apify tokens use separate versioned configuratio
 Unsupported or malformed configuration remains stored but cannot be used. Credential values
 are excluded from diagnostic `toString` output.
 
-Settings supports OpenRouter and Apify connections. Saved connections cannot change provider
-type. Apify has only a token field; AI dialogs only offer OpenRouter connections. Model discovery,
-account refresh and post-request balance updates remain OpenRouter operations.
+Settings supports OpenRouter, OpenAI and Apify connections. Saved connections cannot change
+provider type. Apify has only a token field. AI dialogs offer active OpenRouter and OpenAI
+connections; `AiProviderConfiguration` shares their key/model contract. Model discovery routes
+by provider type. Account information and post-request balance updates remain OpenRouter only.
+OpenAI configuration uses the existing versioned JSON column and provider type string; adding
+it does not alter the Room schema, reset existing data or require migrations.
 
 `ConnectionRunner` is a reusable operation linked to a connection by foreign key, with its own
 name, active flag, operation type and JSON parameters. `ConnectionRun` is a concrete execution
@@ -922,7 +938,7 @@ The first schema includes dataset cursor metadata; no migrations are provided.
 ## Prompt-based runner relevance
 
 The fixed Relevance column on Runs and results opens the shared AI request dialog for one
-saved dataset row. Active OpenRouter connections and active Vacancies/general prompts are
+saved dataset row. Active AI connections and active Vacancies/general prompts are
 available. The original row is sent as a named `runner-result.json` text document; no project,
 resume, cover letter or external source file is required. Provider requests and responses use
 the existing HTTP traffic logger. The global application ScreenState remembers the last

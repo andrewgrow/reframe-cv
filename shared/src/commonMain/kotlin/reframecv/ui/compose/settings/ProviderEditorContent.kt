@@ -30,6 +30,7 @@ import org.jetbrains.compose.resources.stringResource
 import reframecv.domain.models.providers.ApiProviderType
 import reframecv.domain.models.providers.ApifyConfiguration
 import reframecv.domain.models.providers.InvalidProviderConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.shared.generated.resources.Res
 import reframecv.shared.generated.resources.settings_cancel
@@ -37,6 +38,7 @@ import reframecv.shared.generated.resources.settings_close
 import reframecv.shared.generated.resources.settings_edit
 import reframecv.shared.generated.resources.settings_name
 import reframecv.shared.generated.resources.settings_new
+import reframecv.shared.generated.resources.settings_openai_hint
 import reframecv.shared.generated.resources.settings_save
 import reframecv.shared.generated.resources.settings_type
 import reframecv.ui.components.settings.ProviderEditorComponent
@@ -148,6 +150,14 @@ private fun ProviderEditorFields(state: ProviderEditorState, component: Provider
             is OpenRouterConfiguration -> {
                 ProviderManagementSection(state, component)
                 ProviderModelsSection(state, component)
+            }
+
+            is OpenAiConfiguration -> {
+                ProviderModelsSection(state, component)
+                Text(
+                    stringResource(Res.string.settings_openai_hint),
+                    color = ReframeTheme.colorScheme.hint,
+                )
             }
 
             is ApifyConfiguration -> {

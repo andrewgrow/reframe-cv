@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.ApifyConfiguration
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderAccountInfo
 import reframecv.domain.models.providers.ProviderBudget
@@ -17,6 +19,30 @@ import reframecv.domain.models.providers.ProviderConnection
 import reframecv.repository.LocalProviderConnectionsRepository
 
 class ProviderConnectionsTest : WorkspaceDatabaseTest() {
+    @Test
+    fun directAiConnectionUsesExistingStorageAndPreservesOtherConnectionsAcrossReopens() =
+        runBlocking {
+            var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+            val configs = listOf(
+                ApiProviderType.OpenRouter to OpenRouterConfiguration("router-key", "router-model"),
+                ApiProviderType.Apify to ApifyConfiguration("scraper-token"),
+                ApiProviderType.OpenAI to OpenAiConfiguration("direct-key", "direct-model"),
+            )
+            val ids = configs.map { (type, config) ->
+                repository.save(
+                    ProviderConnection(type = type, name = type.name, configuration = config),
+                )
+            }
+            database.close()
+            openDatabase()
+            repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())
+            val restored = repository.observe().first()
+            assertEquals(ids, restored.map { it.id })
+            assertEquals(configs, restored.map { it.type to it.configuration })
+            assertTrue(restored.all { it.usable })
+            assertNull(restored.last().cachedInfo)
+        }
+
     @Test
     fun cachesAccountInfoAcrossReopensWithoutStaleDraftsOrOldKeysOverwritingIt() = runBlocking {
         var repository = LocalProviderConnectionsRepository(database.providerConnectionsDao())

@@ -35,6 +35,7 @@ import reframecv.network.createDesktopNetworkClient
 import reframecv.photos.DesktopResumePhotoPicker
 import reframecv.photos.DesktopResumePhotoStorage
 import reframecv.photos.ResumePhotos
+import reframecv.providers.AiProviderRouter
 import reframecv.providers.RemoteProviderAccountRepository
 import reframecv.providers.RemoteProviderModelsRepository
 import reframecv.providers.assessment.RemoteResumeAssessmentRepository
@@ -43,6 +44,8 @@ import reframecv.providers.coverletters.RemoteCoverLetterGenerationRepository
 import reframecv.providers.coverletters.coverLetterGenerationSchema
 import reframecv.providers.improvement.RemoteResumeImprovementRepository
 import reframecv.providers.improvement.resumeImprovementSchema
+import reframecv.providers.openai.OpenAiClient
+import reframecv.providers.openai.OpenAiSetupClient
 import reframecv.providers.openrouter.OpenRouterClient
 import reframecv.providers.openrouter.OpenRouterSetupClient
 import reframecv.providers.recognition.RemoteVacancyRecognitionRepository
@@ -115,9 +118,16 @@ class DefaultApplicationDependencies(
     private val database = lazy(databaseFactory)
     private val transport = lazy { createDesktopNetworkClient() }
     private val provider = lazy {
-        OpenRouterClient(
-            transport.value,
-            FileHttpTrafficLogger(applicationDataDirectory().resolve("openrouter-http.log")),
+        AiProviderRouter(
+            mapOf(
+                ApiProviderType.OpenRouter to OpenRouterClient(
+                    transport.value,
+                    FileHttpTrafficLogger(
+                        applicationDataDirectory().resolve("openrouter-http.log"),
+                    ),
+                ),
+                ApiProviderType.OpenAI to OpenAiClient(transport.value, openAiTrafficLogger()),
+            ),
         )
     }
     private val recognitionRepository = lazy {
@@ -386,7 +396,13 @@ class DefaultApplicationDependencies(
         )
         ProviderSettingsUseCases(
             LocalProviderConnectionsRepository(database.value.providerConnectionsDao()),
-            RemoteProviderModelsRepository(mapOf(ApiProviderType.OpenRouter to client)),
+            RemoteProviderModelsRepository(
+                mapOf(
+                    ApiProviderType.OpenRouter to client,
+                    ApiProviderType.OpenAI to
+                        OpenAiSetupClient(transport.value, openAiTrafficLogger()),
+                ),
+            ),
             RemoteProviderAccountRepository(mapOf(ApiProviderType.OpenRouter to client)),
         )
     }
@@ -411,3 +427,8 @@ class DefaultApplicationDependencies(
         if (database.isInitialized()) database.value.close()
     }
 }
+
+private fun openAiTrafficLogger() = FileHttpTrafficLogger(
+    applicationDataDirectory().resolve("openai-http.log"),
+    "OpenAiHttp",
+)

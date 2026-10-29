@@ -13,6 +13,7 @@ import reframecv.database.createDatabaseBuilder
 import reframecv.database.workspace.WorkspaceDatabaseTest
 import reframecv.domain.models.prompts.Prompt
 import reframecv.domain.models.providers.ApiProviderType
+import reframecv.domain.models.providers.OpenAiConfiguration
 import reframecv.domain.models.providers.OpenRouterConfiguration
 import reframecv.domain.models.providers.ProviderConnection
 import reframecv.domain.models.settings.AppSettings
@@ -38,6 +39,29 @@ class SettingsBackupRepositoryTest : WorkspaceDatabaseTest() {
         ),
         listOf(Prompt(text = "Read", active = false)),
     )
+
+    @Test
+    fun directAiBackupsDeduplicateAndOmittedKeysPreserveSavedCredentials() = runBlocking {
+        val repository = LocalSettingsBackupRepository(database.settingsBackupDao())
+        val direct = backup.copy(
+            connections = listOf(
+                ProviderConnection(
+                    type = ApiProviderType.OpenAI,
+                    name = "Direct",
+                    configuration = OpenAiConfiguration("direct-secret", "example-model"),
+                ),
+            ),
+        )
+        repository.restore(backup)
+        repository.restore(direct)
+        val withoutKeys = SettingsBackupJson.decode(SettingsBackupJson.encode(direct, false))
+        assertEquals(2, repository.restore(withoutKeys).duplicates)
+        val withKeys = SettingsBackupJson.decode(SettingsBackupJson.encode(direct, true))
+        assertEquals(2, repository.restore(withKeys).duplicates)
+        assertEquals(2, repository.snapshot().connections.size)
+        assertEquals("direct-secret", repository.snapshot().connections.last().ai.apiKey)
+        assertEquals("api", repository.snapshot().connections.first().ai.apiKey)
+    }
 
     @Test
     fun ownExportRestoresIntoFreshDatabaseAndRepeatedImportsDoNotDuplicate() = runBlocking<Unit> {

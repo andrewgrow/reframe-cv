@@ -4,7 +4,7 @@ Open **Settings → Import / export settings** to save or restore a portable JSO
 This does not change the database schema and does not require deleting the database.
 
 The backup contains every saved API connection (provider type, optional name, provider-specific
-configuration and active state), every prompt (title, component, instructions and active state),
+configuration and active state), including direct OpenAI key/model settings, every prompt (title, component, instructions and active state),
 and global application preferences. Global preferences currently consist of window width,
 height and maximized state; restored window preferences apply on the next launch. Subsequent
 window resizing saves the user's newer choice as usual.
