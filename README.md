@@ -144,7 +144,9 @@ Generated Room implementations and Compose resources are excluded.
 
 In **Settings → API Providers**, choose **OpenRouter** or **OpenAI**, enter an API key,
 load the models and select a model. Prompts and response schemas are shared; each AI request
-uses the provider and saved model of the connection selected in its dialog. OpenAI uses the
+uses the provider and saved model of the connection selected in its dialog. The last selected
+connection is remembered across AI dialogs and app restarts; disabled or deleted connections
+are not restored. OpenAI uses the
 Responses API directly with `store: false`. Choose a model that supports structured outputs
 and, when sending PDFs or images, the corresponding input types. The model catalog does not
 report all capabilities; unsupported combinations display the provider's error in the dialog.

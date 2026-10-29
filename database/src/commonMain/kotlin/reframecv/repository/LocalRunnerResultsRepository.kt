@@ -5,6 +5,7 @@ import reframecv.database.providers.RunnerResultImportsDao
 import reframecv.database.providers.RunnerResultsDao
 import reframecv.domain.models.providers.ConnectionRun
 import reframecv.domain.models.providers.RunnerRawResult
+import reframecv.domain.models.providers.RunnerResult
 import reframecv.domain.models.providers.RunnerResultFilter
 import reframecv.domain.models.providers.RunnerResultStatus
 import reframecv.domain.models.vacancy.Vacancy
@@ -56,21 +57,25 @@ class LocalRunnerResultsRepository(
     }
     override suspend fun page(runId: Long, offset: Int, limit: Int) =
         enrich(dao.page(runId, offset, offset + limit))
-    private suspend fun enrich(rows: List<RunnerResultEntity>) = rows.map { row ->
-        val previous = row.externalId?.let { dao.previous(row.source, it, row.runId) }
-        row.toDomainModel().copy(
-            previousResultId = previous?.id,
-            previousStatus = previous?.status?.let(RunnerResultStatus::valueOf),
-            previousVacancyId = previous?.vacancyId,
-            relevanceScore = row.relevanceScore ?: previous?.relevanceScore,
-            relevancePrompt = if (row.relevanceScore !=
-                null
-            ) {
-                row.relevancePrompt
-            } else {
-                previous?.relevancePrompt
-            },
-        )
+    private suspend fun enrich(rows: List<RunnerResultEntity>): List<RunnerResult> {
+        val existing = dao.existingVacanciesByIds(rows.map { it.id })
+        return rows.map { row ->
+            val previous = row.externalId?.let { dao.previous(row.source, it, row.runId) }
+            row.toDomainModel().copy(
+                existingVacancyId = existing[row.id],
+                previousResultId = previous?.id,
+                previousStatus = previous?.status?.let(RunnerResultStatus::valueOf),
+                previousVacancyId = previous?.vacancyId,
+                relevanceScore = row.relevanceScore ?: previous?.relevanceScore,
+                relevancePrompt = if (row.relevanceScore !=
+                    null
+                ) {
+                    row.relevancePrompt
+                } else {
+                    previous?.relevancePrompt
+                },
+            )
+        }
     }
     override suspend fun setStatus(id: Long, status: RunnerResultStatus, vacancyId: Long?) {
         require((status == RunnerResultStatus.Imported) == (vacancyId != null))

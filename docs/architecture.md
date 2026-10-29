@@ -774,6 +774,14 @@ Settings supports OpenRouter, OpenAI and Apify connections. Saved connections ca
 provider type. Apify has only a token field. AI dialogs offer active OpenRouter and OpenAI
 connections; `AiProviderConfiguration` shares their key/model contract. Model discovery routes
 by provider type. Account information and post-request balance updates remain OpenRouter only.
+The shared AI dialog stores the last explicitly selected connection immediately in the global
+Application ScreenState under `ai_connection_id`, independently of document and operation.
+Launching also remembers an automatically selected connection. Closing or cancelling the dialog
+does not undo the choice. Reopening restores it only when it is still an active AI connection;
+otherwise the sole available connection is selected, or selection stays empty when ambiguous.
+Malformed IDs are ignored. Updates merge into the existing state and are queued outside dialog
+lifetime, so other preferences and pending writes survive navigation. No schema change is needed.
+
 OpenAI configuration uses the existing versioned JSON column and provider type string; adding
 it does not alter the Room schema, reset existing data or require migrations.
 
@@ -931,6 +939,26 @@ one Room transaction, so unsupported data or an invalid project cannot leave an 
 Parent projects cannot receive workspace documents. Current imported results cannot be imported
 again or dismissed, including repeat occurrences with a remembered import. UI, use cases and
 transactional database writes enforce the same rule; raw JSON stays unchanged.
+
+Existing saved vacancies are checked through a shared posting index, independently of runner
+import history. Canonical posting URLs work for any source using `url`, `link`, `jobUrl` or
+`job_url`; the AMS adapter additionally supplies both `externalUrl` and `portalUrl` aliases.
+Company, application and input/search URLs are excluded. Normalization removes fragments,
+trailing path slashes, default ports and known marketing/click tracking parameters, lowercases
+only scheme/host, and sorts query keys while preserving values and duplicate-value order.
+Job-identifying query parameters and path case remain significant. Website adapters also recover
+source-scoped IDs from LinkedIn and AMS posting URLs, allowing known URL forms to match without
+relying on a scraper's raw link. Equal numeric IDs from different websites never suffice.
+Titles and companies never participate.
+
+Matching supplies the read-only `existingVacancyId` projection and an “Already exists as vacancy”
+tooltip. Imported visibility filtering hides these rows and disables convert/dismiss actions.
+Counts and pages resolve matches before SQL filtering/pagination, passing matched row IDs as one
+JSON parameter rather than expanding SQLite bind variables. Reads use small URL projections
+instead of loading complete descriptions. Import/review transactions repeat the same match to
+reject stale actions. Raw payloads and recorded history remain intact. Removing or changing a
+manually created vacancy removes its derived match; recorded imports retain historical status.
+No Room schema change, migration or reset is required.
 
 The first schema includes dataset cursor metadata; no migrations are provided.
 

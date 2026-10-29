@@ -38,7 +38,8 @@ internal fun RunnerResultActions(
         when {
             imported -> ResultIcon(
                 Icons.Default.CheckCircle,
-                result.reviewVacancyId?.let { "Imported into vacancy #$it" }
+                result.existingVacancyId?.let { "Already exists as vacancy #$it" }
+                    ?: result.reviewVacancyId?.let { "Imported into vacancy #$it" }
                     ?: "Imported (vacancy deleted)",
             )
 

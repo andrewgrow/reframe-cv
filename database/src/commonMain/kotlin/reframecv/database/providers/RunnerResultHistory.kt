@@ -14,7 +14,7 @@ data class RunnerResultHistory(
 internal const val PREVIOUS_RESULT_ORDER =
     "(p.status = 'Imported') DESC, (p.status != 'New') DESC, p.run_id DESC, p.id DESC"
 
-internal const val REVIEW_STATUS =
+internal const val RECORDED_REVIEW_STATUS =
     "CASE WHEN r.status = 'Imported' OR EXISTS(" +
         "SELECT 1 FROM runner_results p WHERE p.source = r.source " +
         "AND p.external_id = r.external_id AND p.status = 'Imported') " +
@@ -22,6 +22,9 @@ internal const val REVIEW_STATUS =
         "(SELECT p.status FROM runner_results p WHERE p.source = r.source " +
         "AND p.external_id = r.external_id AND p.run_id < r.run_id " +
         "ORDER BY " + PREVIOUS_RESULT_ORDER + " LIMIT 1), 'New') END"
+internal const val REVIEW_STATUS =
+    "CASE WHEN r.id IN (SELECT value FROM json_each(:existingResultIds)) THEN 'Imported' " +
+        "ELSE ($RECORDED_REVIEW_STATUS) END"
 internal const val REVIEW_FILTER =
     "(:showDismissed OR (" + REVIEW_STATUS + ") != 'Dismissed') AND " +
         "(:showImported OR (" + REVIEW_STATUS + ") != 'Imported')"

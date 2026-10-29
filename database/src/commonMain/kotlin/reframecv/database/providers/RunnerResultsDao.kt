@@ -10,7 +10,7 @@ import reframecv.domain.models.providers.ConnectionRun
 
 /** Keeps snapshots immutable and resolves earlier source identities across all runners. */
 @Dao
-abstract class RunnerResultsDao {
+abstract class RunnerResultsDao : RunnerResultReviewQueries {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     abstract suspend fun insert(rows: List<RunnerResultEntity>)
 
@@ -19,25 +19,6 @@ abstract class RunnerResultsDao {
             "AND position < :end ORDER BY position",
     )
     abstract suspend fun page(runId: Long, offset: Int, end: Int): List<RunnerResultEntity>
-
-    @Query("SELECT COUNT(*) FROM runner_results r WHERE run_id = :runId AND $REVIEW_FILTER")
-    abstract suspend fun count(
-        runId: Long,
-        showDismissed: Boolean = true,
-        showImported: Boolean = true,
-    ): Int
-
-    @Query(
-        "SELECT r.* FROM runner_results r WHERE run_id = :runId AND " + REVIEW_FILTER +
-            " ORDER BY position LIMIT :limit OFFSET :offset",
-    )
-    abstract suspend fun reviewPage(
-        runId: Long,
-        offset: Int,
-        limit: Int,
-        showDismissed: Boolean = true,
-        showImported: Boolean = true,
-    ): List<RunnerResultEntity>
 
     @Query(
         "UPDATE connection_runs SET next_result_offset = :offset, result_total = :total, " +
@@ -97,7 +78,8 @@ abstract class RunnerResultsDao {
         val current = checkNotNull(get(id))
         // Imported remains historical even if its vacancy was subsequently removed.
         val previous = current.externalId?.let { previous(current.source, it, current.runId) }
-        val imported = current.status == "Imported" || previous?.status == "Imported"
+        val imported = current.status == "Imported" || previous?.status == "Imported" ||
+            existingVacancy(id) != null
         require(!imported || status == "Imported")
         check(writeStatus(id, status, vacancyId) == 1)
     }

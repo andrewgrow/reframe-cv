@@ -21,10 +21,12 @@ data class RunnerResult(
     val previousVacancyId: Long? = null,
     val relevanceScore: Int? = null,
     val relevancePrompt: String? = null,
+    val existingVacancyId: Long? = null,
 ) : DomainModel {
     val reviewStatus: RunnerResultStatus get() {
         val imported = RunnerResultStatus.Imported
         val decision = when {
+            existingVacancyId != null -> imported
             status == imported || previousStatus == imported -> imported
             status != RunnerResultStatus.New -> status
             else -> previousStatus ?: RunnerResultStatus.New
@@ -32,7 +34,8 @@ data class RunnerResult(
         return if (decision == RunnerResultStatus.Restored) RunnerResultStatus.New else decision
     }
     val reviewVacancyId: Long? get() =
-        if (status == RunnerResultStatus.Imported) vacancyId else previousVacancyId
+        existingVacancyId
+            ?: if (status == RunnerResultStatus.Imported) vacancyId else previousVacancyId
 }
 
 /** Carries an untouched dataset row, including rows the current mapper cannot understand. */

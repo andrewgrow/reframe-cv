@@ -14,6 +14,28 @@ import reframecv.ui.components.settings.runners.RunnerResultAction
 @OptIn(ExperimentalTestApi::class)
 class RunnerHistoryActionsScreenshotTest : GoldenScreenshotTest() {
     @Test
+    fun existingVacancyHasNoConvertOrDismissActions() = runDesktopComposeUiTest {
+        val initial = runnerTableFixture()
+        val view = initial.view!!
+        val page = view.page!!
+        val component = PreviewRunnerRunsComponent(
+            initial.copy(
+                view = view.copy(
+                    page = page.copy(
+                        savedResults = page.savedResults.map {
+                            if (it.id == 1L) it.copy(existingVacancyId = 42) else it
+                        },
+                    ),
+                ),
+            ),
+        )
+        setAndCaptureGolden(this) { RunnerRunsContent(component) }
+        onNodeWithTag("Already exists as vacancy #42").assertExists()
+        onNodeWithTag("runner.result.convert.1").assertDoesNotExist()
+        onNodeWithTag("runner.result.review.1").assertDoesNotExist()
+    }
+
+    @Test
     fun priorImportsHaveNoActionsAndPriorDismissalsOfferRestore() = runDesktopComposeUiTest(
         screenSize = ScreenSize(1000.dp, 1000.dp),
     ) {
